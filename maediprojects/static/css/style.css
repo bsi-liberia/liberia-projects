@@ -1,0 +1,8 @@
+body {
+    margin-top:60px;
+}
+#locationMap {
+    min-width:300px;
+    width:100%;
+    height:400px;
+}

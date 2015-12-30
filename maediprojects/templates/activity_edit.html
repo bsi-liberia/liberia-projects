@@ -1,0 +1,570 @@
+{% set active_page='activity' %}{% extends "layout.html" %}
+{% block title %}Edit activity{% endblock %}
+{% block content %}
+<style>
+  .table span.form-control-feedback {
+    top: 0;
+  }
+</style>
+<h1>Edit activity</h1>
+<div role="tabpanel">
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#basic" aria-controls="basic" role="tab" data-toggle="tab">Basic</a></li>
+    {% if activity.id %}
+    <li role="presentation"><a href="#location" aria-controls="location" role="tab" data-toggle="tab" id="locationTab">Location data</a></li>
+    {% endif %}
+   <!-- <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">Results</a></li>-->
+  </ul>
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="basic">
+      <h2>Basic data</h2>
+      <form class="form-horizontal" id="activity-form" method="POST">
+        <div class="form-group">
+          <label for="code" class="col-sm-2 control-label">Project code</label>
+          <div class="col-sm-10">
+            <input type="text" name="code" id="code"
+            value="{{ activity.code }}" class="form-control" placeholder="If known">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="title" class="col-sm-2 control-label">Title</label>
+          <div class="col-sm-10">
+            <input type="text" name="title" id="title"
+            value="{{ activity.title }}" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="description" class="col-sm-2 control-label">Description</label>
+          <div class="col-sm-10">
+            <textarea name="description" id="description" 
+            class="form-control" rows="2">{{ activity.description }}</textarea>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="start_date" class="col-sm-2 control-label">Start date</label>
+          <div class="col-sm-10">
+            <input type="date" name="start_date" id="start_date"
+            value="{{ activity.start_date }}" class="form-control"
+            placeholder="yyyy-mm-dd">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="end_date" class="col-sm-2 control-label">End date</label>
+          <div class="col-sm-10">
+            <input type="date" name="end_date" id="end_date"
+            value="{{ activity.end_date }}" class="form-control"
+            placeholder="yyyy-mm-dd">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="dac_sector" class="col-sm-2 control-label">DAC Sector</label>
+          <div class="col-sm-10">
+            <input type="text" name="dac_sector" id="dac_sector"
+            value="{{ activity.dac_sector }}" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cicid_sector" class="col-sm-2 control-label">CICID Sector</label>
+          <div class="col-sm-10">
+            <input type="text" name="cicid_sector" id="cicid_sector"
+            value="{{ activity.cicid_sector }}" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="activity_status" class="col-sm-2 
+          control-label">Activity Status</label>
+          <div class="col-sm-10">
+            <input type="text" name="activity_status" id="activity_status"
+            value="{{ activity.activity_status }}" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="total_commitments" class="col-sm-2 
+          control-label">Total commitments</label>
+          <div class="col-sm-10">
+            <div class="input-group">
+              <div class="input-group-addon">EUR</div>
+              <input type="text" name="total_commitments" id="total_commitments"
+              value="{{ activity.total_commitments }}" class="form-control"
+              placeholder="0.00">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="total_disbursements" class="col-sm-2 
+          control-label">Total disbursements</label>
+          <div class="col-sm-10">
+            <div class="input-group">
+              <div class="input-group-addon">EUR</div>
+              <input type="text" name="total_disbursements" id="total_disbursements"
+              value="{{ activity.total_disbursements }}" class="form-control"
+              placeholder="0.00">
+            </div>
+          </div>
+        </div>
+        <hr />
+        
+        <div class="panel-group">
+          <div class="panel panel-default">
+            <div class="panel-heading" id="headingDetailed">
+              <h4 class="panel-title">
+                <a role="button" data-toggle="collapse" 
+                data-target="#detailed"
+                href="#detailed" aria-expanded="false"
+                aria-controls="detailed">
+                  Adjust default settings
+                </a>
+              </h4>
+            </div>
+            <div id="detailed" class="panel-collapse collapse" aria-labelledby="#headingDetailed">
+              <div class="panel-body">
+                
+                <div class="form-group">
+                  <label for="flow_type" class="col-sm-2 control-label">Flow type</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="flow_type" id="flow_type"
+                    value="{{ activity.flow_type }}" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="aid_type" class="col-sm-2 control-label">Aid Type</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="aid_type" id="aid_type"
+                    value="{{ activity.aid_type }}" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="collaboration_type" class="col-sm-2 control-label">Collaboration Type</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="collaboration_type" id="collaboration_type"
+                    value="{{ activity.collaboration_type }}" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="finance_type" class="col-sm-2 control-label">Finance Type</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="finance_type" id="finance_type"
+                    value="{{ activity.finance_type }}" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="tied_status" class="col-sm-2 control-label">Tied Status</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="tied_status" id="tied_status"
+                    value="{{ activity.tied_status }}" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="recipient_country_code" class="col-sm-2 
+                  control-label">Recipient Country</label>
+                  <div class="col-sm-10">      
+                    <input type="text" name="recipient_country_code" id="recipient_country_code"
+                    value="{{ activity.recipient_country_code }}" class="form-control">
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        
+
+        {% if not activity.id %}
+        <button type="submit" class="btn btn-success" id="add-activity-btn">
+          Add activity; edit financial data &raquo;</button>
+        {% endif %}
+      </form>
+    </div>
+    
+    
+    <!-- Location data -->
+    <div role="tabpanel" class="tab-pane" id="location">
+      <h2>Location data</h2>
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="list-group" id="locationSelector">
+            <a href="#" class="list-group-item" data-geonamesid="2460594" 
+            data-latitude="12.65" data-longitude="-8">Bamako Region</a>
+            <a href="#" class="list-group-item">Kayes Region</a>
+            <a href="#" class="list-group-item">Mopti Region</a>
+            <a href="#" class="list-group-item">Ségou Region</a>
+            <a href="#" class="list-group-item">Sikasso Region</a>
+            <a href="#" class="list-group-item">Koulikoro Region</a>
+            <a href="#" class="list-group-item">Tombouctou Region</a>
+            <a href="#" class="list-group-item">Gao Region</a>
+            <a href="#" class="list-group-item">Kidal Region</a>
+          </div>
+        </div>
+        <div class="col-sm-8">
+          <div id="locationMap"></div>
+        </div>
+      </div>
+    </div>
+    
+    
+    <!-- Results data -->
+    <div role="tabpanel" class="tab-pane" id="results">
+      <h2>Results</h2>
+      <a href="" id="addResultModalBtn" class="btn btn-success"
+          data-toggle="modal" data-target="#addResultModal">
+        <span class="glyphicon glyphicon-plus"></span> Add result
+      </a>
+      {% for result in activity.results %}
+      <div id="result-elements-{{ result.id }}">
+        <div class="pull-right">
+          <a href="" id="deleteResultBtn" class="btn btn-danger"
+          data-id="{{ result.id }}" data-result-type="result">
+            <span class="glyphicon glyphicon-trash"></span> Delete result
+          </a>
+        </div>
+        <h3>Result</h3>
+        <form class="form-horizontal from-result result-data-form" 
+          id="result-{{result.id}}" data-id="{{ result.id }}"
+          data-result-form="result">
+          <div class="form-group">
+            <label for="result_title" class="col-sm-2 control-label">Title</label>
+            <div class="col-sm-10">
+              <input type="text" name="result_title" id="result_title"
+              placeholder="title" class="form-control" value="{{ result.result_title }}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="result_description" class="col-sm-2 control-label">Description</label>
+            <div class="col-sm-10">
+              <textarea name="result_description" id="result_description" 
+              class="form-control" placeholder="description">{{ result.result_description }}</textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="result_type" class="col-sm-2 control-label">Type</label>
+            <div class="col-sm-10">
+              <input type="text" name="result_type" id="result_type"
+              placeholder="result type" class="form-control" 
+              value="{{ result.result_type }}">
+            </div>
+          </div>
+        </form>
+        <a href="" id="addIndicatorModalBtn" class="btn btn-success"
+          data-toggle="modal" data-target="#addIndicatorModal"
+          data-parent-id="{{ result.id }}">
+          <span class="glyphicon glyphicon-plus"></span> Add indicator
+        </a>
+        {% for indicator in result.indicators %}
+        <div id="indicator-elements-{{ indicator.id }}">
+          <div class="col-sm-11 col-sm-offset-1">
+            <div class="pull-right">
+              <a href="" id="deleteIndicatorBtn" class="btn btn-danger"
+              data-id="{{ indicator.id }}" data-result-type="indicator">
+                <span class="glyphicon glyphicon-trash"></span> Delete indicator
+              </a>
+            </div>
+            <h3>Indicator</h3>
+            <form class="form-horizontal form-indicator result-data-form" 
+            id="indicator-{{ indicator.id }}" 
+            data-id="{{ indicator.id }}" data-result-form="indicator">
+              <div class="form-group">
+                <label for="indicator_title" class="col-sm-2 control-label">Title</label>
+                <div class="col-sm-10">
+                  <input type="text" name="indicator_title" id="indicator_title"
+                  class="form-control" placeholder="title" 
+                  value="{{ indicator.indicator_title }}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="indicator_description" class="col-sm-2 control-label">Description</label>
+                <div class="col-sm-10">
+                  <textarea name="indicator_description" id="indicator_description" 
+                  class="form-control" 
+                  placeholder="description">{{ indicator.indicator_description }}</textarea>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="baseline_year" class="col-sm-2 control-label">Baseline year</label>
+                <div class="col-sm-10">
+                  <input type="text" name="baseline_year" id="baseline_year" 
+                  class="form-control" placeholder="yyyy" 
+                  value="{{ indicator.baseline_year }}" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="baseline_value" class="col-sm-2 control-label">Baseline value</label>
+                <div class="col-sm-10">
+                  <input type="text" name="baseline_value" id="baseline_value" 
+                  class="form-control" placeholder="baseline value" 
+                  value="{{ indicator.baseline_value }}"  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="baseline_comment" class="col-sm-2 control-label">Baseline comment</label>
+                <div class="col-sm-10">
+                  <textarea name="baseline_comment" id="baseline_comment" 
+                  class="form-control" placeholder="comments...">{{ indicator.baseline_comment }}</textarea>
+                </div>
+              </div>
+            </form>
+          <a href="" id="addPeriodModalBtn" class="btn btn-success"
+          data-toggle="modal" data-target="#addPeriodModal"
+          data-parent-id="{{ indicator.id }}">
+            <span class="glyphicon glyphicon-plus"></span> Add period
+          </a>
+          {% for period in indicator.periods %}
+          <div id="period-elements-{{ period.id }}">
+            <div class="col-sm-10 col-sm-offset-2">
+              <div class="pull-right">
+                <a href="" id="deletePeriodBtn" class="btn btn-danger"
+                data-id="{{ period.id }}" data-result-type="period">
+                  <span class="glyphicon glyphicon-trash"></span> Delete period
+                </a>
+              </div>
+              <h3>Period</h3>
+              <form class="form-horizontal form-period result-data-form" 
+              id="period-{{period.id}}" data-id="{{period.id}}" 
+              data-result-form="period">
+                <div class="form-group">
+                  <label for="period_start" class="col-sm-2 control-label">Period start</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="period_start" id="period_start"
+                    class="form-control" placeholder="yyyy-mm-dd" 
+                    value="{{ period.period_start }}">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="period_end" class="col-sm-2 control-label">Period end</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="period_end" id="period_end"
+                    class="form-control" placeholder="yyyy-mm-dd" 
+                    value="{{ period.period_end }}">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="target_value" class="col-sm-2 control-label">Target value</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="target_value" id="target_value" 
+                    class="form-control" placeholder="value"
+                     value="{{ period.target_value }}" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="target_comment" class="col-sm-2 control-label">Target comment</label>
+                  <div class="col-sm-10">
+                    <textarea name="target_comment" id="target_comment" 
+                    class="form-control" placeholder="comments...">{{ period.target_comment }}</textarea>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="actual_value" class="col-sm-2 control-label">Actual value</label>
+                  <div class="col-sm-10">
+                    <input type="text" name="actual_value" id="actual_value" 
+                    class="form-control" placeholder="value" value="{{ period.actual_value }}" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="actual_comment" class="col-sm-2 control-label">Actual comment</label>
+                  <div class="col-sm-10">
+                    <textarea name="actual_comment" id="actual_comment" 
+                    class="form-control" placeholder="comments...">{{ period.actual_comment }}</textarea>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+        <hr />
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Add result modal -->
+<div class="modal fade" id="addResultModal" tabindex="-1" 
+role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Add result</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" id="addResultForm">
+          <input type="hidden" name="type" value="result">
+          <div class="form-group">
+            <label for="result_title" class="col-sm-2 control-label">Title</label>
+            <div class="col-sm-10">
+              <input type="text" name="result_title" id="result_title"
+              placeholder="title" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="result_description" class="col-sm-2 control-label">Description</label>
+            <div class="col-sm-10">
+              <textarea name="result_description" id="result_description" 
+              class="form-control" placeholder="description"></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="result_type" class="col-sm-2 control-label">Type</label>
+            <div class="col-sm-10">
+              <input type="text" name="result_type" id="result_type"
+              placeholder="result type" class="form-control">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          Close</button>
+        <button type="button" class="btn btn-success" id="addResultBtn"
+        data-form="addResultForm">
+          Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add indicator modal -->
+<div class="modal fade" id="addIndicatorModal" tabindex="-1" 
+role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Add indicator</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" id="addIndicatorForm">
+          <input type="hidden" name="type" value="indicator">
+          <input type="hidden" name="result_id" id="parent_id">
+          <div class="form-group">
+            <label for="indicator_title" class="col-sm-2 control-label">Title</label>
+            <div class="col-sm-10">
+              <input type="text" name="indicator_title" id="indicator_title"
+              class="form-control" placeholder="title">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="indicator_description" class="col-sm-2 control-label">Description</label>
+            <div class="col-sm-10">
+              <textarea name="indicator_description" id="indicator_description" 
+              class="form-control" 
+              placeholder="description"></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="baseline_year" class="col-sm-2 control-label">Baseline year</label>
+            <div class="col-sm-10">
+              <input type="text" name="baseline_year" id="baseline_year" 
+              class="form-control" placeholder="yyyy"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="baseline_value" class="col-sm-2 control-label">Baseline value</label>
+            <div class="col-sm-10">
+              <input type="text" name="baseline_value" id="baseline_value" 
+              class="form-control" placeholder="baseline value"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="baseline_comment" class="col-sm-2 control-label">Baseline comment</label>
+            <div class="col-sm-10">
+              <textarea name="baseline_comment" id="baseline_comment" 
+              class="form-control" placeholder="comments..."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          Close</button>
+        <button type="button" class="btn btn-success" id="addIndicatorBtn"
+        data-form="addIndicatorForm">
+          Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add period modal -->
+<div class="modal fade" id="addPeriodModal" tabindex="-1" 
+role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Add period</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" id="addPeriodForm">
+          <input type="hidden" name="type" value="period">
+          <input type="hidden" name="indicator_id" id="parent_id">
+          <div class="form-group">
+            <label for="period_start" class="col-sm-2 control-label">Period start</label>
+            <div class="col-sm-10">
+              <input type="text" name="period_start" id="period_start"
+              class="form-control" placeholder="yyyy-mm-dd">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="period_end" class="col-sm-2 control-label">Period end</label>
+            <div class="col-sm-10">
+              <input type="text" name="period_end" id="period_end"
+              class="form-control" placeholder="yyyy-mm-dd">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="target_value" class="col-sm-2 control-label">Target value</label>
+            <div class="col-sm-10">
+              <input type="text" name="target_value" id="target_value" 
+              class="form-control" placeholder="value"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="target_comment" class="col-sm-2 control-label">Target comment</label>
+            <div class="col-sm-10">
+              <textarea name="target_comment" id="target_comment" 
+              class="form-control" placeholder="comments..."></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="actual_value" class="col-sm-2 control-label">Actual value</label>
+            <div class="col-sm-10">
+              <input type="text" name="actual_value" id="actual_value" 
+              class="form-control" placeholder="value" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="actual_comment" class="col-sm-2 control-label">Actual comment</label>
+            <div class="col-sm-10">
+              <textarea name="actual_comment" id="actual_comment" 
+              class="form-control" placeholder="comments..."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          Close</button>
+        <button type="button" class="btn btn-success" id="addPeriodBtn"
+        data-form="addPeriodForm">
+          Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if activity.id %}
+
+<link type="text/css" media="screen" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" rel="stylesheet" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+<script src="{{url_for('static', filename='js/map.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='js/activity_edit.js')}}" type="text/javascript"></script>
+
+{% endif %}
+{% endblock %}

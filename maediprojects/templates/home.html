@@ -1,0 +1,25 @@
+{% set active_page='dashboard' %}{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Projects</h1>
+<table class="table">
+  <thead>
+    <th>Title</th>
+    <th>Country</th>
+    <th>Edit</th>
+  </thead>
+  <tbody>
+    {% for activity in activities %}
+    <tr>
+      <td>{{ activity.title }}</td>
+      <td>{{ activity.recipient_country_code }}</td>
+      <td><a href="{{url_for('activity_edit', 
+            activity_id = activity.id)}}">
+            <span class="glyphicon glyphicon-pencil"></span>
+          </a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
