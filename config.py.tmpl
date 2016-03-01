@@ -1,4 +1,16 @@
-SQLALCHEMY_DATABASE_URI = 'sqlite:///sageiaticreator.sqlite'
+import os
+basedir = os.path.abspath(os.path.dirname(__file__))
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'maediprojects.db')
 DEBUG = True
 SECRET_KEY = "YOUR-REALLY-SECRET-KEY"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+LANG = "fr"
+ADMIN_USER = {
+    "username": "admin",
+    "password": "SOME_ADMIN_PASSWORD",
+    "name": "YOUR_NAME",
+    "email_address": "YOUR_EMAIL",
+    "organisation": "YOUR_ORG",
+    "recipient_country_code": "ML",
+    "administrator": True
+}
