@@ -41,6 +41,7 @@ def update_attr(data):
     if data['attr'].endswith('date'):
         data['value'] = isostring_date(data['value'])
     setattr(activity, data['attr'], data['value'])
+    activity.updated_date = datetime.datetime.utcnow()
     db.session.add(activity)
     db.session.commit()
     return True
