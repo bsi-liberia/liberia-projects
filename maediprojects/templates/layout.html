@@ -42,6 +42,24 @@
               organisation_slug=organisation.organisation_slug )}}">Edit organisation data</a></li>
           </ul>
           {% endif %}
+          {% if loggedinuser.username %}
+          <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              {{ loggedinuser.username }}
+              <b class="caret"></b>
+              </a>
+              <ul class="dropdown-menu">
+                {% if loggedinuser.administrator %}<li><a href="{{ url_for('users') }}">Users</a></li>{% endif %}
+                <li><a href="{{ url_for('logout')}} ">Logout</a></li>
+              </ul>
+            </li>
+          </ul>
+          {% else %}
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{{ url_for('login')}} ">Login</a></li>
+          </ul>
+          {% endif %}
         </div><!--/.nav-collapse -->
       </div>
     </nav>
