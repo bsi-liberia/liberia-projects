@@ -50,7 +50,10 @@
               <b class="caret"></b>
               </a>
               <ul class="dropdown-menu">
-                {% if loggedinuser.administrator %}<li><a href="{{ url_for('users') }}">Users</a></li>{% endif %}
+                {% if loggedinuser.administrator %}
+                <li><a href="{{ url_for('codelists_management') }}">Manage codelists</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                {% endif %}
                 <li><a href="{{ url_for('logout')}} ">Logout</a></li>
               </ul>
             </li>
