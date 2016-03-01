@@ -1,0 +1,7 @@
+code,name_en,name_fr
+1,Pipeline/identification,Planification
+2,Implementation,Actif
+3,Completion,Finalisation
+4,Post-completion,Fermé
+5,Cancelled,Annulé
+6,Suspended,Suspendu

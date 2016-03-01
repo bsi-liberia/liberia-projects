@@ -1,0 +1,7 @@
+code,name_en,name_fr,description_en,description_fr
+10,ODA,APD,Official Development Assistance,Aide Publique au Développement
+20,OOF,AASP,Other Official Flows,Autres Apports du Secteur Public
+30,Private grants,Dons privés,made by NGOs and other civil society organisations (e.e. philantropic foundations) based in the reporting DAC country,Dons fournis par les ONG et autres organismes privés (par exemple fondations philantropiques) résidents dans le pays donneur
+35,Private market,Apports privés aux conditions du marché,Private market,Apports privés aux conditions du marché
+40,Non flow,non apports,e.g. GNI,ex : RNB
+50,Other flows,Autres apports,e.g. non-ODA component of peacebuilding operations),ex : élément non APD des opérations de maintien de la paix
