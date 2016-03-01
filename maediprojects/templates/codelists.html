@@ -1,0 +1,88 @@
+{% set active_page='codelists' %}{% extends "layout.html" %}
+{% block title %}Codelists{% endblock %}
+{% block content %}
+<h1>Manage codelists</h1>
+
+<div role="tabpanel">
+  <ul class="nav nav-tabs" role="tablist">
+    {% for codelist in codelist_names %}
+    <li role="presentation"{% if loop.index == 1 %} class="active"{% endif %}>
+      <a href="#{{ codelist.code }}" aria-controls="{{ codelist.code }}" 
+      role="tab" data-toggle="tab" id="{{ codelist.code }}Tab">{{ codelist.name }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="tab-content">
+    {% for codelist in codelist_names %}
+    <div role="tabpanel" class="tab-pane{% if loop.index == 1 %} active{% endif%}" id="{{ codelist.code }}">
+      <h3>{{ codelist.name }}</h3>
+      <table class="table codelists-data" 
+        data-codelist="{{ codelist.code }}"
+        id="table-{{ codelist.code }}">
+        <thead>
+          <th>Code</th>
+          <th>Name</th>
+        </thead>
+        <tbody>
+          {% for code in codelist_codes[codelist.code] %}
+          <tr data-code="{{ code.code }}">
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">Code</label>
+                <input type="text" class="form-control code" 
+                name="code" value="{{ code.code }}">
+              </div>
+            </td>
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">Name</label>
+                <input type="text" class="form-control"
+                name="name" value="{{ code.name }}">
+              </div></td>
+            <td>
+              <a class="btn btn-sm btn-default deleteCode">
+                <i class="glyphicon glyphicon-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <a class="btn btn-success addCode"
+      data-codelist="{{ codelist.code }}">
+        <i class="glyphicon glyphicon-plus"></i> 
+        Add code
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+    {% raw %}
+    <script id="row-codelist-template" type="x-tmpl-mustache">
+      <tr data-code="{{ code }}">
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">Code</label>
+            <input type="text" class="form-control code" 
+            name="code" value="{{ code }}">
+          </div>
+        </td>
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">Name</label>
+            <input type="text" class="form-control"
+            name="name" value="{{ name }}">
+          </div></td>
+        <td>
+          <a class="btn btn-sm btn-default deleteCode">
+            <i class="glyphicon glyphicon-trash"></i>
+          </a>
+        </td>
+      </tr>
+    </script>
+    {% endraw %}
+
+<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='js/codelists_edit.js')}}" type="text/javascript"></script>
+{% endblock %}
