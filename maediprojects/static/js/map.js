@@ -1,10 +1,9 @@
 var MAEDImap = {};
+var markers = {}
 var MAEDImap = function(elID) {
   var map, layerControl, year;
-  var markers = {}
 
   this.addLocation = function(data) {
-    console.log("addLocation", data);
     var newLocation = new L.marker(
       new L.LatLng(
         data['latitude'],
@@ -14,11 +13,21 @@ var MAEDImap = function(elID) {
     var popupContent = getPopupContent(data);
     newLocation.bindPopup(popupContent);
     map.addLayer(newLocation);
-    markers[data.geonamesid] = newLocation;
+    markers[data.id] = newLocation;
   }
   
   this.removeLocation = function(data) {
-    map.removeLayer(markers[data['geonamesid']]);
+    map.removeLayer(markers[data['id']]);
+  }
+  this.toggleLocation = function(data) {
+    if (data.id in markers) {
+      this.removeLocation(data);
+      delete markers[data.id];
+      return "removed";
+    } else {
+      this.addLocation(data);
+      return "added";
+    }
   }
 
   this._init = function () {
