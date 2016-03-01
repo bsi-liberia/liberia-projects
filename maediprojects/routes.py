@@ -5,7 +5,7 @@ from flask.ext.login import login_required, current_user
 from maediprojects import app
 from maediprojects import db
 import models
-from views import activities, api, users
+from views import activities, api, users, codelists
 from query import activity as qactivity
 from query import setup as qsetup
 
