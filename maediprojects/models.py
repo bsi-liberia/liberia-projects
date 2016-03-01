@@ -93,6 +93,7 @@ class Codelist(db.Model):
     __tablename__ = 'codelist'
     code = sa.Column(sa.UnicodeText, primary_key=True) # should be a slug
     name = sa.Column(sa.UnicodeText)
+    __table_args__ = (sa.UniqueConstraint('code',),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -104,6 +105,7 @@ class CodelistCode(db.Model):
     codelist_code = sa.Column(sa.Integer,
             sa.ForeignKey('codelist.code'),
             nullable=False)
+    __table_args__ = (sa.UniqueConstraint('code','codelist_code'),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
