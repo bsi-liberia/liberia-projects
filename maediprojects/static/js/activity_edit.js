@@ -5,12 +5,12 @@ function resetFormGroup(input) {
 }
 function successFormGroup(input) {
   $(input).parent().addClass("has-success has-feedback");
-  $(input).after('<span class="glyphicon glyphicon-ok form-control-feedback" aria-hidden="true"></span> \
+  $(input).after('<span class="glyphicon glyphicon-floppy-saved form-control-feedback" aria-hidden="true"></span> \
   <span class="sr-only form-control-status">(success)</span>');
 }
 function errorFormGroup(input) {
   $(input).parent().addClass("has-error has-feedback");
-  $(input).after('<span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span> \
+  $(input).after('<span class="glyphicon glyphicon-floppy-remove form-control-feedback" aria-hidden="true"></span> \
   <span class="sr-only form-control-status">(error)</span>');
 }
 $(document).on("focus", "#activity-form input, #activity-form textarea, \
@@ -35,7 +35,15 @@ $(document).on("change", "#activity-form input[type=checkbox]", function(e) {
     errorFormGroup(input);
   });  
 });
-$(document).on("change", "#activity-form input[type=text], #activity-form textarea", function(e) {
+
+$('#datetimepicker_start').datetimepicker({
+    format: 'YYYY-MM-DD'
+});
+$('#datetimepicker_end').datetimepicker({
+    format: 'YYYY-MM-DD'
+});
+
+$(document).on("change", "#activity-form input[type=text], #activity-form textarea, #activity-form select", function(e) {
   var data = {
     'attr': this.name,
     'value': this.value,
@@ -48,273 +56,249 @@ $(document).on("change", "#activity-form input[type=text], #activity-form textar
     errorFormGroup(input);
   });  
 });
-$(document).on("change", ".result-data-form input[type=text], \
-.result-data-form textarea", function(e) {
-  form_type = $(this).closest("form").attr("data-result-form");
-  parent_id = $(this).closest("form").attr("data-id");
+
+// We have to handle datetimepickers slightly differently from other form
+// inputs.
+$('#datetimepicker_start, #datetimepicker_end')
+.on("dp.change", function(e) {
   var data = {
-    'attr': this.name,
-    'value': this.value,
-    'id': parent_id
+    'attr': e.target.firstElementChild.name,
+    'value': e.target.firstElementChild.value,
   }
-  var input = this;
+  var input = e.target.firstElementChild;
   resetFormGroup(input);
-  $.post("update_" + form_type + "/", data, function(resultdata) {
+  $.post("update_activity/", data, function(resultdata) {
     successFormGroup(input);
   }).fail(function(){
     errorFormGroup(input);
   });  
 });
 
-$(document).on("click", "#deleteResultBtn, #deleteIndicatorBtn, \
-#deletePeriodBtn", function(e) {
-  e.preventDefault();
-  form_type = $(this).attr("data-result-type");
-  data_id = $(this).attr("data-id");
-
-  var data = {
-    'id': data_id,
-    'result_type': form_type,
-  }
-  var input = this;
-  resetFormGroup(input);
-
-  $.post("delete_result_data/", data, function(resultdata) {
-    $('#' + form_type + '-elements-' + data_id).fadeOut().remove();
-  }).fail(function(){
-    alert("Sorry, something went wrong and it wasn't possible to delete.")
-  });
-});
-$('#addIndicatorModal, #addPeriodModal').on(
-  'show.bs.modal', function (event) {
-  var button = $(event.relatedTarget); // Button that triggered the modal
-  var recipient = button.data('parent-id');
-  var modal = $(this);
-  modal.find('.modal-body #parent_id').val(recipient);
-});
-function add_result_data(data, id) {
-  var d = {};
-  $.map(data, function(item) {
-      d[item.name] = item.value;
-  });
-  if (d['type'] == "result") {
-    $("<div />", { id : 'result-elements-' + id })
-    .append(' \
-    <div class="pull-right"> \
-      <a href="" id="deleteResultBtn" class="btn btn-danger" \
-      data-id="' + id + '" data-result-type="result"> \
-        <span class="glyphicon glyphicon-trash"></span> Delete result \
-      </a> \
-    </div> \
-    <h3>Result</h3> \
-    <form class="form-horizontal from-result result-data-form"  \
-      id="result-' + id + '" data-id="' + id + '" \
-      data-result-form="result"> \
-      <div class="form-group"> \
-        <label for="result_title" class="col-sm-2 control-label">Title</label> \
-        <div class="col-sm-10"> \
-          <input type="text" name="result_title" id="result_title" \
-          placeholder="title" class="form-control" value="' + d['result_title'] + '"> \
-        </div> \
-      </div> \
-      <div class="form-group"> \
-        <label for="result_description" class="col-sm-2 control-label">Description</label> \
-        <div class="col-sm-10"> \
-          <textarea name="result_description" id="result_description"  \
-          class="form-control" placeholder="description">' + d['result_description'] + '</textarea> \
-        </div> \
-      </div> \
-      <div class="form-group"> \
-        <label for="result_type" class="col-sm-2 control-label">Type</label> \
-        <div class="col-sm-10"> \
-          <input type="text" name="result_type" id="result_type" \
-          placeholder="result type" class="form-control"  \
-          value="' + d['result_type'] + '"> \
-        </div> \
-      </div> \
-    </form> \
-    <a href="" id="addIndicatorModalBtn" class="btn btn-success" \
-      data-toggle="modal" data-target="#addIndicatorModal" \
-      data-parent-id="' + id + '"> \
-      <span class="glyphicon glyphicon-plus"></span> Add indicator \
-    </a> \
-    <hr /> \
-  </div> \
-    ').appendTo("#results");
-    
-  } else if (d['type'] == "indicator") {
-    $("<div />", { id : 'indicator-elements-' + id })
-      .append(' \
-  <div id="indicator-elements-' + id + '"> \
-    <div class="col-sm-11 col-sm-offset-1"> \
-      <div class="pull-right"> \
-        <a href="" id="deleteIndicatorBtn" class="btn btn-danger" \
-        data-id="' + id + '" data-result-type="indicator"> \
-          <span class="glyphicon glyphicon-trash"></span> Delete indicator \
-        </a> \
-      </div> \
-      <h3>Indicator</h3> \
-      <form class="form-horizontal form-indicator result-data-form"  \
-      id="indicator-' + id + '"  \
-      data-id="' + id + '" data-result-form="indicator"> \
-        <div class="form-group"> \
-          <label for="indicator_title" class="col-sm-2 control-label">Title</label> \
-          <div class="col-sm-10"> \
-            <input type="text" name="indicator_title" id="indicator_title" \
-            class="form-control" placeholder="title"  \
-            value="' + d['indicator_title'] + '"> \
-          </div> \
-        </div> \
-        <div class="form-group"> \
-          <label for="indicator_description" class="col-sm-2 control-label">Description</label> \
-          <div class="col-sm-10"> \
-            <textarea name="indicator_description" id="indicator_description"  \
-            class="form-control"  \
-            placeholder="description">' + d['indicator_description'] + '</textarea> \
-          </div> \
-        </div> \
-        <div class="form-group"> \
-          <label for="baseline_year" class="col-sm-2 control-label">Baseline year</label> \
-          <div class="col-sm-10"> \
-            <input type="text" name="baseline_year" id="baseline_year"  \
-            class="form-control" placeholder="yyyy"  \
-            value="' + d['baseline_year'] + '" /> \
-          </div> \
-        </div> \
-        <div class="form-group"> \
-          <label for="baseline_value" class="col-sm-2 control-label">Baseline value</label> \
-          <div class="col-sm-10"> \
-            <input type="text" name="baseline_value" id="baseline_value"  \
-            class="form-control" placeholder="baseline value"  \
-            value="' + d['baseline_value'] + '"  /> \
-          </div> \
-        </div> \
-        <div class="form-group"> \
-          <label for="baseline_comment" class="col-sm-2 control-label">Baseline comment</label> \
-          <div class="col-sm-10"> \
-            <textarea name="baseline_comment" id="baseline_comment"  \
-            class="form-control" placeholder="comments...">' + d['baseline_comment'] + '</textarea> \
-          </div> \
-        </div> \
-      </form> \
-    <a href="" id="addPeriodModalBtn" class="btn btn-success" \
-    data-toggle="modal" data-target="#addPeriodModal" \
-    data-parent-id="' + id + '"> \
-      <span class="glyphicon glyphicon-plus"></span> Add period \
-    </a> \
-    </div> \
-  </div> \
-    ')
-    .appendTo("#result-elements-" + d['result_id']);
-    
-  } else if (d['type'] == "period") {
-    $("<div />", { id : 'period-elements-' + id })
-      .append(' \
-        <div class="col-sm-10 col-sm-offset-2"> \
-          <div class="pull-right"> \
-            <a href="" id="deletePeriodBtn" class="btn btn-danger" \
-            data-id="' + id + '" data-result-type="period"> \
-              <span class="glyphicon glyphicon-trash"></span> Delete period \
-            </a> \
-          </div> \
-          <h3>Period</h3> \
-          <form class="form-horizontal form-period result-data-form"  \
-          id="period-' + id + '" data-id="' + id + '"  \
-          data-result-form="period"> \
-            <div class="form-group"> \
-              <label for="period_start" class="col-sm-2 control-label">Period start</label> \
-              <div class="col-sm-10"> \
-                <input type="text" name="period_start" id="period_start" \
-                class="form-control" placeholder="yyyy-mm-dd"  \
-                value="' + d['period_start'] + '"> \
-              </div> \
-            </div> \
-            <div class="form-group"> \
-              <label for="period_end" class="col-sm-2 control-label">Period end</label> \
-              <div class="col-sm-10"> \
-                <input type="text" name="period_end" id="period_end" \
-                class="form-control" placeholder="yyyy-mm-dd"  \
-                value="' + d['period_end'] + '"> \
-              </div> \
-            </div> \
-            <div class="form-group"> \
-              <label for="target_value" class="col-sm-2 control-label">Target value</label> \
-              <div class="col-sm-10"> \
-                <input type="text" name="target_value" id="target_value"  \
-                class="form-control" placeholder="value" \
-                 value="' + d['target_value'] + '" /> \
-              </div> \
-            </div> \
-            <div class="form-group"> \
-              <label for="target_comment" class="col-sm-2 control-label">Target comment</label> \
-              <div class="col-sm-10"> \
-                <textarea name="target_comment" id="target_comment"  \
-                class="form-control" placeholder="comments...">' + d['target_comment'] + '</textarea> \
-              </div> \
-            </div> \
-            <div class="form-group"> \
-              <label for="actual_value" class="col-sm-2 control-label">Actual value</label> \
-              <div class="col-sm-10"> \
-                <input type="text" name="actual_value" id="actual_value"  \
-                class="form-control" placeholder="value" value="' + d['actual_value'] + '" /> \
-              </div> \
-            </div> \
-            <div class="form-group"> \
-              <label for="actual_comment" class="col-sm-2 control-label">Actual comment</label> \
-              <div class="col-sm-10"> \
-                <textarea name="actual_comment" id="actual_comment"  \
-                class="form-control" placeholder="comments...">' + d['actual_comment'] + '</textarea> \
-              </div> \
-            </div> \
-          </form> \
-        </div> \
-    ')
-    .appendTo("#indicator-elements-" + d['indicator_id']);
-    
-  }
-}
-
-$(document).on("click", "#addResultBtn, #addIndicatorBtn, #addPeriodBtn",
-function(e) {
-  e.preventDefault();
-  form = "#" + $(this).data("form");
-  data = $( form ).serializeArray();
-  $.post("add_result_data/", data, function(resultdata) {
-    $("#addResultModal, #addIndicatorModal, #addPeriodModal").modal('hide');
-    id = resultdata['id'];
-    add_result_data(data, id);
-  }).fail(function(){
-    alert("Sorry, something went wrong and it wasn't possible to add.")
-  });
-});
 var locationsMap;
+
+$(function() {
+  locationsMap = new MAEDImap("locationMap");
+	$.getJSON(api_activity_locations_url, function(data) {
+      existingLocations = data;
+      for (i in data["locations"]) {
+        var l = data["locations"][i]["locations"];
+        var toggle = locationsMap.toggleLocation(l);
+      }
+	});
+  
+  $("body").on("shown.bs.tab", "#locationTab", function() {
+    setupLocations()
+  });
+});
+
 $(document).on("click", "#locationSelector .list-group-item",
   function(e) {
     e.preventDefault();
-    if ($(this).hasClass("active")) {
-      $(this).removeClass("active");
-      if ($(this).attr("data-geonamesid")) {
-        var newLocation = {
-          "geonamesid": $(this).attr("data-geonamesid")
-        }
-        locationsMap.removeLocation(newLocation);
+    var location = {
+      "name": $(this).text(),
+      "id": $(this).attr("data-id"),
+      "longitude": $(this).attr("data-longitude"),
+      "latitude": $(this).attr("data-latitude")
+    }
+    var toggle = locationsMap.toggleLocation(location);
+    if (toggle == "added") {
+      $(this).addClass("active");
+      var data = {
+        "action": "add",
+        "location_id": location["id"]
       }
     } else {
-      $(this).addClass("active");
-      if ($(this).attr("data-geonamesid")) {
-        var newLocation = {
-          "name": $(this).text(),
-          "geonamesid": $(this).attr("data-geonamesid"),
-          "longitude": $(this).attr("data-longitude"),
-          "latitude": $(this).attr("data-latitude")
-        }
-        locationsMap.addLocation(newLocation);
+      $(this).removeClass("active");
+      var data = {
+        "action": "delete",
+        "location_id": location["id"]
       }
     }
+    $.post(api_activity_locations_url, data, 
+      function(returndata){
+        if (returndata == 'False'){
+            alert("There was an error updating that location.");
+        }
+      }
+    );
 });
-$(function() {
-  locationsMap = new MAEDImap("locationMap");
-  $("body").on("shown.bs.tab", "#locationTab", function() {
-    locationsMap.resize();
-  });
+
+var updateLocationsMarkers = function(locations) {
+  for (i = 0; i < locations["locations"].length; i++) {
+    if (locations["locations"][i]["id"] in markers) {
+      locations["locations"][i]["active"] = "active";
+    } else {
+      locations["locations"][i]["active"] = "";      
+    }
+  }
+  return locations;
+}
+
+var updateLocationsSelector = function(locations) {
+  // Render locations selector
+	var locations_selector_template = $('#locations-selector-template').html();
+	Mustache.parse(locations_selector_template);   // optional, speeds up future uses
+	var rendered_locations_selector = Mustache.render(locations_selector_template, locations);
+	$('#locations-selector').html(rendered_locations_selector);
+}
+
+var updateLocationsList = function(locations) {
+  // Render locations template
+	locations_template = $('#locations-template').html();
+	Mustache.parse(locations_template);   // optional, speeds up future uses
+  
+  // Check location markers and make sure we're highlighting things nicely
+  locations = updateLocationsMarkers(locations);
+	var rendered_locations = Mustache.render(locations_template, locations);
+	$('#location-data').html(rendered_locations);
+}
+
+var setupLocationsForm = function(locations) {
+  /* ON LOAD. Add some nicer error handling here at some point... */
+  
+  function isADM1(location) {
+    return location["feature_code"] == "ADM1";
+  }
+  locations_adm1 = {"locations": locationsData["locations"].filter(isADM1)}
+  
+  updateLocationsSelector(locations_adm1);
+  updateLocationsList(locations_adm1);
+};
+$(document).on("change", "#selectLocationType", function(e) {
+  var adm1 = this.value;
+  if (adm1 == "all") {
+    updateLocationsList(locationsData);
+  } else if (adm1 == "regions") {
+    function isRelevant(location) {
+        return location["feature_code"] == "ADM1";
+    }
+    var relevantLocations = {"locations": locationsData["locations"].filter(isRelevant) }
+    updateLocationsList(relevantLocations);
+  } else {
+    function isRelevant(location) {
+        return location["admin1_code"] == adm1;
+    }
+    var relevantLocations = {"locations": locationsData["locations"].filter(isRelevant) }
+    updateLocationsList(relevantLocations);
+  }
+});
+
+var locations_template;
+var locationsData;
+var setupLocations = function() {
+	$.getJSON(api_locations_url, function(data) {
+      locationsData = data;
+      setupLocationsForm(data);
+      locationsMap.resize();
+	});
+};
+$(document).on("click", ".deleteFinancial", function(e) {
+  e.preventDefault();
+  var data = {
+    "transaction_id": $(this).closest("tr").attr("data-financial-id"),
+    "action": "delete"
+  }
+  $.post(api_activity_finances_url, data, 
+    function(returndata){
+      if (returndata == 'False'){
+          alert("There was an error updating that financial data.");
+      } else {
+        $("tr#financial-" + data["transaction_id"]).fadeOut();
+      }
+    }
+  );
+});
+$(document).on("click", ".addFinancial", function(e) {
+  e.preventDefault();
+  var transaction_type = $(this).attr("data-transaction-type");
+  var data = {
+    "transaction_type": transaction_type,
+    "action": "add"
+  }
+  $.post(api_activity_finances_url, data, 
+    function(returndata){
+      if (returndata == 'False'){
+          alert("There was an error updating that financial data.");
+      } else {
+        var row_financial_template = $('#row-financial-template').html();
+        var data = {
+          "id": returndata,
+          "transaction_type": transaction_type
+        }
+      	var rendered_row = Mustache.render(row_financial_template, data);
+      	$('#financial-rows-' + transaction_type).append(rendered_row);
+      }
+    }
+  );
+});
+
+// FINANCES
+var updateFinances = function(finances) {
+  // Render finances template
+	var financial_template = $('#financial-template').html();
+	Mustache.parse(financial_template);   // optional, speeds up future uses
+  
+	partials = {"row-financial-template": $('#row-financial-template').html()};
+  
+  function isC(finance) {
+    return finance["transaction_type"] == "C";
+  } 
+  function isD(finance) {
+    return finance["transaction_type"] == "D";
+  }
+  finances_C = {"finances": financialData["finances"].filter(isC),
+                "transaction_type": "C"}
+  finances_D = {"finances": financialData["finances"].filter(isD),
+                "transaction_type": "D"}
+  
+	var rendered_C = Mustache.render(financial_template, finances_C, partials);
+	$('#financial-data-C').html(rendered_C);
+  
+	var rendered_D = Mustache.render(financial_template, finances_D, partials);
+	$('#financial-data-D').html(rendered_D);
+}
+
+var setupFinancesForm = function(finances) {
+  updateFinances(finances);
+};
+var financial_template;
+var financialData;
+var setupFinances = function() {
+	$.getJSON(api_activity_finances_url, function(data) {
+      financialData = data;
+      setupFinancesForm(data);
+	});
+};
+setupFinances()
+
+$(document).on("change", "#finances input[type=text]", function(e) {
+  var data = {
+    'finances_id': $(this).closest("tr").attr("data-financial-id"),
+    'attr': this.name,
+    'value': this.value,
+  }
+  var input = this;
+  resetFormGroup(input);
+  $.post(api_update_activity_finances_url, data, function(resultdata) {
+    successFormGroup(input);
+  }).fail(function(){
+    errorFormGroup(input);
+  });  
+});
+
+// We have to handle datetimepickers slightly differently from other form
+// inputs.
+$('#datetimepicker_start, #datetimepicker_end')
+.on("dp.change", function(e) {
+  var data = {
+    'attr': e.target.firstElementChild.name,
+    'value': e.target.firstElementChild.value,
+  }
+  var input = e.target.firstElementChild;
+  resetFormGroup(input);
+  $.post("update_activity/", data, function(resultdata) {
+    successFormGroup(input);
+  }).fail(function(){
+    errorFormGroup(input);
+  });  
 });
