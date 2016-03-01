@@ -5,8 +5,9 @@ from flask.ext.login import login_required, current_user
 from maediprojects import app
 from maediprojects import db
 import models
-from views import activities
+from views import activities, api, users
 from query import activity as qactivity
+from query import setup as qsetup
 
 @app.route("/")
 def dashboard():
@@ -15,11 +16,12 @@ def dashboard():
                 activities = qactivity.list_activities()
                           )
 
-@app.route("/setup")
+@app.route("/setup/")
 def setup():
-    db.create_all()
+    qsetup.setup()
     return "OK"
 
 @app.route("/setup/<country_code>/")
 def setup_country(country_code):
-    import zipfile
+    qsetup.import_locations(country_code)
+    return "OK"
