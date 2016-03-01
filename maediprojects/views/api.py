@@ -7,6 +7,7 @@ from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
+from maediprojects.query import codelists as qcodelists
 from maediprojects.lib import codelists
 import datetime, json
 
@@ -88,3 +89,33 @@ def api_locations(country_code):
             print i, location
     
     return jsonify(locations = locations)
+
+@app.route("/api/codelists/update/", methods=["POST"])
+@login_required
+def api_codelists_update():
+    # FIXME check for admin status
+    result = qcodelists.update_attr(request.form)
+    if result:
+        return "OK"
+    else:
+        return "ERROR"
+
+@app.route("/api/codelists/delete/", methods=["POST"])
+@login_required
+def api_codelists_delete():
+    # FIXME check for admin status
+    result = qcodelists.delete_code(request.form)
+    if result:
+        return "OK"
+    else:
+        return "ERROR"
+
+@app.route("/api/codelists/new/", methods=["POST"])
+@login_required
+def api_codelists_new():
+    # FIXME check for admin status
+    result = qcodelists.create_code(request.form)
+    if result:
+        return "OK"
+    else:
+        return "ERROR"
