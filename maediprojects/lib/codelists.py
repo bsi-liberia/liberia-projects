@@ -3,6 +3,10 @@ import os
 from maediprojects import app, db, models
 LANG = app.config["LANG"]
 
+def get_db_codelist_names():
+    codelists = models.Codelist.query.all()
+    return codelists
+
 def get_db_codelists():
     # Get codelist name
     # { codelist: cdata }
