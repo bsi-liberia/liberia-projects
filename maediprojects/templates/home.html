@@ -2,6 +2,10 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <h1>Projects</h1>
+<a class="btn btn-success btn-large pull-right" href="{{url_for('activity_new')}}">
+  <i class="glyphicon glyphicon-plus"></i> 
+  New project
+</a>
 <table class="table">
   <thead>
     <th>Title</th>
@@ -12,9 +16,10 @@
     {% for activity in activities %}
     <tr>
       <td>{{ activity.title }}</td>
-      <td>{{ activity.recipient_country_code }}</td>
+      <td>{{ activity.recipient_country.name }}</td>
       <td><a href="{{url_for('activity_edit', 
-            activity_id = activity.id)}}">
+            activity_id = activity.id)}}"
+            class="btn btn-default btn-xs">
             <span class="glyphicon glyphicon-pencil"></span>
           </a></td>
     </tr>
