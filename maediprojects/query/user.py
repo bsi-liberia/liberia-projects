@@ -46,10 +46,6 @@ def addUser(data):
                 ).first()
     if not checkU:
         newU = models.User()
-        # Only an admin user can add users
-        if not current_user.administrator:
-            flash("Sorry, only an administrator can add users", "danger")
-            return False
         newU.setup(
             username = data["username"],
             password = data.get('password'),
