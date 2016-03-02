@@ -34,6 +34,12 @@ def list_activities():
     acts = models.Activity.query.all()
     return acts
 
+def list_activities_by_country(recipient_country_code):
+    acts = models.Activity.query.filter_by(
+        recipient_country_code=recipient_country_code
+    ).all()
+    return acts
+
 def update_attr(data):
     activity = models.Activity.query.filter_by(
         id = data['id']
