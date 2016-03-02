@@ -36,7 +36,7 @@ var MAEDImap = function(elID) {
         maxZoom: 15, attribution: 'MapBox Streets'
     })
     map = new L.Map(elID, {
-        center: new L.LatLng(18,-2),
+        center: new L.LatLng(8,1),
         zoom: 5,
         maxZoom: 15
     });
@@ -46,6 +46,10 @@ var MAEDImap = function(elID) {
   
   this.resize = function() {
     map.invalidateSize();
+  }
+
+  this.fitBounds = function(bounds) {
+    map.fitBounds(bounds);
   }
 
   function getPopupContent(data) {
