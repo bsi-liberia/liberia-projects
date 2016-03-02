@@ -1,0 +1,40 @@
+{
+    "ActivityDateType": {
+        "start": {
+            "planned": "1",
+            "actual": "2"
+        },
+        "end": {
+            "planned": "3",
+            "actual" : "4"
+        }
+    },
+    "TransactionType": {
+        "IF": "1",
+        "C": "2",
+        "D": "3",
+        "E": "4"
+    },
+    "OrganisationRole": {
+        "Funding": "1",
+        "Accountable": "2",
+        "Extending": "3",
+        "Implementing": "4"
+    },
+    "1.03": {
+      "ActivityDateType": {
+          "start": {
+              "planned": "start-planned",
+              "actual": "start-actual"
+          },
+          "end": {
+              "planned": "end-planned",
+              "actual" : "end-actual"
+          }
+      },
+      "TransactionType": {
+        "C": "Commitment",
+        "D": "Disbursement"
+      }
+    }
+}
