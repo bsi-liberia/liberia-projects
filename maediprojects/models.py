@@ -1,3 +1,4 @@
+from sqlalchemy.ext.hybrid import hybrid_property
 import sqlalchemy as sa
 import functools as ft
 from maediprojects import db
@@ -122,7 +123,12 @@ class Activity(db.Model):
     description = sa.Column(sa.UnicodeText)
     start_date = sa.Column(sa.Date)
     end_date = sa.Column(sa.Date)
-    executing_org = sa.Column(sa.UnicodeText) # ADDED
+    executing_org = sa.Column(
+            act_ForeignKey('codelistcode.code'),
+            nullable=False,
+            index=True)
+    executing_org_name = sa.orm.relationship("CodelistCode",
+            foreign_keys=[executing_org])
     implementing_org = sa.Column(sa.UnicodeText) # ADDED
     recipient_country_code = sa.Column(
             act_ForeignKey('country.code'),
@@ -143,6 +149,13 @@ class Activity(db.Model):
     results = cascade_relationship("ActivityResult")
     locations = cascade_relationship("ActivityLocation")
     finances = cascade_relationship("ActivityFinances")
+
+    @hybrid_property
+    def commitments(self):
+        return ActivityFinances.query.filter_by(transaction_type="C").all()
+    @hybrid_property
+    def disbursements(self):
+        return ActivityFinances.query.filter_by(transaction_type="D").all()
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -181,6 +194,7 @@ class ActivityFinances(db.Model):
 class Location(db.Model):
     __tablename__ = 'location'
     id = sa.Column(sa.Integer, primary_key=True)
+    geonames_id = sa.Column(sa.Integer)
     country = sa.Column(
             act_ForeignKey('country.code'),
             nullable=False,
