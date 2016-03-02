@@ -88,6 +88,7 @@ def import_locations(country_code):
     for row in csv:
         if row["feature_code"] in ALLOWED_FEATURE_CODES:
             location = models.Location()
+            location.geonames_id = row["geonameid"]
             location.country = country_code
             location.name = row["name"]
             location.latitude = row["latitude"]
