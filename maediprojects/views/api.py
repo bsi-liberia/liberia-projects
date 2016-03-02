@@ -87,7 +87,6 @@ def api_locations(country_code):
     for i, location in enumerate(locations):
         if location["feature_code"] == "ADM2":
             locations[i]["name"] = " - %s" % location["name"]
-            print i, location
     
     return jsonify(locations = locations)
 
