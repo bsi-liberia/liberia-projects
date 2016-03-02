@@ -189,7 +189,19 @@ var setupLocations = function() {
 	$.getJSON(api_locations_url, function(data) {
       locationsData = data;
       setupLocationsForm(data);
+      function getLats(location) {
+        return parseFloat(location["latitude"]);
+      }
+      function getLongs(location) {
+        return parseFloat(location["longitude"]);
+      }
+      var lats = data["locations"].map(getLats);
+      var longs = data["locations"].map(getLongs);
       locationsMap.resize();
+      locationsMap.fitBounds([
+          [Math.min.apply(null, lats), Math.min.apply(null, longs)],
+          [Math.max.apply(null, lats), Math.max.apply(null, longs)]
+      ]);
 	});
 };
 $(document).on("click", ".deleteFinancial", function(e) {
