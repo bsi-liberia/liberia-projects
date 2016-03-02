@@ -11,6 +11,10 @@
       role="tab" data-toggle="tab" id="{{ codelist.code }}Tab">{{ codelist.name }}</a>
     </li>
     {% endfor %}
+    <li role="presentation">
+      <a href="#locations" aria-controls="locations" 
+      role="tab" data-toggle="tab" id="locationsTab">Locations</a>
+    </li>
   </ul>
   <div class="tab-content">
     {% for codelist in codelist_names %}
@@ -55,6 +59,46 @@
       </a>
     </div>
     {% endfor %}
+    <div role="tabpanel" class="tab-pane" id="locations">
+      <h3>Locations</h3>
+      <p class="lead">Locations are available for the following countries:</p>
+      <table class="table" 
+        data-codelist="locations"
+        id="table-locations">
+        <thead>
+          <th>Country</th>
+        </thead>
+        <tbody>
+          {% for country in countries_locations %}
+          <tr>
+            <td>{{ country.country.name }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <h3>Add locations for a new country</h3>
+      <p class="lead">Locations are automatically imported from 
+        <a href="http://geonames.org">GeoNames.org</a>. Select a country
+        below to download, import and setup locations for a new country.</p>
+      <form class="form-horizontal" action="import_locations/" method="POST">
+        <div class="form-group">
+          <label for="inputLocationsCountry" class="col-sm-2 control-label">Country</label>
+          <div class="col-sm-10">
+            <select class="form-control" name="country">
+              <option>Select one...</option>
+              {% for country in countries %}
+              <option value="{{ country.code }}">{{ country.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-default">Import locations</button>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
