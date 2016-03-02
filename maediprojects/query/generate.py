@@ -162,7 +162,7 @@ def el_location(location):
 def el_location_103(location):
     el = et.Element("location")
 
-    location_type = et.Element("location_type")
+    location_type = et.Element("location-type")
     el.append(location_type)
     location_type.set("code", "ADMD")
 
@@ -293,8 +293,8 @@ def build_activity_103(doc, activity):
     ia.append(el_org_103("reporting", o_name, o_ref, o_type))
     
     # Title, Description
-    ia.append(el_with_narrative("title", activity.title))
-    ia.append(el_with_narrative("description", activity.description))
+    ia.append(el_with_text("title", activity.title))
+    ia.append(el_with_text("description", activity.description))
     
     # Participating orgs
     ia.append(el_org_103("Funding", app.config["ORGANISATION"]["organisation_name"], 
@@ -347,7 +347,7 @@ def build_activity_103(doc, activity):
 
     # Transactions
     for transaction in activity.finances:
-        doc.append(build_transaction_103(transaction.as_dict()))
+        ia.append(build_transaction_103(transaction.as_dict()))
     
     if not activity.commitments:
         transaction = { "id": "%s-C" % activity.id,
@@ -356,7 +356,7 @@ def build_activity_103(doc, activity):
                         "transaction_description": "Total commitments",
                         "transaction_type": "C"
                         }
-        doc.append(build_transaction_103(transaction))
+        ia.append(build_transaction_103(transaction))
     
     if not activity.disbursements:
         transaction = { "id": "%s-D" % activity.id,
@@ -365,7 +365,7 @@ def build_activity_103(doc, activity):
                         "transaction_description": "Total disbursements",
                         "transaction_type": "D"
                         }
-        doc.append(build_transaction_103(transaction))
+        ia.append(build_transaction_103(transaction))
 
     return doc
     
@@ -421,14 +421,14 @@ def build_activity(doc, activity):
     ia.append(el_with_code("sector", activity.dac_sector, "1"))
 
     ia.append(el_with_code("collaboration-type", activity.collaboration_type))
-    ia.append(el_with_code("default-finance-type", activity.finance_type))
     ia.append(el_with_code("default-flow-type", activity.flow_type))
+    ia.append(el_with_code("default-finance-type", activity.finance_type))
     ia.append(el_with_code("default-aid-type", activity.aid_type))
     ia.append(el_with_code("default-tied-status", activity.tied_status))
 
     # Transactions
     for transaction in activity.finances:
-        doc.append(build_transaction(transaction.as_dict()))
+        ia.append(build_transaction(transaction.as_dict()))
 
     if not activity.commitments:
         transaction = { "id": "%s-C" % activity.id,
@@ -437,7 +437,7 @@ def build_activity(doc, activity):
                         "transaction_description": "Total commitments",
                         "transaction_type": "C"
                         }
-        doc.append(build_transaction(transaction))
+        ia.append(build_transaction(transaction))
     
     if not activity.disbursements:
         transaction = { "id": "%s-D" % activity.id,
@@ -446,7 +446,7 @@ def build_activity(doc, activity):
                         "transaction_description": "Total disbursements",
                         "transaction_type": "D"
                         }
-        doc.append(build_transaction(transaction))
+        ia.append(build_transaction(transaction))
 
     return doc
 
