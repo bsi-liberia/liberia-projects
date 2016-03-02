@@ -37,3 +37,12 @@ def get_codelists():
             out[cl_name].append({"code": row["code"], "name": row["name_%s" % LANG]})
     out.update(get_db_codelists())
     return out
+
+def get_codelists_lookups():
+    codelists = {}
+    in_codelists = get_codelists()
+    for cl, cl_items in in_codelists.items():
+        codelists[cl] = {}
+        for cl_item in cl_items:
+            codelists[cl][cl_item["code"]] = cl_item["name"]
+    return codelists
