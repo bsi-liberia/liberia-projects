@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 from maediprojects import app, db, models
 from maediprojects.lib import codelists
 from maediprojects.query import user as quser
@@ -47,13 +49,41 @@ def create_codes_codelists():
             {
                 "code": "FR-6",
                 "name": "AFD"
+            },
+            {
+                "code": "FR-99",
+                "name": u"Service de Coopération et d'Action Culturelle"
             }
         ],
         "CICID sectors": [
             {
                 "code": "1",
-                "name": "Education"
-            }
+                "name": u"Santé"
+            },
+            {
+                "code": "2",
+                "name": u"Éducation et formation professionnelle"
+            },
+            {
+                "code": "3",
+                "name": u"Agriculture et sécurité alimentaire"
+            },
+            {
+                "code": "4",
+                "name": u"Développement durable"
+            },
+            {
+                "code": "5",
+                "name": u"Soutien à la croissance"
+            },
+            {
+                "code": "6",
+                "name": u"Gouvernement et société civile"
+            },
+            {
+                "code": "7",
+                "name": u"Autre"
+            },            
         ]
     }
     
