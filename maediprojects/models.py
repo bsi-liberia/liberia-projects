@@ -195,10 +195,11 @@ class Location(db.Model):
     __tablename__ = 'location'
     id = sa.Column(sa.Integer, primary_key=True)
     geonames_id = sa.Column(sa.Integer)
-    country = sa.Column(
+    country_code = sa.Column(
             act_ForeignKey('country.code'),
             nullable=False,
             index=True)
+    country = sa.orm.relationship("Country")
     name = sa.Column(sa.UnicodeText)
     latitude = sa.Column(sa.UnicodeText)
     longitude = sa.Column(sa.UnicodeText)
