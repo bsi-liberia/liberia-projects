@@ -8,6 +8,7 @@ from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
 from maediprojects.query import codelists as qcodelists
+from maediprojects.query import generate as qgenerate
 from maediprojects.lib import codelists
 import datetime, json
 
@@ -119,3 +120,14 @@ def api_codelists_new():
         return "OK"
     else:
         return "ERROR"
+
+@app.route("/api/iati/<version>/<country_code>.xml")
+def generate_iati_xml(version, country_code):
+    if version == "1.03":
+        xml = qgenerate.generate_103(country_code)
+        return Response(xml, mimetype='text/xml')
+    elif version == "2.01":
+        xml = qgenerate.generate_201(country_code)
+        return Response(xml, mimetype='text/xml')
+
+    return "ERROR: UNKNOWN VERSION"
