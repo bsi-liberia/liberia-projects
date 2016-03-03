@@ -1,55 +1,55 @@
 {% set active_page='activity' %}{% extends "layout.html" %}
-{% block title %}Edit activity{% endblock %}
+{% block title %}{{ _('Edit activity') }}{% endblock %}
 {% block content %}
 <style>
   .table span.form-control-feedback {
     top: 0;
   }
 </style>
-<h1>Edit activity</h1>
+<h1>{{ _('Edit activity') }}</h1>
 <a class="btn btn-success btn-large pull-right" href="{{ url_for('dashboard') }}">
   <i class="glyphicon glyphicon-floppy-disk"></i> 
-  Save and exit project
+  {{ _('Save and exit project') }}
 </a>
 <div role="tabpanel">
   <ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active"><a href="#basic" aria-controls="basic" role="tab" data-toggle="tab">Basic</a></li>
+    <li role="presentation" class="active"><a href="#basic" aria-controls="basic" role="tab" data-toggle="tab">{{ _('Basic') }}</a></li>
     {% if activity.id %}
-    <li role="presentation"><a href="#location" aria-controls="location" role="tab" data-toggle="tab" id="locationTab">Location data</a></li>
-    <li role="presentation"><a href="#finances" aria-controls="finances" role="tab" data-toggle="tab" id="financesTab">Financial data</a></li>
+    <li role="presentation"><a href="#location" aria-controls="location" role="tab" data-toggle="tab" id="locationTab">{{ _('Location data') }}</a></li>
+    <li role="presentation"><a href="#finances" aria-controls="finances" role="tab" data-toggle="tab" id="financesTab">{{ _('Financial data') }}</a></li>
     {% endif %}
    <!-- <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">Results</a></li>-->
   </ul>
   <div class="tab-content">
     <div role="tabpanel" class="tab-pane active" id="basic">
-      <h2>Basic data</h2>
+      <h2>{{ _('Basic data') }}</h2>
       <form class="form-horizontal" id="activity-form" method="POST">
         <div class="form-group">
-          <label for="code" class="col-sm-2 control-label">Project code</label>
+          <label for="code" class="col-sm-2 control-label">{{ _('Project code') }}</label>
           <div class="col-sm-10">
             <input type="text" name="code" id="code"
             value="{{ activity.code }}" class="form-control" placeholder="If known">
           </div>
         </div>
         <div class="form-group">
-          <label for="title" class="col-sm-2 control-label">Title</label>
+          <label for="title" class="col-sm-2 control-label">{{ _('Title') }}</label>
           <div class="col-sm-10">
             <input type="text" name="title" id="title"
             value="{{ activity.title }}" class="form-control">
           </div>
         </div>
         <div class="form-group">
-          <label for="description" class="col-sm-2 control-label">Description</label>
+          <label for="description" class="col-sm-2 control-label">{{ _('Description') }}</label>
           <div class="col-sm-10">
             <textarea name="description" id="description" 
             class="form-control" rows="2">{{ activity.description }}</textarea>
           </div>
         </div>
         <div class="form-group select-fg">
-          <label for="executing_org" class="col-sm-2 control-label">Executing organisation</label>
+          <label for="executing_org" class="col-sm-2 control-label">{{ _('Executing organisation') }}</label>
           <div class="col-sm-10">
             <select name="executing_org" id="executing_org" class="form-control">
-              <option value="">Select one...</option>
+              <option value="">{{ _('Select one...') }}</option>
               {% for ds in codelists["extending-organisation"] %}
               <option value="{{ ds.code }}"{% if ds.code == activity.executing_org %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
               {% endfor %}
@@ -57,19 +57,19 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="implementing_org" class="col-sm-2 control-label">Implementing organisation</label>
+          <label for="implementing_org" class="col-sm-2 control-label">{{ _('Implementing organisation') }}</label>
           <div class="col-sm-10">
             <input type="text" name="implementing_org" id="implementing_org"
             value="{{ activity.implementing_org }}" class="form-control">
           </div>
         </div>
         <div class="form-group input-fg">
-          <label for="start_date" class="col-sm-2 control-label">Start date</label>
+          <label for="start_date" class="col-sm-2 control-label">{{ _('Start date') }}</label>
           <div class="col-sm-10">
             <div class='input-group date' id='datetimepicker_start'>
                 <input type="text" name="start_date" id="start_date"
                 value="{{ activity.start_date }}" class="form-control"
-                placeholder="yyyy-mm-dd">
+                placeholder="{{ _('yyyy-mm-dd') }}">
                 <span class="input-group-addon">
                     <span class="glyphicon glyphicon-calendar"></span>
                 </span>
@@ -77,12 +77,12 @@
           </div>
         </div>
         <div class="form-group input-fg">
-          <label for="end_date" class="col-sm-2 control-label">End date</label>
+          <label for="end_date" class="col-sm-2 control-label">{{ _('End date') }}</label>
           <div class="col-sm-10">
             <div class='input-group date' id='datetimepicker_end'>
                 <input type="text" name="end_date" id="end_date"
                 value="{{ activity.end_date }}" class="form-control"
-                placeholder="yyyy-mm-dd">
+                placeholder="{{ _('yyyy-mm-dd') }}">
                 <span class="input-group-addon">
                     <span class="glyphicon glyphicon-calendar"></span>
                 </span>
@@ -90,10 +90,10 @@
           </div>
         </div>
         <div class="form-group select-fg">
-          <label for="dac_sector" class="col-sm-2 control-label">DAC Sector</label>
+          <label for="dac_sector" class="col-sm-2 control-label">{{ _('DAC Sector') }}</label>
           <div class="col-sm-10">
             <select name="dac_sector" id="dac_sector" class="form-control">
-              <option value="">Select one...</option>
+              <option value="">{{ _('Select one...') }}</option>
               {% for ds in codelists.Sector %}
               <option value="{{ ds.code }}"{% if ds.code == activity.dac_sector %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
               {% endfor %}
@@ -101,10 +101,10 @@
           </div>
         </div>
         <div class="form-group select-fg">
-          <label for="cicid_sector" class="col-sm-2 control-label">CICID Sector</label>
+          <label for="cicid_sector" class="col-sm-2 control-label">{{ _('CICID Sector') }}</label>
           <div class="col-sm-10">
             <select name="cicid_sector" id="cicid_sector" class="form-control">
-              <option value="">Select one...</option>
+              <option value="">{{ _('Select one...') }}</option>
               {% for ds in codelists["cicid-sectors"] %}
               <option value="{{ ds.code }}"{% if ds.code == activity.cicid_sector %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
               {% endfor %}
@@ -113,10 +113,10 @@
         </div>
         <div class="form-group select-fg">
           <label for="activity_status" class="col-sm-2 
-          control-label">Activity Status</label>
+          control-label">{{ _('Activity Status') }}</label>
           <div class="col-sm-10">
             <select name="activity_status" id="activity_status" class="form-control">
-              <option value="">Select one...</option>
+              <option value="">{{ _('Select one...') }}</option>
               {% for ds in codelists.ActivityStatus %}
               <option value="{{ ds.code }}"{% if ds.code == activity.activity_status %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
               {% endfor %}
@@ -125,7 +125,7 @@
         </div>
         <div class="form-group">
           <label for="total_commitments" class="col-sm-2 
-          control-label">Total commitments</label>
+          control-label">{{ _('Total commitments') }}</label>
           <div class="col-sm-10">
             <div class="input-group">
               <div class="input-group-addon">EUR</div>
@@ -137,7 +137,7 @@
         </div>
         <div class="form-group">
           <label for="total_disbursements" class="col-sm-2 
-          control-label">Total disbursements</label>
+          control-label">{{ _('Total disbursements') }}</label>
           <div class="col-sm-10">
             <div class="input-group">
               <div class="input-group-addon">EUR</div>
@@ -156,7 +156,7 @@
                 data-target="#detailed"
                 href="#detailed" aria-expanded="false"
                 aria-controls="detailed">
-                  Adjust default settings
+                  {{ _('Adjust default settings') }}
                 </a>
               </h4>
             </div>
@@ -164,10 +164,10 @@
               <div class="panel-body">
                 
                 <div class="form-group select-fg">
-                  <label for="flow_type" class="col-sm-2 control-label">Flow type</label>
+                  <label for="flow_type" class="col-sm-2 control-label">{{ _('Flow type') }}</label>
                   <div class="col-sm-10">                    
                     <select name="flow_type" id="flow_type" class="form-control">
-                      <option value="">Select one...</option>
+                      <option value="">{{ _('Select one...') }}</option>
                       {% for ft in codelists.FlowType %}
                       <option value="{{ ft.code }}"{% if ft.code == activity.flow_type %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
                       {% endfor %}
@@ -175,10 +175,10 @@
                   </div>
                 </div>
                 <div class="form-group select-fg">
-                  <label for="aid_type" class="col-sm-2 control-label">Aid Type</label>
+                  <label for="aid_type" class="col-sm-2 control-label">{{ _('Aid Type') }}</label>
                   <div class="col-sm-10">
                     <select name="aid_type" id="aid_type" class="form-control">
-                      <option value="">Select one...</option>
+                      <option value="">{{ _('Select one...') }}</option>
                       {% for at in codelists.AidType %}
                       <option value="{{ at.code }}"{% if at.code == activity.aid_type %} selected{% endif %}>{{ at.code }} &ndash; {{ at.name }}</option>
                       {% endfor %}
@@ -186,10 +186,10 @@
                   </div>
                 </div>
                 <div class="form-group select-fg">
-                  <label for="collaboration_type" class="col-sm-2 control-label">Collaboration Type</label>
+                  <label for="collaboration_type" class="col-sm-2 control-label">{{ _('Collaboration Type') }}</label>
                   <div class="col-sm-10">
                     <select name="collaboration_type" id="collaboration_type" class="form-control">
-                      <option value="">Select one...</option>
+                      <option value="">{{ _('Select one...') }}</option>
                       {% for ct in codelists.CollaborationType %}
                       <option value="{{ ct.code }}"{% if ct.code == activity.collaboration_type %} selected{% endif %}>{{ ct.code }} &ndash; {{ ct.name }}</option>
                       {% endfor %}
@@ -197,10 +197,10 @@
                   </div>
                 </div>
                 <div class="form-group select-fg">
-                  <label for="finance_type" class="col-sm-2 control-label">Finance Type</label>
+                  <label for="finance_type" class="col-sm-2 control-label">{{ _('Finance Type') }}</label>
                   <div class="col-sm-10">
                     <select name="finance_type" id="finance_type" class="form-control">
-                      <option value="">Select one...</option>
+                      <option value="">{{ _('Select one...') }}</option>
                       {% for ft in codelists.FinanceType %}
                       <option value="{{ ft.code }}"{% if ft.code == activity.finance_type %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
                       {% endfor %}
@@ -208,10 +208,10 @@
                   </div>
                 </div>
                 <div class="form-group select-fg">
-                  <label for="tied_status" class="col-sm-2 control-label">Tied Status</label>
+                  <label for="tied_status" class="col-sm-2 control-label">{{ _('Tied Status') }}</label>
                   <div class="col-sm-10">
                     <select name="tied_status" id="tied_status" class="form-control">
-                      <option value="">Select one...</option>
+                      <option value="">{{ _('Select one...') }}</option>
                       {% for ft in codelists.TiedStatus %}
                       <option value="{{ ft.code }}"{% if ft.code == activity.tied_status %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
                       {% endfor %}
@@ -220,10 +220,10 @@
                 </div>
                 <div class="form-group select-fg">
                   <label for="recipient_country_code" class="col-sm-2 
-                  control-label">Recipient Country</label>
+                  control-label">{{ _('Recipient Country') }}</label>
                   <div class="col-sm-10">
                     <select name="recipient_country_code" id="recipient_country_code" class="form-control">
-                      <option value="">Select one...</option>
+                      <option value="">{{ _('Select one...') }}</option>
                       {% for ft in codelists.Country %}
                       <option value="{{ ft.code }}"{% if ft.code == activity.recipient_country_code %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
                       {% endfor %}
@@ -236,7 +236,7 @@
         </div>
         {% if not activity.id %}
         <button type="submit" class="btn btn-success" id="add-activity-btn">
-          Add activity; add detailed data &raquo;</button>
+          {{ _('Add activity; add detailed data &raquo;') }}</button>
         {% endif %}
       </form>
     </div>
@@ -248,12 +248,12 @@
       <div class="form-horizontal">
         <div class="form-group">
           <label for="selectLocationType" 
-          class="col-sm-3 control-label">Display:</label>
+          class="col-sm-3 control-label">{% endraw %}{{ _('Display:') }}{% raw %}</label>
           <div class="col-sm-9">
             <select class="form-control" name="selectLocationType"
             id="selectLocationType">
-              <option value="all">All locations</option>
-              <option value="regions" selected>Regions</option>
+              <option value="all">{% endraw %}{{ _('All locations') }}{% raw %}</option>
+              <option value="regions" selected>{% endraw %}{{ _('Regions') }}{% raw %}</option>
               {{# locations }}
                 <option value="{{ admin1_code }}">
                 &nbsp; {{ name }}</option>
@@ -273,15 +273,11 @@
         {{/ locations }}
         {{^ locations }}
           <a href="#" class="list-group-item"><b><i class="glyphicon 
-        glyphicon-exclamation-sign"></i> No available locations found! You 
-        can try the following:</b>
+        glyphicon-exclamation-sign"></i>{% endraw %}{{ _('No available locations found! You can try the following:') }}{% raw %}</b>
         <ul>
-          <li>check you specified the correct country for this project (on 
-      the "Basic" tab, under "Adjust default settings" at the bottom of 
-      the page)</li>
-          <li>reload the page</li>
-          <li>ask MAEDI to confirm locations have been set up for your
-      country.</li>
+          <li>{% endraw %}{{ _('check you specified the correct country for this project (on the "Basic" tab, under "Adjust default settings" at the bottom of the page)') }}{% raw %}</li>
+          <li>{% endraw %}{{ _('reload the page') }}{% raw %}</li>
+          <li>{% endraw %}{{ _('ask MAEDI to confirm locations have been set up for your country.') }}{% raw %}</li>
         </ul></a>
         {{/ locations }}
       </div>
@@ -290,9 +286,9 @@
     <script id="financial-template" type="x-tmpl-mustache">
       <table class="table">
         <thead>
-          <th>Date</th>
-          <th>Value</th>
-          <th>Description</th>
+          <th>{% endraw %}{{ _('Date') }}{% raw %}</th>
+          <th>{% endraw %}{{ _('Value') }}{% raw %}</th>
+          <th>{% endraw %}{{ _('Description') }}{% raw %}</th>
           <th></th>
         </thead>
         <tbody id="financial-rows-{{ transaction_type }}">
@@ -307,7 +303,7 @@
         <td>
           <div class="form-group">
             <input type="text" class="form-control transaction-date" 
-            name="transaction_date" placeholder="yyyy-mm-dd"
+            name="transaction_date" placeholder="{% endraw %}{{ _('yyyy-mm-dd') }}{% raw %}"
             value="{{ transaction_date }}">
           </div>
         </td>
@@ -334,7 +330,7 @@
 
     <!-- Location data -->
     <div role="tabpanel" class="tab-pane" id="location">
-      <h2>Location data</h2>
+      <h2>{{ _('Location data') }}</h2>
       <div class="row">
         <div class="col-sm-4">
           <div id="locations-selector"></div>
@@ -348,25 +344,25 @@
 
     <!-- Financial data -->
     <div role="tabpanel" class="tab-pane" id="finances">
-      <h2>Financial data</h2>
+      <h2>{{ _('Financial data') }}</h2>
       <div class="row">
         <div class="col-sm-12">
-          <h3>Commitments</h3>
+          <h3>{{ _('Commitments') }}</h3>
           <a class="btn btn-success btn-large pull-right addFinancial"
           data-transaction-type="C">
             <i class="glyphicon glyphicon-plus"></i> 
-            Add commitment
+            {{ _('Add commitment') }}
           </a>
           <div id="financial-data-C"></div>
         </div>
       </div>
       <div class="row">
         <div class="col-sm-12">
-          <h3>Disbursements</h3>
+          <h3>{{ _('Disbursements') }}</h3>
           <a class="btn btn-success btn-large pull-right addFinancial"
           data-transaction-type="D">
             <i class="glyphicon glyphicon-plus"></i> 
-            Add disbursement
+            {{ _('Add disbursement') }}
           </a>
           <div id="financial-data-D"></div>
         </div>

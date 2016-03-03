@@ -1,16 +1,16 @@
 {% set active_page='dashboard' %}{% extends "layout.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}{{ _('Dashboard') }}{% endblock %}
 {% block content %}
-<h1>Projects</h1>
+<h1>{{ _('Projects') }}</h1>
 <a class="btn btn-success btn-large pull-right" href="{{url_for('activity_new')}}">
   <i class="glyphicon glyphicon-plus"></i> 
-  New project
+  {{ _('New project') }}
 </a>
 <table class="table">
   <thead>
-    <th>Title</th>
-    <th>Country</th>
-    <th>Edit</th>
+    <th>{{ _('Title') }}</th>
+    <th>{{ _('Country') }}</th>
+    <th>{{ _('Edit') }}</th>
   </thead>
   <tbody>
     {% for activity in activities %}

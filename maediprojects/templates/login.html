@@ -1,24 +1,24 @@
 {% set active_page='login' %}{% extends "layout.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}{{ _('Login') }}{% endblock %}
 {% block content %}
-    <h1>Login</h1>
-    <p class="lead">Please log in to access this area.</p>
+    <h1>{{ _('Login') }}</h1>
+    <p class="lead">{{ _('Please log in to access this area.') }}</p>
     <form method="POST" class="form-horizontal">
       <div class="form-group">
-        <label class="col-sm-2 control-label" for="username">Username</label>
+        <label class="col-sm-2 control-label" for="username">{{ _('Username') }}</label>
         <div class="col-sm-10">
             <input type="text" class="form-control" name="username" id="username"/>
         </div>
       </div>
       <div class="form-group">
-        <label class="col-sm-2 control-label" for="password">Password</label>
+        <label class="col-sm-2 control-label" for="password">{{ _('Password') }}</label>
         <div class="col-sm-10">
             <input type="password" class="form-control" name="password" id="password"/>
         </div>
       </div>
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-            <input type="submit" value="Log in" class="btn btn-default"/>
+            <input type="submit" value="{{ _('Log in') }}" class="btn btn-default"/>
         </div>
       </div>
     </form>

@@ -25,23 +25,14 @@
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
+            <span class="sr-only">{{ _('Toggle navigation') }}</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{{url_for('dashboard')}}">MAEDI projects site</a>
+          <a class="navbar-brand" href="{{url_for('dashboard')}}">{{ _('MAEDI projects database') }}</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
-        {% if organisation %}
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="{{url_for('organisation_dashboard', 
-              organisation_slug=organisation.organisation_slug )}}">
-              {{ organisation.organisation_name }}</a></li>
-            <li><a href="{{url_for('organisation_edit', 
-              organisation_slug=organisation.organisation_slug )}}">Edit organisation data</a></li>
-          </ul>
-          {% endif %}
           {% if loggedinuser.username %}
           <ul class="nav navbar-nav navbar-right">
             <li class="dropdown">
@@ -51,16 +42,16 @@
               </a>
               <ul class="dropdown-menu">
                 {% if loggedinuser.administrator %}
-                <li><a href="{{ url_for('codelists_management') }}">Manage codelists</a></li>
-                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('codelists_management') }}">{{ _('Manage codelists') }}</a></li>
+                <li><a href="{{ url_for('users') }}">{{ _('Users') }}</a></li>
                 {% endif %}
-                <li><a href="{{ url_for('logout')}} ">Logout</a></li>
+                <li><a href="{{ url_for('logout')}} ">{{ _('Logout') }}</a></li>
               </ul>
             </li>
           </ul>
           {% else %}
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="{{ url_for('login')}} ">Login</a></li>
+            <li><a href="{{ url_for('login')}} ">{{ _('Login') }}</a></li>
           </ul>
           {% endif %}
         </div><!--/.nav-collapse -->
