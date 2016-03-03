@@ -1,0 +1,436 @@
+# French translations for PROJECT.
+# Copyright (C) 2016 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2016.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2016-03-03 13:03+0100\n"
+"PO-Revision-Date: 2016-03-03 13:06+0100\n"
+"Last-Translator: \n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.2.0\n"
+"X-Generator: Poedit 1.7.5\n"
+
+#: maediprojects/templates/activity_edit.html:2
+#: maediprojects/templates/activity_edit.html:9
+msgid "Edit activity"
+msgstr "Modifier projet"
+
+#: maediprojects/templates/activity_edit.html:12
+msgid "Save and exit project"
+msgstr "Sauvegarder et quitter"
+
+#: maediprojects/templates/activity_edit.html:16
+msgid "Basic"
+msgstr "Les basiques"
+
+#: maediprojects/templates/activity_edit.html:18
+#: maediprojects/templates/activity_edit.html:333
+msgid "Location data"
+msgstr "Localisation"
+
+#: maediprojects/templates/activity_edit.html:19
+#: maediprojects/templates/activity_edit.html:347
+msgid "Financial data"
+msgstr "Finances"
+
+#: maediprojects/templates/activity_edit.html:25
+msgid "Basic data"
+msgstr "Les basiques"
+
+#: maediprojects/templates/activity_edit.html:28
+msgid "Project code"
+msgstr "Code de projet"
+
+#: maediprojects/templates/activity_edit.html:35
+#: maediprojects/templates/home.html:11
+msgid "Title"
+msgstr "Titre"
+
+#: maediprojects/templates/activity_edit.html:42
+#: maediprojects/templates/activity_edit.html:291
+msgid "Description"
+msgstr "Description"
+
+#: maediprojects/templates/activity_edit.html:49
+msgid "Executing organisation"
+msgstr "Opérateur"
+
+#: maediprojects/templates/activity_edit.html:52
+#: maediprojects/templates/activity_edit.html:96
+#: maediprojects/templates/activity_edit.html:107
+#: maediprojects/templates/activity_edit.html:119
+#: maediprojects/templates/activity_edit.html:170
+#: maediprojects/templates/activity_edit.html:181
+#: maediprojects/templates/activity_edit.html:192
+#: maediprojects/templates/activity_edit.html:203
+#: maediprojects/templates/activity_edit.html:214
+#: maediprojects/templates/activity_edit.html:226
+#: maediprojects/templates/codelists.html:86
+#: maediprojects/templates/user.html:39
+msgid "Select one..."
+msgstr "Sélectionnez un..."
+
+#: maediprojects/templates/activity_edit.html:60
+msgid "Implementing organisation"
+msgstr "Bénéficiaire"
+
+#: maediprojects/templates/activity_edit.html:67
+msgid "Start date"
+msgstr "Date de début"
+
+#: maediprojects/templates/activity_edit.html:72
+#: maediprojects/templates/activity_edit.html:85
+#: maediprojects/templates/activity_edit.html:306
+msgid "yyyy-mm-dd"
+msgstr "aaaa-mm-jj"
+
+#: maediprojects/templates/activity_edit.html:80
+msgid "End date"
+msgstr "Date de fin"
+
+#: maediprojects/templates/activity_edit.html:93
+msgid "DAC Sector"
+msgstr "Secteur CAD"
+
+#: maediprojects/templates/activity_edit.html:104
+msgid "CICID Sector"
+msgstr "Secteur CICID"
+
+#: maediprojects/templates/activity_edit.html:116
+msgid "Activity Status"
+msgstr "Statut de l'activité"
+
+#: maediprojects/templates/activity_edit.html:128
+msgid "Total commitments"
+msgstr "Total des engagements"
+
+#: maediprojects/templates/activity_edit.html:140
+msgid "Total disbursements"
+msgstr "Total des versements"
+
+#: maediprojects/templates/activity_edit.html:159
+msgid "Adjust default settings"
+msgstr "Régler d'autres paramètres"
+
+#: maediprojects/templates/activity_edit.html:167
+msgid "Flow type"
+msgstr "Type de flux"
+
+#: maediprojects/templates/activity_edit.html:178
+msgid "Aid Type"
+msgstr "Type d'aide"
+
+#: maediprojects/templates/activity_edit.html:189
+msgid "Collaboration Type"
+msgstr "Type de collaboration"
+
+#: maediprojects/templates/activity_edit.html:200
+msgid "Finance Type"
+msgstr "Type de financement"
+
+#: maediprojects/templates/activity_edit.html:211
+msgid "Tied Status"
+msgstr "Degré de liaison"
+
+#: maediprojects/templates/activity_edit.html:223
+msgid "Recipient Country"
+msgstr "Pays bénéficiaire"
+
+#: maediprojects/templates/activity_edit.html:239
+msgid "Add activity; add detailed data &raquo;"
+msgstr "Enregistrer l'activité; ajouter des données détaillées &raquo;"
+
+#: maediprojects/templates/activity_edit.html:251
+msgid "Display:"
+msgstr "Voir:"
+
+#: maediprojects/templates/activity_edit.html:255
+msgid "All locations"
+msgstr "Toutes les localisations"
+
+#: maediprojects/templates/activity_edit.html:256
+msgid "Regions"
+msgstr "Régions"
+
+#: maediprojects/templates/activity_edit.html:276
+msgid "No available locations found! You can try the following:"
+msgstr "Aucune localisation trouvé! Essayez les étapes suivantes:"
+
+#: maediprojects/templates/activity_edit.html:278
+msgid "check you specified the correct country for this project (on the \"Basic\" tab, under \"Adjust default settings\" at the bottom of the page)"
+msgstr "vérifiez que vous avez spécifié le bon pays pour ce projet (sur l'onglet &laquo;Basic&raquo;, sous la rubrique &laquo;Régler d'autres paramètres&raquo; au bas de la page)"
+
+#: maediprojects/templates/activity_edit.html:279
+msgid "reload the page"
+msgstr "recharger la page"
+
+#: maediprojects/templates/activity_edit.html:280
+msgid "ask MAEDI to confirm locations have been set up for your country."
+msgstr "demander à MAEDI pour confirmer que les localisations ont été mis en place pour votre pays."
+
+#: maediprojects/templates/activity_edit.html:289
+msgid "Date"
+msgstr "Date"
+
+#: maediprojects/templates/activity_edit.html:290
+msgid "Value"
+msgstr "Montant"
+
+#: maediprojects/templates/activity_edit.html:350
+msgid "Commitments"
+msgstr "Engagements"
+
+#: maediprojects/templates/activity_edit.html:354
+msgid "Add commitment"
+msgstr "Ajouter engagement"
+
+#: maediprojects/templates/activity_edit.html:361
+msgid "Disbursements"
+msgstr "Versements"
+
+#: maediprojects/templates/activity_edit.html:365
+msgid "Add disbursement"
+msgstr "Ajouter versement"
+
+#: maediprojects/templates/codelists.html:2
+#, fuzzy
+msgid "Codelists"
+msgstr "Gérer les listes de codes"
+
+#: maediprojects/templates/codelists.html:4
+#: maediprojects/templates/layout.html:45
+msgid "Manage codelists"
+msgstr "Gérer les listes de codes"
+
+#: maediprojects/templates/codelists.html:16
+#: maediprojects/templates/codelists.html:63
+msgid "Locations"
+msgstr "Localisations"
+
+#: maediprojects/templates/codelists.html:27
+#: maediprojects/templates/codelists.html:35
+#: maediprojects/templates/codelists.html:108
+msgid "Code"
+msgstr "Code"
+
+#: maediprojects/templates/codelists.html:28
+#: maediprojects/templates/codelists.html:42
+#: maediprojects/templates/codelists.html:115
+#: maediprojects/templates/user.html:14
+msgid "Name"
+msgstr "Nom"
+
+#: maediprojects/templates/codelists.html:58
+msgid "Add code"
+msgstr "Ajouter code"
+
+#: maediprojects/templates/codelists.html:64
+msgid "Locations are available for the following countries:"
+msgstr "Localisations sont disponsibles pour les pays suivants :"
+
+#: maediprojects/templates/codelists.html:69
+#: maediprojects/templates/codelists.html:83
+#: maediprojects/templates/home.html:12
+msgid "Country"
+msgstr "Pays"
+
+#: maediprojects/templates/codelists.html:79
+msgid "Add locations for a new country"
+msgstr "Ajouter localisations pour un autre pays"
+
+#: maediprojects/templates/codelists.html:80
+msgid "Locations are automatically imported from <a href=\"http://geonames.org\">GeoNames.org</a>. Select a country below to download, import and setup locations for a new country."
+msgstr "Les localisations sont automatiquement importés à partir <a href=\"http://geonames.org\">GeoNames.org</a>. Sélectionner un pays ci-dessous afin de télécharger, d'importer et de configurer des localisations pour un nouveau pays."
+
+#: maediprojects/templates/codelists.html:95
+msgid "Import locations"
+msgstr "Importer les localisations"
+
+#: maediprojects/templates/home.html:2
+msgid "Dashboard"
+msgstr "Accueil"
+
+#: maediprojects/templates/home.html:4
+msgid "Projects"
+msgstr "Projets"
+
+#: maediprojects/templates/home.html:7
+msgid "New project"
+msgstr "Nouveau projet"
+
+#: maediprojects/templates/home.html:13
+msgid "Edit"
+msgstr "Modifier"
+
+#: maediprojects/templates/layout.html:28
+msgid "Toggle navigation"
+msgstr "Activer la navigation"
+
+#: maediprojects/templates/layout.html:33
+msgid "MAEDI projects database"
+msgstr "MAEDI base projets"
+
+#: maediprojects/templates/layout.html:46
+msgid "Users"
+msgstr "Utilisateurs"
+
+#: maediprojects/templates/layout.html:48
+msgid "Logout"
+msgstr "Se déconnecter"
+
+#: maediprojects/templates/layout.html:54 maediprojects/templates/login.html:2
+#: maediprojects/templates/login.html:4
+msgid "Login"
+msgstr "Se connecter"
+
+#: maediprojects/templates/login.html:5
+msgid "Please log in to access this area."
+msgstr "Connectez-vous pour accéder à cette page."
+
+#: maediprojects/templates/login.html:8 maediprojects/templates/user.html:7
+msgid "Username"
+msgstr "Nom d’utilisateur"
+
+#: maediprojects/templates/login.html:14 maediprojects/templates/user.html:73
+msgid "Password"
+msgstr "Mot de passe"
+
+#: maediprojects/templates/login.html:21
+msgid "Log in"
+msgstr "Se connecter"
+
+#: maediprojects/templates/user.html:2 maediprojects/templates/user.html:4
+msgid "Edit user"
+msgstr "Modifier un utilisateur"
+
+#: maediprojects/templates/user.html:4
+msgid "New user"
+msgstr "Ajouter un nouvel utilisateur"
+
+#: maediprojects/templates/user.html:21
+msgid "Organisation"
+msgstr "Organisation"
+
+#: maediprojects/templates/user.html:28
+msgid "Email address"
+msgstr "Adresse email"
+
+#: maediprojects/templates/user.html:35
+msgid "Default country"
+msgstr "Pays défaut"
+
+#: maediprojects/templates/user.html:55
+msgid "Administrator"
+msgstr "Administrateur"
+
+#: maediprojects/templates/user.html:67
+msgid "Change password"
+msgstr "Changer le mot de passe"
+
+#: maediprojects/templates/user.html:80
+msgid "Update"
+msgstr "Sauvegarder"
+
+#~ msgid "Edit activity"
+#~ msgstr "Modifier projet"
+
+#~ msgid "Save and exit project"
+#~ msgstr "Sauvegarder et quitter"
+
+#~ msgid "Basic"
+#~ msgstr "Les basiques"
+
+#~ msgid "Location data"
+#~ msgstr "Localisation"
+
+#~ msgid "Financial data"
+#~ msgstr "Financières"
+
+#~ msgid "Basic data"
+#~ msgstr "Les basiques"
+
+#~ msgid "Project code"
+#~ msgstr "Nouveau projet"
+
+#~ msgid "Title"
+#~ msgstr "Titre"
+
+#~ msgid "Description"
+#~ msgstr "Description"
+
+#~ msgid "Executing organisation"
+#~ msgstr "Opérateur"
+
+#~ msgid "Select one..."
+#~ msgstr "Sélectionnez un..."
+
+#~ msgid "Implementing organisation"
+#~ msgstr "Bénéficiaire"
+
+#~ msgid "Start date"
+#~ msgstr "Date de début"
+
+#~ msgid "End date"
+#~ msgstr "Date de fin"
+
+#~ msgid "DAC Sector"
+#~ msgstr "Secteur CAD"
+
+#~ msgid "CICID Sector"
+#~ msgstr "Secteur CICID"
+
+#~ msgid "Activity Status"
+#~ msgstr "Statut de l'activité"
+
+#~ msgid "Total commitments"
+#~ msgstr "Total des engagements"
+
+#~ msgid "Total disbursements"
+#~ msgstr "Total des versements"
+
+#~ msgid "Adjust default settings"
+#~ msgstr "Régler d'autres paramètres"
+
+#~ msgid "Flow type"
+#~ msgstr "Type de flux"
+
+#~ msgid "Aid Type"
+#~ msgstr "Type d'aide"
+
+#~ msgid "Collaboration Type"
+#~ msgstr "Type de collaboration"
+
+#~ msgid "Finance Type"
+#~ msgstr "Type de financement"
+
+#~ msgid "Tied Status"
+#~ msgstr "Degré de liaison"
+
+#~ msgid "Recipient Country"
+#~ msgstr "Pays bénéficiaire"
+
+#~ msgid "Add activity; add detailed data &raquo;"
+#~ msgstr "Enregistrer l'activité; ajouter des données détaillées &raquo;"
+
+#~ msgid "XXX:"
+#~ msgstr ""
+
+#~ msgid "jjjj-mm-aa"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Locations are automatically imported from \n"
+#~ "        <a href=\"http://geonames.org\">GeoNames.org</a>."
+#~ " Select a country\n"
+#~ "        below to download, import and"
+#~ " setup locations for a new country."
+#~ msgstr ""
