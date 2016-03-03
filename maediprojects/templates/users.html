@@ -1,19 +1,19 @@
 {% set active_page='users' %}{% extends "layout.html" %}
-{% block title %}Users{% endblock %}
+{% block title %}{{ _('Users') }}{% endblock %}
 {% block content %}
-<h1>Users</h1>
+<h1>{{ _('Users') }}</h1>
 
 <a class="btn btn-success btn-large pull-right" href="{{ url_for('users_new') }}">
   <i class="glyphicon glyphicon-plus"></i> 
-  New user
+  {{ _('New user') }}
 </a>
 <table class="table">
   <thead>
-    <th>Username</th>
-    <th>Name</th>
-    <th>Organisation</th>
-    <th>Country</th>
-    <th>Edit</th>
+    <th>{{ _('Username') }}</th>
+    <th>{{ _('Name') }}</th>
+    <th>{{ _('Organisation') }}</th>
+    <th>{{ _('Country') }}</th>
+    <th>{{ _('Edit') }}</th>
   </thead>
   <tbody>
     {% for user in users %}
