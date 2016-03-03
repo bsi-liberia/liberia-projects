@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-03 13:03+0100\n"
+"POT-Creation-Date: 2016-03-03 13:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -225,7 +225,7 @@ msgstr ""
 #: maediprojects/templates/codelists.html:28
 #: maediprojects/templates/codelists.html:42
 #: maediprojects/templates/codelists.html:115
-#: maediprojects/templates/user.html:14
+#: maediprojects/templates/user.html:14 maediprojects/templates/users.html:13
 msgid "Name"
 msgstr ""
 
@@ -239,7 +239,7 @@ msgstr ""
 
 #: maediprojects/templates/codelists.html:69
 #: maediprojects/templates/codelists.html:83
-#: maediprojects/templates/home.html:12
+#: maediprojects/templates/home.html:12 maediprojects/templates/users.html:15
 msgid "Country"
 msgstr ""
 
@@ -270,7 +270,7 @@ msgstr ""
 msgid "New project"
 msgstr ""
 
-#: maediprojects/templates/home.html:13
+#: maediprojects/templates/home.html:13 maediprojects/templates/users.html:16
 msgid "Edit"
 msgstr ""
 
@@ -282,7 +282,7 @@ msgstr ""
 msgid "MAEDI projects database"
 msgstr ""
 
-#: maediprojects/templates/layout.html:46
+#: maediprojects/templates/layout.html:46 maediprojects/templates/users.html:2
 msgid "Users"
 msgstr ""
 
@@ -300,6 +300,7 @@ msgid "Please log in to access this area."
 msgstr ""
 
 #: maediprojects/templates/login.html:8 maediprojects/templates/user.html:7
+#: maediprojects/templates/users.html:12
 msgid "Username"
 msgstr ""
 
@@ -315,11 +316,11 @@ msgstr ""
 msgid "Edit user"
 msgstr ""
 
-#: maediprojects/templates/user.html:4
+#: maediprojects/templates/user.html:4 maediprojects/templates/users.html:8
 msgid "New user"
 msgstr ""
 
-#: maediprojects/templates/user.html:21
+#: maediprojects/templates/user.html:21 maediprojects/templates/users.html:14
 msgid "Organisation"
 msgstr ""
 
