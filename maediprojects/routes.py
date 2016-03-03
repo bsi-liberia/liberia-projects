@@ -1,9 +1,7 @@
 from flask import Flask, render_template, flash, request, Markup, \
     session, redirect, url_for, escape, Response, abort, send_file, jsonify
 from flask.ext.login import login_required, current_user
-
-from maediprojects import app
-from maediprojects import db
+from maediprojects import app, db
 import models
 from views import activities, api, users, codelists
 from query import activity as qactivity
