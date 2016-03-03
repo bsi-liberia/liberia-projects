@@ -4,7 +4,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'maediprojects.db
 DEBUG = True
 SECRET_KEY = "YOUR-REALLY-SECRET-KEY"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-LANG = "fr"
 ADMIN_USER = {
     "username": "admin",
     "password": "SOME_ADMIN_PASSWORD",
@@ -13,4 +12,12 @@ ADMIN_USER = {
     "organisation": "YOUR_ORG",
     "recipient_country_code": "ML",
     "administrator": True
+}
+# We actually always use the default locale in this app so the data
+# is output consistently.
+BABEL_DEFAULT_LOCALE="fr"
+BABEL_DEFAULT_TIMEZONE="UTC"
+LANGUAGES = {
+    "fr": "Français",
+    "en": "English"
 }
