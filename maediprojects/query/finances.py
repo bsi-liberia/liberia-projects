@@ -41,6 +41,9 @@ def update_attr(data):
             data["value"] = None
         else:
             data['value'] = isostring_date(data['value'])
+    elif data['attr'] == "transaction_value":
+        if data['value'] == "":
+            data['value'] = 0.0
     setattr(finance, data['attr'], data['value'])
     db.session.add(finance)
     db.session.commit()
