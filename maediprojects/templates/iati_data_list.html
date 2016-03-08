@@ -1,0 +1,24 @@
+{% set active_page='iati_data_list' %}{% extends "layout.html" %}
+{% block title %}{{ _('IATI data files') }}{% endblock %}
+{% block content %}
+<h1>{{ _('IATI data files') }}</h1>
+<table class="table">
+  <thead>
+    <th>{{ _('Country') }}</th>
+    <th>{{ _('Country Code') }}</th>
+    <th>{{ _('v1.03 file') }}</th>
+    <th>{{ _('v2.01 file') }}</th>
+  </thead>
+  <tbody>
+    {% for code, country in country_files.items() %}
+    <tr>
+      <td>{{ country.country.name }}</td>
+      <td>{{ country.country.code }}</td>
+      <td><code>{{ country.urls["1.03"] }}</code></td>
+      <td><code>{{ country.urls["2.01"] }}</code></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
