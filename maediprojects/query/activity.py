@@ -1,5 +1,6 @@
 from maediprojects import db, models
 import datetime
+from flask import url_for
 from flask.ext.login import current_user
 
 def isostring_date(value):
@@ -20,8 +21,14 @@ def get_iati_list():
           {
               "country": x.recipient_country.as_dict(),
               "urls":
-                  {"1.03": "/api/iati/1.03/%s.xml" % x.recipient_country_code,
-                   "2.01": "/api/iati/2.01/%s.xml" % x.recipient_country_code,
+                  {"1.03": url_for('generate_iati_xml',
+                                   version="1.03",
+                                   country_code=x.recipient_country_code,
+                                   _external=True),
+                   "2.01": url_for('generate_iati_xml',
+                                   version="2.01",
+                                   country_code=x.recipient_country_code,
+                                   _external=True),
                   }
           }), countries_db))
 
