@@ -307,8 +307,10 @@ def build_activity_103(doc, activity):
     ia.append(el_with_code("activity-status", activity.activity_status))
     
     # Activity dates
-    ia.append(el_date_103("start", activity.start_date.isoformat()))
-    ia.append(el_date_103("end", activity.end_date.isoformat()))
+    if activity.start_date:
+        ia.append(el_date_103("start", activity.start_date.isoformat()))
+    if activity.end_date:
+        ia.append(el_date_103("end", activity.end_date.isoformat()))
     
     # Contact info
     #ia.append(el_contact_info(app.config["ORGANISATION"]))
@@ -347,6 +349,7 @@ def build_activity_103(doc, activity):
 
     # Transactions
     for transaction in activity.finances:
+        if transaction.transaction_value == 0: continue
         ia.append(build_transaction_103(transaction.as_dict()))
     
     if not activity.commitments:
@@ -404,8 +407,10 @@ def build_activity(doc, activity):
     ia.append(el_with_code("activity-status", activity.activity_status))
     
     # Activity dates
-    ia.append(el_date("start", activity.start_date.isoformat()))
-    ia.append(el_date("end", activity.end_date.isoformat()))
+    if activity.start_date:
+        ia.append(el_date("start", activity.start_date.isoformat()))
+    if activity.end_date:
+        ia.append(el_date("end", activity.end_date.isoformat()))
     
     # Contact info
     #ia.append(el_contact_info(app.config["ORGANISATION"]))
@@ -428,6 +433,7 @@ def build_activity(doc, activity):
 
     # Transactions
     for transaction in activity.finances:
+        if transaction.transaction_value == 0: continue
         ia.append(build_transaction(transaction.as_dict()))
 
     if not activity.commitments:
