@@ -1,5 +1,6 @@
 from maediprojects import db, models
 import datetime
+from flask.ext.login import current_user
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -33,6 +34,19 @@ def get_activity(activity_id):
 def list_activities():
     acts = models.Activity.query.all()
     return acts
+
+def get_stats(current_user):
+    activities = list_activities_user(current_user)
+    return {
+        "count": len(activities)
+    }
+
+def list_activities_user(current_user):
+    if(hasattr(current_user, "id") and (not current_user.administrator)):
+        return models.Activity.query.filter_by(
+        user_id = current_user.id
+        ).all()
+    return models.Activity.query.all()
 
 def list_activities_by_country(recipient_country_code):
     acts = models.Activity.query.filter_by(
