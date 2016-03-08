@@ -136,7 +136,10 @@ class Activity(db.Model):
             index=True)
     recipient_country = sa.orm.relationship("Country")
     dac_sector = sa.Column(sa.UnicodeText)
-    cicid_sector = sa.Column(sa.UnicodeText)
+    cicid_sector = sa.Column(
+            act_ForeignKey('codelistcode.code'),
+            nullable=False,
+            index=True)
     collaboration_type = sa.Column(sa.UnicodeText) # ADDED
     finance_type = sa.Column(sa.UnicodeText) # ADDED
     tied_status = sa.Column(sa.UnicodeText) # ADDED
@@ -146,16 +149,21 @@ class Activity(db.Model):
     total_commitments = sa.Column(sa.Float(precision=2))
     total_disbursements = sa.Column(sa.Float(precision=2))
     updated_date = sa.Column(sa.DateTime, default=datetime.datetime.utcnow) # ADDED
-    results = cascade_relationship("ActivityResult")
-    locations = cascade_relationship("ActivityLocation")
-    finances = cascade_relationship("ActivityFinances")
+    results = sa.orm.relationship("ActivityResult",
+            cascade="all, delete-orphan")
+    locations = sa.orm.relationship("ActivityLocation",
+            cascade="all, delete-orphan")
+    finances = sa.orm.relationship("ActivityFinances",
+            cascade="all, delete-orphan")
 
     @hybrid_property
     def commitments(self):
-        return ActivityFinances.query.filter_by(transaction_type="C").all()
+        return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
+                                             ActivityFinances.transaction_type=="C").all()
     @hybrid_property
     def disbursements(self):
-        return ActivityFinances.query.filter_by(transaction_type="D").all()
+        return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
+                                             ActivityFinances.transaction_type=="D").all()
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
