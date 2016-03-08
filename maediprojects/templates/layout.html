@@ -43,6 +43,7 @@
               <ul class="dropdown-menu">
                 {% if loggedinuser.administrator %}
                 <li><a href="{{ url_for('codelists_management') }}">{{ _('Manage codelists') }}</a></li>
+                <li><a href="{{ url_for('iati_data_list') }}">{{ _('List IATI data files') }}</a></li>
                 <li><a href="{{ url_for('users') }}">{{ _('Users') }}</a></li>
                 {% endif %}
                 <li><a href="{{ url_for('logout')}} ">{{ _('Logout') }}</a></li>
