@@ -204,10 +204,17 @@ var setupLocations = function() {
       ]);
 	});
 };
-$(document).on("click", ".deleteFinancial", function(e) {
-  e.preventDefault();
+
+$("#confirm-delete").on('show.bs.modal', function(e) {
+  $(this).find(".btn-ok").on("click", function(f) {
+    deleteFinancial(e.relatedTarget);
+    $("#confirm-delete").modal("hide");
+  });
+});
+
+function deleteFinancial(target) {
   var data = {
-    "transaction_id": $(this).closest("tr").attr("data-financial-id"),
+    "transaction_id": $(target).closest("tr").attr("data-financial-id"),
     "action": "delete"
   }
   $.post(api_activity_finances_url, data, 
@@ -219,7 +226,24 @@ $(document).on("click", ".deleteFinancial", function(e) {
       }
     }
   );
-});
+}
+
+// $(document).on("click", ".deleteFinancial", function(e) {
+//   e.preventDefault();
+//   var data = {
+//     "transaction_id": $(this).closest("tr").attr("data-financial-id"),
+//     "action": "delete"
+//   }
+//   $.post(api_activity_finances_url, data,
+//     function(returndata){
+//       if (returndata == 'False'){
+//           alert("There was an error updating that financial data.");
+//       } else {
+//         $("tr#financial-" + data["transaction_id"]).fadeOut();
+//       }
+//     }
+//   );
+// });
 $(document).on("click", ".addFinancial", function(e) {
   e.preventDefault();
   var transaction_type = $(this).attr("data-transaction-type");
