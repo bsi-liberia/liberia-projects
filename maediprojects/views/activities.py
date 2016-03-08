@@ -17,6 +17,13 @@ def dashboard():
                 activities = qactivity.list_activities_user(current_user)
                           )
 
+@app.route("/iati_data_list/")
+def iati_data_list():
+    return render_template("iati_data_list.html",
+                loggedinuser=current_user,
+                country_files = qactivity.get_iati_list()
+                          )
+
 @app.route("/activities/new/", methods=['GET', 'POST'])
 @login_required
 def activity_new():
