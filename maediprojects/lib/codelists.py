@@ -10,7 +10,9 @@ def get_db_codelist_names():
 def get_db_codelists():
     # Get codelist name
     # { codelist: cdata }
-    codelist_data = models.CodelistCode.query.all()
+    codelist_data = models.CodelistCode.query.order_by(
+        models.CodelistCode.code
+    ).all()
     codelists = dict(map(lambda k: (k.codelist_code, []), codelist_data))
     for cd in codelist_data:
         codelists[cd.codelist_code].append({
