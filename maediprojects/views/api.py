@@ -120,6 +120,11 @@ def api_codelists_new():
     else:
         return "ERROR"
 
+@app.route("/api/iati.json")
+def api_list_iati_files():
+    urls = qactivity.get_iati_list()
+    return jsonify(urls = urls)
+
 @app.route("/api/iati/<version>/<country_code>.xml")
 def generate_iati_xml(version, country_code):
     if version == "1.03":
