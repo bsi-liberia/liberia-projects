@@ -4,6 +4,7 @@ from flask.ext.login import current_user
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
+    if value == "": return None
     return datetime.datetime.strptime(value, "%Y-%m-%d")
 
 def isostring_year(value):
@@ -20,6 +21,9 @@ def create_activity(data):
     act.end_date = isostring_date(data.pop("end_date"))
     
     for attr, val in data.items():
+        if attr.startswith("total_"):
+            if val == "":
+                val = 0
         setattr(act, attr, val)
     db.session.add(act)
     db.session.commit()
