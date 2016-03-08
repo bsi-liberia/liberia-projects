@@ -9,6 +9,14 @@ from maediprojects.lib import codelists
 
 import json
 
+@app.route("/")
+def dashboard():
+    return render_template("home.html",
+                loggedinuser=current_user,
+                stats = qactivity.get_stats(current_user),
+                activities = qactivity.list_activities_user(current_user)
+                          )
+
 @app.route("/activities/new/", methods=['GET', 'POST'])
 @login_required
 def activity_new():

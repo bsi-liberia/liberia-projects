@@ -7,13 +7,6 @@ from views import activities, api, users, codelists
 from query import activity as qactivity
 from query import setup as qsetup
 
-@app.route("/")
-def dashboard():
-    return render_template("home.html",
-                loggedinuser=current_user,
-                activities = qactivity.list_activities()
-                          )
-
 @app.route("/setup/")
 def setup():
     qsetup.setup()
