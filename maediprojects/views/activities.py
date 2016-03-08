@@ -46,6 +46,16 @@ def activity_new():
             flash("An error occurred and your activity couldn't be added", "danger")
         return redirect(url_for('activity_edit', activity_id=a.id))
 
+@app.route("/activities/<activity_id>/delete/")
+@login_required
+def activity_delete(activity_id):
+    result = qactivity.delete_activity(activity_id)
+    if result:
+        flash("Successfully deleted that activity", "success")
+    else:
+        flash("Sorry, unable to delete that activity", "danger")
+    return redirect(url_for("dashboard"))
+
 @app.route("/activities/<activity_id>/edit/")
 @login_required
 def activity_edit(activity_id):
