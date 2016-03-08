@@ -11,6 +11,20 @@ def isostring_year(value):
     # Returns a date object from a string of format YYYY
     return datetime.datetime.strptime(value, "%Y")
 
+def get_iati_list():
+    countries_db = db.session.query(models.Activity
+                    ).distinct(models.Activity.recipient_country_code
+                    ).group_by(models.Activity.recipient_country_code)
+
+    return dict(map(lambda x: (x.recipient_country_code,
+          {
+              "country": x.recipient_country.as_dict(),
+              "urls":
+                  {"1.03": "/api/iati/1.03/%s.xml" % x.recipient_country_code,
+                   "2.01": "/api/iati/2.01/%s.xml" % x.recipient_country_code,
+                  }
+          }), countries_db))
+
 def create_activity(data):
     #FIXME check this org doesn't already exist?
     act = models.Activity()
