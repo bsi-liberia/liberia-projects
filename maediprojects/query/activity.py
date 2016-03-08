@@ -29,6 +29,18 @@ def create_activity(data):
     db.session.commit()
     return act
 
+def delete_activity(activity_id):
+    activity = models.Activity.query.filter_by(
+        id = activity_id
+    ).first()
+    if ((getattr(current_user, "id") == activity.user_id) or 
+        (getattr(current_user, "administrator"))):
+       # Allow this activity to be deleted
+       db.session.delete(activity)
+       db.session.commit()
+       return True
+    return False
+
 def get_activity(activity_id):
     act = models.Activity.query.filter_by(
         id = activity_id
