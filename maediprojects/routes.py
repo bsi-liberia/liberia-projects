@@ -16,3 +16,13 @@ def setup():
 def setup_country(country_code):
     qsetup.import_locations(country_code)
     return "OK"
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html',
+        loggedinuser = current_user), 404
+    
+@app.errorhandler(500)
+def page_not_found(error):
+    return render_template('500.html',
+        loggedinuser = current_user), 500
