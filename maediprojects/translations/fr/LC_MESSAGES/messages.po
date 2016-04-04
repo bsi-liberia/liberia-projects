@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-08 21:25+0100\n"
-"PO-Revision-Date: 2016-04-04 16:59+0100\n"
+"POT-Creation-Date: 2016-04-04 18:13+0200\n"
+"PO-Revision-Date: 2016-04-04 18:22+0100\n"
 "Last-Translator: \n"
 "Language: fr\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -18,6 +18,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.2.0\n"
 "X-Generator: Poedit 1.7.5\n"
+
+#: maediprojects/templates/404.html:2 maediprojects/templates/404.html:4
+msgid "Error 404: File Not Found"
+msgstr "Erreur 404 : Page non trouvée."
+
+#: maediprojects/templates/404.html:6
+msgid "Sorry, but the page you requested could not be found."
+msgstr "Désolé, mais la page demandée est introuvable."
+
+#: maediprojects/templates/500.html:2 maediprojects/templates/500.html:4
+msgid "Error 500: Internal Server Error"
+msgstr "Erreur 500 : Erreur interne du serveur"
+
+#: maediprojects/templates/500.html:6
+msgid "Sorry, but there was an unexpected error and the page you requested could not be loaded."
+msgstr "Désolé, mais il y avait une erreur inattendue et la page demandée ne peut pas être chargée."
 
 #: maediprojects/templates/activity_edit.html:2
 #: maediprojects/templates/activity_edit.html:9
@@ -480,4 +496,7 @@ msgstr "Sauvegarder"
 #~ msgstr ""
 
 #~ msgid ""
+#~ msgstr ""
+
+#~ msgid "rror 500: Internal Server Error"
 #~ msgstr ""
