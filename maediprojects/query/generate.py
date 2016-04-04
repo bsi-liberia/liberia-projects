@@ -351,17 +351,24 @@ def build_activity_103(doc, activity):
     for transaction in activity.finances:
         if transaction.transaction_value == 0: continue
         ia.append(build_transaction_103(transaction.as_dict()))
-    
-    if not activity.commitments:
-        transaction = { "id": "%s-C" % activity.id,
-                        "transaction_date": activity.start_date,
-                        "transaction_value": activity.total_commitments,
-                        "transaction_description": "Total commitments",
-                        "transaction_type": "C"
-                        }
-        ia.append(build_transaction_103(transaction))
-    
-    if not activity.disbursements:
+
+    if ((not activity.commitments) and
+        (activity.start_date) and
+        (activity.total_commitments)
+    ):
+        if ((activity.start_date) and
+            (activity.total_commitments != "")):
+            transaction = { "id": "%s-C" % activity.id,
+                            "transaction_date": activity.start_date,
+                            "transaction_value": activity.total_commitments,
+                            "transaction_description": "Total commitments",
+                            "transaction_type": "C"
+                            }
+            ia.append(build_transaction_103(transaction))
+
+    if ((not activity.disbursements) and
+        (activity.total_disbursements)
+    ):
         transaction = { "id": "%s-D" % activity.id,
                         "transaction_date": datetime.datetime.utcnow().date(),
                         "transaction_value": activity.total_disbursements,
@@ -436,7 +443,10 @@ def build_activity(doc, activity):
         if transaction.transaction_value == 0: continue
         ia.append(build_transaction(transaction.as_dict()))
 
-    if not activity.commitments:
+    if ((not activity.commitments) and
+        (activity.start_date) and
+        (activity.total_commitments)
+    ):
         transaction = { "id": "%s-C" % activity.id,
                         "transaction_date": activity.start_date,
                         "transaction_value": activity.total_commitments,
@@ -444,8 +454,10 @@ def build_activity(doc, activity):
                         "transaction_type": "C"
                         }
         ia.append(build_transaction(transaction))
-    
-    if not activity.disbursements:
+
+    if ((not activity.disbursements) and
+        (activity.total_disbursements)
+    ):
         transaction = { "id": "%s-D" % activity.id,
                         "transaction_date": datetime.datetime.utcnow().date(),
                         "transaction_value": activity.total_disbursements,
