@@ -36,13 +36,6 @@ $(document).on("change", "#activity-form input[type=checkbox]", function(e) {
   });  
 });
 
-$('#datetimepicker_start').datetimepicker({
-    format: 'YYYY-MM-DD'
-});
-$('#datetimepicker_end').datetimepicker({
-    format: 'YYYY-MM-DD'
-});
-
 $(document).on("change", "#activity-form input[type=text], #activity-form textarea, #activity-form select", function(e) {
   var data = {
     'attr': this.name,
