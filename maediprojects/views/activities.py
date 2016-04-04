@@ -6,8 +6,7 @@ from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.lib import codelists
-
-import json
+import json, datetime
 
 @app.route("/")
 def dashboard():
@@ -30,12 +29,15 @@ def activity_new():
     if request.method == "GET":
         return render_template("activity_edit.html",
                     # Specify some defaults
+                    today = datetime.datetime.now().date().isoformat()
                     activity = {
                         "flow_type": "10",
                         "aid_type": "C01",
                         "collaboration_type": "1",
                         "finance_type": "110",
                         "tied_status": "5",
+                        "start_date": today,
+                        "end_date": today,
                         "recipient_country_code": current_user.recipient_country_code,
                     },
                     loggedinuser=current_user,
