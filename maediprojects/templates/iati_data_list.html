@@ -14,8 +14,8 @@
     <tr>
       <td>{{ country.country.name }}</td>
       <td>{{ country.country.code }}</td>
-      <td><code>{{ country.urls["1.03"] }}</code></td>
-      <td><code>{{ country.urls["2.01"] }}</code></td>
+      <td><code><a href="{{ country.urls["1.03"] }}">{{ country.urls["1.03"] }}</a></code></td>
+      <td><code><a href="{{ country.urls["2.01"] }}">{{ country.urls["2.01"] }}</a></code></td>
     </tr>
     {% endfor %}
   </tbody>
