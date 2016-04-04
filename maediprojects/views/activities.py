@@ -27,9 +27,10 @@ def iati_data_list():
 @login_required
 def activity_new():
     if request.method == "GET":
+
+        today = datetime.datetime.now().date().isoformat()
         return render_template("activity_edit.html",
                     # Specify some defaults
-                    today = datetime.datetime.now().date().isoformat()
                     activity = {
                         "flow_type": "10",
                         "aid_type": "C01",
