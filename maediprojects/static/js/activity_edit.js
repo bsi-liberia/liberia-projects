@@ -228,22 +228,6 @@ function deleteFinancial(target) {
   );
 }
 
-// $(document).on("click", ".deleteFinancial", function(e) {
-//   e.preventDefault();
-//   var data = {
-//     "transaction_id": $(this).closest("tr").attr("data-financial-id"),
-//     "action": "delete"
-//   }
-//   $.post(api_activity_finances_url, data,
-//     function(returndata){
-//       if (returndata == 'False'){
-//           alert("There was an error updating that financial data.");
-//       } else {
-//         $("tr#financial-" + data["transaction_id"]).fadeOut();
-//       }
-//     }
-//   );
-// });
 $(document).on("click", ".addFinancial", function(e) {
   e.preventDefault();
   var transaction_type = $(this).attr("data-transaction-type");
