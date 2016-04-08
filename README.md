@@ -39,32 +39,39 @@ The current software has a few limitations which could be improved upon:
 ## Deployment and getting up and running
 
 1. Clone the repository:
-
-    git clone git@github.com:markbrough/maedi-projects.git
+  ```
+  git clone git@github.com:markbrough/maedi-projects.git
+  ```
 
 2. Set up a virtualenv:
-
-    virtualenv ./pyenv
+   ```
+   virtualenv ./pyenv
+   ```
 
 3. Activate the virtualenv:
-
-    source ./pyenv/bin/activate
+   ```
+   source ./pyenv/bin/activate
+   ```
 
 4. Install the requirements:
-
-    pip install -r requirements.txt
+   ```
+   pip install -r requirements.txt
+   ```
 
 5. Copy and edit the config.py.tmpl:
-
-    cp config.py.tmpl config.py
+   ```
+   cp config.py.tmpl config.py
+   ```
 
 6. Run the server:
-
-    python manage.py runserver
+   ```
+   python manage.py runserver
+   ```
 
 7. Setup:
-
-    http://localhost:5000/setup/
+   ```
+   http://localhost:5000/setup/
+   ```
 
 8. You can log in using the admin username and password defined in your `config.py`
 
