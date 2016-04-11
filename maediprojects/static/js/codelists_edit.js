@@ -32,7 +32,7 @@ function deleteCode(target) {
   var deleteButton = target;
   $.post("/api/codelists/delete/", data, 
     function(returndata){
-      if (returndata == 'False'){
+      if (returndata == 'ERROR'){
           alert("There was an error deleting that code.");
       } else {
         $(deleteButton).closest("tr").fadeOut();
@@ -69,7 +69,7 @@ $(document).on("click", ".addCode", function(e) {
   }
   $.post("/api/codelists/new/", data, 
     function(returndata){
-      if (returndata == 'False'){
+      if (returndata == 'ERROR'){
           alert("There was an error creating that code.");
       } else {
         var row_codelist_template = $('#row-codelist-template').html();
