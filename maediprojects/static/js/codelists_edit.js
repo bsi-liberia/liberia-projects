@@ -41,24 +41,6 @@ function deleteCode(target) {
   );
 }
 
-// $(document).on("click", ".deleteCode", function(e) {
-//   e.preventDefault();
-//   var data = {
-//     'codelist_code': $(this).closest("table").attr("data-codelist"),
-//     'code': $(this).closest("tr").attr("data-code"),
-//     "action": "delete"
-//   }
-//   var deleteButton = this;
-//   $.post("/api/codelists/delete/", data,
-//     function(returndata){
-//       if (returndata == 'False'){
-//           alert("There was an error deleting that code.");
-//       } else {
-//         $(deleteButton).closest("tr").fadeOut();
-//       }
-//     }
-//   );
-// });
 $(document).on("click", ".addCode", function(e) {
   e.preventDefault();
   var codelist = $(this).attr("data-codelist");
