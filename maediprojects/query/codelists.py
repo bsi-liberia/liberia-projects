@@ -21,6 +21,12 @@ def update_attr(data):
     return True
 
 def delete_code(data):
+    check = models.Activity.query.filter((
+        models.Activity.executing_org == data['code']
+    ) | (
+        models.Activity.cicid_sector == data['code']
+    )).first()
+    if check: return False
     codelistcode = models.CodelistCode.query.filter_by(
         code = data['code'],
     	codelist_code = data["codelist_code"]
