@@ -23,6 +23,25 @@ def jsonify(*args, **kwargs):
             indent=None if request.is_xhr else 2, cls=JSONEncoder),
         mimetype='application/json')
 
+@app.route("/api/activities/", methods=["POST", "GET"])
+def api_activities_country():
+    if "country_code" not in request.form:
+        activities = qactivity.list_activities()
+    else:
+        activities = qactivity.list_activities_by_country(
+            request.form["country_code"])
+
+    return jsonify(activities = [{
+        'title': activity.title,
+        'country': activity.recipient_country.name,
+        'id': activity.id,
+        'updated_date': activity.updated_date.date().isoformat(),
+        'activity_edit_url': url_for('activity_edit', 
+              activity_id = activity.id),
+        'activity_delete_url': url_for('activity_delete', 
+              activity_id = activity.id)
+    } for activity in activities])
+
 @app.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
 def api_activity_finances(activity_id):
