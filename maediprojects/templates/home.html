@@ -72,6 +72,13 @@
             </a></td>
       </tr>
       {{/ activities }}
+      {{^ activities }}
+      <tr class="active">
+        <td colspan="5">{% endraw %}
+          {{ _("You don't have any projects yet.") }}
+        {% raw %}</td>
+      </tr>
+      {{/ activities }}
     </tbody>
   </table>
 </script>
