@@ -220,6 +220,19 @@
                     </select>
                   </div>
                 </div>
+                {% if loggedinuser.administrator %}
+                <div class="form-group select-fg">
+                  <label for="user_id" class="col-sm-2 
+                  control-label">{{ _('User') }}</label>
+                  <div class="col-sm-10">
+                    <select name="user_id" id="user_id" class="form-control">
+                      {% for u in users %}
+                      <option value="{{ u.id }}"{% if (u.id == loggedinuser.id and not u.id) or (u.id == activity.id) %} selected{% endif %}>{{ u.id }} &ndash; {{ u.username }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                {% endif %}
               </div>
             </div>
           </div>
