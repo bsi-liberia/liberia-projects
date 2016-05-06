@@ -5,6 +5,7 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin,
                             confirm_login,
                             fresh_login_required)
+from flask.ext.babel import gettext
                             
 from maediprojects import app, db, models
 from maediprojects.query import user as quser
@@ -13,6 +14,8 @@ from maediprojects.lib import codelists
 login_manager = LoginManager()
 login_manager.setup_app(app)
 login_manager.login_view = "login"
+login_manager.login_message = gettext(u"Please log in to access this page.")
+login_manager.login_message_category = "danger"
 
 @login_manager.user_loader
 def load_user(id):
@@ -37,9 +40,9 @@ def users_new():
                  codelists = codelists.get_codelists())
     elif request.method == "POST":
         if quser.addUser(request.form):
-            flash("Successfully created user!", "success")
+            flash(gettext(u"Successfully created user!"), "success")
         else:
-            flash("Sorry, couldn't create that user!", "danger")
+            flash(gettext(u"Sorry, couldn't create that user!"), "danger")
         return redirect(url_for("users"))
 
 @app.route("/users/<user_id>/", methods=["GET", "POST"])
@@ -53,9 +56,9 @@ def users_edit(user_id):
                  codelists = codelists.get_codelists())
     elif request.method == "POST":
         if quser.updateUser(request.form):
-            flash("Successfully updated user!", "success")
+            flash(gettext(u"Successfully updated user!"), "success")
         else:
-            flash("Sorry, couldn't update that user!", "danger")
+            flash(gettext(u"Sorry, couldn't update that user!"), "danger")
         return redirect(url_for("users"))
 
 @app.route("/login/", methods=["GET", "POST"])
@@ -64,16 +67,16 @@ def login():
         user = quser.user_by_username(request.form["username"])
         if (user and user.check_password(request.form["password"])):
             if login_user(user):
-                flash("Logged in!", "success")
+                flash(gettext(u"Logged in!"), "success")
                 if request.args.get("next"):
                     redir_url = request.script_root + request.args.get("next")
                 else:
                     redir_url = url_for("dashboard")
                 return redirect(redir_url)
             else:
-                flash("Sorry, but you could not log in.", "danger")
+                flash(gettext(u"Sorry, but you could not log in."), "danger")
         else:
-            flash(u"Invalid username or password.", "danger")
+            flash(gettext(u"Invalid username or password."), "danger")
     return render_template("login.html",
              loggedinuser=current_user)
 
@@ -81,6 +84,6 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Logged out', 'success')
+    flash(gettext(u'Logged out'), 'success')
     redir_url = url_for("dashboard")
     return redirect(redir_url)
