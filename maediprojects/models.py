@@ -149,6 +149,7 @@ class Activity(db.Model):
     activity_status = sa.Column(sa.UnicodeText)
     total_commitments = sa.Column(sa.Float(precision=2))
     total_disbursements = sa.Column(sa.Float(precision=2))
+    created_date = sa.Column(sa.DateTime, default=datetime.datetime.utcnow) # ADDED
     updated_date = sa.Column(sa.DateTime, default=datetime.datetime.utcnow) # ADDED
     results = sa.orm.relationship("ActivityResult",
             cascade="all, delete-orphan")
