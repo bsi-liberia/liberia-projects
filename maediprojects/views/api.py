@@ -39,7 +39,9 @@ def api_activities_country():
         'activity_edit_url': url_for('activity_edit', 
               activity_id = activity.id),
         'activity_delete_url': url_for('activity_delete', 
-              activity_id = activity.id)
+              activity_id = activity.id),
+        'user': activity.user.username,
+        'user_id': activity.user.id,
     } for activity in activities])
 
 @app.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
