@@ -5,6 +5,7 @@ from flask.ext.login import login_required, current_user
 from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
+from maediprojects.query import user as quser
 from maediprojects.lib import codelists
 import json, datetime
 
@@ -44,7 +45,8 @@ def activity_new():
                         "recipient_country_code": current_user.recipient_country_code,
                     },
                     loggedinuser=current_user,
-                    codelists = codelists.get_codelists()
+                    codelists = codelists.get_codelists(),
+                    users = quser.user()
                               )
 
     elif request.method == "POST":
@@ -82,7 +84,8 @@ def activity_edit(activity_id):
                 api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
                 api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
                 api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
-                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id
+                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
+                users = quser.user()
           )
 
 @app.route("/activities/<activity_id>/edit/update_result/", methods=['POST'])
