@@ -118,6 +118,7 @@ class Activity(db.Model):
             act_ForeignKey('maediuser.id'),
             nullable=False,
             index=True)
+    user = sa.orm.relationship("User")
     code = sa.Column(sa.UnicodeText)
     title = sa.Column(sa.UnicodeText)
     description = sa.Column(sa.UnicodeText)
