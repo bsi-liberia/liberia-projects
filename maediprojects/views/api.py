@@ -26,7 +26,7 @@ def jsonify(*args, **kwargs):
 @app.route("/api/activities/", methods=["POST", "GET"])
 def api_activities_country():
     if "country_code" not in request.form:
-        activities = qactivity.list_activities()
+        activities = qactivity.list_activities_user(current_user)
     else:
         activities = qactivity.list_activities_by_country(
             request.form["country_code"])
