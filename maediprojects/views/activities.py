@@ -9,13 +9,13 @@ from maediprojects.lib import codelists
 import json, datetime
 
 @app.route("/")
+@login_required
 def dashboard():
     countries = qactivity.get_iati_list()
     return render_template("home.html",
                 countries=countries,
                 loggedinuser=current_user,
-                stats = qactivity.get_stats(current_user),
-                activities = qactivity.list_activities_user(current_user)
+                stats = qactivity.get_stats(current_user)
                           )
 
 @app.route("/iati_data_list/")
