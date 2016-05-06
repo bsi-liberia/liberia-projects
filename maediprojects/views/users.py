@@ -85,5 +85,5 @@ def login():
 def logout():
     logout_user()
     flash(gettext(u'Logged out'), 'success')
-    redir_url = url_for("dashboard")
+    redir_url = url_for("login")
     return redirect(redir_url)
