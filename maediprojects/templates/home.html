@@ -24,37 +24,7 @@
     </div>
   </form>
 </div>
-<div id="projects-data">
-  <table class="table">
-    <thead>
-      <th>{{ _('Title') }}</th>
-      <th>{{ _('Country') }}</th>
-      <th>{{ _('Last updated') }}</th>
-      <th>{{ _('Edit') }}</th>
-      <th>{{ _('Delete') }}</th>
-    </thead>
-    <tbody>
-      {% for activity in activities %}
-      <tr>
-        <td>{{ activity.title }}</td>
-        <td>{{ activity.recipient_country.name }}</td>
-        <td>{{ activity.updated_date }}</td>
-        <td><a href="{{url_for('activity_edit', 
-              activity_id = activity.id)}}"
-              class="btn btn-default btn-xs">
-              <span class="glyphicon glyphicon-pencil"></span>
-            </a></td>
-        <td><a data-href="{{url_for('activity_delete', 
-              activity_id = activity.id)}}"
-              class="btn btn-default btn-xs btn-delete"
-              data-toggle="modal" data-target="#confirm-delete">
-              <span class="glyphicon glyphicon-trash"></span>
-            </a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<div id="projects-data"></div>
 
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
      aria-labelledby="myModalLabel" aria-hidden="true">
