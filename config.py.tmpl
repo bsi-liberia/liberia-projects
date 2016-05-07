@@ -1,5 +1,6 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'maediprojects.db')
 DEBUG = True
 SECRET_KEY = "YOUR-REALLY-SECRET-KEY"
@@ -13,6 +14,17 @@ ADMIN_USER = {
     "recipient_country_code": "ML",
     "administrator": True
 }
+ORGANISATION = {
+    "default_currency": "EUR",
+    "organisation_name": "MAEDI",
+    "organisation_type": "10",
+    "organisation_ref": "FR-6",
+    "organisation_contact_name": "",
+    "organisation_contact_phone": "",
+    "organisation_contact_email": "",
+    "organisation_contact_website": "",
+    "organisation_contact_address": ""
+}
 # We actually always use the default locale in this app so the data
 # is output consistently.
 BABEL_DEFAULT_LOCALE="fr"
@@ -21,3 +33,13 @@ LANGUAGES = {
     "fr": "Français",
     "en": "English"
 }
+# email server
+MAIL_SERVER = "mail.yourdomain.com"
+MAIL_PORT = 465
+MAIL_USE_TLS = False
+MAIL_USE_SSL = True
+MAIL_DEFAULT_SENDER = "you@yourdomain.com"
+MAIL_USERNAME = "username"
+MAIL_PASSWORD = "password"
+MAIL_RECIPIENTS = ["all@your.recipients"]
+ADMINS = ["email-addresses-that-can-send"]
