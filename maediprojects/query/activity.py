@@ -32,6 +32,24 @@ def get_iati_list():
                   }
           }), countries_db))
 
+def get_updates():
+    the24hoursago = datetime.datetime.utcnow() - datetime.timedelta(days=1)
+
+    created = db.session.query(models.Activity).filter(
+        models.Activity.created_date > the24hoursago
+    ).all()
+    updated = db.session.query(models.Activity).filter(
+        models.Activity.updated_date > the24hoursago
+    ).all()
+
+    created_ids = list(map(lambda x: x.id, created))
+
+    def filterout(update):
+        return update.id not in created_ids
+
+    updated = filter(filterout, updated)
+    return created, updated
+
 def create_activity(data):
     #FIXME check this org doesn't already exist?
     act = models.Activity()
