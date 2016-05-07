@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-04 18:13+0200\n"
+"POT-Creation-Date: 2016-05-07 14:01+0200\n"
 "PO-Revision-Date: 2016-03-03 11:32+0100\n"
 "Last-Translator: \n"
 "Language: en\n"
@@ -50,12 +50,12 @@ msgid "Basic"
 msgstr ""
 
 #: maediprojects/templates/activity_edit.html:18
-#: maediprojects/templates/activity_edit.html:324
+#: maediprojects/templates/activity_edit.html:337
 msgid "Location data"
 msgstr ""
 
 #: maediprojects/templates/activity_edit.html:19
-#: maediprojects/templates/activity_edit.html:338
+#: maediprojects/templates/activity_edit.html:351
 msgid "Financial data"
 msgstr ""
 
@@ -69,12 +69,12 @@ msgid "Project code"
 msgstr "New project"
 
 #: maediprojects/templates/activity_edit.html:35
-#: maediprojects/templates/home.html:12
+#: maediprojects/templates/home.html:52
 msgid "Title"
 msgstr ""
 
 #: maediprojects/templates/activity_edit.html:42
-#: maediprojects/templates/activity_edit.html:281
+#: maediprojects/templates/activity_edit.html:294
 msgid "Description"
 msgstr ""
 
@@ -92,7 +92,7 @@ msgstr ""
 
 #: maediprojects/templates/activity_edit.html:71
 #: maediprojects/templates/activity_edit.html:84
-#: maediprojects/templates/activity_edit.html:296
+#: maediprojects/templates/activity_edit.html:309
 msgid "yyyy-mm-dd"
 msgstr ""
 
@@ -148,84 +148,89 @@ msgstr ""
 msgid "Recipient Country"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:229
+#: maediprojects/templates/activity_edit.html:226
+#: maediprojects/templates/home.html:54
+msgid "User"
+msgstr ""
+
+#: maediprojects/templates/activity_edit.html:242
 msgid "Add activity; add detailed data &raquo;"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:241
+#: maediprojects/templates/activity_edit.html:254
 msgid "Display:"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:245
+#: maediprojects/templates/activity_edit.html:258
 msgid "All locations"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:246
+#: maediprojects/templates/activity_edit.html:259
 msgid "Regions"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:266
+#: maediprojects/templates/activity_edit.html:279
 msgid "No available locations found! You can try the following:"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:268
+#: maediprojects/templates/activity_edit.html:281
 msgid ""
 "check you specified the correct country for this project (on the "
 "\"Basic\" tab, under \"Adjust default settings\" at the bottom of the "
 "page)"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:269
+#: maediprojects/templates/activity_edit.html:282
 msgid "reload the page"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:270
+#: maediprojects/templates/activity_edit.html:283
 msgid "ask MAEDI to confirm locations have been set up for your country."
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:279
+#: maediprojects/templates/activity_edit.html:292
 msgid "Date"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:280
+#: maediprojects/templates/activity_edit.html:293
 msgid "Value"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:341
+#: maediprojects/templates/activity_edit.html:354
 msgid "Commitments"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:345
+#: maediprojects/templates/activity_edit.html:358
 msgid "Add commitment"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:352
+#: maediprojects/templates/activity_edit.html:365
 msgid "Disbursements"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:356
+#: maediprojects/templates/activity_edit.html:369
 msgid "Add disbursement"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:369
+#: maediprojects/templates/activity_edit.html:382
 #: maediprojects/templates/codelists.html:110
-#: maediprojects/templates/home.html:44
+#: maediprojects/templates/home.html:35
 msgid "Confirm delete"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:372
+#: maediprojects/templates/activity_edit.html:385
 msgid "Are you sure you want to delete this financial data?"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:375
+#: maediprojects/templates/activity_edit.html:388
 #: maediprojects/templates/codelists.html:116
-#: maediprojects/templates/home.html:50
+#: maediprojects/templates/home.html:41
 msgid "Cancel"
 msgstr ""
 
-#: maediprojects/templates/activity_edit.html:376
+#: maediprojects/templates/activity_edit.html:389
 #: maediprojects/templates/codelists.html:117
-#: maediprojects/templates/home.html:51
+#: maediprojects/templates/home.html:42
 msgid "Confirm"
 msgstr ""
 
@@ -266,7 +271,7 @@ msgstr ""
 
 #: maediprojects/templates/codelists.html:70
 #: maediprojects/templates/codelists.html:84
-#: maediprojects/templates/home.html:13
+#: maediprojects/templates/home.html:53
 #: maediprojects/templates/iati_data_list.html:7
 #: maediprojects/templates/users.html:15
 msgid "Country"
@@ -309,22 +314,39 @@ msgstr "Projects"
 msgid "projects"
 msgstr "Projects"
 
-#: maediprojects/templates/home.html:8
+#: maediprojects/templates/home.html:10
+#, fuzzy
+msgid "Show projects from"
+msgstr "New project"
+
+#: maediprojects/templates/home.html:12
+msgid "All countries"
+msgstr ""
+
+#: maediprojects/templates/home.html:22
 msgid "New project"
 msgstr "New project"
 
-#: maediprojects/templates/home.html:14 maediprojects/templates/users.html:16
-msgid "Edit"
-msgstr ""
-
-#: maediprojects/templates/home.html:15
-msgid "Delete"
-msgstr ""
-
-#: maediprojects/templates/home.html:47
+#: maediprojects/templates/home.html:38
 msgid ""
 "Are you sure you want to delete this activity? This action cannot be "
 "undone!"
+msgstr ""
+
+#: maediprojects/templates/home.html:55
+msgid "Last updated"
+msgstr ""
+
+#: maediprojects/templates/home.html:56 maediprojects/templates/users.html:16
+msgid "Edit"
+msgstr ""
+
+#: maediprojects/templates/home.html:57
+msgid "Delete"
+msgstr ""
+
+#: maediprojects/templates/home.html:80
+msgid "You don't have any projects yet."
 msgstr ""
 
 #: maediprojects/templates/iati_data_list.html:2
