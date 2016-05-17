@@ -51,7 +51,8 @@
       <div class="checkbox">
 
         <label for="administrator" class="col-sm-2 control-label">
-        <input type="checkbox" name="administrator" id="administrator" />
+        <input type="checkbox" name="administrator" id="administrator"
+        {% if user.administrator %}checked {% endif %} />
          <b>{{ _('Administrator') }}</b></label>
       </div>
     </div>
