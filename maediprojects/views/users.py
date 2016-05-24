@@ -55,7 +55,9 @@ def users_edit(user_id):
                  loggedinuser=current_user,
                  codelists = codelists.get_codelists())
     elif request.method == "POST":
-        if quser.updateUser(request.form):
+        data = request.form.to_dict()
+        data["id"] = user_id
+        if quser.updateUser(data):
             flash(gettext(u"Successfully updated user!"), "success")
         else:
             flash(gettext(u"Sorry, couldn't update that user!"), "danger")
