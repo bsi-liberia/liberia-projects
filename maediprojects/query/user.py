@@ -20,7 +20,7 @@ def user_by_username(username=None):
     return None
 
 def updateUser(data):
-    checkU = models.User.query.filter_by(username=data["username"]
+    checkU = models.User.query.filter_by(id=data["id"]
                 ).first()
     assert checkU
     checkU.username = data["username"]
