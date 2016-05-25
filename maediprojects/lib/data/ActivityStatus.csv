@@ -2,5 +2,6 @@ code,name_en,name_fr
 1,Pipeline/identification,Identification
 2,Implementation,Exécution
 3,Completion,Achevé
+4,Post-completion,Évaluation
 5,Cancelled,Annulé
 6,Suspended,Suspendu
