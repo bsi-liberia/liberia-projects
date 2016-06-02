@@ -1,24 +1,4 @@
-function resetFormGroup(input) {
-  $(input).parent().removeClass("has-success has-error has-feedback");
-  $(input).parent().find(".form-control-feedback").remove();
-  $(input).parent().find(".form-control-status").remove();
-}
-function successFormGroup(input) {
-  $(input).parent().addClass("has-success has-feedback");
-  $(input).after('<span class="glyphicon glyphicon-floppy-saved form-control-feedback" aria-hidden="true"></span> \
-  <span class="sr-only form-control-status">(success)</span>');
-}
-function errorFormGroup(input) {
-  $(input).parent().addClass("has-error has-feedback");
-  $(input).after('<span class="glyphicon glyphicon-floppy-remove form-control-feedback" aria-hidden="true"></span> \
-  <span class="sr-only form-control-status">(error)</span>');
-}
-$(document).on("focus", "#activity-form input, #activity-form textarea, \
-#form-result input, #form-result textarea, #form-indicator input, \
-#form-indicator textarea, #form-period input, #form-period \
-textarea", function(e) {
-  resetFormGroup(this);
-});
+
 $(document).on("change", "#activity-form input[type=checkbox]", function(e) {
   var data = {
     'attr': this.name,
@@ -36,7 +16,7 @@ $(document).on("change", "#activity-form input[type=checkbox]", function(e) {
   });  
 });
 
-$(document).on("change", "#activity-form input[type=text], #activity-form textarea, #activity-form select", function(e) {
+$(document).on("change", "#activity-form input[type=text], #activity-form input[type=number], #activity-form textarea, #activity-form select", function(e) {
   var data = {
     'attr': this.name,
     'value': this.value,
