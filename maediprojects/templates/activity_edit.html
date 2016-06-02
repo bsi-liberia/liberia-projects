@@ -246,6 +246,11 @@
       </form>
     </div>
 
+<script src="{{url_for('static', filename='vendor/moment-2.11.0/moment.min.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js')}}" type="text/javascript"></script>
+<link type="text/css" media="screen" href="{{url_for('static', filename='vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css')}}" rel="stylesheet" />
+<script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
+
 {% if activity.id %}
 
     {% raw %}
@@ -408,8 +413,5 @@ var api_update_activity_finances_url = "{{ api_update_activity_finances_url }}";
 <script src="{{url_for('static', filename='js/activity_edit.js')}}" type="text/javascript"></script>
 
 {% endif %}
-<script src="{{url_for('static', filename='vendor/moment-2.11.0/moment.min.js')}}" type="text/javascript"></script>
-<script src="{{url_for('static', filename='vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js')}}" type="text/javascript"></script>
-<link type="text/css" media="screen" href="{{url_for('static', filename='vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css')}}" rel="stylesheet" />
-<script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
+
 {% endblock %}
