@@ -7,10 +7,12 @@
   }
 </style>
 <h1>{{ _('Edit activity') }}</h1>
+{% if activity.id %}
 <a class="btn btn-success btn-large pull-right" href="{{ url_for('dashboard') }}">
   <i class="glyphicon glyphicon-floppy-disk"></i> 
   {{ _('Save and exit project') }}
 </a>
+{% endif %}
 <div role="tabpanel">
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#basic" aria-controls="basic" role="tab" data-toggle="tab">{{ _('Basic') }}</a></li>
