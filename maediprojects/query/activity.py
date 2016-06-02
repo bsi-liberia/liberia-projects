@@ -115,6 +115,8 @@ def update_attr(data):
     ).first()
     if data['attr'].endswith('date'):
         data['value'] = isostring_date(data['value'])
+    if (data['attr'].startswith("total_") and data['value'] == ""):
+        data['value'] = 0
     setattr(activity, data['attr'], data['value'])
     activity.updated_date = datetime.datetime.utcnow()
     db.session.add(activity)
