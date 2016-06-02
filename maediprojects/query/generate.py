@@ -357,7 +357,7 @@ def build_activity_103(doc, activity):
         (activity.total_commitments)
     ):
         if ((activity.start_date) and
-            (activity.total_commitments != "")):
+            (activity.total_commitments != 0)):
             transaction = { "id": "%s-C" % activity.id,
                             "transaction_date": activity.start_date,
                             "transaction_value": activity.total_commitments,
