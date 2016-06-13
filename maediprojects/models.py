@@ -161,11 +161,13 @@ class Activity(db.Model):
     @hybrid_property
     def commitments(self):
         return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
-                                             ActivityFinances.transaction_type=="C").all()
+                                             ActivityFinances.transaction_type=="C",
+                                             ActivityFinances.activity_id==self.id).all()
     @hybrid_property
     def disbursements(self):
         return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
-                                             ActivityFinances.transaction_type=="D").all()
+                                             ActivityFinances.transaction_type=="D",
+                                             ActivityFinances.activity_id==self.id).all()
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
