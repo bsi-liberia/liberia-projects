@@ -88,7 +88,9 @@ def el_org(role, o_name, o_ref=None, o_type=None):
     
 def el_iati_identifier(activity, o_ref):
     el = et.Element("iati-identifier")
-    a_code = activity.code
+    a_code = { True: activity.code, 
+               False: "%s-%s" % (activity.recipient_country_code, activity.id)
+             }[bool(activity.code)]
     el.text = "%s-%s" % (o_ref, a_code)
     return el
 
