@@ -358,7 +358,7 @@ def build_activity_103(doc, activity):
     for transaction in activity_commitments:
         ia.append(build_transaction_103(transaction.as_dict()))
 
-    if (len(activity_commitments == 0) and (activity.start_date and activity.total_commitments):
+    if (len(activity_commitments == 0) and activity.start_date and activity.total_commitments):
         transaction = { "id": "%s-C" % activity.id,
                         "transaction_date": activity.start_date,
                         "transaction_value": activity.total_commitments,
