@@ -351,8 +351,8 @@ def build_activity_103(doc, activity):
                                cl_lookups["TiedStatus"][activity.tied_status]))
 
     # Transactions
-    activivity_commitments = filter(valid_transaction, activity.commitments)
-    activivity_disbursements = filter(valid_transaction, activity.disbursements)
+    activity_commitments = filter(valid_transaction, activity.commitments)
+    activity_disbursements = filter(valid_transaction, activity.disbursements)
 
     # Output commitments
     for transaction in activity_commitments:
@@ -442,8 +442,8 @@ def build_activity(doc, activity):
     ia.append(el_with_code("default-tied-status", activity.tied_status))
 
     # Transactions
-    activivity_commitments = filter(valid_transaction, activity.commitments)
-    activivity_disbursements = filter(valid_transaction, activity.disbursements)
+    activity_commitments = filter(valid_transaction, activity.commitments)
+    activity_disbursements = filter(valid_transaction, activity.disbursements)
 
     # Output commitments
     for transaction in activity_commitments:
