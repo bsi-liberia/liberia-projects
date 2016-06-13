@@ -371,7 +371,7 @@ def build_activity_103(doc, activity):
     for transaction in activity_disbursements:
         ia.append(build_transaction_103(transaction.as_dict()))
 
-    if ((len(activity_disbursements) > 0) and activity.total_disbursements):
+    if ((len(activity_disbursements) == 0) and activity.total_disbursements):
         transaction = { "id": "%s-D" % activity.id,
                         "transaction_date": datetime.datetime.utcnow().date(),
                         "transaction_value": activity.total_disbursements,
