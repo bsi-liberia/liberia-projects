@@ -357,28 +357,28 @@ def build_activity_103(doc, activity):
     # Output commitments
     for transaction in activity_commitments:
         ia.append(build_transaction_103(transaction.as_dict()))
-    else:
-        if (activity.start_date and activity.total_commitments):
-            transaction = { "id": "%s-C" % activity.id,
-                            "transaction_date": activity.start_date,
-                            "transaction_value": activity.total_commitments,
-                            "transaction_description": "Total commitments",
-                            "transaction_type": "C"
-                            }
-            ia.append(build_transaction_103(transaction))
+
+    if (len(activity_commitments == 0) and (activity.start_date and activity.total_commitments):
+        transaction = { "id": "%s-C" % activity.id,
+                        "transaction_date": activity.start_date,
+                        "transaction_value": activity.total_commitments,
+                        "transaction_description": "Total commitments",
+                        "transaction_type": "C"
+                        }
+        ia.append(build_transaction_103(transaction))
 
     # Output disbursements
     for transaction in activity_disbursements:
         ia.append(build_transaction_103(transaction.as_dict()))
-    else:
-        if (activity.total_disbursements):
-            transaction = { "id": "%s-D" % activity.id,
-                            "transaction_date": datetime.datetime.utcnow().date(),
-                            "transaction_value": activity.total_disbursements,
-                            "transaction_description": "Total disbursements",
-                            "transaction_type": "D"
-                            }
-            ia.append(build_transaction_103(transaction))
+
+    if ((len(activity_disbursements) > 0) and activity.total_disbursements):
+        transaction = { "id": "%s-D" % activity.id,
+                        "transaction_date": datetime.datetime.utcnow().date(),
+                        "transaction_value": activity.total_disbursements,
+                        "transaction_description": "Total disbursements",
+                        "transaction_type": "D"
+                        }
+        ia.append(build_transaction_103(transaction))
 
     return doc
     
