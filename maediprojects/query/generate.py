@@ -350,6 +350,7 @@ def build_activity_103(doc, activity):
     # Transactions
     for transaction in activity.finances:
         if transaction.transaction_value == 0: continue
+        if not transaction.transaction_date: continue
         ia.append(build_transaction_103(transaction.as_dict()))
 
     if ((not activity.commitments) and
@@ -441,6 +442,7 @@ def build_activity(doc, activity):
     # Transactions
     for transaction in activity.finances:
         if transaction.transaction_value == 0: continue
+        if not transaction.transaction_date: continue
         ia.append(build_transaction(transaction.as_dict()))
 
     if ((not activity.commitments) and
