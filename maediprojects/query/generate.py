@@ -309,7 +309,9 @@ def build_activity_103(doc, activity):
     ia.append(el_org_103("Extending", activity.executing_org_name.name, 
                             activity.executing_org_name.code, "10"))
     
-    ia.append(el_with_code("activity-status", activity.activity_status))
+    ia.append(el_with_code_103("activity-status",
+            activity.activity_status,
+            cl_lookups["ActivityStatus"][activity.activity_status]))
     
     # Activity dates
     if activity.start_date:
