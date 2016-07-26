@@ -19,6 +19,24 @@ Copyright (c) 2016 Mark Brough, Ministère des Affaires étrangères et du Déve
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+## Screenshots
+
+**Projects**
+![Projects](/img/projects.png "Projects")
+Landing page shows list of projects that have been added so far. Most users can see only their own projects; administrators can see all projects.
+
+**Activity editorg**
+![Activity editor](/img/basic-data.png "Activity editor")
+Simple form to edit basic activity data. Data is automatically saved as you move through the form.
+
+**Simple geocoder**
+![Simple geocoder](/img/geocoder.png "Simple geocoder")
+The geocoder retrieves locations automatically from [Geonames.org](http://geonames.org) and providers a list of locations that can be selected by clicking on them on the left hand side. They appear as markers on the map and are instantly saved to the database.
+
+**Financial data**
+![Financial data](/img/financial-data.png "Financial data")
+New financial data (commiments and disbursements) can easily be added. The data is saved as you move through the form.
+
 ## Features
 
 1. Internationalisation has been added using [Flask-Babel](https://pythonhosted.org/Flask-Babel/) - you can specify the country in config.py and then add new translations as outlined in Flask-Babel's documentation. Translation strings are stored in `maediprojects/translations`
