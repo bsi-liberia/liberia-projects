@@ -21,20 +21,24 @@ Copyright (c) 2016 Mark Brough, Ministère des Affaires étrangères et du Déve
 
 ## Screenshots
 
-**Projects**
+### Projects
 ![Projects](/img/projects.png "Projects")
+
 Landing page shows list of projects that have been added so far. Most users can see only their own projects; administrators can see all projects.
 
-**Activity editorg**
+### Activity editor
 ![Activity editor](/img/basic-data.png "Activity editor")
+
 Simple form to edit basic activity data. Data is automatically saved as you move through the form.
 
-**Simple geocoder**
+### Simple geocoder
 ![Simple geocoder](/img/geocoder.png "Simple geocoder")
+
 The geocoder retrieves locations automatically from [Geonames.org](http://geonames.org) and providers a list of locations that can be selected by clicking on them on the left hand side. They appear as markers on the map and are instantly saved to the database.
 
-**Financial data**
+### Financial data
 ![Financial data](/img/financial-data.png "Financial data")
+
 New financial data (commiments and disbursements) can easily be added. The data is saved as you move through the form.
 
 ## Features
