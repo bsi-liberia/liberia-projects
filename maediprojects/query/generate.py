@@ -283,7 +283,7 @@ def build_activity_103(doc, activity):
     ia = et.Element("iati-activity")
     doc.append(ia)
 
-    ia.set("last-updated-datetime", current_datetime())
+    ia.set("last-updated-datetime", activity.updated_date.isoformat())
     #FIXME: put default currency in organisation settings
     ia.set("default-currency", app.config["ORGANISATION"]["default_currency"])
     
@@ -394,7 +394,7 @@ def build_activity(doc, activity):
     ia = et.Element("iati-activity")
     doc.append(ia)
 
-    ia.set("last-updated-datetime", current_datetime())
+    ia.set("last-updated-datetime", activity.updated_date.isoformat())
     #FIXME: put default currency in organisation settings
     ia.set("default-currency", app.config["ORGANISATION"]["default_currency"])
     
