@@ -9,6 +9,7 @@ from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import generate as qgenerate
+from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.lib import codelists
 import datetime, json
 
@@ -156,3 +157,9 @@ def generate_iati_xml(version, country_code):
         return Response(xml, mimetype='text/xml')
 
     return "ERROR: UNKNOWN VERSION"
+
+@app.route("/api/activities.csv")
+def maedi_activities_csv():
+    data = qgenerate_csv.generate_csv()
+    data.seek(0)
+    return Response(data, mimetype="text/csv")
