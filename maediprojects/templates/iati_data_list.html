@@ -20,7 +20,8 @@
     {% endfor %}
   </tbody>
 </table>
-
+<hr />
+<p>{{ _('AFD CSV file for project browser:') }} <a class="btn btn-success" href="{{url_for('maedi_activities_csv')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download') }}</a></p>
 <script type="text/javascript">
 $(document).ready(function()
     {
