@@ -7,7 +7,7 @@
   <i class="glyphicon glyphicon-plus"></i> 
   {{ _('New user') }}
 </a>
-<table class="table">
+<table class="table" id="usersList">
   <thead>
     <th>{{ _('Username') }}</th>
     <th>{{ _('Name') }}</th>
@@ -31,5 +31,11 @@
     {% endfor %}
   </tbody>
 </table>
-
+<script type="text/javascript">
+$(document).ready(function()
+    {
+        $("#usersList").tablesorter( {sortList: [[0,0]]} );
+    }
+);
+</script>
 {% endblock %}
