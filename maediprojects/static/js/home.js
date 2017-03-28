@@ -5,7 +5,7 @@ var updateProjects = function(projects) {
 	Mustache.parse(projects_template);
 	var rendered = Mustache.render(projects_template, projects);
 	$('#projects-data').html(rendered);
-  $("#projectsList").tablesorter( {sortList: [[0,0]]} );
+  $("#projectsList").tablesorter( {sortList: [[3,1],[1,0],[0,0]]} );
 }
 var setupProjectsForm = function(projects) {
   updateProjects(projects);
