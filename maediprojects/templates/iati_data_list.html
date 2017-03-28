@@ -2,7 +2,7 @@
 {% block title %}{{ _('IATI data files') }}{% endblock %}
 {% block content %}
 <h1>{{ _('IATI data files') }}</h1>
-<table class="table">
+<table class="table" id="iatiDataFiles">
   <thead>
     <th>{{ _('Country') }}</th>
     <th>{{ _('Country Code') }}</th>
@@ -21,4 +21,11 @@
   </tbody>
 </table>
 
+<script type="text/javascript">
+$(document).ready(function()
+    {
+        $("#iatiDataFiles").tablesorter( {sortList: [[1,0],[0,0]]} );
+    }
+);
+</script>
 {% endblock %}
