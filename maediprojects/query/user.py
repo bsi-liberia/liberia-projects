@@ -33,7 +33,7 @@ def updateUser(data):
     if not current_user.administrator and data.get('administrator'):
         data.pop('administrator')
         
-    checkU.administrator = data.get('administrator')
+    checkU.administrator = bool(data.get('administrator'))
     if "change_password" in data:
         # Update password
         checkU.pw_hash = generate_password_hash(data["password"])
