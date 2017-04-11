@@ -7,6 +7,7 @@ from maediprojects.lib.codelist_helpers import codelists
 from maediprojects.lib.codelists import get_codelists_lookups
 import unicodecsv
 import StringIO
+import re
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -55,9 +56,9 @@ def activity_to_json(activity, cl_lookups):
         u'Other activity identifiers': { True: activity.code, 
                False: activity.id
              }[bool(activity.code)],
-        u'Activity Title': activity.title, 
+        u'Activity Title': re.sub("\t|\n|\r", "", activity.title), 
         u"Activity Title (in recipient's language)":"",
-        u'Activity Description': activity.description, 
+        u'Activity Description': re.sub("\t|\n|\r", "", activity.description), 
         u"Activity Description (in recipient's language)": "",
         u'Activity Status': cl_lookups["ActivityStatus"][activity.activity_status], 
         u'Activity Dates (Start Date)': activity.start_date.isoformat() if activity.start_date else "",
