@@ -10,6 +10,7 @@ from maediprojects.query import finances as qfinances
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import generate as qgenerate
 from maediprojects.query import generate_csv as qgenerate_csv
+from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.lib import codelists
 import datetime, json
 
@@ -170,3 +171,9 @@ def maedi_activities_csv():
     data = qgenerate_csv.generate_csv()
     data.seek(0)
     return Response(data, mimetype="text/csv")
+
+@app.route("/api/activities.xlsx")
+def maedi_activities_xlsx():
+    data = qgenerate_xlsx.generate_xlsx()
+    data.seek(0)
+    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
