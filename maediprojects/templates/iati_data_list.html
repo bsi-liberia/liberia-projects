@@ -21,7 +21,10 @@
   </tbody>
 </table>
 <hr />
-<p>{{ _('AFD CSV file for project browser:') }} <a class="btn btn-success" href="{{url_for('maedi_activities_csv')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download') }}</a></p>
+<p>{{ _('AFD file for project browser:') }}
+  <a class="btn btn-sm btn-success" href="{{url_for('maedi_activities_csv')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download CSV') }}</a>
+  <a class="btn btn-sm btn-success" href="{{url_for('maedi_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download XLSX') }}</a>
+</p>
 <script type="text/javascript">
 $(document).ready(function()
     {
