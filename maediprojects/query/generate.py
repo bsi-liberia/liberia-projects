@@ -284,8 +284,8 @@ def build_activity_103(doc, activity):
     doc.append(ia)
 
     ia.set("last-updated-datetime", activity.updated_date.isoformat())
-    #FIXME: put default currency in organisation settings
     ia.set("default-currency", app.config["ORGANISATION"]["default_currency"])
+    ia.set("{http://www.w3.org/XML/1998/namespace}lang", app.config["ORGANISATION"]["default_language"])
     
     o_name = app.config["ORGANISATION"]["organisation_name"]
     o_ref = app.config["ORGANISATION"]["organisation_ref"]
@@ -395,8 +395,8 @@ def build_activity(doc, activity):
     doc.append(ia)
 
     ia.set("last-updated-datetime", activity.updated_date.isoformat())
-    #FIXME: put default currency in organisation settings
     ia.set("default-currency", app.config["ORGANISATION"]["default_currency"])
+    ia.set("{http://www.w3.org/XML/1998/namespace}lang", app.config["ORGANISATION"]["default_language"])
     
     o_name = app.config["ORGANISATION"]["organisation_name"]
     o_ref = app.config["ORGANISATION"]["organisation_ref"]
