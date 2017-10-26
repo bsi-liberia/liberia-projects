@@ -2,6 +2,7 @@ from maediprojects import db, models
 import datetime
 from flask import url_for
 from flask.ext.login import current_user
+from collections import OrderedDict
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -15,9 +16,10 @@ def isostring_year(value):
 def get_iati_list():
     countries_db = db.session.query(models.Activity
                     ).distinct(models.Activity.recipient_country_code
-                    ).group_by(models.Activity.recipient_country_code)
+                    ).group_by(models.Activity.recipient_country_code
+                    ).order_by(models.Activity.recipient_country_code)
 
-    return dict(map(lambda x: (x.recipient_country_code,
+    return OrderedDict(map(lambda x: (x.recipient_country_code,
           {
               "country": x.recipient_country.as_dict(),
               "urls":
