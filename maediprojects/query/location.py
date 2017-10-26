@@ -59,7 +59,8 @@ def import_locations(country_code):
     zipfile = ZipFile(StringIO(r.content))
     csv = unicodecsv.DictReader(zipfile.open("%s.txt" % country_code), 
                                 fieldnames=GEONAMES_FIELDNAMES,
-                                dialect='excel-tab')
+                                dialect='excel-tab',
+                                quoting=unicodecsv.QUOTE_NONE)
     for row in csv:
         if row["feature_code"] in ALLOWED_FEATURE_CODES:
             location = models.Location()
