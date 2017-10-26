@@ -1,30 +1,36 @@
 {% set active_page='dashboard' %}{% extends "layout.html" %}
 {% block title %}{{ _('Dashboard') }}{% endblock %}
 {% block content %}
-<h1>{{ _('Projects') }}</h1>
-<span class="label label-primary">{{ stats.count }} {{ _('projects') }}</span>
-<div class="pull-right">
-  <form class="form-inline">
-    {% if loggedinuser.administrator %}
-    <div class="form-group">
-      <label for="selectCountry">{{ _('Show projects from') }}</label>
-      <select class="form-control" name="selectCountry" id="selectCountry">
-        <option value="all" selected>{{ _('All countries') }}</option>
-        {% for code, data in countries.items() %}
-        <option value="{{ data.country.code }}">{{ data.country.name }}</option>
-        {% endfor %}
-      </select>
+<div class="row">
+  <div class="col-md-12">
+    <h1>{{ _('Projects') }}</h1>
+    <span class="label label-primary">{{ stats.count }} {{ _('projects') }}</span>
+    <div class="pull-right">
+      <form class="form-inline">
+        {% if loggedinuser.administrator %}
+        <div class="form-group">
+          <label for="selectCountry">{{ _('Show projects from') }}</label>
+          <select class="form-control" name="selectCountry" id="selectCountry">
+            <option value="all" selected>{{ _('All countries') }}</option>
+            {% for code, data in countries.items() %}
+            <option value="{{ data.country.code }}">{{ data.country.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        <div class="form-group">
+          <a class="btn btn-success btn-large" href="{{url_for('activity_new')}}">
+            <i class="glyphicon glyphicon-plus"></i> 
+            {{ _('New project') }}
+          </a>
+        </div>
+      </form>
     </div>
-    {% endif %}
-    <div class="form-group">
-      <a class="btn btn-success btn-large" href="{{url_for('activity_new')}}">
-        <i class="glyphicon glyphicon-plus"></i> 
-        {{ _('New project') }}
-      </a>
-    </div>
-  </form>
+  </div>
 </div>
-<div id="projects-data"></div>
+<div class="row">
+  <div id="projects-data"></div>
+</div>
 
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
      aria-labelledby="myModalLabel" aria-hidden="true">
