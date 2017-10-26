@@ -15,3 +15,6 @@ body {
 #projects-data {
   margin-top:10px;
 }
+.tablesorter-header {
+  white-space: nowrap;
+}
