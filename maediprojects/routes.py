@@ -6,6 +6,7 @@ import models
 from views import activities, api, users, codelists
 from query import activity as qactivity
 from query import setup as qsetup
+from query import import_liberia_db as qlibimport
 
 @app.route("/setup/")
 def setup():
@@ -15,6 +16,11 @@ def setup():
 @app.route("/setup/<country_code>/")
 def setup_country(country_code):
     qsetup.import_locations(country_code)
+    return "OK"
+
+@app.route("/import_liberia/")
+def import_liberia():
+    qlibimport.import_file()
     return "OK"
 
 @app.errorhandler(404)
