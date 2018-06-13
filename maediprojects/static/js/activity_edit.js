@@ -16,18 +16,22 @@ $(document).on("change", "#activity-form input[type=checkbox]", function(e) {
   });  
 });
 
-$(document).on("change", "#activity-form input[type=text], #activity-form input[type=number], #activity-form textarea, #activity-form select", function(e) {
+function saveChangedFormValue(formField) {
   var data = {
-    'attr': this.name,
-    'value': this.value,
+    'attr': formField.name,
+    'value': formField.value,
   }
-  var input = this;
+  var input = formField;
   resetFormGroup(input);
   $.post("update_activity/", data, function(resultdata) {
     successFormGroup(input);
   }).fail(function(){
     errorFormGroup(input);
   });  
+}
+
+$(document).on("change", "#activity-form input[type=text], #activity-form input[type=number], #activity-form textarea, #activity-form select", function(e) {
+  saveChangedFormValue(this);
 });
 
 // We have to handle datetimepickers slightly differently from other form
@@ -46,7 +50,46 @@ $('#datetimepicker_start, #datetimepicker_end')
     errorFormGroup(input);
   });  
 });
+    
+$(document).on("click", "#search_iati",
+    function(e) {
+  e.preventDefault();
+  var title = $("#title").val();
+  var reporting_org_code = $("#funding_org_code").val();
+  console.log(reporting_org_code);
+  var data = {
+    "title": title,
+    "reporting_org_code": reporting_org_code
+  }
+  $.post(api_iati_search_url, data, 
+    function(returndata){
+      if (returndata["count"] == '0'){
+          alert("No activities found from IATI. Try adjusting the title or funding organisation code.");
+      } else {
+        $('#iati-search-results-modal').modal();
+        // Render locations selector
+      	var iati_results_template = $('#iati-search-results-template').html();
+      	Mustache.parse(iati_results_template);
+      	var rendered_search_results = Mustache.render(iati_results_template, {"title": title, "results": returndata["results"]});
+      	$('#iati-search-results-area').html(rendered_search_results);
+      }
+    }
+  );
+});
+$(document).on("click", "#iati-search-results-area .import a",
+  function(e) {
+  e.preventDefault();
+  tr = $(this).closest("tr")
+  iati_identifier = tr.find("td.iati_identifier a").html();
+  description = tr.find("td.description").html();
+  $("#code").val(iati_identifier);
+  //$("#description").val(description);
+  $('#iati-search-results-modal').modal('hide');
+  $("#code").trigger("change");
+  //$("#description").trigger("change");
+});
 
+// LOCATIONS
 var locationsMap;
 
 $(function() {
@@ -249,6 +292,7 @@ var updateFinances = function(finances) {
   
 	var rendered_D = Mustache.render(financial_template, finances_D, partials);
 	$('#financial-data-D').html(rendered_D);
+  
 }
 
 var setupFinancesForm = function(finances) {
@@ -264,7 +308,7 @@ var setupFinances = function() {
 };
 setupFinances()
 
-$(document).on("change", "#finances input[type=text]", function(e) {
+$(document).on("change", "#financial-data-C input[type=text], #financial-data-D input[type=text]", function(e) {
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
     'attr': this.name,
@@ -278,6 +322,49 @@ $(document).on("change", "#finances input[type=text]", function(e) {
     errorFormGroup(input);
   });  
 });
+
+var setupForwardSpendForm = function(forwardspends) {
+	var forward_spend_template = $('#forward-spend-template').html();
+	Mustache.parse(forward_spend_template);
+  
+	partials = {"row-forward-spend-template": $('#row-forward-spend-template').html()};
+  
+	var rendered_FS = Mustache.render(forward_spend_template, forwardspends, partials);
+	$('#financial-data-FS').html(rendered_FS);
+}
+var setupForwardSpend = function() {
+	$.getJSON(api_activity_forwardspends_url, function(data) {
+      setupForwardSpendForm(data);
+	});
+};
+setupForwardSpend()
+
+$(document).on("change", "#financial-data-FS input[type=text]", function(e) {
+  if ($(this).attr("data-forwardspend-id")) {
+    var data = {
+      'id': $(this).attr("data-forwardspend-id"),
+      'value': this.value,
+    }
+    var input = this;
+    resetFormGroup(input);
+    $.post(api_activity_forwardspends_url, data, function(resultdata) {
+      successFormGroup(input);
+    }).fail(function(){
+      errorFormGroup(input);
+    });
+  } else {
+    var input_fields = $(this).closest("tr").find("input[type=text].fs-quarter")
+    var num_quarters = input_fields.length;
+    var input_fields_value = this.value/input_fields.length;
+    $.each(input_fields, function(i, this_field) {
+      $(this_field).val(input_fields_value);
+      $(this_field).trigger("change");
+    });
+  }
+
+});
+
+
 
 // We have to handle datetimepickers slightly differently from other form
 // inputs.
