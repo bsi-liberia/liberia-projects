@@ -3,33 +3,102 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>{{ _('Projects') }}</h1>
-    <span class="label label-primary">{{ stats.count }} {{ _('projects') }}</span>
-    <div class="pull-right">
-      <form class="form-inline">
-        {% if loggedinuser.administrator %}
-        <div class="form-group">
-          <label for="selectCountry">{{ _('Show projects from') }}</label>
-          <select class="form-control" name="selectCountry" id="selectCountry">
-            <option value="all" selected>{{ _('All countries') }}</option>
-            {% for code, data in countries.items() %}
-            <option value="{{ data.country.code }}">{{ data.country.name }}</option>
-            {% endfor %}
-          </select>
+    <h1>{{ _('Dashboard') }}</h1>
+    <a class="btn btn-success btn-large pull-right" href="{{url_for('activity_new')}}">
+      <i class="glyphicon glyphicon-plus"></i> 
+      {{ _('New project') }}
+    </a>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <h3>Summary: FY17 Disbursements by Sector</h3>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div id="sectors-pie"></div>
+  </div>
+</div>
+<hr />
+<div class="row">
+  <div class="col-md-12">
+    <h3>Projects: {{ stats.count }} in total</h3>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingOne">
+          <h4 class="panel-title">
+            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              Show filters
+            </a>
+          </h4>
         </div>
-        {% endif %}
-        <div class="form-group">
-          <a class="btn btn-success btn-large" href="{{url_for('activity_new')}}">
-            <i class="glyphicon glyphicon-plus"></i> 
-            {{ _('New project') }}
-          </a>
+        <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            <form class="form-horizontal">
+              <!--
+              {% if loggedinuser.administrator %}
+              <div class="form-group">
+                <label for="selectCountry" class="col-sm-3 control-label">{{ _('Country') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectCountry" id="selectCountry">
+                    <option value="all" selected>{{ _('All countries') }}</option>
+                    {% for code, data in countries.items() %}
+                    <option value="{{ data.country.code }}">{{ data.country.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              {% endif %}
+              -->
+              <div class="form-group">
+                <label for="selectFundingOrg" class="col-sm-3 control-label">{{ _('Organisation') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectFundingOrg" id="selectFundingOrg">
+                    <option value="all" selected>{{ _('All organisations') }}</option>
+                    {% for name, code in funding_orgs %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="selectMTEFSector" class="col-sm-3 control-label">{{ _('Sector') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectMTEFSector" id="selectMTEFSector">
+                    <option value="all" selected>{{ _('All sectors') }}</option>
+                    {% for name, code in mtef_sectors %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="selectMinistryAgency" class="col-sm-3 control-label">{{ _('Aligned Ministry/Agency') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectMinistryAgency" id="selectMinistryAgency">
+                    <option value="all" selected>{{ _('All Ministries/Agencies') }}</option>
+                    {% for name, code in aligned_ministry_agencies %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>
 <div class="row">
-  <div id="projects-data"></div>
+  <div class="col-md-12">
+    <div id="projects-data"></div>
+  </div>
 </div>
 
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
@@ -56,7 +125,7 @@
   <table class="table" id="projectsList">
     <thead>
       <th>{% endraw %}{{ _('Title') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Country') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Organisation') }}{% raw %}</th>
       <th>{% endraw %}{{ _('User') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Last updated') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Edit') }}{% raw %}</th>
@@ -66,7 +135,7 @@
       {{# activities }}
       <tr>
         <td>{{ title }}</td>
-        <td>{{ country }}</td>
+        <td>{{ funding_org }}</td>
         <td>{{ user }}</td>
         <td>{{ updated_date }}</td>
         <td><a href="{{ activity_edit_url }}"
@@ -97,7 +166,67 @@ $("#confirm-delete").on('show.bs.modal', function(e) {
   $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
 });
 </script>
-<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.min.js')}}" type="text/javascript"></script>
 <script src="{{url_for('static', filename='js/home.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='vendor/d3.v3.min.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='vendor/d3.tip.v0.6.3.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='js/charts/piechart.js')}}" type="text/javascript"></script>
+<style>
+#sectors-pie {
+  width: 900px;
+  height:270px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#sectors-pie .mtef09 {
+  fill: #555E7B !important;
+}
+#sectors-pie .mtef07 {
+  fill: #B7D968 !important;
+}
+#sectors-pie .mtef08 {
+  fill: #B576AD !important;
+}
+#sectors-pie .mtef05 {
+  fill: #E04644 !important;
+}
+#sectors-pie .mtef11 {
+  fill: #FDE47F !important;
+}
+#sectors-pie .mtef10 {
+  fill: #7CCCE5 !important;
+}
+#sectors-pie .mtef02 {
+  fill: #A6C5F4 !important;
+}
+#sectors-pie .mtef01 {
+  fill: #8BEDE5 !important;
+}
+#sectors-pie .mtef04 {
+  fill: #5F74D3 !important;
+}
+#sectors-pie .mtef06 {
+  fill: #7FAD22 !important;
+}
+#sectors-pie .mtef03 {
+  fill: #00BAE0 !important;
+}
+</style>
+<script type="text/javascript">
+  var pieOptions, thisPieChart;
+  d3.json("/api/sectors.json", function(error, data) {
+    pieOptions = {
+      "records": data["sectors"],
+      "drilldown": "name"
+    }
+    thisPieChart = new pieChart("#sectors-pie", pieOptions);
+  });
+  $(document).on("click", ".pie-years li", function(){
+    var year = $(this).attr("data-year");
+    pieOptions["cuts"]["year"] = year;
+    thisPieChart.setData(pieOptions);
+  });
+</script>
 
 {% endblock %}
