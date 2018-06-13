@@ -1,10 +1,10 @@
-# MAEDI Projects Database
+# Liberia Projects Database
 
-Simple project database to collect information about projects funded by French Embassies and publish it in IATI format (both v1.03 and v2.01).
+Simple project database to collect information about aid projects in Liberia and publish it in IATI format (both v1.03 and v2.01).
 
 ## License: AGPL v3.0
 
-Copyright (c) 2016 Mark Brough, Ministère des Affaires étrangères et du Développement international
+Copyright (c) 2016-2018 Mark Brough, Ministère des Affaires étrangères et du Développement international, Overseas Development Institute Liberia
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
