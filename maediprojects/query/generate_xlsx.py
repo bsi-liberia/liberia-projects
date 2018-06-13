@@ -15,6 +15,7 @@ from openpyxl.writer.excel import save_virtual_workbook
 
 def generate_xlsx():
     def guess_types(cell_value):
+        if cell_value == None: return ""
         try:
             if float(cell_value) == int(float(cell_value)):
                 return int(float(cell_value))
