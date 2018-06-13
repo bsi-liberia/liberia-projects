@@ -101,12 +101,31 @@ class Codelist(db.Model):
 
 class CodelistCode(db.Model):
     __tablename__ = 'codelistcode'
-    code = sa.Column(sa.UnicodeText, primary_key=True) # should be a slug
+    id = sa.Column(sa.Integer, primary_key=True)
+    code = sa.Column(sa.UnicodeText)
     name = sa.Column(sa.UnicodeText)
     codelist_code = sa.Column(sa.Integer,
             sa.ForeignKey('codelist.code'),
             nullable=False)
+    codelist = sa.orm.relationship("Codelist")
     __table_args__ = (sa.UniqueConstraint('code','codelist_code'),)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ActivityCodelistCode(db.Model):
+    __tablename__ = 'activitycodelistcode'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(sa.Integer,
+            sa.ForeignKey('activity.id'),
+            nullable=False)
+    codelist_code_id = sa.Column(sa.Integer,
+            sa.ForeignKey('codelistcode.id'),
+            nullable=False)
+    codelist_code = sa.orm.relationship("CodelistCode")
+    percentage = sa.Column(sa.Float,
+            default=100.00)
+    __table_args__ = (sa.UniqueConstraint('activity_id','codelist_code_id'),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -124,12 +143,12 @@ class Activity(db.Model):
     description = sa.Column(sa.UnicodeText)
     start_date = sa.Column(sa.Date)
     end_date = sa.Column(sa.Date)
-    executing_org = sa.Column(
+    funding_org_code = sa.Column(
             act_ForeignKey('codelistcode.code'),
             nullable=False,
             index=True)
-    executing_org_name = sa.orm.relationship("CodelistCode",
-            foreign_keys=[executing_org])
+    funding_org = sa.orm.relationship("CodelistCode",
+            foreign_keys=[funding_org_code])
     implementing_org = sa.Column(sa.UnicodeText) # ADDED
     recipient_country_code = sa.Column(
             act_ForeignKey('country.code'),
@@ -137,10 +156,10 @@ class Activity(db.Model):
             index=True)
     recipient_country = sa.orm.relationship("Country")
     dac_sector = sa.Column(sa.UnicodeText)
-    cicid_sector = sa.Column(
-            act_ForeignKey('codelistcode.code'),
-            nullable=False,
-            index=True)
+    #local_sector = sa.Column(
+    #        act_ForeignKey('codelistcode.code'),
+    #        nullable=False,
+    #        index=True)
     collaboration_type = sa.Column(sa.UnicodeText) # ADDED
     finance_type = sa.Column(sa.UnicodeText) # ADDED
     tied_status = sa.Column(sa.UnicodeText) # ADDED
@@ -157,6 +176,10 @@ class Activity(db.Model):
             cascade="all, delete-orphan")
     finances = sa.orm.relationship("ActivityFinances",
             cascade="all, delete-orphan")
+    forwardspends = sa.orm.relationship("ActivityForwardSpend",
+            cascade="all, delete-orphan")
+    classifications = sa.orm.relationship("ActivityCodelistCode",
+            cascade="all, delete-orphan")
 
     @hybrid_property
     def commitments(self):
@@ -168,9 +191,13 @@ class Activity(db.Model):
         return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
                                              ActivityFinances.transaction_type=="D",
                                              ActivityFinances.activity_id==self.id).all()
+    
+    @hybrid_property
+    def classification_data(self):
+        return {c.codelist_code.codelist.code: c for c in self.classifications}
 
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     
 class ActivityLocation(db.Model):
     __tablename__ = 'activitylocation'
@@ -195,10 +222,26 @@ class ActivityFinances(db.Model):
     activity_id = sa.Column(sa.Integer, 
             sa.ForeignKey('activity.id'), 
             nullable=False)
+    currency = sa.Column(sa.UnicodeText)
     transaction_date = sa.Column(sa.Date)
     transaction_type = sa.Column(sa.UnicodeText)
     transaction_description = sa.Column(sa.UnicodeText)
     transaction_value = sa.Column(sa.Float(precision=2))
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ActivityForwardSpend(db.Model):
+    __tablename__ = 'forwardspend' # 'activityforwardspend'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(
+        act_ForeignKey("activity.id"),
+        nullable=False)
+    value = sa.Column(sa.Float(precision=2))
+    value_date = sa.Column(sa.Date)
+    value_currency = sa.Column(sa.UnicodeText)
+    period_start_date = sa.Column(sa.Date)
+    period_end_date = sa.Column(sa.Date)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
