@@ -46,3 +46,41 @@ $(document).on("change", "#selectCountry", function(e) {
     setupProjectsForm(resultdata);
   });  
 });
+$(document).on("change", "#selectFundingOrg", function(e) {
+  if (e.currentTarget.value == "all") {
+    var data = {}
+  }
+  else {
+    var data = {
+      'funding_org_code': e.currentTarget.value
+    }    
+  }
+  $.post("/api/activities/", data, function(resultdata) {
+    setupProjectsForm(resultdata);
+  });  
+});
+$(document).on("change", "#selectMTEFSector", function(e) {
+  if (e.currentTarget.value == "all") {
+    var data = {}
+  }
+  else {
+    var data = {
+      'mtef_sector': e.currentTarget.value
+    }    
+  }
+  $.post("/api/activities/", data, function(resultdata) {
+    setupProjectsForm(resultdata);
+  });  
+});$(document).on("change", "#selectMinistryAgency", function(e) {
+  if (e.currentTarget.value == "all") {
+    var data = {}
+  }
+  else {
+    var data = {
+      'aligned_ministry_agency': e.currentTarget.value
+    }    
+  }
+  $.post("/api/activities/", data, function(resultdata) {
+    setupProjectsForm(resultdata);
+  });  
+});
