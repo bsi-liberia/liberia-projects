@@ -36,8 +36,15 @@
         <div class="form-group">
           <label for="title" class="col-sm-2 control-label">{{ _('Title') }}</label>
           <div class="col-sm-10">
-            <input type="text" name="title" id="title"
-            value="{{ activity.title }}" class="form-control">
+            <div class="input-group">
+              <input type="text" name="title" id="title"
+              value="{{ activity.title }}" class="form-control">
+              <div class="input-group-addon">
+                <a href="" id="search_iati" title="Search IATI for this project">
+                  <span class="glyphicon glyphicon-globe"></span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -48,11 +55,11 @@
           </div>
         </div>
         <div class="form-group select-fg">
-          <label for="executing_org" class="col-sm-2 control-label">{{ _('Executing organisation') }}</label>
+          <label for="funding_org_code" class="col-sm-2 control-label">{{ _('Funding organisation') }}</label>
           <div class="col-sm-10">
-            <select name="executing_org" id="executing_org" class="form-control">
-              {% for ds in codelists["extending-organisation"] %}
-              <option value="{{ ds.code }}"{% if ds.code == activity.executing_org %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
+            <select name="funding_org_code" id="funding_org_code" class="form-control">
+              {% for ds in codelists["funding-organisation"] %}
+              <option value="{{ ds.code }}"{% if ds.code == activity.funding_org_code %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
               {% endfor %}
             </select>
           </div>
@@ -101,11 +108,21 @@
           </div>
         </div>
         <div class="form-group select-fg">
-          <label for="cicid_sector" class="col-sm-2 control-label">{{ _('CICID Sector') }}</label>
+          <label for="mtef-sector" class="col-sm-2 control-label">{{ _('MTEF Sector') }}</label>
           <div class="col-sm-10">
-            <select name="cicid_sector" id="cicid_sector" class="form-control">
-              {% for ds in codelists["cicid-sectors"] %}
-              <option value="{{ ds.code }}"{% if ds.code == activity.cicid_sector %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
+            <select name="mtef-sector" id="mtef-sector" class="form-control">
+              {% for ds in codelists["mtef-sector"] %}
+              <option value="{{ ds.id }}"{% if ds.id == activity.classification_data["mtef-sector"].codelist_code_id %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group select-fg">
+          <label for="aligned-ministry-agency" class="col-sm-2 control-label">{{ _('Aligned Ministry/Agency') }}</label>
+          <div class="col-sm-10">
+            <select name="aligned-ministry-agency" id="aligned-ministry-agency" class="form-control">
+              {% for ds in codelists["aligned-ministry-agency"] %}
+              <option value="{{ ds.id }}"{% if ds.id == activity.classification_data["aligned-ministry-agency"].codelist_code_id %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
               {% endfor %}
             </select>
           </div>
@@ -121,12 +138,13 @@
             </select>
           </div>
         </div>
+        <!--
         <div class="form-group">
           <label for="total_commitments" class="col-sm-2 
           control-label">{{ _('Total commitments') }}</label>
           <div class="col-sm-10">
             <div class="input-group">
-              <div class="input-group-addon">EUR</div>
+              <div class="input-group-addon">{{ config.ORGANISATION.default_currency }}</div>
               <input type="number" name="total_commitments" id="total_commitments"
               value="{{ activity.total_commitments }}" class="form-control"
               placeholder="0.00">
@@ -138,13 +156,14 @@
           control-label">{{ _('Total disbursements') }}</label>
           <div class="col-sm-10">
             <div class="input-group">
-              <div class="input-group-addon">EUR</div>
+              <div class="input-group-addon">{{ config.ORGANISATION.default_currency }}</div>
               <input type="number" name="total_disbursements" id="total_disbursements"
               value="{{ activity.total_disbursements }}" class="form-control"
               placeholder="0.00">
             </div>
           </div>
         </div>
+          -->
         <hr />
         <div class="panel-group">
           <div class="panel panel-default">
@@ -252,92 +271,172 @@
 <script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
 
 {% if activity.id %}
-
-    {% raw %}
-    <script id="locations-selector-template" type="x-tmpl-mustache">
-      <div class="form-horizontal">
-        <div class="form-group">
-          <label for="selectLocationType" 
-          class="col-sm-3 control-label">{% endraw %}{{ _('Display:') }}{% raw %}</label>
-          <div class="col-sm-9">
-            <select class="form-control" name="selectLocationType"
-            id="selectLocationType">
-              <option value="all">{% endraw %}{{ _('All locations') }}{% raw %}</option>
-              <option value="regions" selected>{% endraw %}{{ _('Regions') }}{% raw %}</option>
-              {{# locations }}
-                <option value="{{ admin1_code }}">
-                &nbsp; {{ name }}</option>
-              {{/ locations }}
-            </select>
-          </div>
-        </div>
+{% raw %}
+<script id="locations-selector-template" type="x-tmpl-mustache">
+  <div class="form-horizontal">
+    <div class="form-group">
+      <label for="selectLocationType" 
+      class="col-sm-3 control-label">{% endraw %}{{ _('Display:') }}{% raw %}</label>
+      <div class="col-sm-9">
+        <select class="form-control" name="selectLocationType"
+        id="selectLocationType">
+          <option value="all">{% endraw %}{{ _('All locations') }}{% raw %}</option>
+          <option value="regions" selected>{% endraw %}{{ _('Regions') }}{% raw %}</option>
+          {{# locations }}
+            <option value="{{ admin1_code }}">
+            &nbsp; {{ name }}</option>
+          {{/ locations }}
+        </select>
       </div>
-    </script>
+    </div>
+  </div>
+</script>
 
-    <script id="locations-template" type="x-tmpl-mustache">
-      <div class="list-group" id="locationSelector">
-        {{# locations }}
-          <a href="#" class="list-group-item {{ active }}" data-id="{{ id }}" 
-          data-latitude="{{ latitude }}" 
-          data-longitude="{{ longitude }}">{{ name }}</a>
-        {{/ locations }}
-        {{^ locations }}
-          <a href="#" class="list-group-item"><b><i class="glyphicon 
-        glyphicon-exclamation-sign"></i>{% endraw %}{{ _('No available locations found! You can try the following:') }}{% raw %}</b>
-        <ul>
-          <li>{% endraw %}{{ _('check you specified the correct country for this project (on the "Basic" tab, under "Adjust default settings" at the bottom of the page)') }}{% raw %}</li>
-          <li>{% endraw %}{{ _('reload the page') }}{% raw %}</li>
-          <li>{% endraw %}{{ _('ask MAEDI to confirm locations have been set up for your country.') }}{% raw %}</li>
-        </ul></a>
-        {{/ locations }}
+<script id="locations-template" type="x-tmpl-mustache">
+  <div class="list-group" id="locationSelector">
+    {{# locations }}
+      <a href="#" class="list-group-item {{ active }}" data-id="{{ id }}" 
+      data-latitude="{{ latitude }}" 
+      data-longitude="{{ longitude }}">{{ name }}</a>
+    {{/ locations }}
+    {{^ locations }}
+      <a href="#" class="list-group-item"><b><i class="glyphicon 
+    glyphicon-exclamation-sign"></i>{% endraw %}{{ _('No available locations found! You can try the following:') }}{% raw %}</b>
+    <ul>
+      <li>{% endraw %}{{ _('check you specified the correct country for this project (on the "Basic" tab, under "Adjust default settings" at the bottom of the page)') }}{% raw %}</li>
+      <li>{% endraw %}{{ _('reload the page') }}{% raw %}</li>
+      <li>{% endraw %}{{ _('ask MAEDI to confirm locations have been set up for your country.') }}{% raw %}</li>
+    </ul></a>
+    {{/ locations }}
+  </div>
+</script>
+
+<script id="financial-template" type="x-tmpl-mustache">
+  <table class="table">
+    <thead>
+      <th>{% endraw %}{{ _('Date') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Currency') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Value') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Description') }}{% raw %}</th>
+      <th></th>
+    </thead>
+    <tbody id="financial-rows-{{ transaction_type }}">
+    {{# finances }}
+      {{> row-financial-template}}
+    {{/ finances }}
+  </table>
+</script>
+
+<script id="row-financial-template" type="x-tmpl-mustache">
+  <tr id="financial-{{ id }}" data-financial-id="{{ id }}">
+    <td>
+      <div class="date form-group">
+        <input type="text" class="form-control transaction-date" 
+        name="transaction_date" placeholder="{% endraw %}{{ _('yyyy-mm-dd') }}{% raw %}"
+        value="{{ transaction_date }}">
       </div>
-    </script>
+    </td>
+    <td>
+      <div class="form-group">
+        <select id="currency" name="currency" class="form-control">
+          <option name="USD">USD</option>
+        </select>
+      </div>
+    </td>
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control" name="transaction_value"
+          placeholder="0.00" value="{{ transaction_value }}">
+      </div>
+    </td>
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control" name="transaction_description"
+        placeholder="optional" value="{{ transaction_description }}">
+      </div>
+    </td>
+    <td>
+      <a class="btn btn-sm btn-default deleteFinancial"
+       data-toggle="modal" data-target="#confirm-delete">
+        <i class="glyphicon glyphicon-trash"></i>
+      </a>
+    </td>
+  </tr>
+</script>
+<script id="forward-spend-template" type="x-tmpl-mustache">
+  <p class="lead">This project starts on <em>{% endraw %}{{activity.start_date}}{%raw%} </em>
+  and ends on <em>{% endraw %}{{activity.end_date}}{%raw%}</em>. Please provide
+  forward spend projections, disaggregated by quarter, for these periods.</p>
+  <form class="form-horizontal">
+    <div class="form-group">
+      <label for="currency" class="col-sm-2 control-label">{% endraw %}{{ _('Currency') }}{% raw %}</label>
+      <div class="col-sm-3">
+        <select id="currency" name="currency" class="form-control">
+          <option name="USD">USD</option>
+        </select>
+      </div>
+      </div>
+  </form>
+  <div class="form-group">
+  </div>
+  <table class="table">
+    <thead>
+      <th>{% endraw %}{{ _('Year') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Jan-Mar') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Apr-Jun') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Jul-Sep') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Oct-Dec') }}{% raw %}</th>
+      <!--<th>{% endraw %}{{ _('Total') }}{% raw %}</th>-->
+    </thead>
+    <tbody id="forward-spend-rows">
+      {{# forwardspends }}
+        {{> row-forward-spend-template}}
+      {{/ forwardspends }}
+  </table>
+</script>
 
-    <script id="financial-template" type="x-tmpl-mustache">
-      <table class="table">
-        <thead>
-          <th>{% endraw %}{{ _('Date') }}{% raw %}</th>
-          <th>{% endraw %}{{ _('Value') }}{% raw %}</th>
-          <th>{% endraw %}{{ _('Description') }}{% raw %}</th>
-          <th></th>
-        </thead>
-        <tbody id="financial-rows-{{ transaction_type }}">
-        {{# finances }}
-          {{> row-financial-template}}
-        {{/ finances }}
-      </table>
-    </script>
-
-    <script id="row-financial-template" type="x-tmpl-mustache">
-      <tr id="financial-{{ id }}" data-financial-id="{{ id }}">
-        <td>
-          <div class="form-group">
-            <input type="text" class="form-control transaction-date" 
-            name="transaction_date" placeholder="{% endraw %}{{ _('yyyy-mm-dd') }}{% raw %}"
-            value="{{ transaction_date }}">
-          </div>
-        </td>
-        <td>
-          <div class="form-group">
-            <input type="text" class="form-control" name="transaction_value"
-            placeholder="0.00" value="{{ transaction_value }}">
-          </div>
-        </td>
-        <td>
-          <div class="form-group">
-            <input type="text" class="form-control" name="transaction_description"
-            placeholder="optional" value="{{ transaction_description }}">
-          </div>
-        </td>
-        <td>
-          <a class="btn btn-sm btn-default deleteFinancial"
-           data-toggle="modal" data-target="#confirm-delete">
-            <i class="glyphicon glyphicon-trash"></i>
-          </a>
-        </td>
-      </tr>
-    </script>
-    {% endraw %}
+<script id="row-forward-spend-template" type="x-tmpl-mustache">
+  <tr>
+    <td>
+      <div class="form-group">
+        <label>{{ year }}</label>
+      </div>
+    </td>
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control{{# Q1 }} fs-quarter{{/ Q1 }}" name="forwardspend-{{ Q1.id }}"
+          value="{{ Q1.value }}" data-forwardspend-id="{{ Q1.id }}" {{^ Q1 }}disabled{{/ Q1 }}>
+      </div>
+    </td>
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control{{# Q2 }} fs-quarter{{/ Q2 }}" name="forwardspend-{{ Q2.id }}"
+          value="{{ Q2.value }}" data-forwardspend-id="{{ Q2.id }}" {{^ Q2 }}disabled{{/ Q2 }}>
+      </div>
+    </td>
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control{{# Q3 }} fs-quarter{{/ Q3 }}" name="forwardspend-{{ Q3.id }}"
+          value="{{ Q3.value }}" data-forwardspend-id="{{ Q3.id }}" {{^ Q3 }}disabled{{/ Q3 }}>
+      </div>
+    </td>
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control{{# Q4 }} fs-quarter{{/ Q4 }}" name="forwardspend-{{ Q4.id }}"
+          value="{{ Q4.value }}" data-forwardspend-id="{{ Q4.id }}" {{^ Q4 }}disabled{{/ Q4 }}>
+      </div>
+    </td>
+    <!--
+    <td>
+      <div class="form-group">
+        <input type="text" class="form-control fs-total" name="total_transaction_value"
+          placeholder="0.00" value="{{ total_value }}">
+      </div>
+    </td>
+    -->
+  </tr>
+</script>
+{% endraw %}
 
     <!-- Location data -->
     <div role="tabpanel" class="tab-pane" id="location">
@@ -356,44 +455,160 @@
     <!-- Financial data -->
     <div role="tabpanel" class="tab-pane" id="finances">
       <h2>{{ _('Financial data') }}</h2>
-      <div class="row">
-        <div class="col-sm-12">
-          <h3>{{ _('Commitments') }}</h3>
-          <a class="btn btn-success btn-large pull-right addFinancial"
-          data-transaction-type="C">
-            <i class="glyphicon glyphicon-plus"></i> 
-            {{ _('Add commitment') }}
-          </a>
-          <div id="financial-data-C"></div>
+      <!--
+      <h4>Summary</h4>
+      <dl class="dl-horizontal">
+        <dt>Commitments</dt>
+        <dd id="summary-commitments"></dd>
+        <dt>Disbursements</dt>
+        <dd id="summary-disbursements"></dd>
+        <dt>MTEF projections</dt>
+        <dd>...</dd>
+      </dl>
+      -->
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                {{ _('Commitments') }}
+              </a>
+            </h4>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div id="financial-data-C"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <a class="btn btn-primary btn-large addFinancial"
+                  data-transaction-type="C">
+                    <i class="glyphicon glyphicon-plus"></i> 
+                    {{ _('Add commitment') }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <h3>{{ _('Disbursements') }}</h3>
-          <a class="btn btn-success btn-large pull-right addFinancial"
-          data-transaction-type="D">
-            <i class="glyphicon glyphicon-plus"></i> 
-            {{ _('Add disbursement') }}
-          </a>
-          <div id="financial-data-D"></div>
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingTwo">
+            <h4 class="panel-title">
+              <a class="collapsed" role="button" data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                {{ _('Disbursements') }}
+              </a>
+            </h4>
+          </div>
+          <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div id="financial-data-D"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <a class="btn btn-primary btn-large addFinancial"
+                  data-transaction-type="D">
+                    <i class="glyphicon glyphicon-plus"></i> 
+                    {{ _('Add disbursement') }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingThree">
+            <h4 class="panel-title">
+              <a class="collapsed" role="button" data-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                {{ _('Forward spending plans') }}
+              </a>
+            </h4>
+          </div>
+          <div id="collapseThree" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div id="financial-data-FS">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
+         aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">{{ _('Confirm delete') }}</h4>
+          </div>
+          <div class="modal-body">
+            <p>{{ _('Are you sure you want to delete this financial data?') }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+            <button type="button" class="btn btn-primary btn-ok">{{ _('Confirm') }}</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+{% raw %}
+<script id="iati-search-results-template" type="x-tmpl-mustache">
+  <p>The following results were found in IATI for <i>{{ title }}</i>.</p>
+  <table class="table">
+    <thead>
+      <th title="IATI Identifier">Project code</th>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Save project code</th>
+    </thead>
+    <tbody>
+      {{# results }}
+      <tr>
+        <td class="iati_identifier"><a href="http://d-portal.org/q.html?aid={{ iati_identifier }}" target="_blank">{{ iati_identifier }}</a</td>
+        <td class="title">{{# title }}{{# narratives }}{{ text }}<br />{{/ narratives }}{{/ title }}</td>
+        <td class="description">{{# descriptions }}{{# narratives }}{{ text }}{{/ narratives }}{{/ descriptions }}</td>
+        <td class="import">
+          <a class="btn btn-xs btn-success">
+            <span class="glyphicon glyphicon-ok"></span>
+          </a>
+        </td>
+      </tr>
+      {{/ results }}
+    </tbody>
+  </table>
+</script>
+{% endraw %}
+
+<div class="modal fade" id="iati-search-results-modal" tabindex="-1" role="dialog" 
      aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">{{ _('Confirm delete') }}</h4>
+        <h4 class="modal-title">{{ _('IATI Search Results') }}</h4>
       </div>
       <div class="modal-body">
-        <p>{{ _('Are you sure you want to delete this financial data?') }}</p>
+        <div id="iati-search-results-area"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
-        <button type="button" class="btn btn-primary btn-ok">{{ _('Confirm') }}</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('OK') }}</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -403,7 +618,9 @@
 var api_locations_url = "{{ api_locations_url }}";
 var api_activity_locations_url = "{{ api_activity_locations_url }}";
 var api_activity_finances_url = "{{ api_activity_finances_url }}";
+var api_activity_forwardspends_url = "{{ api_activity_forwardspends_url }}";
 var api_update_activity_finances_url = "{{ api_update_activity_finances_url }}";
+var api_iati_search_url = "{{ api_iati_search_url }}";
 </script>
 
 <link type="text/css" media="screen" href="{{url_for('static', filename='vendor/leaflet/0.7.7/leaflet.css')}}" rel="stylesheet" />
