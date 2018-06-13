@@ -1,17 +1,10 @@
 from maediprojects import db, models
+from maediprojects.query import finances as qfinances
 import datetime
 from flask import url_for
 from flask.ext.login import current_user
 from collections import OrderedDict
-
-def isostring_date(value):
-    # Returns a date object from a string of format YYYY-MM-DD
-    if value == "": return None
-    return datetime.datetime.strptime(value, "%Y-%m-%d")
-
-def isostring_year(value):
-    # Returns a date object from a string of format YYYY
-    return datetime.datetime.strptime(value, "%Y")
+from maediprojects.lib.util import isostring_date, isostring_year
 
 def get_iati_list():
     countries_db = db.session.query(models.Activity
@@ -56,16 +49,19 @@ def create_activity(data):
     #FIXME check this org doesn't already exist?
     act = models.Activity()
 
-    # Dates have to be converted to date format, then removed from the
-    # dict so they don't attempt to be re-set below...
-    act.start_date = isostring_date(data.pop("start_date"))
-    act.end_date = isostring_date(data.pop("end_date"))
+    # Dates have to be converted to date format
+    data["start_date"] = isostring_date(data["start_date"])
+    data["end_date"] = isostring_date(data["end_date"])
     
     for attr, val in data.items():
         if attr.startswith("total_"):
             if val == "":
                 val = 0
         setattr(act, attr, val)
+    
+    if not "forwardspends" in data:
+        act.forwardspends = qfinances.create_forward_spends(data["start_date"],
+            data["end_date"])
     db.session.add(act)
     db.session.commit()
     return act
@@ -111,12 +107,62 @@ def list_activities_by_country(recipient_country_code):
     ).all()
     return acts
 
+def list_activities_by_filter(filter_name, filter_value):
+    # Filter by classifications
+    if filter_name in ["mtef-sector", "aligned-ministry-agency"]:
+        acts = models.Activity.query.filter(
+            models.CodelistCode.codelist_code == filter_name,
+            models.CodelistCode.code == filter_value
+            ).join(
+                models.ActivityCodelistCode
+            ).join(
+                models.CodelistCode
+            ).all()
+    else:
+        acts = models.Activity.query.filter(
+            getattr(models.Activity, filter_name)==filter_value
+        ).all()
+    return acts
+
 def update_attr(data):
+    if data['attr'] in ["mtef-sector", "aligned-ministry-agency"]:
+        # Delete existing database entry
+        old_clc = models.ActivityCodelistCode.query.filter(
+            models.ActivityCodelistCode.activity_id == data['id'],
+            models.CodelistCode.codelist_code == data['attr']
+        ).join(
+            models.CodelistCode
+        ).all()
+        for code in old_clc:
+            db.session.delete(code)
+        new_clc = models.ActivityCodelistCode()
+        new_clc.activity_id = data["id"]
+        new_clc.codelist_code_id = data['value']
+        db.session.add(new_clc)
+        db.session.commit()
+        return True
+    
     activity = models.Activity.query.filter_by(
         id = data['id']
     ).first()
+    
     if data['attr'].endswith('date'):
         data['value'] = isostring_date(data['value'])
+        if data['attr'] == "start_date":
+            if data['value'].date() < activity.start_date:
+                # FIXME: need to create additional forward spend periods
+                print("Warning: activity start date moved earlier")
+            if data['value'].date() > activity.start_date:
+                # FIXME: need to remove 0-valued forward spend periods
+                print("Warning: activity start date moved later")
+        if data['attr'] == "end_date":
+            if data['value'].date() > activity.end_date:
+                # FIXME: need to create additional forward spend periods
+                print("Warning: activity end date moved later")
+            if data['value'].date() < activity.end_date:
+                # FIXME: need to remove 0-valued forward spend periods
+                print("Warning: activity end date moved earlier")
+        
     if (data['attr'].startswith("total_") and data['value'] == ""):
         data['value'] = 0
     setattr(activity, data['attr'], data['value'])
