@@ -1,6 +1,8 @@
 Babel==2.2.0
 blinker==1.4
+chardet==3.0.4
 email==4.0.2
+et-xmlfile==1.0.1
 Flask==0.10.1
 Flask-Babel==0.9
 Flask-Login==0.3.2
@@ -8,10 +10,12 @@ Flask-Mail==0.9.1
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.1
 itsdangerous==0.24
+jdcal==1.3
 Jinja2==2.8
 lxml==3.5.0
 MarkupSafe==0.23
 normality==0.2.4
+openpyxl==2.4.7
 pytz==2015.7
 requests==2.9.1
 six==1.10.0
@@ -19,3 +23,4 @@ speaklater==1.3
 SQLAlchemy==1.0.12
 unicodecsv==0.14.1
 Werkzeug==0.11.4
+xlrd==1.1.0
