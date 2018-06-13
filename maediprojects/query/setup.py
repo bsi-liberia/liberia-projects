@@ -4,6 +4,9 @@ from maediprojects import app, db, models
 from maediprojects.lib import codelists
 from maediprojects.query import user as quser
 import normality
+import unicodecsv
+import os
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 def setup():
     db.create_all()
@@ -39,56 +42,54 @@ def create_codes_codelists():
         for codelist_code in codelist_data:
             add_codelist_data(codelist_name, codelist_code)
         db.session.commit()
-
-    CODELISTS = {
-        "Extending Organisation": [
-            {
-                "code": "FR-3",
-                "name": "MAEDI"
-            },
-            {
-                "code": "FR-6",
-                "name": "AFD"
-            },
-            {
-                "code": "FR-99",
-                "name": u"Service de Coopération et d'Action Culturelle"
-            }
-        ],
-        "CICID sectors": [
+    
+    local_codelist_files = [
+        {
+            "name": "Aligned Ministry / Agency",
+            "filename": "aligned-ministry-agency.csv"
+         },
+        {
+            "name": "MTEF Sector",
+            "filename": "mtef-sector.csv"
+         },
+        {
+            "name": "Funding Organisation",
+            "filename": "funding-organisation.csv"
+         }]
+    
+    for codelist_file in local_codelist_files:
+        f = open(os.path.join(basedir, "../lib/data/local/", codelist_file["filename"]), "rb")
+        csv = unicodecsv.DictReader(f)
+        add_codelist(codelist_file["name"], csv)
+        f.close()
+    
+    temp = {
+        "Agenda For Transformation Pillar": [
             {
                 "code": "1",
-                "name": u"Santé"
+                "name": u"Peace, Security and Rule of Law"
             },
             {
                 "code": "2",
-                "name": u"Éducation et formation professionnelle"
+                "name": u"Economic Transformation"
             },
             {
                 "code": "3",
-                "name": u"Agriculture et sécurité alimentaire"
+                "name": u"Human Development"
             },
             {
                 "code": "4",
-                "name": u"Développement durable"
+                "name": u"Governance and Public Institutions"
             },
             {
                 "code": "5",
-                "name": u"Soutien à la croissance"
-            },
-            {
-                "code": "6",
-                "name": u"Gouvernement et société civile"
-            },
-            {
-                "code": "7",
-                "name": u"Autre"
-            },            
+                "name": u"Cross-cutting"
+            }
         ]
     }
     
-    for codelist_name, codelist_data in CODELISTS.items():
-        add_codelist(codelist_name, codelist_data)
+    #for codelist_name, codelist_data in CODELISTS.items():
+    #    add_codelist(codelist_name, codelist_data)
 
 def create_user():
     data = app.config["ADMIN_USER"]
