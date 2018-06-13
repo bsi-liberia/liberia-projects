@@ -16,6 +16,7 @@ def get_db_codelists():
     codelists = dict(map(lambda k: (k.codelist_code, []), codelist_data))
     for cd in codelist_data:
         codelists[cd.codelist_code].append({
+            "id": getattr(cd, "id", None),
             "code": cd.code,
             "name": cd.name
         })
@@ -37,7 +38,9 @@ def get_codelists():
         cl_file = open(os.path.join(current_dir, "data", codelist), "r")
         csv = unicodecsv.DictReader(cl_file)
         for row in csv:
-            out[cl_name].append({"code": row["code"], "name": row["name_%s" % LANG]})
+            out[cl_name].append({"code": row["code"], 
+                "id": row.get("id"),
+                "name": row["name_%s" % LANG]})
     out.update(get_db_codelists())
     return out
 
@@ -48,4 +51,23 @@ def get_codelists_lookups():
         codelists[cl] = {}
         for cl_item in cl_items:
             codelists[cl][cl_item["code"]] = cl_item["name"]
+    return codelists
+
+def get_codelists_lookups_by_name():
+    codelists = {}
+    in_codelists = get_codelists()
+    for cl, cl_items in in_codelists.items():
+        codelists[cl] = {}
+        for cl_item in cl_items:
+            codelists[cl][cl_item["name"]] = cl_item["code"]
+    return codelists
+
+def get_codelists_ids_by_name():
+    codelists = {}
+    in_codelists = get_codelists()
+    for cl, cl_items in in_codelists.items():
+        codelists[cl] = {}
+        for cl_item in cl_items:
+            codelists[cl][cl_item["name"]] = cl_item.get("id", 
+                cl_item.get("code"))
     return codelists
