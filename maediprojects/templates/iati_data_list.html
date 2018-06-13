@@ -2,10 +2,9 @@
 {% block title %}{{ _('Data export') }}{% endblock %}
 {% block content %}
 
-<h1>{{ _('Spreadsheet data') }}
-  <a class="btn btn-sm btn-success" href="{{url_for('maedi_activities_csv')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download CSV') }}</a>
-  <a class="btn btn-sm btn-success" href="{{url_for('maedi_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download XLSX') }}</a>
-</h1>
+<h1>{{ _('Spreadsheet data') }}</h1>
+<p><a class="btn btn-sm btn-success" href="{{url_for('maedi_activities_csv')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download CSV') }}</a></p>
+<p><a class="btn btn-sm btn-success" href="{{url_for('maedi_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download XLSX') }}</a></p>
 <hr />
 <h1>{{ _('IATI data files') }}</h1>
 <table class="table" id="iatiDataFiles">
