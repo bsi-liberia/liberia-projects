@@ -1,0 +1,178 @@
+{% set active_page='activities' %}{% extends "layout.html" %}
+{% block title %}{{ _('Activities') }}{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>{{ _('Activities') }}: {{ stats.count }} in total</h1>
+    <a class="btn btn-success btn-large" href="{{url_for('activity_new')}}">
+      <i class="glyphicon glyphicon-plus"></i> 
+      {{ _('New activity') }}
+    </a>
+  </div>
+</div>
+<hr />
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingOne">
+          <h4 class="panel-title">
+            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              Show filters
+            </a>
+          </h4>
+        </div>
+        <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            <form class="form-horizontal">
+              <!--
+              {% if loggedinuser.administrator %}
+              <div class="form-group">
+                <label for="selectCountry" class="col-sm-3 control-label">{{ _('Country') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectCountry" id="selectCountry">
+                    <option value="all" selected>{{ _('All countries') }}</option>
+                    {% for code, data in countries.items() %}
+                    <option value="{{ data.country.code }}">{{ data.country.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              {% endif %}
+              -->
+              <div class="form-group">
+                <label for="selectFundingOrg" class="col-sm-3 control-label">{{ _('Organisation') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectFundingOrg" id="selectFundingOrg">
+                    <option value="all" selected>{{ _('All organisations') }}</option>
+                    {% for name, code in funding_orgs %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="selectMTEFSector" class="col-sm-3 control-label">{{ _('Sector') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectMTEFSector" id="selectMTEFSector">
+                    <option value="all" selected>{{ _('All sectors') }}</option>
+                    {% for name, code in mtef_sectors %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="selectMinistryAgency" class="col-sm-3 control-label">{{ _('Aligned Ministry/Agency') }}</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="selectMinistryAgency" id="selectMinistryAgency">
+                    <option value="all" selected>{{ _('All Ministries/Agencies') }}</option>
+                    {% for name, code in aligned_ministry_agencies %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div id="projects-data">
+      <p class="lead">Loading data, please wait... <span class="glyphicon glyphicon-refresh loader" aria-hidden="true"></span></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
+     aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ _('Confirm delete') }}</h4>
+      </div>
+      <div class="modal-body">
+        <p>{{ _('Are you sure you want to delete this activity? This action cannot be undone!') }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+        <a class="btn btn-primary btn-ok">{{ _('Confirm') }}</a>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% raw %}
+<script id="projects-template" type="x-tmpl-mustache">
+  <table class="table" id="projectsList">
+    <thead>
+      <th>{% endraw %}{{ _('Title') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Organisation') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('User') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Last updated') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Edit') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Delete') }}{% raw %}</th>
+    </thead>
+    <tbody>
+      {{# activities }}
+      <tr>
+        <td>{{ title }}</td>
+        <td>{{ funding_org }}</td>
+        <td>{{ user }}</td>
+        <td>{{ updated_date }}</td>
+        <td><a href="{{ activity_edit_url }}"
+              class="btn btn-default btn-xs">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </a></td>
+        <td><a data-href="{{ activity_delete_url }}"
+              class="btn btn-default btn-xs btn-delete"
+              data-toggle="modal" data-target="#confirm-delete">
+              <span class="glyphicon glyphicon-trash"></span>
+            </a></td>
+      </tr>
+      {{/ activities }}
+      {{^ activities }}
+      <tr class="active">
+        <td colspan="6">{% endraw %}
+          {{ _("You don't have any projects yet.") }}
+        {% raw %}</td>
+      </tr>
+      {{/ activities }}
+    </tbody>
+  </table>
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      <li>
+        <a href="#" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      <li><a href="#">1</a></li>
+      <li><a href="#">2</a></li>
+      <li><a href="#">3</a></li>
+      <li><a href="#">4</a></li>
+      <li><a href="#">5</a></li>
+      <li>
+        <a href="#" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</script>
+{% endraw %}
+
+<script type="text/javascript">
+$("#confirm-delete").on('show.bs.modal', function(e) {
+  $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+});
+</script>
+<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.min.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='js/home.js')}}" type="text/javascript"></script>
+
+{% endblock %}
