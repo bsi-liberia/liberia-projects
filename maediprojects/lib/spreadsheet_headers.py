@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-headers = ['Reporting Organisation', u'Standard activity identifier', 
-u'Other activity identifiers', u'Activity Title', 
+headers = ['Reporting Organisation', u'Project code', u'Activity Title', 
 u"Activity Title (in recipient's language)", u'Activity Description', 
 u"Activity Description (in recipient's language)", u'Activity Status', 
 u'Activity Dates (Start Date)', u'Activity Dates (End Date)', 
@@ -17,13 +16,9 @@ u'Financial transaction (Disbursement & Expenditure)',
 u'Financial transaction (Reimbursement)', 
 u'Financial transaction (Incoming Funds)', 
 u'Financial transaction (Loan repayment / interest repayment)', 
-u'Activity Documents', u'Activity Website', u'Related Activity', 
-u'Conditions attached Y/N', u'Text of Conditions', u'Results data', 
-u'Cofinancement', u'Date de mise à jour du projet', 
-u'Date de la dernière publication', u'Date de publication NCO', 
-u'CRG']
+u'Activity Documents', u'Activity Website', u'Last updated date']
 
-fr_headers = ["Société", u"Id. Concours", u"Id. Projet", 
+fr_headers = ["Société", u"Id. Projet", 
 u"Nom du projet pour les instances", u"Non applicable", 
 u"Description du projet", u"Non applicable", u"Etat du projet", 
 u"Date de 1er versement (projet)", 
@@ -36,7 +31,4 @@ u"Groupe de produit", u"Valeur fixe", u"Valeur fixe",
 u"Engagements bruts (euro)", u"Non applicable", u"Non applicable", 
 u"Versements (euro)", u"Non applicable", u"Non applicable", 
 u"Non applicable", u"Lien_Fiche_Projet", u"Non applicable", 
-u"Non applicable", u"Non applicable", u"Non applicable", 
-u"Non applicable", u"Cofinanciers (O/N)", 
-u"Date mise à jour données projet", u"Date de la dernière publication", 
-u"Date de publication NCO", u"CRG"]
+u"Date mise à jour données projet"]
