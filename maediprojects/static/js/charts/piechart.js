@@ -22,7 +22,7 @@ var pieChart = function(el, data) {
 
   this._init = function() {
       this._calcSize();
-      svg = this.$el.append('svg')
+      svg = this.$el.html('').append('svg')
           .attr("width", width)
           .attr("height", height)
           .append("g")
@@ -61,6 +61,18 @@ var pieChart = function(el, data) {
   this.setData = function(data) {
       this.data = data.records;
       this.drilldown = data.drilldown;
+      this.cuts = data.cuts;
+      cuts = this.cuts;
+      // Cuts should look like e.g. {"year": "2013"}
+      function filterByCut(obj) {
+        for (var key in cuts) {
+          if (obj[key] != cuts[key]) { return false; }
+        }
+        return true;
+      }
+      if (this.cuts != null) {
+          this.data = this.data.filter(filterByCut);
+      }
       this.update();
   }
   
