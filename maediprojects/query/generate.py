@@ -302,12 +302,9 @@ def build_activity_103(doc, activity):
     ia.append(el_with_text("description", activity.description))
     
     # Participating orgs
-    ia.append(el_org_103("Funding", app.config["ORGANISATION"]["organisation_name"], 
-                                app.config["ORGANISATION"]["organisation_ref"], 
-                                app.config["ORGANISATION"]["organisation_type"]))
+    ia.append(el_org_103("Funding", activity.funding_org.name, 
+                            activity.funding_org.code, "10"))
     ia.append(el_org_103("Implementing", activity.implementing_org))
-    ia.append(el_org_103("Extending", activity.executing_org_name.name, 
-                            activity.executing_org_name.code, "10"))
     
     ia.append(el_with_code_103("activity-status",
             activity.activity_status,
@@ -333,8 +330,8 @@ def build_activity_103(doc, activity):
     
     # Classifications
     ia.append(el_with_code_103("sector", 
-                               activity.dac_sector, 
-                               cl_lookups["Sector"][activity.dac_sector],
+                               activity.dac_sector or "", 
+                               cl_lookups["Sector"].get(activity.dac_sector, ""),
                                "DAC"))
     ia.append(el_with_code_103("collaboration-type", 
                                activity.collaboration_type,
@@ -413,12 +410,9 @@ def build_activity(doc, activity):
     ia.append(el_with_narrative("description", activity.description))
     
     # Participating orgs
-    ia.append(el_org("Funding", app.config["ORGANISATION"]["organisation_name"], 
-                                app.config["ORGANISATION"]["organisation_ref"], 
-                                app.config["ORGANISATION"]["organisation_type"]))
+    ia.append(el_org("Funding", activity.funding_org.name, 
+                            activity.funding_org.code, o_type))
     ia.append(el_org("Implementing", activity.implementing_org))
-    ia.append(el_org("Extending", activity.executing_org_name.name, 
-                            activity.executing_org_name.code, o_type))
     
     ia.append(el_with_code("activity-status", activity.activity_status))
     
@@ -439,7 +433,7 @@ def build_activity(doc, activity):
         ia.append(el_location(location))
 
     # Classifications
-    ia.append(el_with_code("sector", activity.dac_sector, "1"))
+    ia.append(el_with_code("sector", activity.dac_sector or "", "1"))
 
     ia.append(el_with_code("collaboration-type", activity.collaboration_type))
     ia.append(el_with_code("default-flow-type", activity.flow_type))
