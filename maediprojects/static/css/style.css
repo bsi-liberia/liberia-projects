@@ -33,39 +33,108 @@ body {
   pointer-events: none;
   font-size: 1.2em;
   top: 0;
-  /* Creates a small triangle extender for the tooltip */
-  /* Northward tooltips */
-  /* Eastward tooltips */
-  /* Southward tooltips */
-  /* Westward tooltips */ }
-  .d3-tip::after {
-    box-sizing: border-box;
-    display: inline;
-    font-size: 10px;
-    width: 100%;
-    line-height: 1;
-    color: rgba(0, 0, 0, 0.8);
-    position: absolute;
-    pointer-events: none; }
-  .d3-tip.n:after {
-    content: "\25BC";
-    margin: -2px 0 0 0;
-    top: 100%;
-    left: 0;
-    text-align: center; }
-  .d3-tip.e:after {
-    content: "\25C0";
-    margin: -4px 0 0 0;
-    top: 50%;
-    left: -8px; }
-  .d3-tip.s:after {
-    content: "\25B2";
-    margin: 0 0 1px 0;
-    top: -8px;
-    left: 0;
-    text-align: center; }
-  .d3-tip.w:after {
-    content: "\25B6";
-    margin: -4px 0 0 -1px;
-    top: 50%;
-    left: 100%; }
+/* Creates a small triangle extender for the tooltip */
+/* Northward tooltips */
+/* Eastward tooltips */
+/* Southward tooltips */
+/* Westward tooltips */ }
+.d3-tip::after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  pointer-events: none; }
+.d3-tip.n:after {
+  content: "\25BC";
+  margin: -2px 0 0 0;
+  top: 100%;
+  left: 0;
+  text-align: center; }
+.d3-tip.e:after {
+  content: "\25C0";
+  margin: -4px 0 0 0;
+  top: 50%;
+  left: -8px; }
+.d3-tip.s:after {
+  content: "\25B2";
+  margin: 0 0 1px 0;
+  top: -8px;
+  left: 0;
+  text-align: center; }
+.d3-tip.w:after {
+  content: "\25B6";
+  margin: -4px 0 0 -1px;
+  top: 50%;
+  left: 100%; }
+
+/* Loading spinner */
+
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+}
+.loader {
+  -webkit-animation:spin2 2s infinite linear;
+  animation:spin 2s infinite linear;
+}
+
+/* Pie charts */
+#sectors-pie {
+  width: 900px;
+  height:270px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mtef09 {
+  fill: #555E7B !important;
+  background-color: #555E7B !important;
+}
+.mtef07 {
+  fill: #B7D968 !important;
+  background-color: #B7D968 !important;
+}
+.mtef08 {
+  fill: #B576AD !important;
+  background-color: #B576AD !important;
+}
+.mtef05 {
+  fill: #E04644 !important;
+  background-color: #E04644 !important;
+}
+.mtef11 {
+  fill: #FDE47F !important;
+  background-color: #FDE47F !important;
+}
+.mtef10 {
+  fill: #7CCCE5 !important;
+  background-color: #7CCCE5 !important;
+}
+.mtef02 {
+  fill: #A6C5F4 !important;
+  background-color: #A6C5F4 !important;
+}
+.mtef01 {
+  fill: #8BEDE5 !important;
+  background-color: #8BEDE5 !important;
+}
+.mtef04 {
+  fill: #5F74D3 !important;
+  background-color: #5F74D3 !important;
+}
+.mtef06 {
+  fill: #7FAD22 !important;
+  background-color: #7FAD22 !important;
+}
+.mtef03 {
+  fill: #00BAE0 !important;
+  background-color: #00BAE0 !important;
+}
