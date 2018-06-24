@@ -25,6 +25,22 @@ def dashboard():
                 stats = qactivity.get_stats(current_user)
                           )
 
+@app.route("/activities/")
+@login_required
+def activities():
+    countries = qactivity.get_iati_list()
+    funding_orgs = codelists.get_codelists_lookups_by_name()["funding-organisation"]
+    mtef_sectors = codelists.get_codelists_lookups_by_name()["mtef-sector"]
+    aligned_ministry_agencies = codelists.get_codelists_lookups_by_name()["aligned-ministry-agency"]
+    return render_template("activities.html",
+                countries=countries,
+                funding_orgs=sorted(funding_orgs.items()),
+                mtef_sectors=sorted(mtef_sectors.items()),
+                aligned_ministry_agencies=sorted(aligned_ministry_agencies.items()),
+                loggedinuser=current_user,
+                stats = qactivity.get_stats(current_user)
+                          )
+
 @app.route("/iati_data_list/")
 def iati_data_list():
     return render_template("iati_data_list.html",
@@ -76,6 +92,27 @@ def activity_delete(activity_id):
     else:
         flash("Sorry, unable to delete that activity", "danger")
     return redirect(url_for("dashboard"))
+
+@app.route("/activities/<activity_id>/")
+@login_required
+def activity(activity_id):
+    activity = qactivity.get_activity(activity_id)
+    locations = qlocation.get_locations_country(
+                                    activity.recipient_country_code)
+    #FIXME why are these not url_for()s ?
+    return render_template("activity.html",
+                activity = activity,
+                loggedinuser=current_user,
+                codelists = codelists.get_codelists(),
+                locations = locations,
+                api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
+                api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
+                api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
+                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
+                api_iati_search_url = "/api/iati_search/",
+                api_activity_forwardspends_url = url_for("api_activity_forwardspends", activity_id=activity_id),
+                users = quser.user()
+          )
 
 @app.route("/activities/<activity_id>/edit/")
 @login_required
