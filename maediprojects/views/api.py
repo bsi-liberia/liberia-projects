@@ -16,6 +16,7 @@ from maediprojects.lib import codelists
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 import requests
 import datetime, json, collections
+from dateutil.relativedelta import relativedelta
 
 OIPA_SEARCH_URL = "https://www.oipa.nl/api/activities/?format=json&q=%22{}%22&recipient_country=LR&reporting_organisation_identifier={}"
 
@@ -230,28 +231,30 @@ def api_iati_search():
     data = json.loads(r.text)
     return jsonify(data)
 
-@app.route("/api/sectors.json")
+@app.route("/api/sectors.json", methods=["GET", "POST"])
 def api_sectors():
     sector_totals = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_disbursement"),
         models.CodelistCode.code,
-        models.CodelistCode.name
+        models.CodelistCode.name,
+        func.strftime('%Y', func.date(models.ActivityFinances.transaction_date, 'start of month', '-6 month')).label("fiscal_year")
     ).join(
         models.Activity,
         models.ActivityCodelistCode,
         models.CodelistCode
     ).filter(
         models.ActivityFinances.transaction_type == "D",
-        models.ActivityFinances.transaction_date>datetime.datetime(2017,7,1),
         models.CodelistCode.codelist_code == "mtef-sector"
     ).group_by(
         models.CodelistCode.name,
-        models.CodelistCode.code
+        models.CodelistCode.code,
+        "fiscal_year"
     ).all()
     return jsonify(sectors = list(map(lambda s: {
         "name": s.name,
-        "value": s.total_disbursement,
-        "code": s.code
+        "value": round(s.total_disbursement, 2),
+        "code": s.code,
+        "fy": s.fiscal_year
     }, sector_totals)))
 
 @app.route("/api/iati/<version>/<country_code>.xml")
