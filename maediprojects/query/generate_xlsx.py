@@ -57,8 +57,6 @@ def generate_xlsx():
     
     writer = xlsxDictWriter(headers)
     writer.writeheader()
-    fr_headers_row = dict(map(lambda x: (x[1], fr_headers[x[0]]), enumerate(headers)))
-    writer.writerow(fr_headers_row)
     cl_lookups = get_codelists_lookups()
     activities = qactivity.list_activities()
     for activity in activities:
