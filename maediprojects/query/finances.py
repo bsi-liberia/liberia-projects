@@ -14,15 +14,35 @@ def isostring_year(value):
 def add_finances(activity_id, data):
     aF = models.ActivityFinances()
     aF.activity_id = activity_id
-    #aF.transaction_date = data["transaction_date"]
-    aF.transaction_type = data["transaction_type"]
-    #aF.transaction_value = data["transaction_value"]
-    #aF.transaction_description = data["transaction_description"]
+    classifications = data.get("classifications")
+    data.pop("classifications")
+    data["transaction_date"] = isostring_date(data["transaction_date"])
+    for key, value in data.items():
+        setattr(aF, key, value)
+    
+    _classifications = []
+    for key, value in classifications.items():
+        _c = models.ActivityFinancesCodelistCode()
+        _c.codelist_id = key
+        _c.codelist_code_id = value
+        _classifications.append(_c)
+    aF.classifications = _classifications
     db.session.add(aF)
     db.session.commit()
     return aF.id
 
+def update_finances_classification(data):
+    checkF = models.ActivityFinancesCodelistCode.query.filter_by(
+        activityfinance_id = data["finances_id"],
+        codelist_id = data["attr"]
+    ).first()
+    if not checkF: return False
+    checkF.codelist_code_id = data["value"]
+    db.session.add(checkF)
+    db.session.commit()
+
 def delete_finances(activity_id, finances_id):
+    print "Delete activity id {} finances id {}".format(activity_id, finances_id)
     checkF = models.ActivityFinances.query.filter_by(
         activity_id = activity_id,
         id = finances_id
@@ -30,7 +50,9 @@ def delete_finances(activity_id, finances_id):
     if checkF:
         db.session.delete(checkF)
         db.session.commit()
+        print "Return True"
         return True
+    print "Return False"
     return False
 
 def update_attr(data):
