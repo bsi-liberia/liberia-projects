@@ -1,0 +1,5 @@
+{% set active_page='help' %}{% extends "layout.html" %}
+{% block title %}{{ _('Help') }}{% endblock %}
+{% block content %}
+{{ markdown_text }}
+{% endblock %}
