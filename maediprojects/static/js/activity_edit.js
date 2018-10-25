@@ -6,14 +6,13 @@ $(document).on("change", "#activity-form input[type=checkbox]", function(e) {
   }
   var activates = $(this).attr("data-activates");
   $("#"+activates).prop("disabled", !(this.checked));
-    
   var input = this;
   resetFormGroup(input);
   $.post("update_activity/", data, function(resultdata) {
     successFormGroup(input);
   }).fail(function(){
     errorFormGroup(input);
-  });  
+  });
 });
 
 function saveChangedFormValue(formField) {
@@ -27,10 +26,10 @@ function saveChangedFormValue(formField) {
     successFormGroup(input);
   }).fail(function(){
     errorFormGroup(input);
-  });  
+  });
 }
 
-$(document).on("change", "#activity-form input[type=text], #activity-form input[type=number], #activity-form textarea, #activity-form select", function(e) {
+$(document).on("change", ".activity-form-save input[type=text], .activity-form-save input[type=number], .activity-form-save textarea, .activity-form-save select", function(e) {
   saveChangedFormValue(this);
 });
 
@@ -48,14 +47,13 @@ $('#datetimepicker_start, #datetimepicker_end')
     successFormGroup(input);
   }).fail(function(){
     errorFormGroup(input);
-  });  
+  });
 });
-    
 $(document).on("click", "#search_iati",
     function(e) {
   e.preventDefault();
   var title = $("#title").val();
-  var reporting_org_code = $("#funding_org_code").val();
+  var reporting_org_code = $("#reporting_org_id option:selected")[0].getAttribute("data-organisation-code");
   console.log(reporting_org_code);
   var data = {
     "title": title,
@@ -101,7 +99,6 @@ $(function() {
         var toggle = locationsMap.toggleLocation(l);
       }
 	});
-  
   $("body").on("shown.bs.tab", "#locationTab", function() {
     setupLocations()
   });
@@ -144,7 +141,7 @@ var updateLocationsMarkers = function(locations) {
     if (locations["locations"][i]["id"] in markers) {
       locations["locations"][i]["active"] = "active";
     } else {
-      locations["locations"][i]["active"] = "";      
+      locations["locations"][i]["active"] = "";
     }
   }
   return locations;
@@ -162,7 +159,6 @@ var updateLocationsList = function(locations) {
   // Render locations template
 	locations_template = $('#locations-template').html();
 	Mustache.parse(locations_template);   // optional, speeds up future uses
-  
   // Check location markers and make sure we're highlighting things nicely
   locations = updateLocationsMarkers(locations);
 	var rendered_locations = Mustache.render(locations_template, locations);
@@ -171,12 +167,10 @@ var updateLocationsList = function(locations) {
 
 var setupLocationsForm = function(locations) {
   /* ON LOAD. Add some nicer error handling here at some point... */
-  
   function isADM1(location) {
     return location["feature_code"] == "ADM1";
   }
   locations_adm1 = {"locations": locationsData["locations"].filter(isADM1)}
-  
   updateLocationsSelector(locations_adm1);
   updateLocationsList(locations_adm1);
 };
@@ -221,18 +215,25 @@ var setupLocations = function() {
 	});
 };
 
-$("#confirm-delete").on('show.bs.modal', function(e) {
-  $(this).find(".btn-ok").on("click", function(f) {
-    deleteFinancial(e.relatedTarget);
-    $("#confirm-delete").modal("hide");
-  });
+
+$('#confirm-delete').on('click', '.btn-ok', function(e) {
+  var $modalDiv = $(e.delegateTarget);
+  var transaction_id = $(this).data('transaction_id');
+  deleteFinancial(transaction_id);
+  $modalDiv.modal('hide');
 });
 
-function deleteFinancial(target) {
+$("#confirm-delete").on('show.bs.modal', function(e) {
+  var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
+  $('.btn-ok', this).data("transaction_id", target);
+});
+
+function deleteFinancial(transaction_id) {
   var data = {
-    "transaction_id": $(target).closest("tr").attr("data-financial-id"),
+    "transaction_id": transaction_id,
     "action": "delete"
   }
+  console.log("delete2", data);
   $.post(api_activity_finances_url, data, 
     function(returndata){
       if (returndata == 'False'){
@@ -244,11 +245,59 @@ function deleteFinancial(target) {
   );
 }
 
+function last_quarter_transaction_date() {
+  return moment().date(1).subtract(1, 'quarter').endOf('quarter').format('YYYY-MM-DD');
+}
+
+/* This is kind of a nasty hack… */
+function setupCSSRules() {
+  $.each($(".set-column-visibility li input"), function(i, checkbox) {
+    target = $(checkbox).attr("data-target");
+    //$("."+target).hide();
+    $("head").append('<style id="style-'+target+'"></style>');
+    addCSSRule(target, "display: none; width: 0%;");
+  });
+}
+setupCSSRules()
+function addCSSRule(target, style) {
+  $('#style-'+target).html('th.'+target+', td.'+target+' {' + style + ';}');
+}
+
+$( '.set-column-visibility li' ).on( 'click', function( event ) {
+    var $checkbox = $(this).find('input[type="checkbox"]');
+    if (!$checkbox.length) {
+        return;
+    }
+    var _target = $checkbox.attr("data-target");
+    if ($checkbox.is(':checked')) { 
+        $checkbox.prop('checked',false); 
+        addCSSRule(_target, "display: none");
+    } 
+    else { 
+      $checkbox.prop('checked',true); 
+      addCSSRule(_target, "");
+    }
+    /*$("."+_target).toggle();*/
+    return false;
+}); 
 $(document).on("click", ".addFinancial", function(e) {
   e.preventDefault();
   var transaction_type = $(this).attr("data-transaction-type");
+  var transaction_date = last_quarter_transaction_date()
+  var aid_type = $("#basic #aid_type option:selected")[0].value;
+  var finance_type = $("#basic #finance_type option:selected")[0].value;
+  var provider_org_id = $("#basic .organisations_select_1:first option:selected")[0].value;
+  var receiver_org_id = $("#basic .organisations_select_4:first option:selected")[0].value;
+  var mtef_sector = $("#sectors select.classification_mtef-sector:first option:selected")[0].value;
   var data = {
     "transaction_type": transaction_type,
+    "transaction_date": transaction_date,
+    "transaction_value": "0.00",
+    "aid_type": aid_type,
+    "finance_type": finance_type,
+    "provider_org_id": provider_org_id,
+    "receiver_org_id": receiver_org_id,
+    "mtef_sector": mtef_sector,
     "action": "add"
   }
   $.post(api_activity_finances_url, data, 
@@ -257,42 +306,88 @@ $(document).on("click", ".addFinancial", function(e) {
           alert("There was an error updating that financial data.");
       } else {
         var row_financial_template = $('#row-financial-template').html();
-        var data = {
-          "id": returndata,
-          "transaction_type": transaction_type
-        }
-      	var rendered_row = Mustache.render(row_financial_template, data);
-      	$('#financial-rows-' + transaction_type).append(rendered_row);
+        data["id"] = returndata;
+        var codelists = generateCodelists()
+        var row = generateTransaction(data, codelists)
+        partials = {"column-codelist-template": $('#column-codelist-template').html()};
+        var rendered_row = Mustache.render(row_financial_template, row, partials);
+        $('#financial-rows-' + transaction_type).append(rendered_row);
       }
     }
   );
 });
+
+var generateCodelists = function() {
+  /* Generate list of aid types */
+  codelists_aid_types = $.map($("#basic #aid_type option"), 
+    function(d,i) { return {"code": d.value, 
+                            "name": d.getAttribute("data-name") }});
+  /* Generate list of finance types */
+  codelists_finance_types = $.map($("#basic #finance_type option"), 
+    function(d,i) { return {"code": d.value, 
+                            "name": d.getAttribute("data-name") }});
+  /* Generate list of mtef sectors */
+  codelists_mtef_sectors = $.map($("#sectors select.classification_mtef-sector:first option"), 
+    function(d,i) { return {"code": d.value, 
+                            "name": d.getAttribute("data-name") }});
+  /* Generate list of organisations */
+  codelists_organisations = $.map($("#basic .organisations_select_1:first option"), 
+    function(d,i) { return {"code": d.value, 
+                            "name": d.getAttribute("data-name") }});
+  return [
+    { "attribute": "aid_type", "codes": codelists_aid_types,
+      "name": "codelist_aid_types" },
+    { "attribute":  "finance_type", "codes": codelists_finance_types,
+      "name": "codelist_finance_types" },
+    { "attribute":  "mtef_sector", "codes": codelists_mtef_sectors,
+      "name": "codelist_mtef_sectors" },
+    {"attribute": "provider_org_id", "codes": codelists_organisations,
+      "name": "codelist_provider_orgs" },
+    {"attribute": "receiver_org_id", "codes": codelists_organisations,
+      "name": "codelist_receiver_orgs" }]
+}
+
+var generateTransaction = function(d, codelists) {
+  $.map(codelists, function(cl, i) {
+    d[cl.name] = $.map(cl.codes, function(c, ci) {
+      if (d[cl.attribute] == c.code) { selected = " selected"; } 
+      else { selected = ""; }
+      return {"name": c.name, "code": c.code, "selected": selected};
+    });
+  });
+  return d;
+}
 
 // FINANCES
 var updateFinances = function(finances) {
   // Render finances template
 	var financial_template = $('#financial-template').html();
 	Mustache.parse(financial_template);   // optional, speeds up future uses
-  
-	partials = {"row-financial-template": $('#row-financial-template').html()};
-  
+	partials = {"row-financial-template": $('#row-financial-template').html(),
+              "column-codelist-template": $('#column-codelist-template').html()
+            };
   function isC(finance) {
     return finance["transaction_type"] == "C";
-  } 
+  }
   function isD(finance) {
     return finance["transaction_type"] == "D";
   }
-  finances_C = {"finances": financialData["finances"].filter(isC),
+  var codelists = generateCodelists()
+  function generateFinancialData(data) {
+    return $.map(data, function(d,i) {
+      return generateTransaction(d, codelists);
+    });
+  }
+  financialDataC = generateFinancialData(financialData["finances"].filter(isC));
+  financialDataD = generateFinancialData(financialData["finances"].filter(isD));
+  finances_C = {"finances": financialDataC,
                 "transaction_type": "C"}
-  finances_D = {"finances": financialData["finances"].filter(isD),
+  finances_D = {"finances": financialDataD,
                 "transaction_type": "D"}
-  
 	var rendered_C = Mustache.render(financial_template, finances_C, partials);
 	$('#financial-data-C').html(rendered_C);
-  
 	var rendered_D = Mustache.render(financial_template, finances_D, partials);
 	$('#financial-data-D').html(rendered_D);
-  
 }
 
 var setupFinancesForm = function(finances) {
@@ -308,7 +403,7 @@ var setupFinances = function() {
 };
 setupFinances()
 
-$(document).on("change", "#financial-data-C input[type=text], #financial-data-D input[type=text]", function(e) {
+$(document).on("change", "#finances input[type=text], #finances select", function(e) {
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
     'attr': this.name,
@@ -326,9 +421,7 @@ $(document).on("change", "#financial-data-C input[type=text], #financial-data-D 
 var setupForwardSpendForm = function(forwardspends) {
 	var forward_spend_template = $('#forward-spend-template').html();
 	Mustache.parse(forward_spend_template);
-  
 	partials = {"row-forward-spend-template": $('#row-forward-spend-template').html()};
-  
 	var rendered_FS = Mustache.render(forward_spend_template, forwardspends, partials);
 	$('#financial-data-FS').html(rendered_FS);
 }
@@ -361,10 +454,7 @@ $(document).on("change", "#financial-data-FS input[type=text]", function(e) {
       $(this_field).trigger("change");
     });
   }
-
 });
-
-
 
 // We have to handle datetimepickers slightly differently from other form
 // inputs.
@@ -380,5 +470,26 @@ $('#datetimepicker_start, #datetimepicker_end')
     successFormGroup(input);
   }).fail(function(){
     errorFormGroup(input);
-  });  
+  });
+});
+
+/* Handle milestones */
+$(document).on("change", "#milestones input[type=checkbox], #milestones textarea", function(e) {
+  if ($(this).attr("data-milestone-attribute") == "achieved") {
+    var value = this.checked;
+  } else {
+    var value = this.value;
+  }
+  var data = {
+    'milestone_id': $(this).attr("data-milestone-id"),
+    'attribute': $(this).attr("data-milestone-attribute"),
+    'value': value,
+  }
+  var input = this;
+  resetFormGroup(input);
+  $.post(api_activity_milestones_url, data, function(resultdata) {
+    successFormGroup(input);
+  }).fail(function(){
+    errorFormGroup(input);
+  });
 });
