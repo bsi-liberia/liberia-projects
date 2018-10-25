@@ -3,6 +3,7 @@
 from maediprojects import app, db, models
 from maediprojects.lib import codelists
 from maediprojects.query import user as quser
+from maediprojects.query import organisations as qorganisations
 import normality
 import unicodecsv
 import os
@@ -43,6 +44,11 @@ def create_codes_codelists():
             add_codelist_data(codelist_name, codelist_code)
         db.session.commit()
     
+    def add_organisation(organisation_data):
+        for organisation in organisation_data:
+            organisation['_type'] = u"donor"
+            qorganisations.create_organisation(organisation)
+    
     local_codelist_files = [
         {
             "name": "Aligned Ministry / Agency",
@@ -53,8 +59,12 @@ def create_codes_codelists():
             "filename": "mtef-sector.csv"
          },
         {
-            "name": "Funding Organisation",
-            "filename": "funding-organisation.csv"
+            "name": "AfT Pillar",
+            "filename": "aft-pillar.csv"
+         },
+        {
+            "name": "SDG Goals",
+            "filename": "sdg-goals.csv"
          }]
     
     for codelist_file in local_codelist_files:
@@ -63,33 +73,11 @@ def create_codes_codelists():
         add_codelist(codelist_file["name"], csv)
         f.close()
     
-    temp = {
-        "Agenda For Transformation Pillar": [
-            {
-                "code": "1",
-                "name": u"Peace, Security and Rule of Law"
-            },
-            {
-                "code": "2",
-                "name": u"Economic Transformation"
-            },
-            {
-                "code": "3",
-                "name": u"Human Development"
-            },
-            {
-                "code": "4",
-                "name": u"Governance and Public Institutions"
-            },
-            {
-                "code": "5",
-                "name": u"Cross-cutting"
-            }
-        ]
-    }
-    
-    #for codelist_name, codelist_data in CODELISTS.items():
-    #    add_codelist(codelist_name, codelist_data)
+    # Add organisations
+    f = open(os.path.join(basedir, "../lib/data/local/", "organisation.csv"), "rb")
+    csv = unicodecsv.DictReader(f)
+    add_organisation(csv)
+    f.close()
 
 def create_user():
     data = app.config["ADMIN_USER"]
