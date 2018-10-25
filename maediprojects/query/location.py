@@ -19,7 +19,7 @@ def get_countries_locations():
 
 def get_locations_country(country_code):
     locations = models.Location.query.filter(and_(
-        models.Location.feature_code.in_(("ADM1", "ADM2")),
+        models.Location.feature_code.in_((u"ADM1", u"ADM2")),
         models.Location.country_code==country_code
     )).order_by(
         models.Location.admin1_code,
