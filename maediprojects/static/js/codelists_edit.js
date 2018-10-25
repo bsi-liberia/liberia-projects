@@ -16,26 +16,35 @@ function errorFormGroup(input) {
 $(document).on("focus", "#codelists-data input", function(e) {
   resetFormGroup(this);
 });
-$("#confirm-delete").on('show.bs.modal', function(e) {
-  $(this).find(".btn-ok").on("click", function(f) {
-    deleteCode(e.relatedTarget);
-    $("#confirm-delete").modal("hide");
-  });
+
+
+$("#confirm-delete").on('click', '.btn-ok', function(e) {
+  $modalDiv = $(e.delegateTarget);
+  var code_id = $(this).data("code_id");
+  var codelist = $(this).data("codelist");
+  deleteCode(code_id, codelist);
+  $modalDiv.modal("hide");
 });
 
-function deleteCode(target) {
+$("#confirm-delete").on('show.bs.modal', function(e) {
+  var code_id = $(e.relatedTarget).closest("tr").attr("data-id");
+  var codelist = $(e.relatedTarget).closest("table").attr("data-codelist");
+  $(".btn-ok", this).data("code_id", code_id);
+  $(".btn-ok", this).data("codelist", codelist);
+});
+
+function deleteCode(code_id, codelist) {
   var data = {
-    'codelist_code': $(target).closest("table").attr("data-codelist"),
-    'code': $(target).closest("tr").attr("data-code"),
+    'codelist_code': codelist,
+    'id': code_id,
     "action": "delete"
   }
-  var deleteButton = target;
   $.post("/api/codelists/delete/", data, 
     function(returndata){
       if (returndata == 'ERROR'){
           alert("There was an error deleting that code.");
       } else {
-        $(deleteButton).closest("tr").fadeOut();
+        $("tr#"+codelist+"-"+code_id).fadeOut();
       }
     }
   );
@@ -46,7 +55,7 @@ $(document).on("click", ".addCode", function(e) {
   var codelist = $(this).attr("data-codelist");
   var data = {
     "codelist_code": codelist,
-    "code": "",
+    "code": "CODE",
     "name": ""
   }
   $.post("/api/codelists/new/", data, 
@@ -54,22 +63,28 @@ $(document).on("click", ".addCode", function(e) {
       if (returndata == 'ERROR'){
           alert("There was an error creating that code.");
       } else {
-        var row_codelist_template = $('#row-codelist-template').html();
+        if (codelist == "organisation") {
+          var row_codelist_template = $('#row-organisation-template').html();
+        } else {
+          var row_codelist_template = $('#row-codelist-template').html();
+        }
         var data = {
-          "code": "",
+          "id": returndata,
+          "codelist_code": codelist,
+          "code": "CODE",
           "name": ""
         }
-      	var rendered_row = Mustache.render(row_codelist_template, data);
-      	$('#table-' + codelist + ' tbody').append(rendered_row);
+        var rendered_row = Mustache.render(row_codelist_template, data);
+        $('#table-' + codelist + ' tbody').append(rendered_row);
       }
     }
   );
 });
 
-$(document).on("change", ".codelists-data input[type=text]", function(e) {
+$(document).on("change", ".codelists-data input[type=text], .codelists-data select", function(e) {
   var data = {
     'codelist_code': $(this).closest("table").attr("data-codelist"),
-    'code': $(this).closest("tr").attr("data-code"),
+    'id': $(this).closest("tr").attr("data-id"),
     'attr': this.name,
     'value': this.value,
   }
@@ -77,10 +92,6 @@ $(document).on("change", ".codelists-data input[type=text]", function(e) {
   resetFormGroup(input);
   $.post("/api/codelists/update/", data, function(resultdata) {
     successFormGroup(input);
-    if (data['attr'] == "code") {
-      // We have to update the tr code if it gets adjusted in the UI
-      $(input).closest("tr").attr("data-code", data["value"]);
-    }
   }).fail(function(){
     errorFormGroup(input);
   });  
