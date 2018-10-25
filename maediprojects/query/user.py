@@ -1,7 +1,36 @@
 from maediprojects import db, models
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime, time
+from flask import flash, redirect, url_for, request
 from flask.ext.login import current_user
+from functools import wraps
+
+def administrator_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.administrator is False:
+            flash("You must be an administrator to access that page.", "danger")
+            return redirect(url_for("dashboard"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def check_permissions(permission_name):
+    if current_user.permissions_dict.get(permission_name, "none") == "none":
+        return False
+    return True
+
+def permissions_required(permission_name):
+    def wrapper(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not check_permissions(permission_name):
+                flash("You do not have sufficient permissions to access that page.", "danger")
+                if request.referrer != None:
+                    return redirect(request.referrer)
+                return redirect(url_for("dashboard"))
+            return f(*args, **kwargs)
+        return decorated_function
+    return wrapper
 
 def user(user_id=None):
     if user_id:
@@ -18,6 +47,19 @@ def user_by_username(username=None):
                     ).first()
         return user
     return None
+
+def setPermission(user, permission_name, permission_value):
+    checkPermission = models.UserPermission.query.filter_by(
+        user_id = user.id,
+        permission_name = permission_name).first()
+    if not checkPermission:
+        checkPermission = models.UserPermission()
+        checkPermission.user_id=user.id
+        checkPermission.permission_name = permission_name
+    checkPermission.permission_value = permission_value
+    db.session.add(checkPermission)
+    db.session.commit()
+    return checkPermission
 
 def updateUser(data):
     checkU = models.User.query.filter_by(id=data["id"]
@@ -37,6 +79,8 @@ def updateUser(data):
     if "change_password" in data:
         # Update password
         checkU.pw_hash = generate_password_hash(data["password"])
+    setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
+    setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
     db.session.add(checkU)
     db.session.commit()
     return checkU
@@ -53,10 +97,12 @@ def addUser(data):
             email_address = data.get('email_address'),
             organisation = data.get('organisation'),
             recipient_country_code = data.get('recipient_country_code'),
-            administrator = data.get('administrator')
+            administrator = bool(data.get('administrator'))
             )
         db.session.add(newU)
         db.session.commit()
+        setPermission(newU, "domestic_external", data.get("domestic_external"))
+        setPermission(newU, "domestic_external_edit", data.get("domestic_external_edit"))
         return newU
     return checkU
 
