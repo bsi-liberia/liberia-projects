@@ -7,12 +7,13 @@ from maediprojects.query import activity as qactivity
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import location as qlocations
 from maediprojects.query import finances as qfinances
+from maediprojects.query import organisations as qorganisations
 import normality
 import os, re
 import datetime as dt
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-def read_file(FILENAME=os.path.join(basedir, "..", "lib/", "AMCU_Master_Database.xlsx")):
+def read_file(FILENAME=os.path.join(basedir, "..", "lib/import_files/", "AMCU_Master_Database.xlsx")):
     f = open(FILENAME, "rb")
     return xlsx_to_csv.getDataFromFile(f, f.read(), sheet="Main Database June 2017")
 
@@ -67,17 +68,20 @@ def tidy_amount(amount_value):
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
     if re.match("^\d*$", amount_value): # 2000
-        return (float(amount_value), "USD")
+        return (float(amount_value), u"USD")
     elif re.match('(\d*\.\d*)', amount_value):
-        return (float(amount_value), "USD")
+        return (float(amount_value), u"USD")
     elif re.match("^(\d*)m (\D*)$", amount_value): # 20m EUR
         result = re.match("^(\d*)m (\D*)$", amount_value).groups()
-        return (float(result[0])*1000000, result[1].upper())
+        return (float(result[0])*1000000, unicode(result[1].upper()))
     elif re.match("^(\d*) (\D*)$", amount_value): # 2000 EUR
         result = re.match("^(\d*) (\D*)$", amount_value).groups()
-        return (float(result[0]), result[1].upper())
+        return (float(result[0]), unicode(result[1].upper()))
 
-def process_transactions(activity, start_date):
+def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
+    provider = clean_get_create_organisation(activity["Funding agency"])
+    receiver = clean_get_create_organisation(activity["Implementing Agency"])
+    
     transactions = []
     commitment_cols = ["Cost"]
     for col in commitment_cols:
@@ -89,6 +93,15 @@ def process_transactions(activity, start_date):
         commitment.transaction_description = u"Cost, imported from AMCU data"
         commitment.transaction_value = float(amount)
         commitment.currency = currency
+        commitment.provider_org_id = provider
+        commitment.receiver_org_id = receiver
+        commitment.finance_type = CODES["finance_type"][
+            activity["Type Of Assistance"].strip()
+        ]
+        commitment.aid_type = CODES["aid_type"][
+            activity["Aid Modality"].strip()
+        ]
+        commitment.classifications = process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME)
         transactions.append(commitment)
     disbursement_cols = ['Actual Disbursements Q1 FY13/14', 
     'Actual Disbursements Q2 FY13/14', 'Actual Disbursements Q3 FY13/14', 
@@ -130,16 +143,25 @@ def process_transactions(activity, start_date):
         
         if activity[col].strip() in ("", "-", "0"): continue
         amount, currency = tidy_amount(activity[col])
-        commitment = models.ActivityFinances()
-        commitment.transaction_date = dt.datetime.strptime(end_fq_date, 
+        disbursement = models.ActivityFinances()
+        disbursement.transaction_date = dt.datetime.strptime(end_fq_date, 
             "%Y-%m-%d")
-        commitment.transaction_type = u"D"
-        commitment.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU data".format(
+        disbursement.transaction_type = u"D"
+        disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU data".format(
             fq, fy
         )
-        commitment.transaction_value = float(amount)
-        commitment.currency = currency
-        transactions.append(commitment)
+        disbursement.transaction_value = float(amount)
+        disbursement.currency = currency
+        disbursement.provider_org_id = provider
+        disbursement.receiver_org_id = receiver
+        disbursement.finance_type = CODES["finance_type"][
+            activity["Type Of Assistance"].strip()
+        ]
+        disbursement.aid_type = CODES["aid_type"][
+            activity["Aid Modality"].strip()
+        ]
+        disbursement.classifications = process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME)
+        transactions.append(disbursement)
     return transactions
 
 def process_forward_spends(activity, start_date, end_date):
@@ -229,6 +251,14 @@ def process_locations(activity, LOCATIONS):
             activity_locations.append(l)
     return activity_locations
 
+def process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME):
+    classifications = []
+    cl = models.ActivityFinancesCodelistCode()
+    cl.codelist_id = 'mtef-sector'
+    cl.codelist_code_id = CODELISTS_IDS_BY_NAME["mtef-sector"][activity["Secondary Sector"].strip()]
+    classifications.append(cl)
+    return classifications
+
 def process_classifications(activity, CODELISTS_IDS_BY_NAME):
     
     classifications = []
@@ -239,7 +269,35 @@ def process_classifications(activity, CODELISTS_IDS_BY_NAME):
     cl = models.ActivityCodelistCode()
     cl.codelist_code_id = CODELISTS_IDS_BY_NAME["aligned-ministry-agency"][activity["Aligned Ministry Agency"].strip()]
     classifications.append(cl)
+
+    AFT_PILLARS = {
+        "Peace, Security and Rule of Law - 1": "Peace, Security and Rule of Law",
+        "Economic Transformation": "Economic Transformation",
+        "Economic Transformation- 2": "Economic Transformation",
+        "Human Development- 3": "Human Development",
+        "Governance and Public Institutions - 4": "Governance and Public Institutions",
+        "Cross - cutting - 5": "Cross-cutting",
+        "Cross-cutting - 5": "Cross-cutting"
+    }
+    cl = models.ActivityCodelistCode()
+    cl.codelist_code_id = CODELISTS_IDS_BY_NAME["aft-pillar"][AFT_PILLARS[activity["Agenda For Transformation Pillar"].strip()]]
+    classifications.append(cl)
+
+    cl = models.ActivityCodelistCode()
+    cl.codelist_code_id = CODELISTS_IDS_BY_NAME["sdg-goals"][""]
+    classifications.append(cl)
     return classifications
+
+def clean_get_create_organisation(_name):
+    name = unicode(_name.decode("utf-8")).strip()
+    return qorganisations.get_or_create_organisation(name)
+
+def make_organisation(name, role):
+    organisation_id = clean_get_create_organisation(name)
+    activity_org = models.ActivityOrganisation()
+    activity_org.organisation_id = organisation_id
+    activity_org.role = role
+    return activity_org
 
 def import_file():
     qlocations.import_locations("LR")
@@ -269,6 +327,7 @@ def import_file():
         
         d = {
             "user_id": 1, #FIXME
+            "domestic_external": u"external",
             "code": "", #FIXME
             "title": unicode(activity["Project Name"].decode("utf-8")),
             "description": nonempty_from_list([
@@ -277,8 +336,12 @@ def import_file():
             ]),
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
-            "funding_org_code": qcodelists.get_or_create_code("funding-organisation",
+            "reporting_org_id": qorganisations.get_or_create_organisation(
                 unicode(activity["Funding agency"].decode("utf-8").strip())),
+            "organisations": [
+                make_organisation(activity["Implementing Agency"], 4),
+                make_organisation(activity["Funding agency"], 1)
+            ],
             "implementing_org": unicode(activity["Implementing Agency"].decode("utf-8")),
             "recipient_country_code": "LR",
             "classifications": process_classifications(activity, CODELISTS_IDS_BY_NAME),
@@ -296,7 +359,7 @@ def import_file():
             ],
             "tied_status": "5", # Assume everything is untied
             "flow_type": "10", # Assume everything is ODA
-            "finances": process_transactions(activity, start_date),
+            "finances": process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME),
             "forwardspends": forwardspends,
             "locations": process_locations(activity, LOCATIONS)
         }
