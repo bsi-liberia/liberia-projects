@@ -18,9 +18,16 @@ body {
 .tablesorter-header {
   white-space: nowrap;
 }
-#finances td.has-feedback span.form-control-feedback {
+#finances td.has-feedback span.form-control-feedback,
+#milestones td.has-feedback span.form-control-feedback {
   top: 7px;
   right: 7px;
+}
+#milestones .checkbox {
+  margin-top: 0px;
+}
+#milestones .checkbox span.form-control-feedback {
+  line-height:20px;
 }
 
 /* D3 TIP */
@@ -94,47 +101,137 @@ body {
   margin-right: auto;
 }
 
-.mtef09 {
+.mtef-sector-09 {
   fill: #555E7B !important;
   background-color: #555E7B !important;
 }
-.mtef07 {
+.mtef-sector-07 {
   fill: #B7D968 !important;
   background-color: #B7D968 !important;
 }
-.mtef08 {
+.mtef-sector-08 {
   fill: #B576AD !important;
   background-color: #B576AD !important;
 }
-.mtef05 {
+.mtef-sector-05 {
   fill: #E04644 !important;
   background-color: #E04644 !important;
 }
-.mtef11 {
+.mtef-sector-11 {
   fill: #FDE47F !important;
   background-color: #FDE47F !important;
 }
-.mtef10 {
+.mtef-sector-10 {
   fill: #7CCCE5 !important;
   background-color: #7CCCE5 !important;
 }
-.mtef02 {
+.mtef-sector-02 {
   fill: #A6C5F4 !important;
   background-color: #A6C5F4 !important;
 }
-.mtef01 {
+.mtef-sector-01 {
   fill: #8BEDE5 !important;
   background-color: #8BEDE5 !important;
 }
-.mtef04 {
+.mtef-sector-04 {
   fill: #5F74D3 !important;
   background-color: #5F74D3 !important;
 }
-.mtef06 {
+.mtef-sector-06 {
   fill: #7FAD22 !important;
   background-color: #7FAD22 !important;
 }
-.mtef03 {
+.mtef-sector-03 {
   fill: #00BAE0 !important;
   background-color: #00BAE0 !important;
+}
+#finances table th {
+  white-space: nowrap;
+}
+#finances table td div.form-group, #milestones table td div.form-group {
+  margin-bottom: 0px;
+}
+
+
+.intro {
+    padding: 0 20px 130px 0;
+    position: relative;
+}
+.intro-message {
+    position: relative;
+    z-index: 999;
+    background-color: #ffffff;
+    border: 1px solid transparent;
+        border-top-color: transparent;
+        border-right-color: transparent;
+        border-bottom-color: transparent;
+        border-left-color: transparent;
+    border-color: #eeeeee;
+    margin-top: 100px;
+    width: 420px;
+    box-shadow: 1px 1px 3px #666666;
+}
+.intro-message h1 {
+    color: #333333;
+    font-size: 50px;
+    padding: 0 10px 10px 70px;
+    text-shadow: 1px 1px 2px #dddddd;
+    /*font-family: "Trebuchet MS","Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;*/
+}
+#locationMap {
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 0;
+}
+.navbar-brand {
+  height: 50px;
+  color:#333333;
+  max-height: 50px;
+  overflow: visible;
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+.navbar-default {
+    background: #fefefe;
+    background: -moz-linear-gradient(180deg,#ffffff 0%,#eeeeee 100%);
+    background: -webkit-gradient(linear,left bottom,right top,color-stop(0%,#3e9336),color-stop(100%,#7c9ac4));
+    background: -webkit-linear-gradient(45deg,#3e9336 0%,#7c9ac4 100%);
+    background: -o-linear-gradient(45deg,#3e9336 0%,#7c9ac4 100%);
+    background: -ms-linear-gradient(45deg,#3e9336 0%,#7c9ac4 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #eeeeee 100%) repeat scroll 0 0 transparent;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#3e9336',endColorstr='#7c9ac4',GradientType=1);
+    border-bottom:1px solid #cccccc;
+    /*
+    -webkit-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
+    -moz-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
+    box-shadow: outset 0 3px 7px rgba(0,0,0,.2),inset 0 3px 7px rgba(0,0,0,.2);
+    padding:60px 0 30px;
+    margin-top:none;
+    top:0;
+    color:#ffffff;*/
+
+}
+img.brand {
+  padding: 0}
+.slider-track .slider-track-low, .slider-track .slider-track-high {
+  background-color: #e0e0e0;
+}
+.slider-selection {
+  background: #337ab7 !important;
+}
+.date-select .min-date, .date-select .max-date {
+  font-weight: bold;
+  margin: auto 10px auto 10px;
+  width: 5%;
+}
+.slider.slider-horizontal {
+  width:80% !important;
+}
+.form-activity-filters .form-group {
+  margin-bottom:5px;
+}
+
+.navbar-brand > img {
+  display: inline;
 }
