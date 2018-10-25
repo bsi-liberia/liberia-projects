@@ -5,6 +5,7 @@ from flask.ext.login import login_required, current_user
 from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
+from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import codelists
 
 import json
@@ -17,7 +18,8 @@ def codelists_management():
                 codelist_codes = codelists.get_db_codelists(),
                 codelist_names = codelists.get_db_codelist_names(),
                 countries = codelists.get_codelists()["Country"],
-                countries_locations = qlocation.get_countries_locations()
+                countries_locations = qlocation.get_countries_locations(),
+                organisations = qorganisations.get_organisations()
                           )
 
 @app.route("/codelists/import_locations/", methods=["POST"])
