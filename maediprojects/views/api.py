@@ -3,20 +3,23 @@ from flask import Flask, render_template, flash, request, Markup, \
     jsonify, current_app
 from flask.ext.login import login_required, current_user
 from sqlalchemy.sql import func
-                            
 from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
 from maediprojects.query import codelists as qcodelists
+from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate as qgenerate
+from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.lib import codelists
+from maediprojects.lib.codelists import get_codelists_lookups
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 import requests
 import datetime, json, collections
 from dateutil.relativedelta import relativedelta
+from collections import defaultdict
 
 OIPA_SEARCH_URL = "https://www.oipa.nl/api/activities/?format=json&q=%22{}%22&recipient_country=LR&reporting_organisation_identifier={}"
 
@@ -33,49 +36,75 @@ def jsonify(*args, **kwargs):
 
 @app.route("/api/activities/", methods=["POST", "GET"])
 def api_activities_country():
-    if "country_code" in request.form:
-        activities = qactivity.list_activities_by_country(
-            request.form["country_code"])
-    elif "funding_org_code" in request.form:
-        activities = qactivity.list_activities_by_filter(
-            "funding_org_code",
-            request.form["funding_org_code"])
-    elif "mtef_sector" in request.form:
-        activities = qactivity.list_activities_by_filter(
-            "mtef-sector",
-            request.form["mtef_sector"])
-    elif "aligned_ministry_agency" in request.form:
-        activities = qactivity.list_activities_by_filter(
-            "aligned-ministry-agency",
-            request.form["aligned_ministry_agency"])
+    arguments = request.form.to_dict()
+    if arguments:
+        activities = qactivity.list_activities_by_filters(arguments)
     else:
         activities = qactivity.list_activities_user(current_user)
-
+    activity_commitments, activity_disbursements = qactivity.activity_C_Ds()
+    def round_or_zero(value):
+        if not value: return 0
+        return round(value)
     return jsonify(activities = [{
         'title': activity.title,
-        'country': activity.recipient_country.name,
-        'funding_org': activity.funding_org.name,
+        'reporting_org': activity.reporting_org.name,
         'id': activity.id,
         'updated_date': activity.updated_date.date().isoformat(),
-        'activity_edit_url': url_for('activity_edit', 
-              activity_id = activity.id),
-        'activity_delete_url': url_for('activity_delete', 
-              activity_id = activity.id),
+        'total_commitments': "${:,.2f}".format(round_or_zero(activity_commitments.get(activity.id))),
+        'total_disbursements': "${:,.2f}".format(round_or_zero(activity_disbursements.get(activity.id))),
         'user': activity.user.username,
         'user_id': activity.user.id,
+        "permissions": activity.permissions
     } for activity in activities])
+
+@app.route("/api/activities/<activity_id>.json", methods=["POST", "GET"])
+def api_activities_by_id(activity_id):
+    cl_lookups = get_codelists_lookups()
+    activity = qactivity.get_activity(activity_id)
+    data = qgenerate_csv.activity_to_json(activity, cl_lookups)
+
+    return jsonify(data)
+
+@app.route("/api/activities/complete/<activity_id>.json", methods=["POST", "GET"])
+def api_activities_by_id_complete(activity_id):
+    cl_lookups = get_codelists_lookups()
+    activity = qactivity.get_activity(activity_id).as_jsonable_dict()
+
+    return jsonify(activity)
+
+@app.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
+def api_activity_milestones(activity_id):
+    milestone_id = request.form["milestone_id"]
+    attribute = request.form["attribute"]
+    value = request.form["value"]
+    if attribute == "achieved": value={"true": True, "false": False}[value]
+    update_status = qmilestone.add_or_update_activity_milestone({
+                "activity_id": activity_id,
+                "milestone_id": milestone_id,
+                "attribute": attribute,
+                "value": value})
+    if update_status == True:
+        return "success"
+    return "error"
 
 @app.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
 def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id. 
-    
     POST also accepts financial data to be added or deleted."""
-    
     if request.method == "POST":
         if request.form["action"] == "add":
             data = {
-                "transaction_type": request.form["transaction_type"]
+                "transaction_type": request.form["transaction_type"],
+                "transaction_date": request.form["transaction_date"],
+                "transaction_value": request.form["transaction_value"],
+                "aid_type": request.form["aid_type"],
+                "finance_type": request.form["finance_type"],
+                "provider_org_id": request.form["provider_org_id"],
+                "receiver_org_id": request.form["receiver_org_id"],
+                "classifications": {
+                    "mtef-sector": request.form["mtef_sector"]
+                }
             }
             result = qfinances.add_finances(activity_id, data)
         elif request.form["action"] == "delete":
@@ -94,7 +123,11 @@ def finances_edit_attr(activity_id):
         'value': request.form['value'],
         'finances_id': request.form['finances_id'],
     }
-    update_status = qfinances.update_attr(data)
+    if data["attr"] == "mtef_sector":
+        data["attr"] = 'mtef-sector' #FIXME make consistent
+        update_status = qfinances.update_finances_classification(data)
+    else:
+        update_status = qfinances.update_attr(data)
     if update_status == True:
         return "success"
     return "error"
@@ -103,9 +136,7 @@ def finances_edit_attr(activity_id):
 @login_required
 def api_activity_forwardspends(activity_id):
     """GET returns a list of all forward spend data for a given activity_id.
-    
     POST updates value for a given forwardspend_id."""
-
     if request.method == "GET":
         data = qactivity.get_activity(activity_id).forwardspends
         forwardspends = list(map(lambda fs_db: fs_db.as_dict(),
@@ -147,13 +178,26 @@ def forwardspends_edit_attr(activity_id):
         return "success"
     return "error"
 
+@app.route("/api/activity_locations/")
+@login_required
+def api_all_activity_locations():
+    """GET returns a list of all locations."""
+    query = models.ActivityLocation.query.join(models.Activity)
+    query = qactivity.filter_activities_for_permissions(query)
+    activitylocations = query.all()
+    locations = list(map(lambda al: ({"locations": al.locations.as_dict(),
+        "title": al.activity.title, 
+        "id": al.activity_id, 
+        "url": url_for('activity', activity_id=al.activity_id, 
+            _external=True)}), 
+        activitylocations))
+    return jsonify(locations = locations)
+
 @app.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
 @login_required
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
-    
     POST also accepts locations to be added or deleted."""
-    
     if request.method == "POST":
         if request.form["action"] == "add":
             result = qlocation.add_location(activity_id, request.form["location_id"])
@@ -170,21 +214,21 @@ def api_locations(country_code):
     """Returns locations and tries to sort them. Note that there may be cases where
     this will break as the geonames data does not always contain
     good information about the hierarchical relationships between locations."""
-    
     locations = list(map(lambda x: x.as_dict(), 
                      qlocation.get_locations_country(country_code)))
-    
     for i, location in enumerate(locations):
         if location["feature_code"] == "ADM2":
             locations[i]["name"] = " - %s" % location["name"]
-    
     return jsonify(locations = locations)
 
 @app.route("/api/codelists/update/", methods=["POST"])
 @login_required
 def api_codelists_update():
     # FIXME check for admin status
-    result = qcodelists.update_attr(request.form)
+    if request.form["codelist_code"] == "organisation":
+        result = qorganisations.update_attr(request.form)
+    else:
+        result = qcodelists.update_attr(request.form)
     if result:
         return "OK"
     else:
@@ -194,7 +238,10 @@ def api_codelists_update():
 @login_required
 def api_codelists_delete():
     # FIXME check for admin status
-    result = qcodelists.delete_code(request.form)
+    if request.form["codelist_code"] == "organisation":
+        result = qorganisations.delete_org(request.form)
+    else:
+        result = qcodelists.delete_code(request.form)
     if result:
         return "OK"
     else:
@@ -204,9 +251,12 @@ def api_codelists_delete():
 @login_required
 def api_codelists_new():
     # FIXME check for admin status
-    result = qcodelists.create_code(request.form)
+    if request.form["codelist_code"] == "organisation":
+        result = qorganisations.create_organisation(request.form)
+    else:
+        result = qcodelists.create_code(request.form)
     if result:
-        return "OK"
+        return str(result.id)
     else:
         return "ERROR"
 
@@ -226,8 +276,7 @@ def api_list_iati_files():
 def api_iati_search():
     title = request.form["title"]
     reporting_org_code = request.form["reporting_org_code"]
-    
-    r = requests.get(OIPA_SEARCH_URL.format(title, reporting_org_code))
+    r = requests.get(OIPA_SEARCH_URL.format(title.encode("utf-8"), reporting_org_code))
     data = json.loads(r.text)
     return jsonify(data)
 
@@ -240,11 +289,11 @@ def api_sectors():
         func.strftime('%Y', func.date(models.ActivityFinances.transaction_date, 'start of month', '-6 month')).label("fiscal_year")
     ).join(
         models.Activity,
-        models.ActivityCodelistCode,
+        models.ActivityFinancesCodelistCode,
         models.CodelistCode
     ).filter(
-        models.ActivityFinances.transaction_type == "D",
-        models.CodelistCode.codelist_code == "mtef-sector"
+        models.ActivityFinances.transaction_type == u"D",
+        models.ActivityFinancesCodelistCode.codelist_id == u"mtef-sector"
     ).group_by(
         models.CodelistCode.name,
         models.CodelistCode.code,
@@ -256,6 +305,43 @@ def api_sectors():
         "code": s.code,
         "fy": s.fiscal_year
     }, sector_totals)))
+
+@app.route("/api/sectors_C_D.json", methods=["GET", "POST"])
+def api_sectors_C_D():
+    query = db.session.query(
+        func.sum(models.ActivityFinances.transaction_value).label("total_value"),
+        models.ActivityFinances.transaction_type,
+        models.CodelistCode.code,
+        models.CodelistCode.name,
+        models.Activity.domestic_external,
+        func.strftime('%Y', func.date(models.ActivityFinances.transaction_date, 'start of month', '-6 month')).label("fiscal_year")
+    ).join(
+        models.Activity,
+        models.ActivityFinancesCodelistCode,
+        models.CodelistCode
+    ).filter(
+        models.CodelistCode.codelist_code == u"mtef-sector",
+        models.CodelistCode.name != u""
+    ).group_by(
+        models.CodelistCode.name,
+        models.CodelistCode.code,
+        models.ActivityFinances.transaction_type,
+        models.Activity.domestic_external,
+        "fiscal_year"
+    )
+    query = qactivity.filter_activities_for_permissions(query)
+    sector_totals = query.all()
+    def append_path(root, paths):
+        if paths:
+            sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {'Commitments': 0.0, 'Disbursements': 0.0})
+            sector[{"C": "Commitments", "D": "Disbursements"}[paths.transaction_type]] = paths.total_value
+            sector["name"] = paths.name
+            sector["code"] = paths.code
+            sector["domestic_external"] = paths.domestic_external
+            sector["fy"] = paths.fiscal_year
+    root = {}
+    for s in sector_totals: append_path(root, s)
+    return jsonify(sectors = root.values())
 
 @app.route("/api/iati/<version>/<country_code>.xml")
 def generate_iati_xml(version, country_code):
@@ -274,8 +360,50 @@ def maedi_activities_csv():
     data.seek(0)
     return Response(data, mimetype="text/csv")
 
-@app.route("/api/activities.xlsx")
+@app.route("/api/activities_external_transactions.xlsx")
+def activities_xlsx_transactions():
+    data = qgenerate_xlsx.generate_xlsx_transactions(u"domestic_external", u"external")
+    data.seek(0)
+    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route("/api/activities_external.xlsx")
 def maedi_activities_xlsx():
+    data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
+    data.seek(0)
+    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route("/api/activities_all.xlsx")
+def all_activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx()
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route("/api/activities_filtered.xlsx")
+def all_activities_xlsx_filtered():
+    arguments = request.args.to_dict()
+    data = qgenerate_xlsx.generate_xlsx_filtered(arguments)
+    data.seek(0)
+    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route("/api/export_template.xlsx")
+@app.route("/api/export_template/<organisation_id>.xlsx")
+def export_donor_template(organisation_id=None):
+    if organisation_id:
+        reporting_org_name = qorganisations.get_organisation_by_id(
+            organisation_id).name
+        filename = "AMCU 2018 Q1 Template {}.xlsx".format(reporting_org_name)
+        activities = {reporting_org_name: qactivity.list_activities_by_filters({
+            u"reporting_org_id": organisation_id}) }
+    else:
+        filename = "AMCU 2018 Q1 Template All Donors.xlsx"
+        all_activities = qactivity.list_activities_by_filters({
+                u"domestic_external": u"external"
+            })
+
+        activities = defaultdict(list)
+        for a in all_activities:
+            activities[a.reporting_org.name].append(a)
+    data = qgenerate_xlsx.generate_xlsx_export_template(activities)
+    data.seek(0)
+    return send_file(data, as_attachment=True, attachment_filename=filename, 
+        cache_timeout=5)
