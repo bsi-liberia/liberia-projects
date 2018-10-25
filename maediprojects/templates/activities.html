@@ -3,16 +3,19 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>{{ _('Activities') }}: {{ stats.count }} in total</h1>
+    <h1>{{ _('Activities') }}: <span id="activities_count">loading...</span></h1>
+    {% if loggedinuser.permissions_dict.domestic_external_edit != "none" %}
     <a class="btn btn-success btn-large" href="{{url_for('activity_new')}}">
-      <i class="glyphicon glyphicon-plus"></i> 
+      <i class="glyphicon glyphicon-plus"></i>
       {{ _('New activity') }}
     </a>
+    {% endif %}
   </div>
 </div>
 <hr />
+
 <div class="row">
-  <div class="col-md-12">
+  <div class="col-md-9">
     <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="headingOne">
@@ -24,53 +27,29 @@
         </div>
         <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
           <div class="panel-body">
-            <form class="form-horizontal">
-              <!--
-              {% if loggedinuser.administrator %}
+            <form class="form-horizontal form-activity-filters">
+              <p class="lead">Find projects matching all of the following conditions. Results automatically update below.</p>
+              {% for codelist_name, codelist_id, codelist_values in codelists %}
               <div class="form-group">
-                <label for="selectCountry" class="col-sm-3 control-label">{{ _('Country') }}</label>
+                <label for="{{codelist_id}}" class="col-sm-3 control-label">{{ codelist_name }}</label>
                 <div class="col-sm-9">
-                  <select class="form-control" name="selectCountry" id="selectCountry">
-                    <option value="all" selected>{{ _('All countries') }}</option>
-                    {% for code, data in countries.items() %}
-                    <option value="{{ data.country.code }}">{{ data.country.name }}</option>
+                  <select class="form-control filter-select" name="{{codelist_id}}"
+                    id="{{codelist_id}}">
+                    <option value="all" selected>{{ _('Select all') }}</option>
+                    {% for codelist_item in codelist_values %}
+                    <option value="{{ codelist_item.id }}">{{ codelist_item.name }}</option>
                     {% endfor %}
                   </select>
                 </div>
               </div>
-              {% endif %}
-              -->
-              <div class="form-group">
-                <label for="selectFundingOrg" class="col-sm-3 control-label">{{ _('Organisation') }}</label>
+              {% endfor %}
+              <div class="form-group date-select">
+                <label for="date-range" class="col-sm-3 control-label">Date Range</label>
                 <div class="col-sm-9">
-                  <select class="form-control" name="selectFundingOrg" id="selectFundingOrg">
-                    <option value="all" selected>{{ _('All organisations') }}</option>
-                    {% for name, code in funding_orgs %}
-                    <option value="{{ code }}">{{ name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="selectMTEFSector" class="col-sm-3 control-label">{{ _('Sector') }}</label>
-                <div class="col-sm-9">
-                  <select class="form-control" name="selectMTEFSector" id="selectMTEFSector">
-                    <option value="all" selected>{{ _('All sectors') }}</option>
-                    {% for name, code in mtef_sectors %}
-                    <option value="{{ code }}">{{ name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="selectMinistryAgency" class="col-sm-3 control-label">{{ _('Aligned Ministry/Agency') }}</label>
-                <div class="col-sm-9">
-                  <select class="form-control" name="selectMinistryAgency" id="selectMinistryAgency">
-                    <option value="all" selected>{{ _('All Ministries/Agencies') }}</option>
-                    {% for name, code in aligned_ministry_agencies %}
-                    <option value="{{ code }}">{{ name }}</option>
-                    {% endfor %}
-                  </select>
+                  <span class="min-date"></span>
+                  <input id="date-selector" type="text" class="span2 date-selector" value=""/>
+                  <span class="max-date"></span>
+                  <p class="help-block">Matches projects containing any activity between these dates.</p>
                 </div>
               </div>
             </form>
@@ -79,7 +58,11 @@
       </div>
     </div>
   </div>
+  <div class="col-md-3">
+    <a class="btn btn-primary pull-right" id="download_excel" href="{{ url_for('all_activities_xlsx_filtered')}}?mtef-sector=55"><span class="glyphicon glyphicon-save"></span> Export selection to Excel</a>
+  </div>
 </div>
+
 <div class="row">
   <div class="col-md-12">
     <div id="projects-data">
@@ -88,7 +71,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -113,6 +96,8 @@
     <thead>
       <th>{% endraw %}{{ _('Title') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Organisation') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Commitments') }}{% raw %}</th>
+      <th>{% endraw %}{{ _('Disbursements') }}{% raw %}</th>
       <th>{% endraw %}{{ _('User') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Last updated') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Edit') }}{% raw %}</th>
@@ -121,58 +106,47 @@
     <tbody>
       {{# activities }}
       <tr>
-        <td>{{ title }}</td>
-        <td>{{ funding_org }}</td>
+        <td><a href="{% endraw %}{{ activity_base_url }}{% raw %}{{ id }}/">{{ title }}</a></td>
+        <td>{{ reporting_org }}</td>
+        <td>{{ total_commitments }}</td>
+        <td>{{ total_disbursements }}</td>
         <td>{{ user }}</td>
         <td>{{ updated_date }}</td>
-        <td><a href="{{ activity_edit_url }}"
+        <td>{{#permissions.edit}}<a href="{% endraw %}{{ activity_base_url }}{% raw %}{{ id }}/edit/"
               class="btn btn-default btn-xs">
               <span class="glyphicon glyphicon-pencil"></span>
-            </a></td>
-        <td><a data-href="{{ activity_delete_url }}"
+            </a>{{/permissions.edit}}</td>
+        <td>{{#permissions.edit}}<a data-href="{% endraw %}{{ activity_base_url }}{% raw %}{{ id }}/delete/"
               class="btn btn-default btn-xs btn-delete"
               data-toggle="modal" data-target="#confirm-delete">
               <span class="glyphicon glyphicon-trash"></span>
-            </a></td>
+            </a>{{/permissions.edit}}</td>
       </tr>
       {{/ activities }}
       {{^ activities }}
       <tr class="active">
         <td colspan="6">{% endraw %}
-          {{ _("You don't have any projects yet.") }}
+          {{ _("No projects found.") }}
         {% raw %}</td>
       </tr>
       {{/ activities }}
     </tbody>
   </table>
-  <nav aria-label="Page navigation">
-    <ul class="pagination">
-      <li>
-        <a href="#" aria-label="Previous">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-      <li><a href="#">1</a></li>
-      <li><a href="#">2</a></li>
-      <li><a href="#">3</a></li>
-      <li><a href="#">4</a></li>
-      <li><a href="#">5</a></li>
-      <li>
-        <a href="#" aria-label="Next">
-          <span aria-hidden="true">&raquo;</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
 </script>
 {% endraw %}
+
+<script type="text/javascript">
+var activity_dates = {{ dates|safe }};
+</script>
+<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.min.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='vendor/bootstrap-slider/dist/bootstrap-slider.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/home.js')}}" type="text/javascript"></script>
+<link type="text/css" href="{{url_for('static', filename='vendor/bootstrap-slider/dist/css/bootstrap-slider.min.css')}}" rel="stylesheet" />
 
 <script type="text/javascript">
 $("#confirm-delete").on('show.bs.modal', function(e) {
   $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
 });
 </script>
-<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.min.js')}}" type="text/javascript"></script>
-<script src="{{url_for('static', filename='js/home.js')}}" type="text/javascript"></script>
 
 {% endblock %}
