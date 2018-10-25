@@ -3,10 +3,8 @@ var pieChart = function(el, data) {
   this.$el = d3.select(el);
   var el_top = $(el).offset().top;
   var el_left = $(el).offset().left;
-  
-  var _width, _height, svg, pie, arc, arcOver, tip, years, yearsdiv, drilldown, cuts, legend;
+  var _width, _height, svg, pie, arc, arcOver, tip, years, yearsdiv, drilldown, cuts, legends;
   var margin = {top: 10, right: 32, bottom: 10, left: 32};
-
 
   // Calculate based on element (window) size
   this._calcSize = function() {
@@ -18,7 +16,7 @@ var pieChart = function(el, data) {
   var width = _width,
       height = _height,
       radius = Math.min(width, height),
-      color = d3.scale.category20();
+      color = d3.scaleOrdinal(d3.schemeCategory20);
 
   this._init = function() {
       this._calcSize();
@@ -34,30 +32,27 @@ var pieChart = function(el, data) {
           .append("ul");
 
       // Make pie only 180 rather than 360 degrees, and rotate 90 deg CCW
-      pie = d3.layout.pie()
+      pie = d3.pie()
           .value(function(d) { return +d.value; })
           .startAngle(-90*(Math.PI/180))
           .endAngle(90*(Math.PI/180))
           .sort(null);
 
       // Create arcs: one for normal, and one if selected
-      arc = d3.svg.arc()
+      arc = d3.arc()
           .outerRadius(radius - 30)
           .innerRadius(radius - 100);
-      
-      arcOver = d3.svg.arc()
+      arcOver = d3.arc()
             .outerRadius(radius)
             .innerRadius(radius - 90);
 
       this.$el.on("mouseleave", mouseleave);
-      
       // Create legend
-      legend = svg.append("g")
-    			.attr("class", "legends");
-      
+      legends = svg.append("g")
+    			.attr("class", "legend");
       this.setData(data);
   }
-  
+
   this.setData = function(data) {
       this.data = data.records;
       this.drilldown = data.drilldown;
@@ -75,14 +70,13 @@ var pieChart = function(el, data) {
       }
       this.update();
   }
-  
+
   this.update = function () {
       var value = this.value === "count"
           ? function() { return 1; }
           : function(d) { return d.value; };
 
       drilldown = this.drilldown;
-      
       tip = d3.tip()
         .attr('class', 'd3-tip')
         .offset([-10, 0])
@@ -90,20 +84,16 @@ var pieChart = function(el, data) {
           return "<strong>" + d.data[drilldown] + "</strong><br /><small>Disbursement: USD" + dec(d.data.value) + "</small>";
         });
       svg.call(tip);
-      
+
 	    // Update legends
-	    var legends = svg.select(".legends");
 	    var legend = legends
 	        .selectAll(".legend")
-	        .data(this.data);
-
-	    legend
+          .data(this.data);
+	    var l = legend
 	      .enter()
 	      .append("g")
 	      .attr("class", "legend")
-	      .html("<rect/><text/>");
-
-	    legend
+	      .html("<rect/><text/>")
 	      .attr("transform", function (d, i) {
 	        var lw = _width * 1.5;
 	        // Needs to be this to compensate for a) width, b) datacanvas transform
@@ -112,22 +102,21 @@ var pieChart = function(el, data) {
 	        return "translate(-" + lw + "," + lh + ")";
 	      });
 
-	    legend.select("rect")
+        l.select("rect")
 	        .attr("x", _width - 350)
 	        .attr("width", 18)
 	        .attr("height", 18)
-	        .attr("class", function(d) { return "mtef"+d['code']; });
+          .attr("class", function(d) { return "mtef-sector-"+d['code']; })
 
-	    legend.select("text")
-	        .attr("x", _width - 325)
-	        .attr("y", 9)
-	        .attr("dy", ".35em")
-	        .text(function (d) { return d[drilldown]; });
-      
+        l.select("text")
+          .attr("x", _width - 325)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .text(function (d) { return d[drilldown]; });
 
   	  var g = svg.selectAll(".arc")
                  .data(pie(this.data));
-      
+
       g
       	  .enter().append("path")
           .attr("d", arc)
@@ -136,15 +125,15 @@ var pieChart = function(el, data) {
   	      .style("fill-rule", "evenodd")
           .attr("class", "arc segment")
           .each(function(d) { this._current = d; })
-          .attr("class", function(d) { return "arc segment mtef" + d.data['code']; })
+          .attr("class", function(d) { return "arc segment mtef-sector-" + d.data['code']; })
           .on("mousemove",mouseover)
           .on("mouseout", mouseleave);
-      
+
       g
           .transition().duration(750)
           .attrTween("d", arcTween);
   }
-  
+
   function mouseover(d) {
     tip.show(d);
     var seg = d3.select(this);
@@ -153,23 +142,23 @@ var pieChart = function(el, data) {
       .duration(200)
       .style("opacity", 0.5);
   }
-  
+
   function mouseclick(d) {
       var seg = d3.select(this);
-      if (seg.classed("selected")) {      
+      if (seg.classed("selected")) {
           seg
               .classed("selected", false)
               .transition()
               .duration(200)
               .attr("d", arc)
               .style("stroke-width", 1);
-      } else {      
+      } else {
           seg.classed("selected", true)
              .transition()
-             .duration(200)
+             .duration(50)
              .attr("d", arcOver)
              .style("stroke", "white")
-             .style("stroke-width", 1);          
+             .style("stroke-width", 1);
       }
   }
 
@@ -177,10 +166,10 @@ var pieChart = function(el, data) {
     tip.hide();
     d3.selectAll(".segment")
       .transition()
-      .duration(200)
+      .duration(50)
       .style("opacity", 1);
   }
-  
+
   function arcTween(a) {
     var i = d3.interpolate(this._current, a);
     this._current = i(0);
@@ -188,8 +177,8 @@ var pieChart = function(el, data) {
       return arc(i(t));
     };
   }
-  
-  var dec = d3.format(',.2f');
-  
+
+  var dec = d3.format(',.0f');
+
   this._init();
 };
