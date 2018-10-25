@@ -7,11 +7,25 @@ from views import activities, api, users, codelists
 from query import activity as qactivity
 from query import setup as qsetup
 from query import import_liberia_db as qlibimport
+from query import import_psip as qpsipimport
+import os
+import mistune
 
-@app.route("/setup/")
-def setup():
-    qsetup.setup()
-    return "OK"
+@app.before_request
+def setup_default_permissions():
+    if current_user.is_authenticated:
+        session["permissions"] = current_user.permissions_dict
+    else:
+        session["permissions"] = {}
+        if request.headers['Host'] == "psip.liberiaprojects.org":
+            session["permissions"]["domestic_external"] = "domestic"
+        elif request.headers['Host'] == "liberiaprojects.org":
+            session["permissions"]["domestic_external"] = "external"
+        # Only used for bug testing locally
+        elif request.headers['Host'] == "127.0.0.1:5000":
+            session["permissions"]["domestic_external"] = "domestic"
+        else:
+            session["permissions"]["domestic_external"] = "both"
 
 @app.route("/setup/<country_code>/")
 def setup_country(country_code):
