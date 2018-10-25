@@ -27,15 +27,35 @@ def setup_default_permissions():
         else:
             session["permissions"]["domestic_external"] = "both"
 
-@app.route("/setup/<country_code>/")
-def setup_country(country_code):
-    qsetup.import_locations(country_code)
-    return "OK"
+# @app.route("/setup/")
+# def setup():
+#     qsetup.setup()
+#     return "OK"
 
-@app.route("/import_liberia/")
-def import_liberia():
-    qlibimport.import_file()
-    return "OK"
+# @app.route("/setup/<country_code>/")
+# def setup_country(country_code):
+#     qsetup.import_locations(country_code)
+#     return "OK"
+
+# @app.route("/import_liberia/")
+# def import_liberia():
+#     qlibimport.import_file()
+#     return "OK"
+
+# @app.route("/import_psip/")
+# def import_psip():
+#     qpsipimport.import_file()
+#     return "OK"
+
+@app.route("/help/")
+@login_required
+def help():
+    current_dir = os.path.join(os.path.dirname(__file__))
+    help_content = open(os.path.join(current_dir, "templates/help.md"), "r").read()
+    return render_template("help.html",
+                markdown_text = Markup(mistune.markdown(help_content)),
+                loggedinuser=current_user
+        )
 
 @app.errorhandler(404)
 def page_not_found(error):
