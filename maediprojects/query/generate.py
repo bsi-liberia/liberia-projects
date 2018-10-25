@@ -96,7 +96,10 @@ def el_iati_identifier(activity, o_ref):
 
 def el_with_code_103(element_name, code, text, vocabulary=None):
     el = et.Element(element_name)
-    el.set("code", code)
+    if code == None:
+        el.set("code", "Unknown")
+    else:
+        el.set("code", code)
     if vocabulary:
         el.set("vocabulary", vocabulary)
     el.text = text
@@ -104,7 +107,10 @@ def el_with_code_103(element_name, code, text, vocabulary=None):
 
 def el_with_code(element_name, code, vocabulary=None):
     el = et.Element(element_name)
-    el.set("code", code)
+    if code == None:
+        el.set("code", "Unknown")
+    else:
+        el.set("code", code)
     if vocabulary:
         el.set("vocabulary", vocabulary)
     return el
@@ -302,9 +308,12 @@ def build_activity_103(doc, activity):
     ia.append(el_with_text("description", activity.description))
     
     # Participating orgs
-    ia.append(el_org_103("Funding", activity.funding_org.name, 
-                            activity.funding_org.code, "10"))
-    ia.append(el_org_103("Implementing", activity.implementing_org))
+    for organisation in activity.funding_organisations:
+        ia.append(el_org_103("Funding", organisation.name, 
+                                organisation.code, "10"))
+    for organisation in activity.implementing_organisations:
+        ia.append(el_org_103("Implementing", organisation.name, 
+                                organisation.code, "10"))
     
     ia.append(el_with_code_103("activity-status",
             activity.activity_status,
@@ -335,21 +344,21 @@ def build_activity_103(doc, activity):
                                "DAC"))
     ia.append(el_with_code_103("collaboration-type", 
                                activity.collaboration_type,
-                               cl_lookups["CollaborationType"][activity.collaboration_type]
+                               cl_lookups["CollaborationType"].get(activity.collaboration_type)
                                ))
     ia.append(el_with_code_103("default-finance-type",
                                activity.finance_type,
-                               cl_lookups["FinanceType"][activity.finance_type]
+                               cl_lookups["FinanceType"].get(activity.finance_type)
                                ))
     ia.append(el_with_code_103("default-flow-type",
                                activity.flow_type,
-                               cl_lookups["FlowType"][activity.flow_type]))
+                               cl_lookups["FlowType"].get(activity.flow_type)))
     ia.append(el_with_code_103("default-aid-type", 
                                activity.aid_type,
-                               cl_lookups["AidType"][activity.aid_type]))
+                               cl_lookups["AidType"].get(activity.aid_type)))
     ia.append(el_with_code_103("default-tied-status", 
                                activity.tied_status,
-                               cl_lookups["TiedStatus"][activity.tied_status]))
+                               cl_lookups["TiedStatus"].get(activity.tied_status)))
 
     # Transactions
     activity_commitments = filter(valid_transaction, activity.commitments)
@@ -410,9 +419,11 @@ def build_activity(doc, activity):
     ia.append(el_with_narrative("description", activity.description))
     
     # Participating orgs
-    ia.append(el_org("Funding", activity.funding_org.name, 
-                            activity.funding_org.code, o_type))
-    ia.append(el_org("Implementing", activity.implementing_org))
+    for organisation in activity.funding_organisations:
+        ia.append(el_org("Funding", organisation.name, 
+                            organisation.code, "10"))
+    ia.append(el_org("Implementing", organisation.name,
+                            organisation.code, "10"))
     
     ia.append(el_with_code("activity-status", activity.activity_status))
     
