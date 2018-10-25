@@ -1,6 +1,7 @@
 {% set active_page='dashboard' %}{% extends "layout.html" %}
 {% block title %}{{ _('Dashboard') }}{% endblock %}
 {% block content %}
+<!--
 <div class="row">
   <div class="col-md-12">
     <h1>{{ _('Dashboard') }}</h1>
@@ -8,26 +9,66 @@
 </div>
 <div class="row">
   <div class="col-md-12">
-    <h3>Summary: FY<select class="select" id="select-fy">
+    <h3>Project locations</h3>
+    
+  </div>
+</div>
+-->
+</div>
+<div class="clearfix intro">
+    <div id="locationMap"></div>
+    <div class="intro-message">
+        <h1>Tracking development<br />
+          across Liberia</h1>
+    </div>
+</div>
+<div class="container">
+<h3>Commitments and disbursements by sector, to date</h3>
+<div class="row">
+  <div class="col-md-12">
+    <div id="commitments-disbursements-chart">
+      <p class="lead loading-bar-chart">Loading data, please wait... <span class="glyphicon glyphicon-refresh loader" aria-hidden="true"></span></p>
+    </div>
+  </div>
+</div>
+{% if loggedinuser.permissions_dict.domestic_external == "both" %}
+<h3>Commitments/disbursements by sector and source (domestic/external), to date</h3>
+<div class="row">
+  <div class="col-md-12">
+    <div id="commitments-disbursements-source-chart"></div>
+  </div>
+</div>
+<h3>Commitments/disbursements by sector, domestic financing, to date</h3>
+<div class="row">
+  <div class="col-md-12">
+    <div id="commitments-disbursements-domestic-chart"></div>
+  </div>
+</div>
+
+<!-- Sectors pie -->
+<div class="row">
+  <div class="col-md-12">
+    <h3>Disbursements by sector for FY<select class="select" id="select-fy">
       <option value="2014">14</option>
       <option value="2015">15</option>
       <option value="2016">16</option>
       <option value="2017" selected>17</option>
-    </select> Disbursements by Sector</h3>
+    </select></h3>
   </div>
 </div>
 <div class="row">
   <div class="col-md-12">
-    <div id="sectors-pie">
-      <p class="lead">Loading data, please wait... <span class="glyphicon glyphicon-refresh loader" aria-hidden="true"></span></p>
-    </div>
+    <div id="sectors-pie"></div>
   </div>
 </div>
-<script src="{{url_for('static', filename='vendor/d3.v3.min.js')}}" type="text/javascript"></script>
-<script src="{{url_for('static', filename='vendor/d3.tip.v0.6.3.js')}}" type="text/javascript"></script>
+{% endif %}
+
+<script src="{{url_for('static', filename='vendor/d3/4.13.0/d3.min.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='vendor/d3.tip.d3v4.js')}}" type="text/javascript"></script>
 <script src="{{url_for('static', filename='js/charts/piechart.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='js/charts/barchart.js')}}" type="text/javascript"></script>
 <script type="text/javascript">
-  var pieOptions, thisPieChart;
+  var pieOptions, thisPieChart, cdBarChart, cdSourceBarChart;
   d3.json("/api/sectors.json", function(error, data) {
     pieOptions = {
       "records": data["sectors"],
@@ -38,12 +79,133 @@
     }
     thisPieChart = new pieChart("#sectors-pie", pieOptions);
   });
-  $(document).on("click", "#select-fy", function(){
+  $(document).on("change", "#select-fy", function(){
     var year = $(this).val();
-    console.log(year)
     pieOptions["cuts"]["fy"] = year;
     thisPieChart.setData(pieOptions);
   });
+  
+  var makeTitle = function(str) {
+    return str.charAt(0).toUpperCase() + str.substr(1);
+  }
+  
+  d3.json("/api/sectors_C_D.json", function(error, data) {
+    // C/D by sector
+    var options = {
+      'data': d3.nest()
+        .key(function(d) { return d.name; })
+        .rollup(function(v) { return {
+          Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
+          Disbursements: d3.sum(v, function(d) { return d.Disbursements; })
+        }; })
+        .entries(data.sectors)
+        .map(
+          function(d) {
+            return { name: d.key,
+                     Commitments: d.value.Commitments,
+                     Disbursements: d.value.Disbursements,
+                     "Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements}
+         }).sort(function(x, y){
+           return d3.ascending(x.name, y.name);
+         }),
+       'keys': ["Commitments", "Disbursements", "Balance (Commitments - Disbursements)"],
+       'colours': ["#1f77b4", "#2ca02c", "#ff7f0e"]
+    }
+    $(".loading-bar-chart").fadeOut();
+    cdBarChart = new barChart("#commitments-disbursements-chart", options);
+    
+    // C/D, sector and source
+    {% if loggedinuser.permissions_dict.domestic_external == "both" %}
+
+    var options = {
+      'data': d3.nest()
+        .key(function(d) { return d.name; })
+        .key(function(d) { return d.domestic_external; })
+        .rollup(function(v) { return {
+          Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
+          Disbursements: d3.sum(v, function(d) { return d.Disbursements; })
+        }; })
+        .entries(data.sectors)
+        .map(
+          function(d) {
+            t = {
+              name: d.key
+            }
+            d.values.map(function(dv) { 
+              t[makeTitle(dv.key)+" Commitments"] = dv.value.Commitments; 
+              t[makeTitle(dv.key)+" Disbursements"] = dv.value.Disbursements; 
+            });
+            
+            return t;
+         }).sort(function(x, y){
+           return d3.ascending(x.name, y.name);
+         }),
+       'keys': ["External Commitments", "External Disbursements", "Domestic Commitments", "Domestic Disbursements"],
+       'colours': ["#98abc5", "#8a89a6", "#d0743c", "#ff8c00"]
+    }
+    cdSourceBarChart = new barChart("#commitments-disbursements-source-chart", options);
+    
+    // C/D, domestic
+    var options = {
+    'data': d3.nest()
+      .key(function(d) { return d.name; })
+      .rollup(function(v) { return {
+        Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
+        Disbursements: d3.sum(v, function(d) { return d.Disbursements; })
+      }; })
+      .entries(data.sectors
+        .filter(function(d) { return d.domestic_external == "domestic";}))
+      .map(
+        function(d) {
+          return { name: d.key,
+                   Commitments: d.value.Commitments,
+                   Disbursements: d.value.Disbursements,
+                   "Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements}
+       }).sort(function(x, y){
+         return d3.ascending(x.name, y.name);
+       }),
+     'keys': ["Commitments", "Disbursements", "Balance (Commitments - Disbursements)"],
+     'colours': ["#d0743c", "#ff8c00", "#a05d56"]
+    }
+    cdDomesticBarChart = new barChart("#commitments-disbursements-domestic-chart", options);
+    {% endif %}
+  });
+  
 </script>
 
+<script type="text/javascript">
+var api_activity_locations_url = "/api/activity_locations/";
+</script>
+<link type="text/css" href="{{url_for('static', filename='vendor/leaflet/1.3.3/leaflet.css')}}" rel="stylesheet" />
+<script type="text/javascript" src="{{url_for('static', filename='vendor/leaflet/1.3.3/leaflet.js')}}"></script>
+
+<script type="text/javascript" src="{{url_for('static', filename='vendor/leaflet-markercluster/1.3.0/leaflet.markercluster.js')}}"></script>
+<link type="text/css" href="{{url_for('static', filename='vendor/leaflet-markercluster/1.3.0/MarkerCluster.css')}}" rel="stylesheet" />
+<link type="text/css" href="{{url_for('static', filename='vendor/leaflet-markercluster/1.3.0/MarkerCluster.Default.css')}}" rel="stylesheet" />
+
+
+<script src="{{url_for('static', filename='js/map.js')}}" type="text/javascript"></script>
+<script type="text/javascript">
+  // LOCATIONS
+  var locationsMap;
+
+  $(function() {
+    locationsMap = new MAEDImap("locationMap", {"all_projects": true});
+  	$.getJSON(api_activity_locations_url, function(data) {
+        existingLocations = data;
+        var markerLayer = L.markerClusterGroup({showCoverageOnHover:false});
+        for (i in data["locations"]) {
+          var l = data["locations"][i]["locations"];
+          var toggle = locationsMap.addLocation(l, markerLayer, data["locations"][i]);
+        }
+        $(".loading-map").hide();
+        locationsMap.addLayer(markerLayer);
+        locationsMap.resize();
+        locationsMap.fitBounds([
+            [4.3833, -11.3242],
+            [8.37583, -7.56658]
+        ]);
+  	});
+  });
+</script>
 {% endblock %}
