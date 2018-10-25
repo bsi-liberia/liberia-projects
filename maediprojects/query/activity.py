@@ -1,16 +1,52 @@
 from maediprojects import db, models
 from maediprojects.query import finances as qfinances
 import datetime
-from flask import url_for
+from flask import url_for, session
 from flask.ext.login import current_user
 from collections import OrderedDict
 from maediprojects.lib.util import isostring_date, isostring_year
+from maediprojects.lib import codelists
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
+
+def get_earliest_latest_dates():
+    earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)).scalar()
+    latest = db.session.query(func.max(models.ActivityFinances.transaction_date)).scalar()
+    return earliest, latest
+
+def activity_C_Ds():
+    commitments_query = db.session.query(
+        models.ActivityFinances.activity_id, 
+        func.sum(models.ActivityFinances.transaction_value).label("total_commitments")
+    ).filter(models.ActivityFinances.transaction_type==u'C'
+    ).group_by(models.ActivityFinances.activity_id
+    ).all()
+    commitments = dict(map(lambda c: (c.activity_id, c.total_commitments), commitments_query))
+    disbursements_query = db.session.query(
+        models.ActivityFinances.activity_id, 
+        func.sum(models.ActivityFinances.transaction_value).label("total_disbursements")
+    ).filter(models.ActivityFinances.transaction_type==u'D'
+    ).group_by(models.ActivityFinances.activity_id
+    ).all()
+    disbursements = dict(map(lambda d: (d.activity_id, d.total_disbursements), disbursements_query))
+    return commitments, disbursements
+
+def filter_activities_for_permissions(query):
+    permissions = session.get("permissions", {})
+    if "domestic_external" in permissions:
+        if permissions["domestic_external"] == "domestic":
+            return query.filter(models.Activity.domestic_external == "domestic")
+        elif permissions["domestic_external"] == "external":
+            return query.filter(models.Activity.domestic_external == "external")
+        elif permissions["domestic_external"] == "external":
+            return query.filter(models.Activity.domestic_external == "external")
+    return query
 
 def get_iati_list():
     countries_db = db.session.query(models.Activity
                     ).distinct(models.Activity.recipient_country_code
                     ).group_by(models.Activity.recipient_country_code
-                    ).order_by(models.Activity.recipient_country_code)
+                    ).order_by(models.Activity.recipient_country_code).all()
 
     return OrderedDict(map(lambda x: (x.recipient_country_code,
           {
@@ -53,12 +89,32 @@ def create_activity(data):
     data["start_date"] = isostring_date(data["start_date"])
     data["end_date"] = isostring_date(data["end_date"])
     
+    classifications = []
+    for cl in ["sdg-goals", "mtef-sector", "aft-pillar", 
+        "aligned-ministry-agency", "papd-pillar"]:
+        cl_id = 'classification_id_{}'.format(cl)
+        cl_pct = 'classification_percentage_{}'.format(cl)
+        classification = models.ActivityCodelistCode()
+        classification.codelist_code_id=data[cl_id]
+        classifications.append(classification)
+        data.pop(cl_id)
+        data.pop(cl_pct)
+    act.classifications = classifications
+
+    orgs = []
+    for org_id, org_role in ((data["org_4"], 4), (data["org_1"], 1)):
+        org = models.ActivityOrganisation()
+        org.organisation_id = org_id
+        org.role = org_role
+        data.pop("org_{}".format(org_role))
+        orgs.append(org)
+    act.organisations = orgs
+
     for attr, val in data.items():
         if attr.startswith("total_"):
             if val == "":
                 val = 0
         setattr(act, attr, val)
-    
     if not "forwardspends" in data:
         act.forwardspends = qfinances.create_forward_spends(data["start_date"],
             data["end_date"])
@@ -95,11 +151,16 @@ def get_stats(current_user):
     }
 
 def list_activities_user(current_user):
+    # FIXME Simplify this by removing this function -- all requests
+    # for activities should be passed through filter..._for_permissions
     if(hasattr(current_user, "id") and (not current_user.administrator)):
-        return models.Activity.query.filter_by(
+        query = models.Activity.query.filter_by(
         user_id = current_user.id
-        ).all()
-    return models.Activity.query.all()
+        )
+    else:
+        query = models.Activity.query
+    query = filter_activities_for_permissions(query)
+    return query.all()
 
 def list_activities_by_country(recipient_country_code):
     acts = models.Activity.query.filter_by(
@@ -107,25 +168,52 @@ def list_activities_by_country(recipient_country_code):
     ).all()
     return acts
 
-def list_activities_by_filter(filter_name, filter_value):
-    # Filter by classifications
-    if filter_name in ["mtef-sector", "aligned-ministry-agency"]:
-        acts = models.Activity.query.filter(
-            models.CodelistCode.codelist_code == filter_name,
-            models.CodelistCode.code == filter_value
+def getJSONDate(value):
+    return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+def list_activities_by_filters(filters):
+    query = models.Activity.query.outerjoin(
+                    models.ActivityFinances,
+                    models.ActivityFinancesCodelistCode
+                )
+    codelist_names = codelists.get_db_codelists().keys()
+    codelist_names.remove("organisation")
+    codelist_vals = []
+    for filter_name, filter_value in filters.items():
+        if filter_value == "all": continue
+        if filter_name == "earliest_date":
+            query = query.filter(
+                models.ActivityFinances.transaction_date > getJSONDate(filter_value))
+        elif filter_name == "latest_date":
+            query = query.filter(
+                models.ActivityFinances.transaction_date < getJSONDate(filter_value))
+        elif filter_name in codelist_names:
+            codelist_vals.append(int(filter_value))
+        else:
+            query = query.filter(
+                getattr(models.Activity, filter_name)==filter_value
+            )
+    # This gets a bit nasty. We join multiple times to the same tables to filter by
+    # multiple values. We need to use sqlalchemy.orm' aliased function for this.
+    if codelist_vals:
+        query = query
+        for codelist_val in codelist_vals:
+            this_activitycodelist_code = aliased(models.ActivityCodelistCode)
+            this_codelist_code = aliased(models.CodelistCode)
+            query = query.join(
+                this_activitycodelist_code, models.Activity.id == this_activitycodelist_code.activity_id
             ).join(
-                models.ActivityCodelistCode
-            ).join(
-                models.CodelistCode
-            ).all()
-    else:
-        acts = models.Activity.query.filter(
-            getattr(models.Activity, filter_name)==filter_value
-        ).all()
+                    this_codelist_code, this_activitycodelist_code.codelist_code_id ==  this_codelist_code.id
+            )
+            query = query.filter(
+                    this_codelist_code.id == codelist_val
+            )
+    query = filter_activities_for_permissions(query)
+    acts = query.all()
     return acts
 
 def update_attr(data):
-    if data['attr'] in ["mtef-sector", "aligned-ministry-agency"]:
+    if data['attr'] in ["mtef-sector", "aligned-ministry-agency", "sdg-goals"]:
         # Delete existing database entry
         old_clc = models.ActivityCodelistCode.query.filter(
             models.ActivityCodelistCode.activity_id == data['id'],
