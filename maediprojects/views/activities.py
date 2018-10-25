@@ -1,24 +1,32 @@
 from flask import Flask, render_template, flash, request, Markup, \
     session, redirect, url_for, escape, Response, abort, send_file, jsonify
 from flask.ext.login import login_required, current_user
-                            
+from werkzeug.utils import secure_filename
 from maediprojects import app, db, models
+from maediprojects.query import codelists as qcodelists
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
+from maediprojects.query import organisations as qorganisations
+from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
 import json, datetime
+
+ALLOWED_EXTENSIONS = set(['xlsx', 'xls'])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/")
 @login_required
 def dashboard():
     countries = qactivity.get_iati_list()
-    funding_orgs = codelists.get_codelists_lookups_by_name()["funding-organisation"]
+    reporting_orgs = qorganisations.get_organisations()
     mtef_sectors = codelists.get_codelists_lookups_by_name()["mtef-sector"]
     aligned_ministry_agencies = codelists.get_codelists_lookups_by_name()["aligned-ministry-agency"]
     return render_template("home.html",
                 countries=countries,
-                funding_orgs=sorted(funding_orgs.items()),
+                reporting_orgs=reporting_orgs,
                 mtef_sectors=sorted(mtef_sectors.items()),
                 aligned_ministry_agencies=sorted(aligned_ministry_agencies.items()),
                 loggedinuser=current_user,
@@ -29,48 +37,143 @@ def dashboard():
 @login_required
 def activities():
     countries = qactivity.get_iati_list()
-    funding_orgs = codelists.get_codelists_lookups_by_name()["funding-organisation"]
-    mtef_sectors = codelists.get_codelists_lookups_by_name()["mtef-sector"]
-    aligned_ministry_agencies = codelists.get_codelists_lookups_by_name()["aligned-ministry-agency"]
+    reporting_orgs = list(map(lambda o: {"id": o.id, "name": o.name}, qorganisations.get_reporting_orgs()))
+    cl = codelists.get_codelists()
+    _cl_domestic_external = [
+        {"id": "domestic",
+         "name": "Domestic (PSIP / PIU)"},
+        {"id": "external",
+         "name": "External (Aid / AMCU)"}
+    ]
+    filters_codelists = [
+        ("Reported by", "reporting_org_id", reporting_orgs),
+        ("Sector", "mtef-sector", cl["mtef-sector"]),
+        ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
+        ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
+        ("Activity Status", "activity_status", cl["ActivityStatus"]),
+        ("Domestic / External", "domestic_external", _cl_domestic_external),
+        ]
+    activity_base_url = url_for("activities")
+    earliest, latest = qactivity.get_earliest_latest_dates()
+    dates = {
+        "earliest": earliest.isoformat(),
+        "latest": latest.isoformat()
+    }
     return render_template("activities.html",
                 countries=countries,
-                funding_orgs=sorted(funding_orgs.items()),
-                mtef_sectors=sorted(mtef_sectors.items()),
-                aligned_ministry_agencies=sorted(aligned_ministry_agencies.items()),
+                reporting_orgs=reporting_orgs,
+                codelists=filters_codelists,
                 loggedinuser=current_user,
-                stats = qactivity.get_stats(current_user)
-                          )
+                stats = qactivity.get_stats(current_user),
+                activity_base_url = activity_base_url,
+                dates=dates
+    )
 
-@app.route("/iati_data_list/")
-def iati_data_list():
-    return render_template("iati_data_list.html",
-                loggedinuser=current_user,
-                country_files = qactivity.get_iati_list()
-                          )
+@app.route("/export/")
+def export():
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    return render_template("export.html",
+                loggedinuser = current_user,
+                funding_orgs=reporting_orgs)
+
+@app.route("/import/", methods=["POST", "GET"])
+def import_template():
+    if request.method == "GET": return(redirect(url_for('export')))
+    if 'file' not in request.files:
+        flash('Please select a file.', "warning")
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('Please select a file.', "warning")
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        # For each sheet: convert to dict
+        # For each line in each sheet:
+        # Process (financial data) import column
+        # If no data in that FQ: then import
+        # If there was data for that FY: then don't import
+        result = qgenerate_xlsx.import_xls(file)
+        if result > 0: flash("{} activities successfully updated!".format(result), "success")
+        else: flash("""No activities were updated. No updated disbursements 
+        were found. Check that you selected the correct file and that it 
+        contains 2017 Q4 Disbursement data. It must be formatted according to
+        the AMCU template format. You can download a copy of this template 
+        below.""".format(result), "warning")
+        return redirect(url_for('export'))
+    flash("Sorry, there was an error, and that file could not be imported", "danger")
+    return redirect(url_for('export'))
 
 @app.route("/activities/new/", methods=['GET', 'POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_new():
     if request.method == "GET":
-
         today = datetime.datetime.now().date().isoformat()
         return render_template("activity_edit.html",
-                    # Specify some defaults
-                    activity = {
-                        "flow_type": "10",
-                        "aid_type": "C01",
-                        "collaboration_type": "1",
-                        "finance_type": "110",
-                        "activity_status": "2",
-                        "tied_status": "5",
-                        "start_date": today,
-                        "end_date": today,
-                        "recipient_country_code": current_user.recipient_country_code,
+            # Specify some defaults
+            activity = {
+                "flow_type": "10",
+                "aid_type": "C01",
+                "collaboration_type": "1",
+                "finance_type": "110",
+                "activity_status": "2",
+                "tied_status": "5",
+                "start_date": today,
+                "end_date": today,
+                "recipient_country_code": current_user.recipient_country_code,
+                "domestic_external": current_user.permissions_dict.get("domestic_external_edit"),
+                "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
+                    {"role": 1, "id": 1, "organisation": { "id": ""}},
+                    {"role": 4, "id": 4, "organisation": { "id": ""}}
+                ],
+                "classification_data": {
+                    "mtef-sector": {
+                        "name": "MTEF Sector",
+                        "code": "mtef-sector",
+                        "id": "mtef-sector",
+                        "entries": [
+                            {""}
+                        ]
                     },
-                    loggedinuser=current_user,
-                    codelists = codelists.get_codelists(),
-                    users = quser.user()
-                              )
+                    "aft-pillar": {
+                        "name": "AfT Pillar",
+                        "code": "aft-pillar",
+                        "id": "aft-pillar",
+                        "entries": [
+                            {""}
+                        ]
+                    },
+                    "aligned-ministry-agency": {
+                        "name": "Aligned Ministry/Agency",
+                        "code": "aligned-ministry-agency",
+                        "id": "aligned-ministry-agency",
+                        "entries": [
+                            {""}
+                        ]
+                    },
+                    "sdg-goals": {
+                        "name": "SDG Goals",
+                        "code": "sdg-goals",
+                        "id": "sdg-goals",
+                        "entries": [
+                            {""}
+                        ]
+                    },
+                    "papd-pillar": {
+                        "name": "PAPD Pillar",
+                        "code": "papd-pillar",
+                        "id": "papd-pillar",
+                        "entries": [
+                            {""}
+                        ]
+                    }
+                },
+            },
+            loggedinuser=current_user,
+            organisations = qorganisations.get_organisations(),
+            codelists = codelists.get_codelists(),
+            users = quser.user()
+            )
 
     elif request.method == "POST":
         # Create new activity
@@ -85,18 +188,21 @@ def activity_new():
 
 @app.route("/activities/<activity_id>/delete/")
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_delete(activity_id):
     result = qactivity.delete_activity(activity_id)
     if result:
         flash("Successfully deleted that activity", "success")
     else:
         flash("Sorry, unable to delete that activity", "danger")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("activities"))
 
 @app.route("/activities/<activity_id>/")
 @login_required
+@quser.permissions_required("domestic_external")
 def activity(activity_id):
     activity = qactivity.get_activity(activity_id)
+    if not activity: return(abort(404))
     locations = qlocation.get_locations_country(
                                     activity.recipient_country_code)
     #FIXME why are these not url_for()s ?
@@ -104,6 +210,7 @@ def activity(activity_id):
                 activity = activity,
                 loggedinuser=current_user,
                 codelists = codelists.get_codelists(),
+                codelist_lookups = codelists.get_codelists_lookups(),
                 locations = locations,
                 api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
                 api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
@@ -116,6 +223,7 @@ def activity(activity_id):
 
 @app.route("/activities/<activity_id>/edit/")
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_edit(activity_id):
     activity = qactivity.get_activity(activity_id)
     locations = qlocation.get_locations_country(
@@ -125,10 +233,12 @@ def activity_edit(activity_id):
                 activity = activity,
                 loggedinuser=current_user,
                 codelists = codelists.get_codelists(),
+                organisations = qorganisations.get_organisations(),
                 locations = locations,
                 api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
                 api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
                 api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
+                api_activity_milestones_url = url_for("api_activity_milestones", activity_id=activity_id),
                 api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
                 api_iati_search_url = "/api/iati_search/",
                 api_activity_forwardspends_url = url_for("api_activity_forwardspends", activity_id=activity_id),
@@ -137,6 +247,7 @@ def activity_edit(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_result/", methods=['POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_edit_result_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -150,6 +261,7 @@ def activity_edit_result_attr(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_indicator/", methods=['POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_edit_indicator_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -163,6 +275,7 @@ def activity_edit_indicator_attr(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_period/", methods=['POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_edit_period_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -176,6 +289,7 @@ def activity_edit_period_attr(activity_id):
 
 @app.route("/activities/<activity_id>/edit/delete_result_data/", methods=['POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_delete_result_data(activity_id):
     data = {
         'id': request.form['id'],
@@ -188,6 +302,7 @@ def activity_delete_result_data(activity_id):
 
 @app.route("/activities/<activity_id>/edit/add_result_data/", methods=['POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_add_results_data(activity_id):
     data = request.form
     add_status = qactivity.add_result_data(activity_id, data)
@@ -203,7 +318,27 @@ def activity_add_results_data(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_activity/", methods=['POST'])
 @login_required
+@quser.permissions_required("domestic_external_edit")
 def activity_edit_attr(activity_id):
+    #FIXME this is a bit hacky
+    if request.form['attr'].startswith("classification_"):
+        if request.form['attr'].startswith("classification_id"):
+            activitycodelist_id = request.form['attr'].split("classification_id_")[1]
+            attr = "codelist_code_id"
+        if request.form['attr'].startswith("classification_percentage"):
+            activitycodelist_id = request.form['attr'].split("classification_percentage_")[1]
+            attr = "percentage"
+        update_status = qcodelists.update_activity_codelist(
+            activitycodelist_id, {"attr": attr, "value": request.form['value']}
+            )
+        if update_status: return "success"
+        else: return "error"
+    if request.form['attr'].startswith("org"):
+        update_status = qorganisations.update_activity_organisation(
+            request.form['attr'].split("_")[1],
+            request.form['value'])
+        if update_status: return "success"
+        else: return "error"
     data = {
         'attr': request.form['attr'],
         'value': request.form['value'],
