@@ -11,9 +11,15 @@
       role="tab" data-toggle="tab" id="{{ codelist.code }}Tab">{{ codelist.name }}</a>
     </li>
     {% endfor %}
+    <!-- Hide for now - this is handled in setup so no need to show here
     <li role="presentation">
       <a href="#locations" aria-controls="locations" 
       role="tab" data-toggle="tab" id="locationsTab">{{ _('Locations') }}</a>
+    </li>
+    -->
+    <li role="presentation">
+      <a href="#organisations" aria-controls="organisations" 
+      role="tab" data-toggle="tab" id="organisationsTab">{{ _('Organisations') }}</a>
     </li>
   </ul>
   <div class="tab-content">
@@ -29,7 +35,7 @@
         </thead>
         <tbody>
           {% for code in codelist_codes[codelist.code] %}
-          <tr data-code="{{ code.code }}">
+          <tr data-id="{{ code.id }}" id="{{codelist.code}}-{{code.id}}">
             <td>
               <div class="form-group">
                 <label class="control-label sr-only">{{ _('Code') }}</label>
@@ -98,6 +104,77 @@
         </div>
       </form>
     </div>
+    <div role="tabpanel" class="tab-pane" id="organisations">
+      <h3>{{ _('Organisations') }}</h3>
+      <table class="table codelists-data" 
+        data-codelist="organisation"
+        id="table-organisation">
+        <thead>
+          <tr>
+            <th>{{ _('Name') }}</th>
+            <th>{{ _('Acronym') }}</th>
+            <th>{{ _('Type') }}</th>
+            <th>{{ _('IATI Organisation ID') }}</th>
+            <th>{{ _('GoL Budget Code') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for organisation in organisations %}
+          <tr data-id="{{ organisation.id }}" id="organisation-{{ organisation.id }}">
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">{{ _('Name') }}</label>
+                <input type="text" class="form-control"
+                name="name" value="{{ organisation.name }}">
+              </div>
+            </td>
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">{{ _('Acronym') }}</label>
+                <input type="text" class="form-control"
+                name="acronym" value="{{ organisation.acronym }}">
+              </div>
+            </td>
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">{{ _('Type') }}</label>
+                <select id="_type" name="_type" class="form-control">
+                  <option value="donor"{% if organisation._type=='donor' %} selected{% endif %}>Donor</option>
+                  <option value="gol"{% if organisation._type=='gol' %} selected{% endif %}>Govt of Liberia</option>
+                  <option value="ngo"{% if organisation._type=='ngo' %} selected{% endif %}>NGO</option>
+                </select>
+              </div>
+            </td>
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">{{ _('IATI Code') }}</label>
+                <input type="text" class="form-control" 
+                name="code" value="{{ organisation.code }}">
+              </div>
+            </td>
+            <td>
+              <div class="form-group">
+                <label class="control-label sr-only">{{ _('Budget Code') }}</label>
+                <input type="text" class="form-control" 
+                name="budget_code" value="{{ organisation.budget_code }}">
+              </div>
+            </td>
+            <td>
+              <a class="btn btn-sm btn-default deleteCode"
+              data-toggle="modal" data-target="#confirm-delete">
+                <i class="glyphicon glyphicon-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <a class="btn btn-success addCode"
+      data-codelist="organisation">
+        <i class="glyphicon glyphicon-plus"></i> 
+        {{ _('Add code') }}
+      </a>
+    </div>
   </div>
 </div>
 
@@ -122,7 +199,7 @@
 
     {% raw %}
     <script id="row-codelist-template" type="x-tmpl-mustache">
-      <tr data-code="{{ code }}">
+      <tr data-id="{{ id }}" id="{{ codelist_code }}-{{ id }}">
         <td>
           <div class="form-group">
             <label class="control-label sr-only">{% endraw %}{{ _('Code') }}{% raw %}</label>
@@ -139,6 +216,54 @@
         <td>
           <a class="btn btn-sm btn-default deleteCode"
              data-toggle="modal" data-target="#confirm-delete">
+            <i class="glyphicon glyphicon-trash"></i>
+          </a>
+        </td>
+      </tr>
+    </script>
+    <script id="row-organisation-template" type="x-tmpl-mustache">
+      <tr data-id="{{ id }}" id="organisation-{{id}}">
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">{% endraw %}{{ _('Name') }}{% raw %}</label>
+            <input type="text" class="form-control"
+            name="name" value="{{ name }}">
+          </div>
+        </td>
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">{% endraw %}{{ _('Acronym') }}{% raw %}</label>
+            <input type="text" class="form-control"
+            name="name" value="{{ acronym }}">
+          </div>
+        </td>
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">{% endraw %}{{ _('Type') }}{% raw %}</label>
+            <select id="_type" name="_type" class="form-control">
+              <option name="donor" selected>Donor</option>
+              <option name="gol">Govt of Liberia</option>
+              <option name="ngo">NGO</option>
+            </select>
+          </div>
+        </td>
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">{% endraw %}{{ _('IATI Code') }}{% raw %}</label>
+            <input type="text" class="form-control" 
+            name="code" value="{{ code }}">
+          </div>
+        </td>
+        <td>
+          <div class="form-group">
+            <label class="control-label sr-only">{% endraw %}{{ _('Budget Code') }}{% raw %}</label>
+            <input type="text" class="form-control" 
+            name="budget_code" value="{{ budget_code }}">
+          </div>
+        </td>
+        <td>
+          <a class="btn btn-sm btn-default deleteCode"
+          data-toggle="modal" data-target="#confirm-delete">
             <i class="glyphicon glyphicon-trash"></i>
           </a>
         </td>
