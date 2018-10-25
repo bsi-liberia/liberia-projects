@@ -3,12 +3,14 @@
 from maediprojects import app, db, models
 import datetime
 from maediprojects.query import activity as qactivity
+from maediprojects.lib import util
 from maediprojects.lib.codelist_helpers import codelists 
 from maediprojects.lib.codelists import get_codelists_lookups
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers
 import unicodecsv
 import StringIO
 import re
+import collections
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -38,63 +40,110 @@ def activity_to_json(activity, cl_lookups):
     
     activity_disbursements = filter(valid_transaction, activity.disbursements)
     sum_disbursements = sum(map(lambda d: d.transaction_value, activity_disbursements))
-          
-    longs = list(map(lambda l: float(l.locations.longitude), activity.locations))
-    lats = list(map(lambda l: float(l.locations.latitude), activity.locations))
     
-    if len(longs)>0 and len(lats)>0:
-        average_longs = sum(longs) / len(longs)
-        average_lats = sum(lats) / len(lats)
-    else:
-        average_longs = ""
-        average_lats = ""
+    def get_code_or_blank(activity, codelist):
+        if codelist in activity.classification_data:
+            return ",".join(list(map(lambda x: x.codelist_code.name, activity.classification_data[codelist]["entries"])))
+        return ""
     
-    return {u'Reporting Organisation': "MFDP",
-     u'Project code': { True: activity.code, 
-               False: activity.id
-             }[bool(activity.code)],
-        u'Activity Title': re.sub("\t|\n|\r", "", activity.title), 
-        u"Activity Title (in recipient's language)":"",
-        u'Activity Description': re.sub("\t|\n|\r", "", activity.description), 
-        u"Activity Description (in recipient's language)": "",
-        u'Activity Status': cl_lookups["ActivityStatus"][activity.activity_status], 
+    data = {u'Reported by': activity.reporting_org.name,
+        u'ID': activity.id,
+        u'Project code': activity.code,
+        u'Domestic/External': activity.domestic_external,
+        u'Activity Title': re.sub("\t|\n|\r", "", activity.title),
+        u'Activity Description': re.sub("\t|\n|\r", "", activity.description),
+        u'Activity Status': cl_lookups["ActivityStatus"].get(activity.activity_status), 
         u'Activity Dates (Start Date)': activity.start_date.isoformat() if activity.start_date else "",
-        u'Activity Dates (End Date)': activity.end_date.isoformat() if activity.end_date else "", 
-        u'Activity Contacts': "",
-        u'Participating Organisation (Funding)': activity.funding_org.name, 
-        u'Participating Organisation (Implementing)': activity.implementing_org,
-        u'Recipient Country': cl_lookups["Country"][activity.recipient_country_code], 
-        u'Recipient Region': "",
-        u'Sub-national Geographic Location - Latitude': average_lats, 
-        u'Sub-national Geographic Location - Longitude': average_longs,
+        u'Activity Dates (End Date)': activity.end_date.isoformat() if activity.end_date else "",
+        u'County': ", ".join(list(map(lambda l: l.locations.name, activity.locations))),
+        u'Funded by': ",".join(list(map(lambda x: x.name, activity.funding_organisations))), 
+        u'Implemented by': ",".join(list(map(lambda x: x.name, activity.implementing_organisations))),
         u'Sector (DAC CRS)': cl_lookups["Sector"].get(activity.dac_sector, ""), 
-        u'Sector (Agency specific)': activity.classification_data["mtef-sector"].codelist_code.name,
-        u'Policy Markers': "",
-        u'Collaboration Type': cl_lookups["CollaborationType"][activity.collaboration_type], 
-        u'Default Flow Type': cl_lookups["FlowType"][activity.flow_type],
-        u'Default Finance Type': cl_lookups["FinanceType"][activity.finance_type],
-        u'Default Aid Type': cl_lookups["AidType"][activity.aid_type], 
-        u'Default Tied Aid Status': cl_lookups["TiedStatus"][activity.tied_status],
+        u'MTEF Sector': get_code_or_blank(activity, "mtef-sector"),
+        u'Aligned Ministry/Agency': get_code_or_blank(activity, "aligned-ministry-agency"),
+        u'AfT Pillar': get_code_or_blank(activity, "aft-pillar"),
+        u'Collaboration Type (Donor Type)': cl_lookups["CollaborationType"].get(activity.collaboration_type), 
+        u'Finance Type (Type of Assistance)': cl_lookups["FinanceType"].get(activity.finance_type),
+        u'Aid Type (Aid Modality)': cl_lookups["AidType"].get(activity.aid_type),
         u'Activity Budget': "",
         u'Planned Disbursements': "", 
-        u'Financial transaction (Commitment)': sum_commitments, 
-        u'Financial transaction (Disbursement & Expenditure)': sum_disbursements, 
-        u'Financial transaction (Reimbursement)': "", 
-        u'Financial transaction (Incoming Funds)': "", 
-        u'Financial transaction (Loan repayment / interest repayment)': "", 
+        u'Total Commitments': sum_commitments, 
+        u'Total Disbursements': sum_disbursements,
         u'Activity Documents': "", 
         u'Activity Website': "", 
-        u'Last updated date': activity.updated_date.date().isoformat()
+        u'Last updated date': activity.updated_date.date().isoformat(),
     }
+    # Add Disbursements data
+    data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_disbursements_dict.items())))
+    # Add MTEF data
+    data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_forward_spend_dict.items())))
+    return data
+
+def generate_disb_fys():
+    #FIXME don't hard code start/end years
+    disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy), 
+                     "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy),
+                     "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy), 
+                     "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
+                     ) for fy in range(2013, 2019)]
+    return [item for sublist in disbFYs_QTRs for item in sublist]
 
 def generate_csv():
     csv_file = StringIO.StringIO()
     cl_lookups = get_codelists_lookups()
-    
-    csv = unicodecsv.DictWriter(csv_file, headers)
+    disb_fys = generate_disb_fys()
+    _headers = headers + disb_fys
+    csv = unicodecsv.DictWriter(csv_file, _headers)
     csv.writeheader()
-    
     activities = qactivity.list_activities()
     for activity in activities:
-        csv.writerow(activity_to_json(activity, cl_lookups))
+        activity_data = activity_to_json(activity, cl_lookups)
+        remove_keys = set(activity_data)-set(_headers)
+        for remove_key in remove_keys: del activity_data[remove_key]
+        csv.writerow(activity_data)
     return csv_file
+
+def activity_to_transactions_list(activity, cl_lookups):
+
+    def get_code_or_blank(activity, codelist):
+        if codelist in activity.classification_data:
+            return ",".join(list(map(lambda x: x.codelist_code.name, activity.classification_data[codelist]["entries"])))
+        return ""
+
+    def make_transaction(activity, tr, transaction_type):
+        return {u'Reported by': activity.reporting_org.name,
+            u'ID': activity.id,
+            u'Project code': activity.code,
+            u'Domestic/External': activity.domestic_external,
+            u'Activity Title': re.sub("\t|\n|\r", "", activity.title),
+            u'Activity Description': re.sub("\t|\n|\r", "", activity.description),
+            u'Activity Status': cl_lookups["ActivityStatus"].get(activity.activity_status),
+            u'Activity Dates (Start Date)': activity.start_date.isoformat() if activity.start_date else "",
+            u'Activity Dates (End Date)': activity.end_date.isoformat() if activity.end_date else "",
+            u'County': ", ".join(list(map(lambda l: l.locations.name, activity.locations))),
+            u'Funded by': ",".join(list(map(lambda x: x.name, activity.funding_organisations))),
+            u'Implemented by': ",".join(list(map(lambda x: x.name, activity.implementing_organisations))),
+            u'Sector (DAC CRS)': cl_lookups["Sector"].get(activity.dac_sector, ""),
+            u'MTEF Sector': get_code_or_blank(activity, "mtef-sector"),
+            u'Aligned Ministry/Agency': get_code_or_blank(activity, "aligned-ministry-agency"),
+            u'AfT Pillar': get_code_or_blank(activity, "aft-pillar"),
+            u'Collaboration Type (Donor Type)': cl_lookups["CollaborationType"].get(activity.collaboration_type),
+            u'Finance Type (Type of Assistance)': cl_lookups["FinanceType"].get(activity.finance_type),
+            u'Aid Type (Aid Modality)': cl_lookups["AidType"].get(activity.aid_type),
+            u'Last updated date': activity.updated_date.date().isoformat(),
+            u"Fiscal Year": tr["fiscal_year"],
+            u"Fiscal Quarter": tr["fiscal_quarter"],
+            u"Transaction Date": util.fq_fy_to_date(int(tr["fiscal_quarter"][1]),
+                int(tr["fiscal_year"]), start_end='start').date().isoformat(),
+            u"Transaction Value": tr["value"],
+            u"Transaction Type": transaction_type
+        }
+
+    transactions = []
+    for tr in activity.FY_commitments_dict.values():
+        transactions.append(make_transaction(activity, tr, u"Commitment"))
+    for tr in activity.FY_disbursements_dict.values():
+        transactions.append(make_transaction(activity, tr, u"Disbursement"))
+    for tr in activity.FY_forward_spend_dict.values():
+        transactions.append(make_transaction(activity, tr, u"MTEF Projection"))
+    return transactions
