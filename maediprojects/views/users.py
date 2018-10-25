@@ -6,9 +6,11 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             confirm_login,
                             fresh_login_required)
 from flask.ext.babel import gettext
+from functools import wraps
                             
 from maediprojects import app, db, models
 from maediprojects.query import user as quser
+from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import codelists
 
 login_manager = LoginManager()
@@ -23,17 +25,45 @@ def load_user(id):
     
 @app.route("/users/")
 @login_required
+@quser.administrator_required
 def users():
+    if not current_user.administrator:
+        flash(gettext(u"You must be an administrator to access that area."), "danger")
     users = quser.user()
     return render_template("users.html",
              users = users,
              loggedinuser=current_user)
 
+@app.route("/users/delete/", methods=["POST"])
+@login_required
+@quser.administrator_required
+def users_delete():
+    if not current_user.administrator:
+        flash(gettext(u"You must be an administrator to create new users."), "danger")
+        return redirect(url_for("dashboard"))
+    if current_user.username == request.form.get("username"):
+        flash(gettext(u"You cannot delete your own user."), "danger")
+        return redirect(url_for("dashboard"))
+    if quser.deleteUser(request.form.get('username')):
+        flash(gettext(u"Successfully deleted user."), "success")
+    else:
+        flash(gettext(u"Sorry, there was an error and that user could not be deleted."), "danger")
+    return redirect(url_for("users"))
+
 @app.route("/users/new/", methods=["GET", "POST"])
 @login_required
+@quser.administrator_required
 def users_new():
+    #if not current_user.administrator:
+    #    flash("You must be an administrator to create new users.", "danger")
+    #    return redirect(url_for("dashboard"))
     if request.method=="GET":
-        user = {}
+        user = {
+            "permissions_dict": {
+                "domestic_external": current_user.permissions_dict["domestic_external"]
+            },
+            "recipient_country_code": "LR"
+        }
         return render_template("user.html",
                  user = user,
                  loggedinuser=current_user,
@@ -47,12 +77,17 @@ def users_new():
 
 @app.route("/users/<user_id>/", methods=["GET", "POST"])
 @login_required
+@quser.administrator_required
 def users_edit(user_id):
+    if not current_user.administrator:
+        flash("You must be an administrator to edit users.", "danger")
+        return redirect(url_for("dashboard"))
     if request.method=="GET":
         user = quser.user(user_id)
         return render_template("user.html",
                  user = user,
                  loggedinuser=current_user,
+                 organisations=qorganisations.get_organisations(),
                  codelists = codelists.get_codelists())
     elif request.method == "POST":
         data = request.form.to_dict()
@@ -61,7 +96,7 @@ def users_edit(user_id):
             flash(gettext(u"Successfully updated user!"), "success")
         else:
             flash(gettext(u"Sorry, couldn't update that user!"), "danger")
-        return redirect(url_for("users"))
+        return redirect(url_for("users_edit", user_id=user_id))
 
 @app.route("/login/", methods=["GET", "POST"])
 def login():
