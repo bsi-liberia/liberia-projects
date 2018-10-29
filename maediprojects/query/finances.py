@@ -1,6 +1,7 @@
 from maediprojects import db, models
 from sqlalchemy import *
 import datetime
+from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 
 def isostring_date(value):
@@ -92,7 +93,25 @@ def create_periods(start_date, end_date):
             periods.append((quarter, end_date.year))
     return periods
 
+def create_missing_forward_spends(from_date, to_date, activity_id):
+    # NB quarters here are in calendar quarters, not Liberian fiscal quarters
+    def _switch_round(year_quarter):
+        return year_quarter[1], year_quarter[0]
+
+    required_periods = create_periods(from_date, to_date)
+    fs = models.ActivityForwardSpend.query.filter_by(activity_id=activity_id).all()
+    existing_periods = list(map(lambda f: (
+        util.MONTHS_QUARTERS[f.period_start_date.month], 
+        f.period_start_date.year), fs))
+
+    def filter_from_existing(required_period):
+        return (required_period not in existing_periods)
+    new_periods = filter(filter_from_existing, required_periods)
+    forward_spends = create_forward_spends_from_periods(new_periods)
+    return forward_spends
+
 def create_forward_spend(quarter, year, value, currency):
+    # NB quarters are in calendar quarters, not Liberian fiscal quarters
     fs = models.ActivityForwardSpend()
     fs.value = value
     start_day, start_month = QUARTERS_MONTH_DAY[quarter]["start"]
@@ -102,6 +121,14 @@ def create_forward_spend(quarter, year, value, currency):
     fs.period_start_date = datetime.datetime(year, start_month, start_day)
     fs.period_end_date = datetime.datetime(year, end_month, end_day)
     return fs
+
+def create_forward_spends_from_periods(periods, value=0, currency=u"USD"):
+    forwardspends = []
+    if value>0: value = round(value/len(periods), 2)
+    for quarter, year in periods:
+        fs = create_forward_spend(quarter, year, value, currency)
+        forwardspends.append(fs)
+    return forwardspends
 
 def create_forward_spends(start_date, end_date, value=0, currency=u"USD"):
     forwardspends = []
