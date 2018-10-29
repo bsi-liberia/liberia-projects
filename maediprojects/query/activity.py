@@ -5,7 +5,7 @@ from flask import url_for, session
 from flask.ext.login import current_user
 from collections import OrderedDict
 from maediprojects.lib.util import isostring_date, isostring_year
-from maediprojects.lib import codelists
+from maediprojects.lib import codelists, util
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
@@ -238,14 +238,16 @@ def update_attr(data):
         data['value'] = isostring_date(data['value'])
         if data['attr'] == "start_date":
             if data['value'].date() < activity.start_date:
-                # FIXME: need to create additional forward spend periods
+                new_fs = qfinances.create_missing_forward_spends(data['value'].date(), activity.end_date, activity.id)
+                activity.forwardspends += new_fs
                 print("Warning: activity start date moved earlier")
             if data['value'].date() > activity.start_date:
                 # FIXME: need to remove 0-valued forward spend periods
                 print("Warning: activity start date moved later")
         if data['attr'] == "end_date":
             if data['value'].date() > activity.end_date:
-                # FIXME: need to create additional forward spend periods
+                new_fs = qfinances.create_missing_forward_spends(activity.start_date, data['value'].date(), activity.id)
+                activity.forwardspends += new_fs
                 print("Warning: activity end date moved later")
             if data['value'].date() < activity.end_date:
                 # FIXME: need to remove 0-valued forward spend periods
