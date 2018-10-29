@@ -233,7 +233,6 @@ function deleteFinancial(transaction_id) {
     "transaction_id": transaction_id,
     "action": "delete"
   }
-  console.log("delete2", data);
   $.post(api_activity_finances_url, data, 
     function(returndata){
       if (returndata == 'False'){
@@ -471,6 +470,7 @@ $('#datetimepicker_start, #datetimepicker_end')
   }).fail(function(){
     errorFormGroup(input);
   });
+  setupForwardSpend()
 });
 
 /* Handle milestones */
