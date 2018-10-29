@@ -1,98 +1,205 @@
-// SET UP DATES
-var earliest_activity_date = new Date(activity_dates['earliest']);
-var latest_activity_date = new Date(activity_dates['latest']);
-$(".date-select .min-date").text(earliest_activity_date.getFullYear());
-$(".date-select .max-date").text(latest_activity_date.getFullYear());
-var dateSlider = $('#date-selector').slider({
-  id: 'slider2',
-  min: earliest_activity_date.getTime(),
-  max: latest_activity_date.getTime(),
-  value: [earliest_activity_date.getTime(), latest_activity_date.getTime()],
-  formatter: function(value) {
-    if (value.length == 2) {
-      date_from = new Date(value[0]).toLocaleDateString();
-      date_to = new Date(value[1]).toLocaleDateString();
-      return date_from + ' – ' + date_to;
+
+  var pieOptions, thisPieChart, cdBarChart, cdSourceBarChart;
+  d3.json("/api/sectors.json", function(error, data) {
+    pieOptions = {
+      "records": data["sectors"],
+      "drilldown": "name",
+      "cuts": {
+                "fy": "2017"
+              }
     }
-    date = new Date(value);
-    return 'Current date: ' + date.toLocaleDateString();
+    thisPieChart = new pieChart("#sectors-pie", pieOptions);
+  });
+  $(document).on("change", "#select-fy", function(){
+    var year = $(this).val();
+    pieOptions["cuts"]["fy"] = year;
+    thisPieChart.setData(pieOptions);
+  });
+  
+  var makeTitle = function(str) {
+    return str.charAt(0).toUpperCase() + str.substr(1);
   }
-});
 
-// PROJECTS
-var updateProjects = function(projects) {
-  // Render projects template
-	var projects_template = $('#projects-template').html();
-	Mustache.parse(projects_template);
-	var rendered = Mustache.render(projects_template, projects);
-	$('#projects-data').html(rendered);
-  $("#activities_count").text(projects.activities.length+" found");
-  $.tablesorter.themes.bootstrap = {
-    caption      : 'caption',
-    header       : 'bootstrap-header',
-    iconSortNone : 'bootstrap-icon-unsorted',
-    iconSortAsc  : 'glyphicon glyphicon-chevron-up',
-    iconSortDesc : 'glyphicon glyphicon-chevron-down',
-  };
-  $("#projectsList").tablesorter( {
-      sortList: [[3,1],[1,0],[0,0]],
-      theme : "bootstrap",
-      widthFixed: true,
-      headerTemplate : '{content} {icon}',
-      widgets : [ "uitheme"]
-  } );
-}
-var projects_template;
-var projectData;
-var queryProjectsData = function() {
-  // Check dates
-  var values = $("#date-selector").slider("getValue");
-  var selected_earliest_activity_date = new Date(values[0]);
-  var selected_latest_activity_date = new Date(values[1]);
-  var data = {}
-  var query = ""
-  var fv_data = $.map($(".filter-select"),
-        function(d) {
-          return {"id": d.id, "value": d.value}
-       });
+  d3.json("/api/sectors_C_D.json", function(error, data) {
+    data.sectors = data.sectors.filter(function(d) {
+          return (d.fy > 2012) && (d.fy < 2020);
+        })
+    // LINE CHART
+    lineOptions = {
+      "data": {
+        "sectors": data.sectors.filter(function(d) {
+          return (d.fy > 2012) && (d.fy < 2019);
+        })
+      },
+      "drilldown": "name",
+      "values": ["Disbursements", "Disbursement Projection","Commitments"]
+    }
+    thisLineChart = new lineChart("#line-chart", lineOptions);
+    // END LINE CHART
 
-  if (
-      (values.length==2) &&
-      ((earliest_activity_date.toString()!=selected_earliest_activity_date.toString()) ||
-       (latest_activity_date.toString()!=selected_latest_activity_date.toString()))
-    ) {
-      fv_data.push({
-        "id": "earliest_date", "value": selected_earliest_activity_date.toJSON()
+    // C/D by sector
+    var optionsCDC = {
+      'data': d3.nest()
+        .key(function(d) { return d.name; })
+        .rollup(function(v) { return {
+          "Commitments": d3.sum(v, function(d) { return d.Commitments; }), 
+          "Disbursements": d3.sum(v, function(d) { return d.Disbursements; }), 
+          "Disbursement Projection": d3.sum(v, function(d) { return d["Disbursement Projection"]; })
+        }; })
+        .entries(data.sectors)
+        .map(
+          function(d) {
+            return { name: d.key,
+                     "New Commitments": d.value.Commitments,
+                     "Disbursements": d.value.Disbursements,
+                     "Disbursement Projection": d.value["Disbursement Projection"],
+                     //"Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements
+                   }
+         }).sort(function(x, y){
+           return d3.ascending(x.name, y.name);
+         }),
+       'keys': ["Disbursement Projection", "Disbursements", "New Commitments"],
+       'colours': ["#1f77b4", "#2ca02c", "#ff7f0e"]
+    }
+    $(".loading-bar-chart").fadeOut();
+    cdBarChart = new barChart("#commitments-disbursements-chart", optionsCDC);
+
+    years = (d3.map(data.sectors, function(d){return d.fy;}).keys().sort(function(x, y){
+        return d3.descending(x, y);
+      }))
+    years.unshift("All years")
+
+    yearsControlD = d3.select("#commitments-disbursements-chart-controls")
+      .append("div")
+      .attr("class", "form-group")
+      .append("form")
+      .attr("class","form-horizontal");
+
+    yearsControlD
+      .append("label")
+      .attr("class", "control-label col-sm-2")
+      .text("Fiscal Year");
+
+    yearsControl = yearsControlD
+      .append("div")
+      .attr("class", "col-sm-3")
+      .append("select")
+      .on("change", function() { changeChart(this)} )
+
+    function changeChart(obj) {
+      _entries = function() { 
+        if (obj.value.length == 4) {
+          return data.sectors.filter(function(d) {
+            return (d.fy == obj.value);
           })
-      fv_data.push({
-        "id": "latest_date", "value": selected_latest_activity_date.toJSON()
-      })
-  };
-  $(fv_data).each(function(i, f) {
-    data[f["id"]] = f["value"]
-    if (i == 0) { query+= "?" 
-    } else { query+= "&" }
-    query += f["id"] + "=" + f["value"];
-  });
-  $("#activities_count").text("loading...");
-  $("#projectsList").html('<p class="lead">Loading data, please wait... <span class="glyphicon glyphicon-refresh loader" aria-hidden="true"></span></p>');
+        } else {
+          return data.sectors;
+        }
+      } 
+      optionsCDC['data'] = d3.nest()
+        .key(function(d) { return d.name; })
+        .rollup(function(v) { return {
+          Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
+          Disbursements: d3.sum(v, function(d) { return d.Disbursements; }), 
+          "Disbursement Projection": d3.sum(v, function(d) { return d["Disbursement Projection"]; })
+        }; })
+        .entries(_entries())
+        .map(
+          function(d) {
+            return { name: d.key,
+                     "New Commitments": d.value.Commitments,
+                     "Disbursements": d.value.Disbursements,
+                     "Disbursement Projection": d.value["Disbursement Projection"],
+                     //"Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements
+                   }
+         }).sort(function(x, y){
+           return d3.ascending(x.name, y.name);
+         })
+      cdBarChart.setData(optionsCDC)
+    }
+    var years = yearsControl
+      .attr("class", "form-control")
+      .selectAll("option")
+      .data(years)
 
-  $.post("/api/activities/", data, function(resultdata) {
-    updateProjects(resultdata);
+    years.enter()
+      .append("option")
+      .attr("value", function(d) { return d })
+      .text(function(d) { return d })
+
+    var options = {
+      'data': d3.nest()
+        .key(function(d) { return d.name; })
+        .key(function(d) { return d.domestic_external; })
+        .rollup(function(v) { return {
+          Commitments: d3.sum(v, function(d) { return Math.max(d.Commitments, 0); }), 
+          Disbursements: d3.sum(v, function(d) { return Math.max(d.Disbursements, 0); })
+        }; })
+        .entries(data.sectors)
+        .map(
+          function(d) {
+            t = {
+              name: d.key
+            }
+            d.values.map(function(dv) { 
+              t[makeTitle(dv.key)+" Commitments"] = dv.value.Commitments; 
+              t[makeTitle(dv.key)+" Disbursements"] = dv.value.Disbursements; 
+            });
+            
+            return t;
+         }).sort(function(x, y){
+           return d3.ascending(x.name, y.name);
+         }),
+       'keys': ["External Commitments", "External Disbursements", "Domestic Commitments", "Domestic Disbursements"],
+       'colours': ["#98abc5", "#8a89a6", "#d0743c", "#ff8c00"]
+    }
+    cdSourceBarChart = new barChart("#commitments-disbursements-source-chart", options);
+
+    // C/D, domestic
+    var options = {
+    'data': d3.nest()
+      .key(function(d) { return d.name; })
+      .rollup(function(v) { return {
+        Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
+        Disbursements: d3.sum(v, function(d) { return d.Disbursements; })
+      }; })
+      .entries(data.sectors
+        .filter(function(d) { return d.domestic_external == "domestic";}))
+      .map(
+        function(d) {
+          return { name: d.key,
+                   Commitments: d.value.Commitments,
+                   Disbursements: d.value.Disbursements,
+                   "Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements}
+       }).sort(function(x, y){
+         return d3.ascending(x.name, y.name);
+       }),
+     'keys': ["Commitments", "Disbursements", "Balance (Commitments - Disbursements)"],
+     'colours': ["#d0743c", "#ff8c00", "#a05d56"]
+    }
+    cdDomesticBarChart = new barChart("#commitments-disbursements-domestic-chart", options);
   });
-  $("#download_excel").attr("href", "/api/activities_filtered.xlsx" + query);
-}
-$(document).on("change", ".filter-select", function(e) {
-  queryProjectsData();
-});
-$(document).on("slideStop", "#date-selector", function(e) {
-  queryProjectsData();
-  values = e.value;
-  var min_date = new Date(values[0]);
-  var max_date = new Date(values[1]);
-  $(".date-select .min-date").text(min_date.getFullYear());
-  $(".date-select .max-date").text(max_date.getFullYear());
-});
-// Initial load
-$(".filter-select").val("all");
-queryProjectsData()
+  
+
+
+  // LOCATIONS
+  var locationsMap;
+
+  $(function() {
+    locationsMap = new MAEDImap("locationMap", {"all_projects": true});
+    $.getJSON(api_activity_locations_url, function(data) {
+        existingLocations = data;
+        var markerLayer = L.markerClusterGroup({showCoverageOnHover:false});
+        for (i in data["locations"]) {
+          var l = data["locations"][i]["locations"];
+          var toggle = locationsMap.addLocation(l, markerLayer, data["locations"][i]);
+        }
+        $(".loading-map").hide();
+        locationsMap.addLayer(markerLayer);
+        locationsMap.resize();
+        locationsMap.fitBounds([
+            [4.3833, -11.3242],
+            [8.37583, -7.56658]
+        ]);
+    });
+  });
