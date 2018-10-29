@@ -1,16 +1,25 @@
+// barchart.js
+
 var barChart = {};
+
 var barChart = function(el, options) {
   this.$el = d3.select(el);
-  var svg, margin, height, g, x0, x1, y, z;
+  var svg, margin, height, g, x0, x1, y, z, xAxis, yAxis, legends, dataCanvas;
   
   this._init = function() {
     svg = this.$el.append("svg")
           .attr("width",  960)
           .attr("height", 500),
-        margin = {top: 20, right: 20, bottom: 100, left: 40},
-        width = +svg.attr("width") - margin.left - margin.right,
-        height = +svg.attr("height") - margin.top - margin.bottom,
+        margin = {top: 20, right: 20, bottom: 100, left: 70},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom,
         g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    dataCanvas = svg
+      .append("g")
+      .attr("class", "data-canvas")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     x0 = d3.scaleBand()
         .rangeRound([0, width])
@@ -21,6 +30,26 @@ var barChart = function(el, options) {
 
     y = d3.scaleLinear()
         .rangeRound([height, 0]);
+
+    bars = dataCanvas.append("g")
+      .attr("class", "bars")
+
+    dataCanvas.append("g")
+      .attr("class", "x-axis");
+
+    dataCanvas.append("g")
+      .attr("class", "y-axis")
+      .append("text")
+        .attr("class", "axis-legend");
+    
+    // Define xAxis function.
+    xAxis = d3.axisBottom(x0).ticks(10);
+    yAxis = d3.axisLeft(y).ticks(null).tickFormat(function(d) {
+          return d / 1000000000 + 'bn';
+        });
+
+    legends = dataCanvas.append("g")
+        .attr("class", "legends");
     
     if (options.colours) {
       z = d3.scaleOrdinal().range(options.colours);
@@ -51,32 +80,75 @@ var barChart = function(el, options) {
       });
     svg.call(tip);
 
-    g.append("g")
-      .selectAll("g")
+    var bars = svg.select("g.bars")
+      .selectAll("g.bargroup")
       .data(data)
-      .enter().append("g")
+
+    var bargroup = bars
+      .enter()
+      .append("g")
+      .merge(bars)
+        .attr("class", "bargroup")
         .attr("transform", function(d) { return "translate(" + x0(d.name) + ",0)"; })
       .selectAll("rect")
       .data(function(d) { return keys.map(function(key) { return {key: key, value: d[key]}; }); })
+
+    var bar = bargroup
       .enter().append("rect")
+        .attr('height', 0)
+        .attr('y', height)
+
+    bar
+        .merge(bargroup)
+        .transition()
+        .duration(500)
+        .attr("class","bar")
         .attr("x", function(d) { return x1(d.key); })
-        .attr("y", function(d) { return y(d.value); })
+        .attr("y", function(d) { return y(d3.max([d.value, 0])); })
         .attr("width", x1.bandwidth())
-        .attr("height", function(d) { return height - y(d.value); })
+        .attr("height", function(d) { return height - y(d3.max([d.value, 0])); })
         .attr("fill", function(d) { return z(d.key); })
+    bar
         .on("mousemove",mouseover)
         .on("mouseout", mouseleave);
+
+    bargroup.exit().remove()
+    bars.exit().remove()
+
+    // Add the X Axis
+    svg.select(".x-axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+        .selectAll("text")  
+          .style("text-anchor", "end")
+          .attr("dx", "-.8em")
+          .attr("dy", ".15em")
+          .attr("transform", "rotate(-45)")
+          .call(wrap, x0.bandwidth());
+
+    // Add the Y Axis
+    _yAxis = svg.select(".y-axis")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis)
+
+    _yAxisLegend = _yAxis.select("text.axis-legend")
+        .attr("x", 2)
+        .attr("y", y(y.ticks().pop()) + 0.5)
+        .attr("dy", "0.32em")
+        .attr("fill", "#000")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "start")
+        .text("Value (USD millions)")
+
+    _yAxisLegend
+        .exit().remove();
+
+    /*
 
     g.append("g")
         .attr("class", "axis")
         .attr("transform", "translate(-10," + height + ")")
         .call(d3.axisBottom(x0).ticks(10))
-        .selectAll("text")	
-          .style("text-anchor", "end")
-          .attr("dx", "-.8em")
-          .attr("dy", ".15em")
-          .attr("transform", "rotate(-45)")
-          .call(wrap, x0.bandwidth())
         ;
 
     g.append("g")
@@ -92,14 +164,15 @@ var barChart = function(el, options) {
         .attr("font-weight", "bold")
         .attr("text-anchor", "start")
         .text("Value");
+        */
 
-    var legend = g.append("g")
+    var legend = legends
         .attr("font-family", "sans-serif")
         .attr("font-size", 10)
         .attr("text-anchor", "end")
-      .selectAll("g")
-      .data(keys.slice())
-      .enter().append("g")
+        .selectAll("g")
+       .data(keys.slice())
+       .enter().append("g")
         .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
     legend.append("rect")
@@ -113,6 +186,8 @@ var barChart = function(el, options) {
         .attr("y", 9.5)
         .attr("dy", "0.32em")
         .text(function(d) { return d; });
+
+    legend.exit().remove();
   }
   function wrap(text, width) {
     text.each(function() {
