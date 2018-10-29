@@ -2,6 +2,7 @@ from flask import Flask, render_template, flash, request, Markup, \
     session, redirect, url_for, escape, Response, abort, send_file, \
     jsonify, current_app
 from flask.ext.login import login_required, current_user
+import sqlalchemy as sa
 from sqlalchemy.sql import func
 from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
@@ -331,16 +332,43 @@ def api_sectors_C_D():
     )
     query = qactivity.filter_activities_for_permissions(query)
     sector_totals = query.all()
+
+    fy_query = db.session.query(
+        func.sum(models.ActivityForwardSpend.value).label("total_value"),
+        sa.sql.expression.literal("FS").label("transaction_type"),
+        models.CodelistCode.code,
+        models.CodelistCode.name,
+        models.Activity.domestic_external,
+        func.strftime('%Y', func.date(models.ActivityForwardSpend.period_start_date, 'start of month', '-6 month')).label("fiscal_year")
+    ).join(
+        models.Activity,
+        models.ActivityCodelistCode,
+        models.CodelistCode
+    ).filter(
+        models.CodelistCode.codelist_code == u"mtef-sector",
+        models.CodelistCode.name != u""
+    ).group_by(
+        models.CodelistCode.name,
+        models.CodelistCode.code,
+        "transaction_type",
+        models.Activity.domestic_external,
+        "fiscal_year"
+    )
+    fy_query = qactivity.filter_activities_for_permissions(fy_query)
+    fy_sector_totals = fy_query.all()
+
+
     def append_path(root, paths):
         if paths:
-            sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {'Commitments': 0.0, 'Disbursements': 0.0})
-            sector[{"C": "Commitments", "D": "Disbursements"}[paths.transaction_type]] = paths.total_value
+            sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {'Commitments': 0.0, 'Disbursements': 0.0, 'Disbursement Projection': 0.0})
+            sector[{"C": "Commitments", "D": "Disbursements", "FS": "Disbursement Projection"}[paths.transaction_type]] = paths.total_value
             sector["name"] = paths.name
             sector["code"] = paths.code
             sector["domestic_external"] = paths.domestic_external
             sector["fy"] = paths.fiscal_year
     root = {}
     for s in sector_totals: append_path(root, s)
+    for s in fy_sector_totals: append_path(root, s)
     return jsonify(sectors = root.values())
 
 @app.route("/api/iati/<version>/<country_code>.xml")
