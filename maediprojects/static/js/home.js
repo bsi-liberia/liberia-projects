@@ -1,15 +1,4 @@
 
-  var pieOptions, thisPieChart, cdBarChart, cdSourceBarChart;
-  d3.json("/api/sectors.json", function(error, data) {
-    pieOptions = {
-      "records": data["sectors"],
-      "drilldown": "name",
-      "cuts": {
-                "fy": "2017"
-              }
-    }
-    thisPieChart = new pieChart("#sectors-pie", pieOptions);
-  });
   $(document).on("change", "#select-fy", function(){
     var year = $(this).val();
     pieOptions["cuts"]["fy"] = year;
@@ -127,61 +116,72 @@
       .attr("value", function(d) { return d })
       .text(function(d) { return d })
 
-    var options = {
+    if (permissions_domestic_external == "both") {
+      var options = {
+        'data': d3.nest()
+          .key(function(d) { return d.name; })
+          .key(function(d) { return d.domestic_external; })
+          .rollup(function(v) { return {
+            Commitments: d3.sum(v, function(d) { return Math.max(d.Commitments, 0); }), 
+            Disbursements: d3.sum(v, function(d) { return Math.max(d.Disbursements, 0); })
+          }; })
+          .entries(data.sectors)
+          .map(
+            function(d) {
+              t = {
+                name: d.key
+              }
+              d.values.map(function(dv) {
+                t[makeTitle(dv.key)+" Commitments"] = dv.value.Commitments;
+                t[makeTitle(dv.key)+" Disbursements"] = dv.value.Disbursements;
+              });
+              return t;
+           }).sort(function(x, y){
+             return d3.ascending(x.name, y.name);
+           }),
+         'keys': ["External Commitments", "External Disbursements", "Domestic Commitments", "Domestic Disbursements"],
+         'colours': ["#98abc5", "#8a89a6", "#d0743c", "#ff8c00"]
+      }
+      cdSourceBarChart = new barChart("#commitments-disbursements-source-chart", options);
+
+      // C/D, domestic
+      var options = {
       'data': d3.nest()
         .key(function(d) { return d.name; })
-        .key(function(d) { return d.domestic_external; })
         .rollup(function(v) { return {
-          Commitments: d3.sum(v, function(d) { return Math.max(d.Commitments, 0); }), 
-          Disbursements: d3.sum(v, function(d) { return Math.max(d.Disbursements, 0); })
+          Commitments: d3.sum(v, function(d) { return d.Commitments; }),
+          Disbursements: d3.sum(v, function(d) { return d.Disbursements; })
         }; })
-        .entries(data.sectors)
+        .entries(data.sectors
+          .filter(function(d) { return d.domestic_external == "domestic";}))
         .map(
           function(d) {
-            t = {
-              name: d.key
-            }
-            d.values.map(function(dv) { 
-              t[makeTitle(dv.key)+" Commitments"] = dv.value.Commitments; 
-              t[makeTitle(dv.key)+" Disbursements"] = dv.value.Disbursements; 
-            });
-            
-            return t;
+            return { name: d.key,
+                     Commitments: d.value.Commitments,
+                     Disbursements: d.value.Disbursements,
+                     "Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements}
          }).sort(function(x, y){
            return d3.ascending(x.name, y.name);
          }),
-       'keys': ["External Commitments", "External Disbursements", "Domestic Commitments", "Domestic Disbursements"],
-       'colours': ["#98abc5", "#8a89a6", "#d0743c", "#ff8c00"]
-    }
-    cdSourceBarChart = new barChart("#commitments-disbursements-source-chart", options);
+       'keys': ["Commitments", "Disbursements", "Balance (Commitments - Disbursements)"],
+       'colours': ["#d0743c", "#ff8c00", "#a05d56"]
+      }
+      cdDomesticBarChart = new barChart("#commitments-disbursements-domestic-chart", options);
 
-    // C/D, domestic
-    var options = {
-    'data': d3.nest()
-      .key(function(d) { return d.name; })
-      .rollup(function(v) { return {
-        Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
-        Disbursements: d3.sum(v, function(d) { return d.Disbursements; })
-      }; })
-      .entries(data.sectors
-        .filter(function(d) { return d.domestic_external == "domestic";}))
-      .map(
-        function(d) {
-          return { name: d.key,
-                   Commitments: d.value.Commitments,
-                   Disbursements: d.value.Disbursements,
-                   "Balance (Commitments - Disbursements)": d.value.Commitments - d.value.Disbursements}
-       }).sort(function(x, y){
-         return d3.ascending(x.name, y.name);
-       }),
-     'keys': ["Commitments", "Disbursements", "Balance (Commitments - Disbursements)"],
-     'colours': ["#d0743c", "#ff8c00", "#a05d56"]
+      var pieOptions, thisPieChart, cdBarChart, cdSourceBarChart;
+      d3.json("/api/sectors.json", function(error, data) {
+        pieOptions = {
+          "records": data["sectors"],
+          "drilldown": "name",
+          "cuts": {
+                    "fy": "2017"
+                  }
+        }
+        thisPieChart = new pieChart("#sectors-pie", pieOptions);
+      });
     }
-    cdDomesticBarChart = new barChart("#commitments-disbursements-domestic-chart", options);
   });
   
-
-
   // LOCATIONS
   var locationsMap;
 
