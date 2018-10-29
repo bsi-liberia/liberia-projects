@@ -5,268 +5,276 @@ var lineChart = {};
 var lineChart = function(el, data) {
   this.$el = d3.select(el);
 
+  this.controls = el+"-controls";
   this.data = null;
   this.xData = null;
   this.yData = null;
 
-  var margin = {top: 10, right: 32, bottom: 48, left: 32};
-  var _width, _height;
-  // Scales, Axis, line and area functions.
-  var x, y, xAxis, line, area, bisector;
-  // Elements.
-  var svg, dataCanvas;
+  var svg, dataCanvas, width, height, x, y, xAxis, yAxis, line, area, bisector, setValue, setDrilldown, controls, select, legends, tip;
 
-  this._calcSize = function() {
-    _width = parseInt(this.$el.style('width'), 10) - margin.left - margin.right;
-    _height = parseInt(this.$el.style('height'), 10) - margin.top - margin.bottom;
-  };
+  var margin = {top: 20, right: 20, bottom: 30, left: 70},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
   
-  var parseDate = d3.time.format("%Y").parse;
-  
-  this.setData = function(data) {
-    var _data = data.data;
-    
-    // Add support for multiple series in future...
-    
-    this.data0 = _data.data[0].data;
-    this.data1 = _data.data[1].data;
-    
-    this.data0.forEach(function(d) {
-      d.date = parseDate(d.year);
-    });
-    this.data1.forEach(function(d) {
-      d.date = parseDate(d.year);
-    });
-    
-    this.xData = _data.x;
-    this.yData = _data.y;
-    this.update();
-  }
+  var parseDate = d3.timeParse("%Y");
+  var color = d3.scaleOrdinal(d3.schemeCategory10);   // set the colour scale
+  var dec = d3.format(",.2f");
   
   this._init = function() {
-    console.log("init");
-    this._calcSize();
     svg = this.$el.append('svg')
-      .attr('class', 'chart');      
-      
-    x = d3.time.scale();
-    y = d3.scale.linear();
-    
-    // Define xAxis function.
-    xAxis = d3.svg.axis()
-      .scale(x)
-      .ticks(6)
-      .orient("bottom");
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
 
-    // Line function.
-    line = d3.svg.line()
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(d.value); });
+    dataCanvas = svg
+      .append("g")
+      .attr("class", "data-canvas")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    x = d3.scaleTime()
+      .range([0, width]);
+    y = d3.scaleLinear()
+      .range([height, 0]);
 
+    xAxis = dataCanvas.append("g")
+      .attr("class", "x-axis");
 
-    // Chart elements.
-    dataCanvas = svg.append("g")
-        .attr('class', 'data-canvas')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    yAxis = dataCanvas.append("g")
+      .attr("class", "y-axis");
 
-    svg.append("g")
-      .attr("class", "x axis")
-      .append("text")
-        .attr("class", "label")
-        .attr("text-anchor", "middle");
+    legends = dataCanvas.append("g")
+      .attr("class", "legends");
 
-    svg.append("g")
-      .attr("class", "y axis")
-      .append("text")
-        .attr("class", "label")
-        .attr("text-anchor", "middle");
-
-    dataCanvas.append("path")
-      .attr("class", "line line0")
-      .on("mouseover", mouseover);
-    
-    dataCanvas.append("path")
-      .attr("class", "line line1")
-      .on("mouseover", mouseover);;
-      
-    this.$el.append("div")
-      .attr("class", "tooltip")
-      .html('<dl><dt>Year</dt><dd class="year"></dd><dt>Value</dt><dd class="value"></dd></dl>');
+    dataCanvas.append("g")
+      .attr("class", "series");
 
     dataCanvas.append("g")
       .attr("class", "focus-circles");
+    
+    // Define xAxis function.
+    xAxis = d3.axisBottom(x).ticks(10);
+    yAxis = d3.axisLeft(y).ticks(10);
+
+    // Line function.
+    line = d3.line()
+      .x(function(d) { return x(d.date); })
+      .y(function(d) { return y(d[setValue]); });
+
+    controls = this.controls;
+    selectDiv = d3.select(controls)
+      .append("div")
+      .attr("class", "form-group")
+      .append("form")
+      .attr("class","form-horizontal");
+
+    selectDiv
+      .append("label")
+      .attr("class", "control-label col-sm-2")
+      .text("Display");
+
+    select = selectDiv
+      .append("div")
+      .attr("class", "col-sm-3")
+      .append("select")
+      .attr("class", "form-control")
+      .on('change', this.changeControls)
       
     this.setData(data);
   };
+  this.setData = function(options) {
+    this.data = options.data.sectors;
+    setDrilldown = options.drilldown;
+    this.values = options.values;
+    setValue = options.values[0]
+    
+    this.data.forEach(function(d) {
+      d.date = parseDate(d.fy);
+    });
+    this.update();
+  }
   this.update = function() {
-    console.log("update");
-    this._calcSize();
-    var _this = this;
+    // Scale the range of the data
+    x.domain(d3.extent(this.data, function(d) { return d.date; }));
+    y.domain([0, d3.max(this.data, function(d) { return d[setValue]; })]);
 
-    var yAxisGroup = svg.select('.y.axis');
+    tip = d3.tip()
+      .attr('class', 'd3-tip')
+      .offset([-10, 0])
+      .html(function(d) {
+        return "<strong>" + d[setDrilldown] + " (" + d.fy + ")</strong><br /><small>USD" + dec(d[setValue]) + "</small>";
+      });
+    svg.call(tip);
 
-    yAxisGroup.selectAll('.axis-lines')
-      .data([
-        {x1: 0, x2: _width + margin.left + margin.right, y1: 0.5, y2: 0.5},
-        {x1: 0, x2: _width + margin.left + margin.right, y1: _height + margin.top + 10.5, y2: _height + margin.top + 10.5}
-      ])
-    .enter().append('line')
-      .attr('class', 'axis-lines')
-      .attr('x1', function(d) {return d.x1; })
-      .attr('y1', function(d) {return d.y1; })
-      .attr('x2', function(d) {return d.x2; })
-      .attr('y2', function(d) {return d.y2; });
-
-    yAxisGroup.selectAll('.axis-lines')
-      .attr('x1', function(d) {return d.x1; })
-      .attr('y1', function(d) {return d.y1; })
-      .attr('x2', function(d) {return d.x2; })
-      .attr('y2', function(d) {return d.y2; });
-
-    yAxisGroup.selectAll('.label-min')
-      .data([this.yData.domain[0]])
-    .enter().append('text')
-      .attr('class', 'label-min')
-      .attr('x', 0)
-      .attr('y', _height + margin.top)
-      .text(function(d) {return d;});
-
-    yAxisGroup.selectAll('.label-min')
-      .attr('x', 0)
-      .attr('y', _height + margin.top)
-      .text(function(d) {return d;});
-
-    yAxisGroup.selectAll('.label-max')
-      .data([this.yData.domain[1]])
-    .enter().append('text')
-      .attr('class', 'label-max')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('dy', '14px') // 14 is for the font size.
-      .text(function(d) {return d;});
-
-    yAxisGroup.selectAll('.label-max')
-      .attr('x', 0)
-      .attr('y', 0)
-      .text(function(d) {
-        var value = d;
-        var suffix = '';
-        if (value / 1e6 >= 1) {
-          suffix = ' M';
-          value = Math.round(value / 1e6);
-        }
-        return dec(value) + suffix;
+    // Nest the entries by symbol
+    var dataNest = d3.nest()
+      .key(function(d) {return d[setDrilldown];})
+      .entries(this.data)
+      .map(
+        function(d) {
+          return { color: d.color,
+            active: d.active,
+            key: d.key,
+            values: d.values.sort(function(x, y){
+              return d3.ascending(x.date, y.date);
+            })
+          }
+        })
+      .sort(function(x, y){
+        return d3.ascending(x.key, y.key);
       });
 
-    x.range([0, _width])
-      .domain(d3.extent(this.data0, function(d) { return d.date; }));
-      //.domain(this.data.map(function(d) { return d.date; }));
+    legendSpace = width/dataNest.length; // spacing for the legend
 
-    y.range([_height, 0])
-      .domain(this.yData.domain);
-    svg
-      .attr('width', _width + margin.left + margin.right)
-      .attr('height', _height + margin.top + margin.bottom);
+    dataCanvas.selectAll("g.series .line").remove();
 
-    dataCanvas
-      .attr('width', _width)
-      .attr('height', _height);
-      
+    var lines = dataCanvas.select("g.series")
+      .selectAll(".line")
+      .data(dataNest);
 
-    var pathLine0 = dataCanvas.select(".line0")
-      .datum(this.data0)
-      .attr("d", line)
-      .on("mouseover", mouseover);
-      
+    var _line = lines
+      .enter()
+      .append("path")
+      .attr("class", function(d) { return "line " + slugify(d.key);})
+      .style("stroke", function(d) { // Add the colours dynamically
+        return d.color = color(d.key)})
+      .attr("id", function(d) {return 'tag'+d.key.replace(/\s+/g, '')}) // assign ID
+      .attr("d", function(d) {return line(d.values)})
+      .call(transition)
 
-    var pathLine1 = dataCanvas.select(".line1")
-      .datum(this.data1)
-      .attr("d", line)
-      .on("mouseover", mouseover);
-      
-    // Add focus circles
-    dataCanvas.select(".focus-circles").selectAll(".focus-circle").remove();
-  	var focuscircles = dataCanvas.select(".focus-circles")
-      .selectAll("focus-circle")
-  		.data( this.data0 );
-      
-    focuscircles
-  		.enter()
-  		.append("circle")
-  			.attr("class","focus-circle")
-  			.attr("cx", function(d,i){return x(d.date)})
-  			.attr("cy",function(d,i){return y(d.value)})
-        .style('opacity', 0)
-  			.attr("r",12)
-      .on("mouseover", circlemouseover);
-      
-    focuscircles.exit()
-      .remove();
+    // Make legend
+    var legend = legends
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "end")
+      .selectAll("g")
+      .data(dataNest)
+      .enter()
+      .append("g")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")" });
 
-    // Append Axis.
-    svg.select(".x.axis")
-      .attr("transform", "translate(" + margin.left + "," + (_height + margin.top + 10) + ")").transition()
+    legend
+      .append("rect")
+      .attr("x", width - 19)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", function (d) { return color(d.key)})
+      .style("cursor", "pointer")
+      .on("click", function(d, i){
+        // Determine if current line is visible 
+        var active   = d.active ? false : true ,
+        newOpacity = active ? 0 : 1; 
+        // Hide or show the elements based on the ID
+        d3.select("#tag"+d.key.replace(/\s+/g, ''))
+          .transition().duration(100) 
+          .style("opacity", newOpacity); 
+        // Update whether or not the elements are active
+        d.active = active;
+        })
+
+    legend
+      .append("text")
+      .attr("x", width - 24)
+      .attr("y", 9.5)
+      .attr("dy", "0.32em")
+      .style("cursor", "pointer")
+      .on("click", function(d, i){
+        // Determine if current line is visible 
+        var active   = d.active ? false : true ,
+        newOpacity = active ? 0 : 1; 
+        // Hide or show the elements based on the ID
+        d3.select("#tag"+d.key.replace(/\s+/g, ''))
+            .transition().duration(100) 
+            .style("opacity", newOpacity); 
+        // Update whether or not the elements are active
+        d.active = active;
+        })
+      .text(function(d) {return d.key});
+
+    var _values = this.values
+
+    _this = this;
+    if (_values.length > 1) {
+      var options = select
+        .selectAll("option")
+        .data(_values)
+        .enter().append("option")
+        .attr("value", function(d) {return d})
+        .text(function(d) {return d});      
+    }
+
+    // Create focus circle for each data point in each series
+    var focuscircles = dataCanvas.select("g.focus-circles")
+      .selectAll("circle")
+      .data(function() { return $.map(dataNest, function(k) { return k.values; })})
+
+    var focuscircle = focuscircles
+      .enter()
+      .append("circle")
+      .merge(focuscircles) // this is new in D4!
+      .style('opacity', 0)
+      .attr("r",12)
+        .attr("cx", function(d){ return x(d.date);})
+        .attr("cy",function(d){return y(d[setValue]);})
+        .attr("class","focus-circle")
+        .on("mouseover", circlemouseover)
+        .on("mouseout", circlemouseout);
+
+    focuscircles.exit().remove();
+
+    // Add the X Axis
+    svg.select(".x-axis")
+      .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
 
-    if (this.xData && this.xData.label) {
-      svg.select(".x.axis .label")
-        .text(this.xData.label)
-        .attr("x", _width / 2)
-        .attr("y", 35);
-    }
-
-    if (this.yData && this.yData.label) {
-      svg.select(".y.axis .label")
-        .text(this.yData.label)
-        .attr('x', -(_height / 2 + margin.top))
-        .attr('y', 10)
-        .attr('transform', 'rotate(-90)');
-    }
-
+    // Add the Y Axis
+    dataCanvas.select(".y-axis")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis);
   }
-  
-  function mouseover(d) {
-    d3.select(this)
-      .style("stroke-width", "7px")
-      .on("mouseout", function () {
-          d3.select(this)
-          .style("stroke-width", "5px");
-      });
-  }
+
   function circlemouseover(d) {
     thecircle = d3.select(this);
-    thecircle_x = thecircle.attr("cx");
-    thecircle_y = thecircle.attr("cy");
-    
-    the_tooltip = d3.select(".tooltip");
-    the_line = d3.select(".line0");
-    
-    
-    the_tooltip = d3.select('.tooltip');
-  
-    d3.select(".tooltip .year").text(d.year);
-    d3.select(".tooltip .value").text(d.value);
-    
-    the_tooltip
-        .style("left", thecircle_x + "px")     
-        .style("top", thecircle_y + "px")
-        .transition()
-        .duration(200)
-        .style("opacity", .8);
+    tip.show(d);
+    the_line = d3.select(".line." + slugify(d.name));
+    the_line.style("stroke-width", "4px");
+  }
+  function circlemouseout(d) {
+    thecircle = d3.select(this);
+    tip.hide();
+    the_line = d3.select(".line." + slugify(d.name));
+    the_line.style("stroke-width", "2px");
+  }
 
-    the_line.style("stroke-width", "7px");
-    d3.select(this).on("mouseout", function () {
-      the_line.style("stroke-width", "5px");
-      the_tooltip.style("opacity", 0);
-    });
+  function slugify(text)
+  {
+    return text.toString().toLowerCase()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, '');            // Trim - from end of text
+  }
+
+  function transition(path) {
+      path.transition()
+          .duration(1500)
+          .attrTween("stroke-dasharray", tweenDash);
+  }
+  function tweenDash() {
+      var l = this.getTotalLength(),
+          i = d3.interpolateString("0," + l, l + "," + l);
+      return function (t) { return i(t); };
+  }
+
+  this.changeControls = function() {
+    selectValue = d3.select(controls+" select").property("value");
+    console.log(selectValue)
+    setValue = selectValue;
+    _this.update();
   }
 
   this.destroy = function(el) {
     // Any clean-up would go here
     // in this example there is nothing to do
   };
-  
-  var dec = d3.format('0,0[.]0');
 
   this._init();
 };
