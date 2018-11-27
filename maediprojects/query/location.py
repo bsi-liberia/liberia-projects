@@ -1,4 +1,6 @@
+from flask.ext.login import current_user
 from maediprojects import db, models
+import activity as qactivity
 from sqlalchemy import *
 from StringIO import StringIO
 from zipfile import ZipFile
@@ -38,6 +40,17 @@ def add_location(activity_id, location_id):
         aL.location_id = location_id
         db.session.add(aL)
         db.session.commit()
+
+        qactivity.activity_updated(activity_id, 
+            {
+            "user_id": current_user.id,
+            "mode": "add",
+            "target": "ActivityLocation",
+            "target_id": activity_id,
+            "old_value": None,
+            "value": {'location_id': location_id}
+            }
+            )
         return True
     return False
 
@@ -49,6 +62,18 @@ def delete_location(activity_id, location_id):
     if checkL:
         db.session.delete(checkL)
         db.session.commit()
+
+
+        qactivity.activity_updated(activity_id, 
+            {
+            "user_id": current_user.id,
+            "mode": "delete",
+            "target": "ActivityLocation",
+            "target_id": activity_id,
+            "old_value": {'location_id': location_id},
+            "value": None
+            }
+            )
         return True
     return False
 
