@@ -1,4 +1,6 @@
+from flask.ext.login import current_user
 from maediprojects import db, models
+import activity as qactivity
 import datetime
 import normality
 
@@ -7,9 +9,21 @@ def update_activity_codelist(activitycodelistcode_id, data):
         id = activitycodelistcode_id
     ).first()
     if not activity_codelist: return False
+    old_value = getattr(activity_codelist, data['attr'])
     setattr(activity_codelist, data['attr'], data['value'])
     db.session.add(activity_codelist)
     db.session.commit()
+    qactivity.activity_updated(activity_codelist.activity_id, 
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityCodelistCode",
+        "target_id": activity_codelist.id,
+        "old_value": {data['attr']: old_value},
+        "value": {data['attr']: data['value']}
+        }
+    )
+    print data
     return True
 
 def get_code_by_name(codelist, name):
