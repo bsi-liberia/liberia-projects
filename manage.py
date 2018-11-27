@@ -7,7 +7,7 @@
 #  This programme is free software; you may redistribute and/or modify
 #  it under the terms of the GNU Affero General Public License v3.0
 
-from flask.ext.script import Manager
+from flask_script import Manager
 import maediprojects
 
 def run():

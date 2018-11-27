@@ -2,7 +2,7 @@ from maediprojects import db, models
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime, time
 from flask import flash, redirect, url_for, request
-from flask.ext.login import current_user
+from flask_login import current_user
 from functools import wraps
 import organisations as qorganisations
 import activity as qactivity

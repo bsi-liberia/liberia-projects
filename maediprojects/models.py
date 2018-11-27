@@ -4,7 +4,7 @@ import functools as ft
 from maediprojects import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 
 cascade_relationship = ft.partial(
     sa.orm.relationship,

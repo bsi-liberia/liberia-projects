@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash, request, Markup, \
     session, redirect, url_for, escape, Response, abort, send_file, jsonify
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from maediprojects import app, db, models
 from maediprojects.query import codelists as qcodelists

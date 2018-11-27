@@ -1,11 +1,11 @@
 from flask import Flask, render_template, flash, request, Markup, \
     session, redirect, url_for, escape, Response, abort, send_file, \
     current_app
-from flask.ext.login import (LoginManager, current_user, login_required,
+from flask_login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin,
                             confirm_login,
                             fresh_login_required)
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from functools import wraps
                             
 from maediprojects import app, db, models

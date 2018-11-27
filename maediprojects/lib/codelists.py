@@ -1,7 +1,7 @@
 import unicodecsv
 import os
 from maediprojects import app, db, models
-import flask.ext.babel as babel
+import flask_babel as babel
 
 def get_db_codelist_names():
     codelists = models.Codelist.query.all()

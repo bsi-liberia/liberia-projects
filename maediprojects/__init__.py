@@ -1,8 +1,8 @@
 from flask import Flask, Markup
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.babel import Babel
-from flask.ext.mail import Mail
-from flask.ext.login import login_required, current_user
+from flask_sqlalchemy import SQLAlchemy
+from flask_babel import Babel
+from flask_mail import Mail
+from flask_login import login_required, current_user
 import os
 import mistune
 
@@ -14,10 +14,7 @@ mail = Mail(app)
 
 @app.template_filter("markdown")
 def render_markdown(markdown_text):
-    print markdown_text
-    x = mistune.markdown(Markup(markdown_text), escape=False)
-    print x
-    return x
+    return mistune.markdown(Markup(markdown_text), escape=False)
 
 import routes
 

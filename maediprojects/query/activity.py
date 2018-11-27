@@ -2,7 +2,7 @@ from maediprojects import db, models
 from maediprojects.query import finances as qfinances
 import datetime
 from flask import url_for, session, flash
-from flask.ext.login import current_user
+from flask_login import current_user
 from collections import OrderedDict
 from maediprojects.lib.util import isostring_date, isostring_year
 from maediprojects.lib import codelists, util
