@@ -4,6 +4,8 @@ import datetime, time
 from flask import flash, redirect, url_for, request
 from flask.ext.login import current_user
 from functools import wraps
+import organisations as qorganisations
+import activity as qactivity
 
 def administrator_required(f):
     @wraps(f)
@@ -15,15 +17,42 @@ def administrator_required(f):
     return decorated_function
 
 def check_permissions(permission_name):
-    if current_user.permissions_dict.get(permission_name, "none") == "none":
+    if permission_name == "view": _p_n = "domestic_external"
+    elif permission_name == "edit": _p_n = "domestic_external_edit"
+    else: _p_n = permission_name
+    if current_user.permissions_dict.get(_p_n, "none") == "none":
         return False
     return True
 
-def permissions_required(permission_name):
+def check_activity_permissions(permission_name, activity_id):
+    act = qactivity.get_activity(activity_id)
+    if act and current_user.permissions_dict.get("organisations"):
+        if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
+            # If the user is attached to an organisation, then they should always
+            # at least have view rights.
+            if permission_name == "view": return True 
+            if current_user.permissions_dict["organisations"][act.reporting_org_id]["permission_value"] == permission_name:
+                return True
+    return False
+
+def check_new_activity_permission():
+    for org in current_user.permissions_dict["organisations"].values():
+        if org["permission_value"] == "edit": return True
+    return False
+
+def permissions_required(permission_name, activity_id=None):
     def wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not check_permissions(permission_name):
+            if kwargs.get('activity_id'): 
+                activity_id = kwargs.get('activity_id')
+                check = (not check_activity_permissions(permission_name, activity_id) 
+                    and not check_permissions(permission_name))
+            elif permission_name == "edit":
+                check = (not check_new_activity_permission() and not check_permissions(permission_name))
+            else:
+                check = (not check_permissions(permission_name))
+            if check:
                 flash("You do not have sufficient permissions to access that page.", "danger")
                 if request.referrer != None:
                     return redirect(request.referrer)
@@ -144,3 +173,27 @@ def userPermissions(user_id):
     checkP = models.UserPermission.query.filter_by(user_id=user_id
             ).all()
     return checkP
+
+def addOrganisationPermission(data):
+    checkOP = models.UserOrganisation()
+    checkOP.user_id = data['user_id']
+    checkOP.permission_name = data["permission_name"]
+    checkOP.permission_value = data["permission_value"]
+    checkOP.organisation_id = qorganisations.get_organisation_by_code("").id
+    db.session.add(checkOP)
+    db.session.commit()
+    return checkOP
+
+def deleteOrganisationPermission(data):
+    checkOP = models.UserOrganisation.query.filter_by(id=data['id']).first()
+    db.session.delete(checkOP)
+    db.session.commit()
+    return True
+
+def updateOrganisationPermission(data):
+    checkOP = models.UserOrganisation.query.filter_by(id=data['id']).first()
+    if not checkOP: return False
+    setattr(checkOP, data['attr'], data['value'])
+    db.session.add(checkOP)
+    db.session.commit()
+    return checkOP
