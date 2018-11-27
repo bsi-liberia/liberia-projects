@@ -39,13 +39,16 @@ def activity_C_D_FSs():
 
 def filter_activities_for_permissions(query):
     permissions = session.get("permissions", {})
-    if "domestic_external" in permissions:
-        if permissions["domestic_external"] == "domestic":
-            return query.filter(models.Activity.domestic_external == "domestic")
-        elif permissions["domestic_external"] == "external":
-            return query.filter(models.Activity.domestic_external == "external")
-        elif permissions["domestic_external"] == "external":
-            return query.filter(models.Activity.domestic_external == "external")
+    if permissions.get("domestic_external") == "both":
+        return query
+    elif permissions.get("domestic_external") == "domestic":
+        return query.filter(models.Activity.domestic_external == "domestic")
+    elif permissions.get("domestic_external") == "external":
+        return query.filter(models.Activity.domestic_external == "external")
+    elif permissions.get("domestic_external") == "external":
+        return query.filter(models.Activity.domestic_external == "external")
+    elif "organisations" in permissions:
+        return query.filter(models.Activity.reporting_org_id.in_(permissions["organisations"].keys()))
     return query
 
 def get_iati_list():
