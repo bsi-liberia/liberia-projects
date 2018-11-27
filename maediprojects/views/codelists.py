@@ -6,12 +6,14 @@ from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
+from maediprojects.query import user as quser
 from maediprojects.lib import codelists
 
 import json
 
 @app.route("/codelists/")
 @login_required
+@quser.administrator_required
 def codelists_management():
     return render_template("codelists.html",
                 loggedinuser=current_user,
@@ -24,6 +26,7 @@ def codelists_management():
 
 @app.route("/codelists/import_locations/", methods=["POST"])
 @login_required
+@quser.administrator_required
 def import_locations():
     existing_countries = list(map(lambda l: l.country.code, 
                     qlocation.get_countries_locations()))
