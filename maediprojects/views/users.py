@@ -12,6 +12,7 @@ from maediprojects import app, db, models
 from maediprojects.query import user as quser
 from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import codelists
+from maediprojects.views.api import jsonify
 
 login_manager = LoginManager()
 login_manager.setup_app(app)
@@ -69,8 +70,10 @@ def users_new():
                  loggedinuser=current_user,
                  codelists = codelists.get_codelists())
     elif request.method == "POST":
-        if quser.addUser(request.form):
+        user = quser.addUser(request.form)
+        if user:
             flash(gettext(u"Successfully created user!"), "success")
+            return redirect(url_for("users_edit", user_id=user.id))
         else:
             flash(gettext(u"Sorry, couldn't create that user!"), "danger")
         return redirect(url_for("users"))
@@ -97,6 +100,64 @@ def users_edit(user_id):
         else:
             flash(gettext(u"Sorry, couldn't update that user!"), "danger")
         return redirect(url_for("users_edit", user_id=user_id))
+
+@app.route("/users/<user_id>/permissions/", methods=["GET", "POST"])
+@login_required
+@quser.administrator_required
+def user_permissions_edit(user_id):
+    def _append_organisation(uo, organisations):
+        uo["organisations"] = dict(map(lambda o: (o.id, o.as_dict()), organisations))
+        if uo["organisations"].get(uo["organisation_id"]):
+            uo["organisations"].get(uo["organisation_id"])["selected"] = " selected"
+        uo["organisations"] = list(uo["organisations"].values())
+        select_options = {True: " selected", False: ""}
+        uo["permission_values"] = [
+            {"name": "View projects", "value": "view", "selected": select_options[bool(uo["permission_value"]=="view")]},
+            {"name": "Edit projects", "value": "edit", "selected": select_options[bool(uo["permission_value"]=="edit")]}
+        ]
+        return uo
+
+    if not current_user.administrator:
+        flash("You must be an administrator to edit users.", "danger")
+        return redirect(url_for("dashboard"))
+    if request.method=="GET":
+        user = quser.user(user_id)
+        user_organisations = list(map(lambda uo: 
+            (_append_organisation(uo.as_dict(), qorganisations.get_organisations())), 
+            user.organisations))
+        return jsonify(permissions=user_organisations)
+    elif request.method == "POST":
+        data = request.form.to_dict()
+        data["user_id"] = user_id
+        if data["action"] == "add":
+            op = quser.addOrganisationPermission(data)
+            if not op: return "False"
+            return jsonify({
+                "id": op.id, 
+                "organisations": list(map(lambda o: o.as_dict(), 
+                    qorganisations.get_organisations())),
+              "permission_values": [
+                {
+                  "selected": " selected", 
+                  "name": "View projects", 
+                  "value": "view"
+                },
+                {
+                  "selected": "", 
+                  "name": "Edit projects", 
+                  "value": "edit"
+                }
+              ], 
+                })
+        elif data["action"] == "delete":
+            op = quser.deleteOrganisationPermission(data)
+            if not op: return False
+            return "ok"
+        elif data["action"] == "edit":
+            op = quser.updateOrganisationPermission(data)
+            if not op: return False
+            return "ok"
+        return "error, unknown action"
 
 @app.route("/login/", methods=["GET", "POST"])
 def login():
