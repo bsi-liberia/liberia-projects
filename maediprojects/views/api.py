@@ -14,6 +14,7 @@ from maediprojects.query import generate as qgenerate
 from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
+from maediprojects.query import user as quser
 from maediprojects.lib import codelists
 from maediprojects.lib.codelists import get_codelists_lookups
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
@@ -42,10 +43,13 @@ def api_activities_country():
         activities = qactivity.list_activities_by_filters(arguments)
     else:
         activities = qactivity.list_activities_user(current_user)
-    activity_commitments, activity_disbursements = qactivity.activity_C_Ds()
+    activity_commitments, activity_disbursements, activity_projected_disbursements = qactivity.activity_C_D_FSs()
     def round_or_zero(value):
         if not value: return 0
         return round(value)
+    def make_pct(value1, value2):
+        if value2 == 0: return None
+        return (value1/value2)*100
     return jsonify(activities = [{
         'title': activity.title,
         'reporting_org': activity.reporting_org.name,
@@ -53,6 +57,9 @@ def api_activities_country():
         'updated_date': activity.updated_date.date().isoformat(),
         'total_commitments': "${:,.2f}".format(round_or_zero(activity_commitments.get(activity.id))),
         'total_disbursements': "${:,.2f}".format(round_or_zero(activity_disbursements.get(activity.id))),
+        'total_projected_disbursements': "${:,.2f}".format(round_or_zero(activity_projected_disbursements.get(activity.id))),
+        'pct_disbursements_projected': make_pct(activity_disbursements.get(activity.id, 0), activity_projected_disbursements.get(activity.id, 0)),
+        'pct_disbursements_committed': make_pct(activity_disbursements.get(activity.id, 0), activity_commitments.get(activity.id, 0)),
         'user': activity.user.username,
         'user_id': activity.user.id,
         "permissions": activity.permissions
@@ -74,6 +81,8 @@ def api_activities_by_id_complete(activity_id):
     return jsonify(activity)
 
 @app.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
+@login_required
+@quser.permissions_required("view")
 def api_activity_milestones(activity_id):
     milestone_id = request.form["milestone_id"]
     attribute = request.form["attribute"]
@@ -90,6 +99,7 @@ def api_activity_milestones(activity_id):
 
 @app.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
+@quser.permissions_required("edit")
 def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id. 
     POST also accepts financial data to be added or deleted."""
@@ -118,8 +128,10 @@ def api_activity_finances(activity_id):
 
 @app.route("/api/activity_finances/<activity_id>/update_finances/", methods=['POST'])
 @login_required
+@quser.permissions_required("edit")
 def finances_edit_attr(activity_id):
     data = {
+        'activity_id': activity_id,
         'attr': request.form['attr'],
         'value': request.form['value'],
         'finances_id': request.form['finances_id'],
@@ -135,6 +147,7 @@ def finances_edit_attr(activity_id):
 
 @app.route("/api/activity_forwardspends/<activity_id>/", methods=["GET", "POST"])
 @login_required
+@quser.permissions_required("edit")
 def api_activity_forwardspends(activity_id):
     """GET returns a list of all forward spend data for a given activity_id.
     POST updates value for a given forwardspend_id."""
@@ -168,6 +181,7 @@ def api_activity_forwardspends(activity_id):
 
 @app.route("/api/activity_forwardspends/<activity_id>/update_forwardspends/", methods=['POST'])
 @login_required
+@quser.permissions_required("edit")
 def forwardspends_edit_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -196,6 +210,7 @@ def api_all_activity_locations():
 
 @app.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
 @login_required
+@quser.permissions_required("edit")
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
@@ -224,6 +239,7 @@ def api_locations(country_code):
 
 @app.route("/api/codelists/update/", methods=["POST"])
 @login_required
+@quser.administrator_required
 def api_codelists_update():
     # FIXME check for admin status
     if request.form["codelist_code"] == "organisation":
@@ -237,6 +253,7 @@ def api_codelists_update():
 
 @app.route("/api/codelists/delete/", methods=["POST"])
 @login_required
+@quser.administrator_required
 def api_codelists_delete():
     # FIXME check for admin status
     if request.form["codelist_code"] == "organisation":
@@ -250,6 +267,7 @@ def api_codelists_delete():
 
 @app.route("/api/codelists/new/", methods=["POST"])
 @login_required
+@quser.administrator_required
 def api_codelists_new():
     # FIXME check for admin status
     if request.form["codelist_code"] == "organisation":
