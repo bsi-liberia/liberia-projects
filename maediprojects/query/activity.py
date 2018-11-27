@@ -90,6 +90,30 @@ def get_updates():
     updated = filter(filterout, updated)
     return created, updated
 
+def activity_add_log(activity_id, user_id, mode, target, old_value, value):
+    activity_log = models.ActivityLog()
+    activity_log.activity_id = activity_id
+    activity_log.user_id = user_id
+    activity_log.mode = mode
+    activity_log.target = target
+    activity_log.old_value = old_value
+    activity_log.value = value
+    db.session.add(activity_log)
+    db.session.commit()
+    return activity_log
+
+def activity_updated(activity_id, update_data=False):
+    activity = models.Activity.query.filter_by(id=activity_id).first()
+    if not activity: 
+        flash("Could not update last updated date for activity ID {}: activity not found".format(
+            activity_id), "danger")
+        return False
+    activity.updated_date = datetime.datetime.utcnow()
+    db.session.add(activity)
+    db.session.commit()
+    print update_data
+    return True
+
 def create_activity(data):
     #FIXME check this org doesn't already exist?
     act = models.Activity()
