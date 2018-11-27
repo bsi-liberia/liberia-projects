@@ -15,7 +15,7 @@ body {
 #projects-data {
   margin-top:10px;
 }
-.tablesorter-header {
+#projects-data .tablesorter-header {
   white-space: nowrap;
 }
 #finances td.has-feedback span.form-control-feedback,
