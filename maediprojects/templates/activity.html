@@ -58,6 +58,10 @@
           <td><b>End date</b></td>
           <td>{{ activity.end_date }}</td>
         </tr>
+        <tr>
+          <td><b>Last updated</b></td>
+          <td>{{ activity.updated_date }}</td>
+        </tr>
       </tbody>
     </table>
     <h3>Sectors</h3>
@@ -90,13 +94,13 @@
     {% endif %}
   </div>
   <div class="col-md-6" style="height: 430px;">
-    <h3>Project locations</h3>
+    <h3>Locations</h3>
     <div id="locationMap"></div>
   </div>
 </div>
 <div class="row">
   <div class="col-md-6">
-    <h3>Commitments</h3>
+    <h3>{% if activity.domestic_external == "external" %}Commitments{% else %}Appropriations{% endif %}</h3>
     <table class="table" id="commitments-table">
       <thead>
         <th>Period</th>
@@ -133,7 +137,7 @@
 {% if activity.FY_forward_spend_dict %}
 <div class="row">
   <div class="col-md-6">
-    <h3>MTEF projections</h3>
+    <h3>{% if activity.domestic_external == "external" %}MTEF Projections{% else %}Spending Plan{% endif %}</h3>
     <table class="table" id="mtef-projections-table">
       <thead>
         <th>Period</th>
