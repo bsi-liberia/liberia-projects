@@ -51,6 +51,7 @@ def activities():
         ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
         ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
         ("Activity Status", "activity_status", cl["ActivityStatus"]),
+        ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
         ]
     activity_base_url = url_for("activities")
@@ -77,6 +78,7 @@ def export():
                 funding_orgs=reporting_orgs)
 
 @app.route("/import/", methods=["POST", "GET"])
+@login_required
 def import_template():
     if request.method == "GET": return(redirect(url_for('export')))
     if 'file' not in request.files:
@@ -105,7 +107,7 @@ def import_template():
 
 @app.route("/activities/new/", methods=['GET', 'POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_new():
     if request.method == "GET":
         today = datetime.datetime.now().date().isoformat()
@@ -188,7 +190,7 @@ def activity_new():
 
 @app.route("/activities/<activity_id>/delete/")
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_delete(activity_id):
     result = qactivity.delete_activity(activity_id)
     if result:
@@ -199,7 +201,7 @@ def activity_delete(activity_id):
 
 @app.route("/activities/<activity_id>/")
 @login_required
-@quser.permissions_required("domestic_external")
+@quser.permissions_required("view")
 def activity(activity_id):
     activity = qactivity.get_activity(activity_id)
     if not activity: return(abort(404))
@@ -223,7 +225,7 @@ def activity(activity_id):
 
 @app.route("/activities/<activity_id>/edit/")
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_edit(activity_id):
     activity = qactivity.get_activity(activity_id)
     locations = qlocation.get_locations_country(
@@ -247,7 +249,7 @@ def activity_edit(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_result/", methods=['POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_edit_result_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -261,7 +263,7 @@ def activity_edit_result_attr(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_indicator/", methods=['POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_edit_indicator_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -275,7 +277,7 @@ def activity_edit_indicator_attr(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_period/", methods=['POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_edit_period_attr(activity_id):
     data = {
         'attr': request.form['attr'],
@@ -289,7 +291,7 @@ def activity_edit_period_attr(activity_id):
 
 @app.route("/activities/<activity_id>/edit/delete_result_data/", methods=['POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_delete_result_data(activity_id):
     data = {
         'id': request.form['id'],
@@ -302,7 +304,7 @@ def activity_delete_result_data(activity_id):
 
 @app.route("/activities/<activity_id>/edit/add_result_data/", methods=['POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_add_results_data(activity_id):
     data = request.form
     add_status = qactivity.add_result_data(activity_id, data)
@@ -318,7 +320,7 @@ def activity_add_results_data(activity_id):
 
 @app.route("/activities/<activity_id>/edit/update_activity/", methods=['POST'])
 @login_required
-@quser.permissions_required("domestic_external_edit")
+@quser.permissions_required("edit")
 def activity_edit_attr(activity_id):
     #FIXME this is a bit hacky
     if request.form['attr'].startswith("classification_"):
