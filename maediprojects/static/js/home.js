@@ -106,12 +106,12 @@
          })
       cdBarChart.setData(optionsCDC)
     }
-    var years = yearsControl
+    var _years = yearsControl
       .attr("class", "form-control")
       .selectAll("option")
       .data(years)
 
-    years.enter()
+    _years.enter()
       .append("option")
       .attr("value", function(d) { return d })
       .text(function(d) { return d })
