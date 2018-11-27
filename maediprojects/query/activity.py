@@ -1,7 +1,7 @@
 from maediprojects import db, models
 from maediprojects.query import finances as qfinances
 import datetime
-from flask import url_for, session
+from flask import url_for, session, flash
 from flask.ext.login import current_user
 from collections import OrderedDict
 from maediprojects.lib.util import isostring_date, isostring_year
@@ -14,7 +14,7 @@ def get_earliest_latest_dates():
     latest = db.session.query(func.max(models.ActivityFinances.transaction_date)).scalar()
     return earliest, latest
 
-def activity_C_Ds():
+def activity_C_D_FSs():
     commitments_query = db.session.query(
         models.ActivityFinances.activity_id, 
         func.sum(models.ActivityFinances.transaction_value).label("total_commitments")
@@ -29,7 +29,13 @@ def activity_C_Ds():
     ).group_by(models.ActivityFinances.activity_id
     ).all()
     disbursements = dict(map(lambda d: (d.activity_id, d.total_disbursements), disbursements_query))
-    return commitments, disbursements
+    forward_disbursements_query = db.session.query(
+        models.ActivityForwardSpend.activity_id, 
+        func.sum(models.ActivityForwardSpend.value).label("total_forward_disbursements")
+    ).group_by(models.ActivityForwardSpend.activity_id
+    ).all()
+    forward_disbursements = dict(map(lambda d: (d.activity_id, d.total_forward_disbursements), forward_disbursements_query))
+    return commitments, disbursements, forward_disbursements
 
 def filter_activities_for_permissions(query):
     permissions = session.get("permissions", {})
