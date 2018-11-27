@@ -3,7 +3,7 @@ from flask import Flask, render_template, flash, request, Markup, \
 from flask.ext.login import login_required, current_user
 from maediprojects import app, db
 import models
-from views import activities, api, users, codelists
+from views import activities, api, users, codelists, documentation
 from query import activity as qactivity
 from query import setup as qsetup
 from query import import_liberia_db as qlibimport
@@ -46,16 +46,6 @@ def setup_default_permissions():
 # def import_psip():
 #     qpsipimport.import_file()
 #     return "OK"
-
-@app.route("/help/")
-@login_required
-def help():
-    current_dir = os.path.join(os.path.dirname(__file__))
-    help_content = open(os.path.join(current_dir, "templates/help.md"), "r").read()
-    return render_template("help.html",
-                markdown_text = Markup(mistune.markdown(help_content)),
-                loggedinuser=current_user
-        )
 
 @app.errorhandler(404)
 def page_not_found(error):
