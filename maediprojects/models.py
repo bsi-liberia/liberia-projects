@@ -112,9 +112,15 @@ class Activity(db.Model):
     def permissions(self):
         # TODO eventually this will vary by activity, as permissions can be
         # selective for different organisations.
+        def _check_org_permission():
+            org_permission = self.reporting_org_id in current_user.permissions_dict["organisations"]
+            if org_permission:
+                return current_user.permissions_dict["organisations"][self.reporting_org_id]["permission_value"]
+            return False
+        op = _check_org_permission()
         return {
-        "edit": bool(current_user.permissions_dict["domestic_external_edit"] != "none"),
-        "view": bool(current_user.permissions_dict["domestic_external"] != "none")
+        "edit": (bool(current_user.permissions_dict["domestic_external_edit"] != "none") or (op=="edit")),
+        "view": (bool(current_user.permissions_dict["domestic_external"] != "none") or (op in ("view", "edit")))
         }
 
     @hybrid_property
@@ -242,8 +248,8 @@ class Activity(db.Model):
             "id": ms.id,
             "notes": ms_achieved_notes.get(ms.id, ""),
             "achieved": {
-                True: {"status": True, "name": "Completed", "icon": "glyphicon-ok"},
-                False: {"status": False, "name": "Pending", "icon": "glyphicon-remove"},
+                True: {"status": True, "name": "Completed", "icon": "glyphicon-ok", "colour": "success"},
+                False: {"status": False, "name": "Pending", "icon": "glyphicon-remove", "colour": "warning"},
                 }[bool(ms_achieved.get(ms.id, False))]}, all_milestones))
         return ms
 
@@ -629,7 +635,9 @@ class User(db.Model):
 
     @hybrid_property
     def permissions_dict(self):
-        return dict(map(lambda p: (p.permission_name, p.permission_value), self.permissions))
+        permissions = dict(map(lambda p: (p.permission_name, p.permission_value), self.permissions))
+        permissions["organisations"] = dict(map(lambda op: (op.organisation_id, op.as_dict()), self.organisations))
+        return permissions
         
 class UserPermission(db.Model):
     __tablename__ = 'userpermission'
