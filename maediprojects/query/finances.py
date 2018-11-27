@@ -1,8 +1,10 @@
-from maediprojects import db, models
+from flask.ext.login import current_user
 from sqlalchemy import *
 import datetime
+from maediprojects import db, models
 from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
+import activity as qactivity
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -20,7 +22,6 @@ def add_finances(activity_id, data):
     data["transaction_date"] = isostring_date(data["transaction_date"])
     for key, value in data.items():
         setattr(aF, key, value)
-    
     _classifications = []
     for key, value in classifications.items():
         _c = models.ActivityFinancesCodelistCode()
@@ -30,6 +31,17 @@ def add_finances(activity_id, data):
     aF.classifications = _classifications
     db.session.add(aF)
     db.session.commit()
+
+    qactivity.activity_updated(activity_id, 
+        {
+        "user_id": current_user.id,
+        "mode": "add",
+        "target": "ActivityFinances",
+        "target_id": aF.id,
+        "old_value": None,
+        "value": aF.as_dict()
+        }
+        )
     return aF.id
 
 def update_finances_classification(data):
@@ -38,9 +50,21 @@ def update_finances_classification(data):
         codelist_id = data["attr"]
     ).first()
     if not checkF: return False
+    old_value = checkF.codelist_code_id
     checkF.codelist_code_id = data["value"]
     db.session.add(checkF)
     db.session.commit()
+
+    qactivity.activity_updated(data["activity_id"],
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityFinancesCodelistCode",
+        "target_id": checkF.id,
+        "old_value": {data["attr"]: old_value},
+        "value": {data["attr"]: data["value"]}
+        }
+        )
 
 def delete_finances(activity_id, finances_id):
     print "Delete activity id {} finances id {}".format(activity_id, finances_id)
@@ -49,9 +73,21 @@ def delete_finances(activity_id, finances_id):
         id = finances_id
     ).first()
     if checkF:
+        old_value = checkF.as_dict()
         db.session.delete(checkF)
         db.session.commit()
         print "Return True"
+
+        qactivity.activity_updated(checkF.activity_id, 
+            {
+            "user_id": current_user.id,
+            "mode": "delete",
+            "target": "ActivityFinances",
+            "target_id": old_value["id"],
+            "old_value": old_value,
+            "value": None
+            }
+            )
         return True
     print "Return False"
     return False
@@ -60,6 +96,9 @@ def update_attr(data):
     finance = models.ActivityFinances.query.filter_by(
         id = data['finances_id']
     ).first()
+
+    old_value = getattr(finance, data['attr'])
+
     if data['attr'].endswith('date'):
         if data["value"] == "": 
             data["value"] = None
@@ -71,6 +110,18 @@ def update_attr(data):
     setattr(finance, data['attr'], data['value'])
     db.session.add(finance)
     db.session.commit()
+
+    qactivity.activity_updated(finance.activity_id, 
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityFinances",
+        "target_id": finance.id,
+        "old_value": {data['attr']: old_value},
+        "value": {data['attr']: data['value']}
+        }
+        )
+
     return True
 
 # Forward spend data
