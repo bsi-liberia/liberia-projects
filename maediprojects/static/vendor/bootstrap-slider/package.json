@@ -1,47 +1,22 @@
 {
-  "name": "bootstrap-slider",
-  "version": "10.2.1",
-  "description": "Slider view component for Twitter Bootstrap.",
-  "main": "dist/bootstrap-slider.js",
-  "style": "dist/css/bootstrap-slider.css",
-  "scripts": {
-    "pretest": "grunt lint",
-    "test": "grunt test",
-    "release": "sh ./scripts/release.sh",
-    "update-gh-pages": "sh ./scripts/update-gh-pages.sh"
-  },
-  "homepage": "http://github.com/seiyria/bootstrap-slider",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/seiyria/bootstrap-slider.git"
+  "author": {
+    "name": "bootstrap-slider"
   },
   "bugs": {
     "url": "http://github.com/seiyria/bootstrap-slider/issues"
   },
-  "author": "bootstrap-slider ",
+  "bundleDependencies": false,
   "contributors": [
     {
-      "name": "Kyle Kemp",
-      "twitter": "@seiyria",
-      "github": "seiyria"
+      "name": "Kyle Kemp"
     },
     {
-      "name": "Rohit Kalkur",
-      "twitter": "@Rovolutionary",
-      "github": "rovolution"
+      "name": "Rohit Kalkur"
     }
   ],
-  "keywords": [
-    "slider",
-    "bootstrap",
-    "twitter",
-    "slide"
-  ],
-  "license": "MIT",
-  "readmeFilename": "README.md",
-  "gitHead": "67eb8fe3c26205efc94ae95b3ef37a469eef0b81",
   "dependencies": {},
-  "engine": {},
+  "deprecated": false,
+  "description": "Slider view component for Twitter Bootstrap.",
   "devDependencies": {
     "babel-preset-es2015": "6.3.13",
     "bootstrap": "^3.3.6",
@@ -61,6 +36,8 @@
     "grunt-sass-lint": "^0.2.2",
     "grunt-template": "0.2.0"
   },
+  "engine": {},
+  "gitHead": "67eb8fe3c26205efc94ae95b3ef37a469eef0b81",
   "gruntConfig": {
     "devPort": 9000,
     "js": {
@@ -96,5 +73,27 @@
       "cssMin": "dist/css/bootstrap-slider.min.css"
     },
     "spec": "test/specs/**/*.js"
-  }
+  },
+  "homepage": "http://github.com/seiyria/bootstrap-slider",
+  "keywords": [
+    "slider",
+    "bootstrap",
+    "twitter",
+    "slide"
+  ],
+  "license": "MIT",
+  "main": "dist/bootstrap-slider.js",
+  "name": "bootstrap-slider",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/seiyria/bootstrap-slider.git"
+  },
+  "scripts": {
+    "pretest": "grunt lint",
+    "release": "sh ./scripts/release.sh",
+    "test": "grunt test",
+    "update-gh-pages": "sh ./scripts/update-gh-pages.sh"
+  },
+  "style": "dist/css/bootstrap-slider.css",
+  "version": "10.2.1"
 }
