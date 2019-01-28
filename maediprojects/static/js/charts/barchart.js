@@ -4,17 +4,20 @@ var barChart = {};
 
 var barChart = function(el, options) {
   this.$el = d3.select(el);
-  var svg, margin, height, g, x0, x1, y, z, xAxis, yAxis, legends, dataCanvas;
+  var svg, margin, width, height, g, x0, x1, y, z, xAxis, yAxis, legends, dataCanvas;
+
+  margin = {top: 20, right: 20, bottom: 100, left: 70}
+  this._calcSize = function() {
+    width = parseInt(this.$el.style('width'), 10) - margin.left - margin.right;
+    height = parseInt(this.$el.style('height'), 10) - margin.top - margin.bottom;
+  };
   
   this._init = function() {
+    this._calcSize();
     svg = this.$el.append("svg")
-          .attr("width",  960)
-          .attr("height", 500),
-        margin = {top: 20, right: 20, bottom: 100, left: 70},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom,
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom),
         g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
     dataCanvas = svg
       .append("g")
@@ -65,6 +68,17 @@ var barChart = function(el, options) {
     this.update();
   }
   this.update = function () {
+    this._calcSize();
+    svg
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom);
+    dataCanvas
+      .attr('width', width)
+      .attr('height', height);
+    x0 = d3.scaleBand()
+        .rangeRound([0, width])
+        .paddingInner(0.1);
+    xAxis = d3.axisBottom(x0).ticks(10);
     var data = this.data;
     var keys = this.keys;
 
@@ -143,46 +157,37 @@ var barChart = function(el, options) {
     _yAxisLegend
         .exit().remove();
 
-    /*
-
-    g.append("g")
-        .attr("class", "axis")
-        .attr("transform", "translate(-10," + height + ")")
-        .call(d3.axisBottom(x0).ticks(10))
-        ;
-
-    g.append("g")
-        .attr("class", "axis")
-        .call(d3.axisLeft(y).ticks(null).tickFormat(function(d) {
-          return d / 1000000000 + 'bn';
-        }))
-      .append("text")
-        .attr("x", 2)
-        .attr("y", y(y.ticks().pop()) + 0.5)
-        .attr("dy", "0.32em")
-        .attr("fill", "#000")
-        .attr("font-weight", "bold")
-        .attr("text-anchor", "start")
-        .text("Value");
-        */
+    var legends = dataCanvas.select(".legends")
+        .attr("transform", function(d,i) {
+          w = parseInt(width, 10);
+          w -= margin.right;
+          return "translate(" + w + ",0)";
+        });
 
     var legend = legends
+        .selectAll(".legend")
+        .data(keys.slice());
+
+    var l = legend
+       .enter().append("g")
+        .attr("class", "legend")
+        .html("<rect/><text/>")
+        .attr("transform", function(d, i) {
+          return "translate(0," + i * 20 + ")"; })
+
+    l
+        .select("rect")
+        .attr("x", 0)
+        .attr("width", 19)
+        .attr("height", 19)
+        .attr("fill", z)
+
+    l
+        .select("text")
         .attr("font-family", "sans-serif")
         .attr("font-size", 10)
         .attr("text-anchor", "end")
-        .selectAll("g")
-       .data(keys.slice())
-       .enter().append("g")
-        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-    legend.append("rect")
-        .attr("x", width - 19)
-        .attr("width", 19)
-        .attr("height", 19)
-        .attr("fill", z);
-
-    legend.append("text")
-        .attr("x", width - 24)
+        .attr("x", -10)
         .attr("y", 9.5)
         .attr("dy", "0.32em")
         .text(function(d) { return d; });
