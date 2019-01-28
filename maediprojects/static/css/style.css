@@ -235,3 +235,6 @@ img.brand {
 .navbar-brand > img {
   display: inline;
 }
+.dashboard-chart {
+  height: 500px;
+}
