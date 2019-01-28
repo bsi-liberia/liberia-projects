@@ -8,6 +8,7 @@
   var makeTitle = function(str) {
     return str.charAt(0).toUpperCase() + str.substr(1);
   }
+  var thisLineChart, cdBarChart, cdSourceBarChart, cdDomesticBarChart, thisPieChart;
 
   d3.json("/api/sectors_C_D.json", function(error, data) {
     data.sectors = data.sectors.filter(function(d) {
@@ -168,7 +169,7 @@
       }
       cdDomesticBarChart = new barChart("#commitments-disbursements-domestic-chart", options);
 
-      var pieOptions, thisPieChart, cdBarChart, cdSourceBarChart;
+      var pieOptions;
       d3.json("/api/sectors.json", function(error, data) {
         pieOptions = {
           "records": data["sectors"],
@@ -203,3 +204,12 @@
         ]);
     });
   });
+
+  var resizeCharts = debounce(function() {
+      thisLineChart.update();
+      cdBarChart.update();
+      cdSourceBarChart.update();
+      cdDomesticBarChart.update();
+  }, 1000);
+
+  $(window).resize(resizeCharts);
