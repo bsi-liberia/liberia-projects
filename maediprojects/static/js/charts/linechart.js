@@ -12,9 +12,12 @@ var lineChart = function(el, data) {
 
   var svg, dataCanvas, width, height, x, y, xAxis, yAxis, line, area, bisector, setValue, setDrilldown, controls, select, legends, tip;
 
-  var margin = {top: 20, right: 20, bottom: 30, left: 70},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+  var margin = {top: 20, right: 20, bottom: 30, left: 70};
+  this._calcSize = function() {
+    width = parseInt(this.$el.style('width'), 10) - margin.left - margin.right;
+    height = parseInt(this.$el.style('height'), 10) - margin.top - margin.bottom;
+  };
+  this._calcSize();
   
   var parseDate = d3.timeParse("%Y");
   var color = d3.scaleOrdinal(d3.schemeCategory10);   // set the colour scale
@@ -91,7 +94,14 @@ var lineChart = function(el, data) {
     this.update();
   }
   this.update = function() {
+    this._calcSize();
+    svg
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom);
     // Scale the range of the data
+    x = d3.scaleTime()
+      .range([0, width]);
+    xAxis = d3.axisBottom(x).ticks(10);
     x.domain(d3.extent(this.data, function(d) { return d.date; }));
     y.domain([0, d3.max(this.data, function(d) { return d[setValue]; })]);
 
@@ -140,10 +150,17 @@ var lineChart = function(el, data) {
       .call(transition)
 
     // Make legend
-    var legend = legends
+    legends
       .attr("font-family", "sans-serif")
       .attr("font-size", 10)
       .attr("text-anchor", "end")
+        .attr("transform", function(d,i) {
+          w = parseInt(width, 10);
+          w -= margin.right;
+          return "translate(" + w + ",0)";
+        });
+
+    var legend = legends
       .selectAll("g")
       .data(dataNest)
       .enter()
@@ -152,7 +169,7 @@ var lineChart = function(el, data) {
 
     legend
       .append("rect")
-      .attr("x", width - 19)
+      .attr("x", -19)
       .attr("width", 19)
       .attr("height", 19)
       .attr("fill", function (d) { return color(d.key)})
@@ -171,7 +188,7 @@ var lineChart = function(el, data) {
 
     legend
       .append("text")
-      .attr("x", width - 24)
+      .attr("x", -24)
       .attr("y", 9.5)
       .attr("dy", "0.32em")
       .style("cursor", "pointer")
