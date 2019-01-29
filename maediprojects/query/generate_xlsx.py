@@ -3,7 +3,7 @@
 from maediprojects import app, db, models
 import datetime
 from maediprojects.query import activity as qactivity
-from maediprojects.lib import xlsx_to_csv
+from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists 
 from maediprojects.lib.codelists import get_codelists_lookups
@@ -98,29 +98,27 @@ def process_transaction_classifications(activity):
     classifications.append(cl)
     return classifications
 
-def process_transaction(activity, row, column_name):
+def get_data_from_header(column_name):
+    pattern = "(\d*) Q(\d) \(D\)"
+    result = re.match(pattern, column_name).groups()
+    return (result[1], result[0])
+
+def get_fy_fq_date(fq, fy):
+    qtrs = {"1": "09-30",
+            "2": "12-31",
+            "3": "03-31",
+            "4": "06-30"}
+    if fq in ("3","4"):
+        fy = int(fy)+1
+    return "{}-{}".format(fy,qtrs[fq])
+
+def process_transaction(activity, amount, currency, column_name):
     provider = activity.funding_organisations[0].id
     receiver = activity.implementing_organisations[0].id
-
-    transaction_value = row[column_name]
-    def get_data_from_header(column_name):
-        pattern = "(\d*) Q(\d) \(D\)"
-        result = re.match(pattern, column_name).groups()
-        return (result[1], result[0])
-
-    def get_fy_fq_date(fq, fy):
-        qtrs = {"1": "09-30",
-                "2": "12-31",
-                "3": "03-31",
-                "4": "06-30"}
-        if fq in ("3","4"):
-            fy = int(fy)+1
-        return "{}-{}".format(fy,qtrs[fq])
 
     fq, fy = get_data_from_header(column_name)
     end_fq_date = get_fy_fq_date(fq, fy)
 
-    amount, currency = tidy_amount(row[column_name])
     disbursement = models.ActivityFinances()
     disbursement.transaction_date = datetime.datetime.strptime(end_fq_date,
         "%Y-%m-%d")
@@ -128,7 +126,7 @@ def process_transaction(activity, row, column_name):
     disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU template".format(
         fq, fy
     )
-    disbursement.transaction_value = float(amount)
+    disbursement.transaction_value = amount
     disbursement.currency = currency
     disbursement.provider_org_id = provider
     disbursement.receiver_org_id = receiver
@@ -137,32 +135,59 @@ def process_transaction(activity, row, column_name):
     disbursement.classifications = process_transaction_classifications(activity)
     return disbursement
 
-def import_xls(input_file):
+def import_xls(input_file, column_name=u"2018 Q1 (D)"):
     xl_workbook = xlrd.open_workbook(filename=input_file.filename,
         file_contents=input_file.read())
     num_sheets = len(xl_workbook.sheet_names())
     num_updated_activities = 0
     activity_id = None
+    cl_lookups = get_codelists_lookups()
     try:
         for sheet_id in range(0,num_sheets):
             input_file.seek(0)
             data = xlsx_to_csv.getDataFromFile(
                 input_file.filename, input_file.read(), sheet_id, True)
             for row in data: # each row is one ID
-                #FIXME add error handling
-                if '2018 Q1 (D)' not in row: break
-                if ((row[u'2018 Q1 (D)'] == "") or 
-                    (float(row[u'2018 Q1 (D)']) == 0) or
-                    (float(row[u'2018 Q1 (D)']) == "-")):
+                if column_name not in row:
+                    flash("The column {} containing financial data was not \
+                    found in the uploaded spreadsheet!".format(column_name), "danger")
+                    raise Exception
+                if ((row[column_name] == "") or 
+                    (float(row[column_name]) == 0) or
+                    (float(row[column_name]) == "-")):
                     continue
                 activity_id = row[u"ID"]
                 activity = qactivity.get_activity(activity_id)
+                if not activity:
+                    flash("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                        and was not imported! Please create this activity in the \
+                        system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
+                    continue
+                existing_activity = activity_to_json(activity, cl_lookups)
+                row_value, row_currency = tidy_amount(row[column_name])
+
+                #FIXME need to handle multiple currencies later... also handle this in process_transaction()
+                difference = row_value-float(existing_activity.get(column_name, 0))
+                if difference == 0:
+                    continue
                 activity.finances.append(
-                    process_transaction(activity, row, u'2018 Q1 (D)')
+                    process_transaction(activity, difference, row_currency, column_name)
                 )
                 db.session.add(activity)
                 num_updated_activities += 1
-                flash("Updated 2018 Q1 Disbursements for {} (Project ID: {})".format(
+
+                if existing_activity.get(column_name):
+                    flash("Updated {} for {} (Project ID: {}); previous value was {}; \
+                        new value is {}. New entry for {} added.".format(
+                    util.column_data_to_string(column_name),
+                    activity.title, activity.id,
+                    existing_activity.get(column_name),
+                    row.get(column_name),
+                    difference
+                    ), "success")
+                else:
+                    flash("Updated {} for {} (Project ID: {})".format(
+                    util.column_data_to_string(column_name),
                     activity.title, activity.id), "success")
     except Exception, e:
         if activity_id:
@@ -210,7 +235,7 @@ def generate_xlsx_filtered(arguments):
     return writer.save()
 
 def generate_xlsx_export_template(data):
-    _headers = ["ID", "Project code", "Activity Title", "2018 Q1 (D)"]
+    _headers = ["ID", "Project code", "Activity Title", util.previous_fy_fq()]
     writer = xlsxDictWriter(_headers)
     cl_lookups = get_codelists_lookups()
 
