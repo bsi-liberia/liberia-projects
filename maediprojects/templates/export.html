@@ -16,7 +16,7 @@
   AMCU quarterly reporting template. This means you do not have to go through
   each project and manually update it: you can upload one file for each donor.</p>
 <h3><span class="glyphicon glyphicon-download"></span> Download donor quarterly reporting templates</h3>
-<p class="lead">Generate quarterly reporting templates for one or all donors. You should 
+<p class="lead">Generate quarterly reporting templates for <i>{{ previous_fy_fq }}</i> for one or all donors. You should 
   then send the template to the relevant donor via email, as an Excel attachment.</p>
 <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -46,6 +46,18 @@
       <input type="file" id="file" name="file">
       <p class="help-block">Select an Excel file to import. The file must
         be formatted according to the donor quarterly reporting template.</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="file" class="col-sm-2 control-label">FY/FQ data to import</label>
+    <div class="col-sm-10">
+      <select class="select form-control" name="fy_fq">
+        {% for fy_fq in available_fys_fqs %}
+        <option value="{{ fy_fq.value }}"{{ fy_fq.selected }}>{{ fy_fq.text }}</option>
+        {% endfor %}
+      </select>
+      <p class="help-block">Select which fiscal year/quarter you would like to import.
+      Note that only data from this column will be imported.</p>
     </div>
   </div>
   <div class="form-group">
