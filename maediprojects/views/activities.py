@@ -9,7 +9,7 @@ from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
-from maediprojects.lib import codelists
+from maediprojects.lib import codelists, util
 import json, datetime
 
 ALLOWED_EXTENSIONS = set(['xlsx', 'xls'])
@@ -73,9 +73,13 @@ def activities():
 @app.route("/export/")
 def export():
     reporting_orgs = qorganisations.get_reporting_orgs()
+    available_fys_fqs = util.available_fy_fqs_as_dict()
+    previous_fy_fq = util.column_data_to_string(util.previous_fy_fq())
     return render_template("export.html",
                 loggedinuser = current_user,
-                funding_orgs=reporting_orgs)
+                funding_orgs=reporting_orgs,
+                previous_fy_fq = previous_fy_fq,
+                available_fys_fqs = available_fys_fqs)
 
 @app.route("/import/", methods=["POST", "GET"])
 @login_required
@@ -89,18 +93,19 @@ def import_template():
         flash('Please select a file.', "warning")
         return redirect(request.url)
     if file and allowed_file(file.filename):
+        fy_fq = request.form['fy_fq']
         # For each sheet: convert to dict
         # For each line in each sheet:
         # Process (financial data) import column
         # If no data in that FQ: then import
         # If there was data for that FY: then don't import
-        result = qgenerate_xlsx.import_xls(file)
+        result = qgenerate_xlsx.import_xls(file, fy_fq)
         if result > 0: flash("{} activities successfully updated!".format(result), "success")
         else: flash("""No activities were updated. No updated disbursements 
         were found. Check that you selected the correct file and that it 
-        contains 2017 Q4 Disbursement data. It must be formatted according to
+        contains {} data. It must be formatted according to
         the AMCU template format. You can download a copy of this template 
-        below.""".format(result), "warning")
+        below.""".format(util.column_data_to_string(fy_fq)), "warning")
         return redirect(url_for('export'))
     flash("Sorry, there was an error, and that file could not be imported", "danger")
     return redirect(url_for('export'))
