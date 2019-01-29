@@ -15,7 +15,7 @@ from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
-from maediprojects.lib import codelists
+from maediprojects.lib import codelists, util
 from maediprojects.lib.codelists import get_codelists_lookups
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 import requests
@@ -434,14 +434,15 @@ def all_activities_xlsx_filtered():
 @app.route("/api/export_template.xlsx")
 @app.route("/api/export_template/<organisation_id>.xlsx")
 def export_donor_template(organisation_id=None):
+    fyfq_string = util.column_data_to_string(util.previous_fy_fq())
     if organisation_id:
         reporting_org_name = qorganisations.get_organisation_by_id(
             organisation_id).name
-        filename = "AMCU 2018 Q1 Template {}.xlsx".format(reporting_org_name)
+        filename = "AMCU {} Template {}.xlsx".format(fyfq_string, reporting_org_name)
         activities = {reporting_org_name: qactivity.list_activities_by_filters({
             u"reporting_org_id": organisation_id}) }
     else:
-        filename = "AMCU 2018 Q1 Template All Donors.xlsx"
+        filename = "AMCU {} Template All Donors.xlsx".format(fyfq_string)
         all_activities = qactivity.list_activities_by_filters({
                 u"domestic_external": u"external"
             })
