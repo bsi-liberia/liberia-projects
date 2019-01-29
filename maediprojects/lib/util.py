@@ -1,4 +1,6 @@
-import datetime
+import datetime, re
+
+ALLOWED_YEARS = range(2013, 2019)
 
 MONTHS_QUARTERS = {
     1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2, 7: 3, 8: 3, 9: 3, 10: 4, 
@@ -76,3 +78,52 @@ def isostring_date(value):
 def isostring_year(value):
     # Returns a date object from a string of format YYYY
     return datetime.datetime.strptime(value, "%Y")
+
+def subtract_one_quarter(from_year, from_quarter):
+    if from_quarter > 1:
+        return from_year, from_quarter-1
+    else:
+        return from_year-1, 4
+
+def add_one_quarter(from_year, from_quarter):
+    if from_quarter < 4:
+        return from_year, from_quarter+1
+    else:
+        return from_year+1, 1
+
+def available_fy_fqs():
+    return ["{} Q{} (D)".format(year, quarter) for year in ALLOWED_YEARS for quarter in (1,2,3,4)]
+
+def current_fy_fq():
+    year, quarter = date_to_fy_fq(datetime.datetime.utcnow())
+    return "{} Q{} (D)".format(year, quarter)
+
+def previous_fy_fq():
+    year, quarter = date_to_fy_fq(datetime.datetime.utcnow())
+    year, quarter = subtract_one_quarter(year, quarter)
+    return "{} Q{} (D)".format(year, quarter)
+
+def previous_fy_fq_numeric():
+    year, quarter = date_to_fy_fq(datetime.datetime.utcnow())
+    return subtract_one_quarter(year, quarter)
+
+def available_fy_fqs_as_dict():
+    return [{'value': fyfqstring,
+             'text': column_data_to_string(fyfqstring),
+             'selected': {True: ' selected', 
+                          False: ''}[previous_fy_fq() == fyfqstring]
+              } for fyfqstring in available_fy_fqs()]
+
+def get_data_from_header(column_name):
+    pattern = "(\d*) Q(\d) \(D\)"
+    result = re.match(pattern, column_name).groups()
+    return (result[1], result[0])
+
+def fy_to_fyfy(fy):
+    """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819"""
+    return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
+
+def column_data_to_string(column_name):
+    fq, fy = get_data_from_header(column_name)
+    fyfy = fy_to_fyfy(fy)
+    return u"FY{} Q{} Disbursements".format(fyfy, fq)
