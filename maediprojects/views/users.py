@@ -32,8 +32,16 @@ def profile():
         return redirect(url_for("users_edit", user_id=current_user.id))
 
     if request.method == "POST":
-        data = request.form.to_dict()
+        data = {
+            k: v
+            for k, v in request.form.items()
+            if k in ["name", "organisation", "recipient_country_code",
+                     "change_password", "password"]
+        }
         data["id"] = current_user.id
+        data["username"] = current_user.username
+        data["email_address"] = current_user.email_address
+
         if quser.updateUser(data):
             flash(gettext(u"Profile successfully updated!"), "success")
         else:
