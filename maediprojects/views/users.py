@@ -23,7 +23,29 @@ login_manager.login_message_category = "danger"
 @login_manager.user_loader
 def load_user(id):
     return quser.user(id)
-    
+
+
+@app.route("/profile/", methods=["GET", "POST"])
+@login_required
+def profile():
+    if current_user.administrator:
+        return redirect(url_for("users_edit", user_id=current_user.id))
+
+    if request.method == "POST":
+        data = request.form.to_dict()
+        data["id"] = current_user.id
+        if quser.updateUser(data):
+            flash(gettext(u"Profile successfully updated!"), "success")
+        else:
+            flash(gettext(u"Sorry, couldn't update!"), "danger")
+        return redirect(url_for("profile"))
+
+    return render_template("profile.html",
+                           codelists=codelists.get_codelists(),
+                           user=current_user,
+                           loggedinuser=current_user)
+
+
 @app.route("/users/")
 @login_required
 @quser.administrator_required
