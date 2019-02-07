@@ -104,15 +104,12 @@ def updateUser(data):
         # Update password
         checkU.pw_hash = generate_password_hash(data["password"])
 
-    if not current_user.administrator:
-        db.session.add(checkU)
-        db.session.commit()
-        return checkU
+    if current_user.administrator:
+        # Only an admin user can give administrative privileges
+        checkU.administrator = bool(data.get('administrator'))
+        setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
+        setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
 
-    # Only an admin user can give administrative privileges
-    checkU.administrator = bool(data.get('administrator'))
-    setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
-    setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
     db.session.add(checkU)
     db.session.commit()
     return checkU
