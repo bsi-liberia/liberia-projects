@@ -3,7 +3,6 @@ blinker==1.4
 certifi==2018.11.29
 chardet==3.0.4
 Click==7.0
-email==4.0.2
 et-xmlfile==1.0.1
 Flask==0.12.3
 Flask-Babel==0.9
