@@ -22,8 +22,7 @@ def get_db_codelists():
         })
     return codelists
 
-def get_codelists():
-    LANG = babel.get_locale()
+def get_codelists(LANG=babel.get_locale()):
     current_dir = os.path.join(os.path.dirname(__file__))
     
     def only_csv(filename):

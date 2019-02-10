@@ -9,14 +9,11 @@ import unicodecsv
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-def setup():
-    db.create_all()
-    create_codes_codelists()
-    import_countries()
-    create_user()
 
-def import_countries():
-    countries = codelists.get_codelists()["Country"]
+def import_countries(language, country_code=None):
+    countries = codelists.get_codelists(language)["Country"]
+    if country_code is not None:
+        countries = [c for c in countries if c["code"] == country_code]
     for country in countries:
         if country["code"] == "": continue
         c = models.Country()
