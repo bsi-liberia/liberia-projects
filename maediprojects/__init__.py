@@ -1,5 +1,6 @@
 from flask import Flask, Markup
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_babel import Babel
 from flask_mail import Mail
 from flask_login import login_required, current_user
@@ -9,6 +10,7 @@ import mistune
 app = Flask(__name__.split('.')[0])
 app.config.from_pyfile(os.path.join('..', 'config.py'))
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 babel = Babel(app)
 mail = Mail(app)
 
