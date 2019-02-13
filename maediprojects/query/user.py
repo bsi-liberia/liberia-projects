@@ -99,17 +99,17 @@ def updateUser(data):
     checkU.email_address = data["email_address"]
     checkU.organisation = data["organisation"]
     checkU.recipient_country_code = data["recipient_country_code"]
-    
-    # Only an admin user can give administrative privileges
-    if not current_user.administrator and data.get('administrator'):
-        data.pop('administrator')
-        
-    checkU.administrator = bool(data.get('administrator'))
+
     if "change_password" in data:
         # Update password
         checkU.pw_hash = generate_password_hash(data["password"])
-    setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
-    setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
+
+    if current_user.administrator:
+        # Only an admin user can give administrative privileges
+        checkU.administrator = bool(data.get('administrator'))
+        setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
+        setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
+
     db.session.add(checkU)
     db.session.commit()
     return checkU
