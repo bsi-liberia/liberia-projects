@@ -151,8 +151,6 @@ body {
 #finances table td div.form-group, #milestones table td div.form-group {
   margin-bottom: 0px;
 }
-
-
 .intro {
     padding: 0 20px 130px 0;
     position: relative;
@@ -183,6 +181,30 @@ body {
   position: absolute;
   right: 0;
   z-index: 0;
+}
+@media only screen and (max-width: 768px) {
+  .intro {
+    padding-right: 0px;
+    padding-bottom: 0px;
+  }
+  .intro-message {
+    position:inherit;
+    margin-top:0px;
+    /*box-shadow: none;*/
+    border:none;
+    background-color: #369;
+    width:100%;
+  }
+  .intro-message h1 {
+    width: 100%;
+    margin: 0px;
+    font-size: 35px;
+    padding: 10px 0px 10px 10px;
+    color:#fff;
+  }
+  #locationMap {
+    position:inherit;
+  }
 }
 .navbar-brand {
   height: 50px;
@@ -237,4 +259,12 @@ img.brand {
 }
 .dashboard-chart {
   height: 500px;
+}
+#filtersAppliedLabel {
+  float:right;
+  display:none;
+  border: 1px solid none;
+}
+#filtersAppliedLabel a {
+  color: #ffffff;
 }
