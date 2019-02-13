@@ -5,9 +5,6 @@ from maediprojects import app, db
 import models
 from views import activities, api, users, codelists, documentation
 from query import activity as qactivity
-from query import setup as qsetup
-from query import import_liberia_db as qlibimport
-from query import import_psip as qpsipimport
 import os
 import mistune
 
@@ -27,25 +24,6 @@ def setup_default_permissions():
         else:
             session["permissions"]["domestic_external"] = "both"
 
-# @app.route("/setup/")
-# def setup():
-#     qsetup.setup()
-#     return "OK"
-
-# @app.route("/setup/<country_code>/")
-# def setup_country(country_code):
-#     qsetup.import_locations(country_code)
-#     return "OK"
-
-# @app.route("/import_liberia/")
-# def import_liberia():
-#     qlibimport.import_file()
-#     return "OK"
-
-# @app.route("/import_psip/")
-# def import_psip():
-#     qpsipimport.import_file()
-#     return "OK"
 
 @app.errorhandler(404)
 def page_not_found(error):

@@ -85,16 +85,26 @@ The current software has a few limitations which could be improved upon:
    cp config.py.tmpl config.py
    ```
 
-6. Run the server:
+6. Create an environment variable for the app:
+   ```
+   export FLASK_APP=maediprojects/__init__.py
+   ```
+
+7. Run database migrations:
+   ```
+   flask db upgrade
+   ```
+
+8. Run initial setup:
+   ```
+   flask setup
+   ```
+
+9. Run the server:
    ```
    python manage.py runserver
    ```
 
-7. Setup:
-   ```
-   http://localhost:5000/setup/
-   ```
+10. You can log in using the admin username and password defined in your `config.py`
 
-8. You can log in using the admin username and password defined in your `config.py`
-
-9. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists" / "Gérer les listes de codes". Click on the "Locations" / "Localisations" tab, then choose a country to import.
+11. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists" / "Gérer les listes de codes". Click on the "Locations" / "Localisations" tab, then choose a country to import.
