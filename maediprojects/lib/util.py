@@ -127,3 +127,10 @@ def column_data_to_string(column_name):
     fq, fy = get_data_from_header(column_name)
     fyfy = fy_to_fyfy(fy)
     return u"FY{} Q{} Disbursements".format(fyfy, fq)
+
+def make_quarters_text(list):
+    return [{"quarter_name": "Q{}".format(k),
+        "quarter_months": "{}-{}".format(
+        datetime.date(2019, l["start"][1], l["start"][0]).strftime("%b"),
+        datetime.date(2019, l["end"][1], l["end"][0]).strftime("%b")
+    )} for k, l in list.items()]
