@@ -62,7 +62,7 @@ The current software has a few limitations which could be improved upon:
 
 1. Clone the repository:
   ```
-  git clone git@github.com:markbrough/maedi-projects.git
+  git clone git@github.com:bsi-liberia/liberia-projects.git
   ```
 
 2. Set up a virtualenv:
