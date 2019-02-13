@@ -493,3 +493,18 @@ $(document).on("change", "#milestones input[type=checkbox], #milestones textarea
     errorFormGroup(input);
   });
 });
+
+// Javascript to enable link to tab
+var url = document.location.toString();
+if (url.match('#')) {
+    if (url.split('#')[1] == "location") {
+      setupLocations();
+    }
+    $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+    window.scrollTo(0, 0);
+}
+// Change hash for page-reload
+$('.nav-tabs a').on('shown.bs.tab', function (e) {
+    window.location.hash = e.target.hash;
+    window.scrollTo(0, 0);
+})
