@@ -1,0 +1,59 @@
+{% set active_page='disbursements' %}{% extends "layout.html" %}
+{% block title %}{{ _('Disbursement tracking') }}{% endblock %}
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<h1>Disbursement tracking</h1>
+		<p class="lead">Showing {{ activities|length }} activities with planned disbursements over 
+		USD 1 million. Planned and actual disbursements are restricted to amounts in FY18 only.</p>
+		<table class="table" id="milestones">
+			<thead>
+				<tr>
+					<th style="width:25%;" rowspan="2">Title</th>
+					<th rowspan="2">Reported by</th>
+					<th colspan="3">Financial reporting for FY18 only</th>
+				</tr>
+				<tr>
+					<th>Planned Disbursements</th>
+					<th>Actual Disbursements</th>
+					<th style="width:25%;">% Disbursed</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for activity in activities %}
+				<tr>
+					<td><a href="{{ url_for('activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
+					<td>{{ activity.reporting_org.name }}</td>
+					<td>{{ activity.sum_forwardspends[0] }}</td>
+					<td>{{ activity.sum_disbursements[0] }}</td>
+					<td><div class="progress">
+					  <div class="progress-bar" role="progressbar" aria-valuenow="{{ activity.disb_forwardspends }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{activity.disb_forwardspends}}%;">
+					    {{ activity.disb_forwardspends }}%
+					  </div>
+					</div></td>
+				</tr>
+				{% endfor %}
+				<tr class="warning">
+					<td colspan="4"><i>Rough expected disbursement, given {{ days_since_fy_begin }} 
+					days since start of fiscal year ({{ fy_start_day }})</i></td>
+					<td><div class="progress">
+					  <div class="progress-bar progress-bar-warning progress-bar-striped" role="progressbar" aria-valuenow="{{ progress_time }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{progress_time}}%;">
+					    {{ progress_time }}%
+					  </div>
+					</div></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<script type="text/javascript">
+
+  $("#milestones").tablesorter( {
+      sortList: [[4,1]],
+      theme : "bootstrap",
+      widthFixed: true,
+      headerTemplate : '{content} {icon}',
+      widgets : [ "uitheme"]
+  } );
+</script>
+{% endblock %}
