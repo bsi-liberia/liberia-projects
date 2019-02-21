@@ -474,10 +474,9 @@
   <table class="table">
     <thead>
       <th>{% endraw %}{{ _('Year') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Jan-Mar') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Apr-Jun') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Jul-Sep') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Oct-Dec') }}{% raw %}</th>
+      {{# quarters }}
+      <th>{{ quarter_name }} ({{ quarter_months }})</th>
+      {{/ quarters }}
       <!--<th>{% endraw %}{{ _('Total') }}{% raw %}</th>-->
     </thead>
     <tbody id="forward-spend-rows">
