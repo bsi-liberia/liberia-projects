@@ -261,7 +261,7 @@ class Activity(db.Model):
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         #'user', 'organisations', 'reporting_org', 'recipient_country', 'results', 'locations', 'finances', 'forwardspends', 'classifications'
         ret_data.update({key: getattr(self, key).as_dict() for key in ['reporting_org']})
-        [ret_data.update({key: [c.as_dict() for c in getattr(self, key)]}) for key in ['finances', 'locations', 'classifications', 'organisations']]
+        [ret_data.update({key: [c.as_dict() for c in getattr(self, key)]}) for key in ['finances', 'locations', 'classifications', 'organisations', 'implementing_organisations']]
         return ret_data
 
 class ActivityFinances(db.Model):
