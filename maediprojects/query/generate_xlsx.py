@@ -6,7 +6,7 @@ from maediprojects.query import activity as qactivity
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists 
-from maediprojects.lib.codelists import get_codelists_lookups
+from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
 from io import BytesIO
 import re
 from generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
@@ -14,8 +14,9 @@ import openpyxl
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.writer.excel import save_virtual_workbook
+from openpyxl.worksheet.datavalidation import DataValidation
 from flask import flash
-from openpyxl.styles import Color, PatternFill, Font, Border
+from openpyxl.styles import Color, PatternFill, Font, Border, Protection
 import xlrd
 
 def guess_types(cell_value):
@@ -46,8 +47,7 @@ class xlsxDictWriter(object):
         for column_header, cell in row_data.items():
             if column_header not in hm: continue
             column_letter = get_column_letter((hm[column_header]))
-            self.ws.cell('%s%s'%(column_letter, (self.row_index))
-                ).value = guess_types(cell)
+            self.ws['%s%s'%(column_letter, (self.row_index))] = guess_types(cell)
         self.row_index += 1
 
     def writeheader(self):
@@ -71,7 +71,7 @@ class xlsxDictWriter(object):
     def __init__(self, headers):
         self.wb = Workbook()
         ws = self.wb.worksheets[0]
-        ws.title="Data"
+        ws.title=u"Data"
         self.header_mapping = dict(
             map(lambda x: (x[1], x[0]), enumerate(headers, start=1)))
 
@@ -221,7 +221,7 @@ def generate_xlsx_filtered(arguments):
     disbFYs = generate_disb_fys()
     _headers = headers + disbFYs
     writer = xlsxDictWriter(_headers)
-    writer.writesheet("Data")
+    writer.writesheet(u"Data")
     writer.writeheader()
     cl_lookups = get_codelists_lookups()
     if (arguments):
@@ -235,7 +235,9 @@ def generate_xlsx_filtered(arguments):
     return writer.save()
 
 def generate_xlsx_export_template(data):
-    _headers = ["ID", "Project code", "Activity Title", util.previous_fy_fq()]
+    _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
+    u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
+    u"County",]
     writer = xlsxDictWriter(_headers)
     cl_lookups = get_codelists_lookups()
 
@@ -243,20 +245,58 @@ def generate_xlsx_export_template(data):
                          end_color='FFFF00',
                          fill_type = 'solid')
 
+    statuses = get_codelists_lookups_by_name()["ActivityStatus"].keys()
+
+    # Activity Status validation
+    v_status = DataValidation(type="list", formula1='"{}"'.format(u",".join(statuses)), allow_blank=False)
+    v_status.error ='Your entry is not in the list'
+    v_status.errorTitle = 'Activity Status'
+    v_status.prompt = 'Please select from the list'
+    v_status.promptTitle = 'Activity Status'
+
+    v_id = DataValidation(type="whole")
+    v_id.errorTitle = "Invalid ID"
+    v_id.error = "Please enter a valid ID"
+    v_id.promptTitle = 'Liberia Project Dashboard ID'
+    v_id.prompt = 'Please do not edit this ID. It is used by the Liberia Project Dashboard to uniquely identify activities.'
+
+    v_date = DataValidation(type="date")
+    v_date.errorTitle = "Invalid date"
+    v_date.error = "Please enter a valid date"
+
+    v_number = DataValidation(type="decimal")
+    v_number.errorTitle = "Invalid number"
+    v_number.error = "Please enter a valid number"
+
     for org_code, activities in sorted(data.items()):
         writer.writesheet(org_code)
+        writer.ws.add_data_validation(v_status)
+        writer.ws.add_data_validation(v_date)
+        writer.ws.add_data_validation(v_number)
+        writer.ws.add_data_validation(v_id)
+        #writer.ws.protection.sheet = True
         for activity in activities:
             writer.writerow(activity_to_json(activity, cl_lookups))
-        writer.ws.column_dimensions[u"C"].width = 90
+        writer.ws.column_dimensions[u"C"].width = 70
         writer.ws.column_dimensions[u"D"].width = 15
-        writer.ws.cell(row=1,column=4).fill = myFill
+        writer.ws.column_dimensions[u"E"].width = 15
+        writer.ws.column_dimensions[u"F"].width = 20
+        writer.ws.column_dimensions[u"G"].width = 15
+        for rownum in range(1+1, len(activities)+2):
+            writer.ws.cell(row=rownum,column=4).fill = myFill
+            writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
+            #writer.ws.cell(row=rownum,column=4).protection = Protection(locked=False)
+        v_id.add('A2:A{}'.format(len(activities)+2))
+        v_number.add('D2:D{}'.format(len(activities)+2))
+        v_status.add('E2:E{}'.format(len(activities)+2))
+        v_date.add('F2:G{}'.format(len(activities)+2))
     writer.delete_first_sheet()
     return writer.save()
 
 def generate_xlsx_transactions(filter_key=None, filter_value=None):
     disbFYs = generate_disb_fys()
     writer = xlsxDictWriter(headers_transactions)
-    writer.writesheet("Data")
+    writer.writesheet(u"Data")
     writer.writeheader()
     cl_lookups = get_codelists_lookups()
     if (filter_key and filter_value):
