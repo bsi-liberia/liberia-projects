@@ -36,6 +36,27 @@
     {% endfor %}
   </ul>
 </div>
+<h3><span class="glyphicon glyphicon-download"></span> Download donor MTEF forward projections reporting templates</h3>
+<p class="lead">Generate annual forward projections reporting templates for one or all donors. You should 
+  then send the template to the relevant donor via email, as an Excel attachment.</p>
+<div class="btn-group">
+  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <span class="glyphicon glyphicon-save" aria-hidden="true"></span> Select template to download  <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu">
+    <li>
+      <a href="{{ url_for('export_donor_template', mtef=True)}}">
+        Download templates for all donors
+      </a>
+    </li>
+    <li role="separator" class="divider"></li>
+    {% for org in funding_orgs %}
+    <li><a href="{{ url_for('export_donor_template', mtef=True, organisation_id=org.id) }}">
+      Template for {{ org.name }}
+    </a></li>
+    {% endfor %}
+  </ul>
+</div>
 <h3><span class="glyphicon glyphicon-upload"></span> Import data from quarterly reporting template</h3>
 <p class="lead">Import Excel files following the donor quarterly reporting 
   template format.</p>
