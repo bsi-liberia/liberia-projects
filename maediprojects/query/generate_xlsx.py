@@ -234,8 +234,14 @@ def generate_xlsx_filtered(arguments):
     writer.delete_first_sheet()
     return writer.save()
 
-def generate_xlsx_export_template(data):
-    _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
+def generate_xlsx_export_template(data, mtef=False):
+    if mtef:
+        _headers = [u"ID", u"Project code", u"Activity Title",
+        u"FY19/20 (MTEF)", u"FY20/21 (MTEF)", u"FY21/22 (MTEF)",
+    u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
+    u"County",]
+    else:
+        _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
     u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
     u"County",]
     writer = xlsxDictWriter(_headers)
@@ -277,19 +283,38 @@ def generate_xlsx_export_template(data):
         #writer.ws.protection.sheet = True
         for activity in activities:
             writer.writerow(activity_to_json(activity, cl_lookups))
-        writer.ws.column_dimensions[u"C"].width = 70
-        writer.ws.column_dimensions[u"D"].width = 15
-        writer.ws.column_dimensions[u"E"].width = 15
-        writer.ws.column_dimensions[u"F"].width = 20
-        writer.ws.column_dimensions[u"G"].width = 15
-        for rownum in range(1+1, len(activities)+2):
-            writer.ws.cell(row=rownum,column=4).fill = myFill
-            writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
-            #writer.ws.cell(row=rownum,column=4).protection = Protection(locked=False)
-        v_id.add('A2:A{}'.format(len(activities)+2))
-        v_number.add('D2:D{}'.format(len(activities)+2))
-        v_status.add('E2:E{}'.format(len(activities)+2))
-        v_date.add('F2:G{}'.format(len(activities)+2))
+        if mtef == True:
+            for rownum in range(1+1, len(activities)+2):
+                writer.ws.cell(row=rownum,column=4).fill = myFill
+                writer.ws.cell(row=rownum,column=5).fill = myFill
+                writer.ws.cell(row=rownum,column=6).fill = myFill
+                writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
+                writer.ws.cell(row=rownum,column=5).number_format = u'"USD "#,##0.00'
+                writer.ws.cell(row=rownum,column=6).number_format = u'"USD "#,##0.00'
+            writer.ws.column_dimensions[u"C"].width = 70
+            writer.ws.column_dimensions[u"D"].width = 15
+            writer.ws.column_dimensions[u"E"].width = 15
+            writer.ws.column_dimensions[u"F"].width = 15
+            writer.ws.column_dimensions[u"G"].width = 15
+            writer.ws.column_dimensions[u"H"].width = 20
+            writer.ws.column_dimensions[u"I"].width = 20
+            v_id.add('A2:A{}'.format(len(activities)+2))
+            v_number.add('D2:F{}'.format(len(activities)+2))
+            v_status.add('G2:G{}'.format(len(activities)+2))
+            v_date.add('H2:I{}'.format(len(activities)+2))
+        elif mtef == False:
+            for rownum in range(1+1, len(activities)+2):
+                writer.ws.cell(row=rownum,column=4).fill = myFill
+                writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
+            writer.ws.column_dimensions[u"C"].width = 70
+            writer.ws.column_dimensions[u"D"].width = 15
+            writer.ws.column_dimensions[u"E"].width = 15
+            writer.ws.column_dimensions[u"F"].width = 20
+            writer.ws.column_dimensions[u"G"].width = 15
+            v_id.add('A2:A{}'.format(len(activities)+2))
+            v_number.add('D2:D{}'.format(len(activities)+2))
+            v_status.add('E2:E{}'.format(len(activities)+2))
+            v_date.add('F2:G{}'.format(len(activities)+2))
     writer.delete_first_sheet()
     return writer.save()
 
