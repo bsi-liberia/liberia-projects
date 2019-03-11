@@ -454,8 +454,13 @@ def all_activities_xlsx_filtered():
 
 @app.route("/api/export_template.xlsx")
 @app.route("/api/export_template/<organisation_id>.xlsx")
-def export_donor_template(organisation_id=None):
-    fyfq_string = util.column_data_to_string(util.previous_fy_fq())
+def export_donor_template(organisation_id=None, mtef=False):
+    if request.args.get('mtef'):
+        fyfq_string = u"MTEF Forward Projections"
+        mtef = True
+    else:
+        fyfq_string = util.column_data_to_string(util.previous_fy_fq())
+        mtef = False
     if organisation_id:
         reporting_org_name = qorganisations.get_organisation_by_id(
             organisation_id).name
@@ -471,7 +476,7 @@ def export_donor_template(organisation_id=None):
         activities = defaultdict(list)
         for a in all_activities:
             activities[a.reporting_org.name].append(a)
-    data = qgenerate_xlsx.generate_xlsx_export_template(activities)
+    data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef)
     data.seek(0)
     return send_file(data, as_attachment=True, attachment_filename=filename, 
         cache_timeout=5)
