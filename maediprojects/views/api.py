@@ -303,8 +303,8 @@ def api_codelists_new():
 @app.route("/api/")
 def api_list_routes():
     return jsonify({
-        "iati": url_for("api_list_iati_files"),
-        "csv": url_for("maedi_activities_csv")
+        "iati": url_for("api_list_iati_files", _external=True),
+        "csv": url_for("maedi_activities_csv", _external=True)
     })
 
 @app.route("/api/iati.json")
