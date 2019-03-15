@@ -304,7 +304,7 @@ def api_codelists_new():
 def api_list_routes():
     return jsonify({
         "iati": url_for("api_list_iati_files", _external=True),
-        "csv": url_for("maedi_activities_csv", _external=True)
+        "csv": url_for("activities_csv", _external=True)
     })
 
 @app.route("/api/iati.json")
@@ -422,7 +422,7 @@ def generate_iati_xml(version, country_code):
     return "ERROR: UNKNOWN VERSION"
 
 @app.route("/api/activities.csv")
-def maedi_activities_csv():
+def activities_csv():
     data = qgenerate_csv.generate_csv()
     data.seek(0)
     return Response(data, mimetype="text/csv")
@@ -434,7 +434,7 @@ def activities_xlsx_transactions():
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @app.route("/api/activities_external.xlsx")
-def maedi_activities_xlsx():
+def activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
