@@ -1,9 +1,11 @@
 """Click commands."""
 import click
+from flask.cli import with_appcontext
 
 
 @click.command()
 @click.argument('language', default='en')
+@with_appcontext
 def setup(language):
     """Initial setup."""
     from query import setup as qsetup
@@ -14,6 +16,7 @@ def setup(language):
 
 @click.command()
 @click.argument('country_code')
+@with_appcontext
 def setup_country(country_code):
     """Setup a country."""
     from query import setup as qsetup
@@ -21,6 +24,7 @@ def setup_country(country_code):
 
 
 @click.command()
+@with_appcontext
 def import_liberia():
     """Import Liberia data."""
     from query import import_liberia_db as qlibimport
@@ -28,6 +32,7 @@ def import_liberia():
 
 
 @click.command()
+@with_appcontext
 def import_psip():
     """Import psip data."""
     from query import import_psip as qpsipimport
