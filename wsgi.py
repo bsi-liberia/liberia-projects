@@ -1,1 +1,4 @@
-from maediprojects import app
+from maediprojects import create_app
+
+
+create_app()

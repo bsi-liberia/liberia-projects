@@ -1,7 +1,11 @@
-from maediprojects import db, models
-from sqlalchemy import *
 import datetime
+
+from sqlalchemy import *
+
+from maediprojects import models
+from maediprojects.extensions import db
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
+
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -23,4 +27,4 @@ def add_or_update_activity_milestone(data):
     setattr(checkM, data["attribute"], data["value"])
     db.session.add(checkM)
     db.session.commit()
-    return True  
+    return True

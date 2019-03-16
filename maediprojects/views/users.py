@@ -1,19 +1,15 @@
-from flask import render_template, flash, request, redirect, url_for
-from flask_login import (LoginManager, current_user, login_required,
-                         login_user, logout_user)
+from flask import Blueprint, render_template, flash, request, redirect, url_for
+from flask_login import current_user, login_required, login_user, logout_user
 from flask_babel import gettext
 
-from maediprojects import app
 from maediprojects.query import user as quser
 from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import codelists
 from maediprojects.views.api import jsonify
+from maediprojects.extensions import login_manager
 
-login_manager = LoginManager()
-login_manager.setup_app(app)
-login_manager.login_view = "login"
-login_manager.login_message = gettext(u"Please log in to access this page.")
-login_manager.login_message_category = "danger"
+
+blueprint = Blueprint('users', __name__, url_prefix='/', static_folder='../static')
 
 
 @login_manager.user_loader
@@ -21,11 +17,11 @@ def load_user(id):
     return quser.user(id)
 
 
-@app.route("/profile/", methods=["GET", "POST"])
+@blueprint.route("/profile/", methods=["GET", "POST"])
 @login_required
 def profile():
     if current_user.administrator:
-        return redirect(url_for("users_edit", user_id=current_user.id))
+        return redirect(url_for("users.users_edit", user_id=current_user.id))
 
     if request.method == "POST":
         data = {
@@ -42,7 +38,7 @@ def profile():
             flash(gettext(u"Profile successfully updated!"), "success")
         else:
             flash(gettext(u"Sorry, couldn't update!"), "danger")
-        return redirect(url_for("profile"))
+        return redirect(url_for("users.profile"))
 
     return render_template("profile.html",
                            codelists=codelists.get_codelists(),
@@ -50,7 +46,7 @@ def profile():
                            loggedinuser=current_user)
 
 
-@app.route("/users/")
+@blueprint.route("/users/")
 @login_required
 @quser.administrator_required
 def users():
@@ -62,30 +58,30 @@ def users():
                            loggedinuser=current_user)
 
 
-@app.route("/users/delete/", methods=["POST"])
+@blueprint.route("/users/delete/", methods=["POST"])
 @login_required
 @quser.administrator_required
 def users_delete():
     if not current_user.administrator:
         flash(gettext(u"You must be an administrator to create new users."), "danger")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("activities.dashboard"))
     if current_user.username == request.form.get("username"):
         flash(gettext(u"You cannot delete your own user."), "danger")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("activities.dashboard"))
     if quser.deleteUser(request.form.get('username')):
         flash(gettext(u"Successfully deleted user."), "success")
     else:
         flash(gettext(u"Sorry, there was an error and that user could not be deleted."), "danger")
-    return redirect(url_for("users"))
+    return redirect(url_for("users.users"))
 
 
-@app.route("/users/new/", methods=["GET", "POST"])
+@blueprint.route("/users/new/", methods=["GET", "POST"])
 @login_required
 @quser.administrator_required
 def users_new():
     #if not current_user.administrator:
     #    flash("You must be an administrator to create new users.", "danger")
-    #    return redirect(url_for("dashboard"))
+    #    return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = {
             "permissions_dict": {
@@ -101,19 +97,19 @@ def users_new():
         user = quser.addUser(request.form)
         if user:
             flash(gettext(u"Successfully created user!"), "success")
-            return redirect(url_for("users_edit", user_id=user.id))
+            return redirect(url_for("users.users_edit", user_id=user.id))
         else:
             flash(gettext(u"Sorry, couldn't create that user!"), "danger")
-        return redirect(url_for("users"))
+        return redirect(url_for("users.users"))
 
 
-@app.route("/users/<user_id>/", methods=["GET", "POST"])
+@blueprint.route("/users/<user_id>/", methods=["GET", "POST"])
 @login_required
 @quser.administrator_required
 def users_edit(user_id):
     if not current_user.administrator:
         flash("You must be an administrator to edit users.", "danger")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = quser.user(user_id)
         return render_template("user.html",
@@ -128,10 +124,10 @@ def users_edit(user_id):
             flash(gettext(u"Successfully updated user!"), "success")
         else:
             flash(gettext(u"Sorry, couldn't update that user!"), "danger")
-        return redirect(url_for("users_edit", user_id=user_id))
+        return redirect(url_for("users.users_edit", user_id=user_id))
 
 
-@app.route("/users/<user_id>/permissions/", methods=["GET", "POST"])
+@blueprint.route("/users/<user_id>/permissions/", methods=["GET", "POST"])
 @login_required
 @quser.administrator_required
 def user_permissions_edit(user_id):
@@ -149,7 +145,7 @@ def user_permissions_edit(user_id):
 
     if not current_user.administrator:
         flash("You must be an administrator to edit users.", "danger")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = quser.user(user_id)
         user_organisations = list(map(lambda uo:
@@ -192,7 +188,7 @@ def user_permissions_edit(user_id):
         return "error, unknown action"
 
 
-@app.route("/login/", methods=["GET", "POST"])
+@blueprint.route("/login/", methods=["GET", "POST"])
 def login():
     if request.method == "POST" and "username" in request.form:
         user = quser.user_by_username(request.form["username"])
@@ -202,7 +198,7 @@ def login():
                 if request.args.get("next"):
                     redir_url = request.script_root + request.args.get("next")
                 else:
-                    redir_url = url_for("dashboard")
+                    redir_url = url_for("activities.dashboard")
                 return redirect(redir_url)
             else:
                 flash(gettext(u"Sorry, but you could not log in."), "danger")
@@ -211,10 +207,10 @@ def login():
     return render_template("login.html",
              loggedinuser=current_user)
 
-@app.route('/logout/')
+@blueprint.route('/logout/')
 @login_required
 def logout():
     logout_user()
     flash(gettext(u'Logged out'), 'success')
-    redir_url = url_for("login")
+    redir_url = url_for("users.login")
     return redirect(redir_url)
