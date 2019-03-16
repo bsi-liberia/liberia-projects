@@ -209,29 +209,32 @@ def activity_delete(activity_id):
         flash("Sorry, unable to delete that activity", "danger")
     return redirect(url_for("activities.activities"))
 
+
 @blueprint.route("/activities/<activity_id>/")
 @login_required
 @quser.permissions_required("view")
 def activity(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if not activity: return(abort(404))
+    if not activity:
+        return(abort(404))
     locations = qlocation.get_locations_country(
                                     activity.recipient_country_code)
-    #FIXME why are these not url_for()s ?
-    return render_template("activity.html",
-                activity = activity,
-                loggedinuser=current_user,
-                codelists = codelists.get_codelists(),
-                codelist_lookups = codelists.get_codelists_lookups(),
-                locations = locations,
-                api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
-                api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
-                api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
-                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
-                api_iati_search_url = "/api/iati_search/",
-                api_activity_forwardspends_url = url_for("api.api_activity_forwardspends", activity_id=activity_id),
-                users = quser.user()
-          )
+    return render_template(
+        "activity.html",
+        activity=activity,
+        loggedinuser=current_user,
+        codelists=codelists.get_codelists(),
+        codelist_lookups=codelists.get_codelists_lookups(),
+        locations=locations,
+        api_locations_url=url_for("api.api_locations", country_code=activity.recipient_country_code),
+        api_activity_locations_url=url_for("api.api_activity_locations", activity_id=activity_id),
+        api_activity_finances_url=url_for("api.api_activity_finances", activity_id=activity_id),
+        api_update_activity_finances_url=url_for("api.finances_edit_attr", activity_id=activity_id),
+        api_iati_search_url=url_for("api.api_iati_search"),
+        api_activity_forwardspends_url=url_for("api.api_activity_forwardspends", activity_id=activity_id),
+        users=quser.user()
+    )
+
 
 @blueprint.route("/activities/<activity_id>/edit/")
 @login_required
@@ -240,22 +243,23 @@ def activity_edit(activity_id):
     activity = qactivity.get_activity(activity_id)
     locations = qlocation.get_locations_country(
                                     activity.recipient_country_code)
-    #FIXME why are these not url_for()s ?
-    return render_template("activity_edit.html",
-                activity = activity,
-                loggedinuser=current_user,
-                codelists = codelists.get_codelists(),
-                organisations = qorganisations.get_organisations(),
-                locations = locations,
-                api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
-                api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
-                api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
-                api_activity_milestones_url = url_for("api.api_activity_milestones", activity_id=activity_id),
-                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
-                api_iati_search_url = "/api/iati_search/",
-                api_activity_forwardspends_url = url_for("api.api_activity_forwardspends", activity_id=activity_id),
-                users = quser.user()
-          )
+    return render_template(
+        "activity_edit.html",
+        activity=activity,
+        loggedinuser=current_user,
+        codelists=codelists.get_codelists(),
+        organisations=qorganisations.get_organisations(),
+        locations=locations,
+        api_locations_url=url_for("api.api_locations", country_code=activity.recipient_country_code),
+        api_activity_locations_url=url_for("api.api_activity_locations", activity_id=activity_id),
+        api_activity_finances_url=url_for("api.api_activity_finances", activity_id=activity_id),
+        api_activity_milestones_url=url_for("api.api_activity_milestones", activity_id=activity_id),
+        api_update_activity_finances_url=url_for("api.finances_edit_attr", activity_id=activity_id),
+        api_iati_search_url=url_for("api.api_iati_search"),
+        api_activity_forwardspends_url=url_for("api.api_activity_forwardspends", activity_id=activity_id),
+        users=quser.user()
+    )
+
 
 @blueprint.route("/activities/<activity_id>/edit/update_result/", methods=['POST'])
 @login_required
