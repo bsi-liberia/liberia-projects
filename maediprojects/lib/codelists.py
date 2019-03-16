@@ -4,7 +4,6 @@ import os
 import flask_babel as babel
 
 from maediprojects import models
-from maediprojects.extensions import db
 
 
 def get_db_codelist_names():

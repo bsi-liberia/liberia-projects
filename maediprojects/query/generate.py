@@ -1,13 +1,11 @@
 import datetime
 from lxml import etree as et
 
-from flask import current_app as app
+from flask import current_app
 
-from maediprojects import models
 from maediprojects.query import activity as qactivity
 from maediprojects.lib.codelist_helpers import codelists
 from maediprojects.lib.codelists import get_codelists_lookups
-from maediprojects.extensions import db
 
 
 def isostring_date(value):
@@ -295,12 +293,12 @@ def build_activity_103(doc, activity):
     doc.append(ia)
 
     ia.set("last-updated-datetime", activity.updated_date.isoformat())
-    ia.set("default-currency", app.config["ORGANISATION"]["default_currency"])
-    ia.set("{http://www.w3.org/XML/1998/namespace}lang", app.config["ORGANISATION"]["default_language"])
+    ia.set("default-currency", current_app.config["ORGANISATION"]["default_currency"])
+    ia.set("{http://www.w3.org/XML/1998/namespace}lang", current_app.config["ORGANISATION"]["default_language"])
 
-    o_name = app.config["ORGANISATION"]["organisation_name"]
-    o_ref = app.config["ORGANISATION"]["organisation_ref"]
-    o_type = app.config["ORGANISATION"]["organisation_type"]
+    o_name = current_app.config["ORGANISATION"]["organisation_name"]
+    o_ref = current_app.config["ORGANISATION"]["organisation_ref"]
+    o_type = current_app.config["ORGANISATION"]["organisation_type"]
 
     # IATI Identifier
     ia.append(el_iati_identifier(activity, o_ref))
@@ -331,7 +329,7 @@ def build_activity_103(doc, activity):
         ia.append(el_date_103("end", activity.end_date.isoformat()))
 
     # Contact info
-    #ia.append(el_contact_info(app.config["ORGANISATION"]))
+    #ia.append(el_contact_info(current_app.config["ORGANISATION"]))
 
     # Geography
     ia.append(el_with_code_103("recipient-country",
@@ -406,12 +404,12 @@ def build_activity(doc, activity):
     doc.append(ia)
 
     ia.set("last-updated-datetime", activity.updated_date.isoformat())
-    ia.set("default-currency", app.config["ORGANISATION"]["default_currency"])
-    ia.set("{http://www.w3.org/XML/1998/namespace}lang", app.config["ORGANISATION"]["default_language"])
+    ia.set("default-currency", current_app.config["ORGANISATION"]["default_currency"])
+    ia.set("{http://www.w3.org/XML/1998/namespace}lang", current_app.config["ORGANISATION"]["default_language"])
 
-    o_name = app.config["ORGANISATION"]["organisation_name"]
-    o_ref = app.config["ORGANISATION"]["organisation_ref"]
-    o_type = app.config["ORGANISATION"]["organisation_type"]
+    o_name = current_app.config["ORGANISATION"]["organisation_name"]
+    o_ref = current_app.config["ORGANISATION"]["organisation_ref"]
+    o_type = current_app.config["ORGANISATION"]["organisation_type"]
 
     # IATI Identifier
     ia.append(el_iati_identifier(activity, o_ref))
@@ -439,7 +437,7 @@ def build_activity(doc, activity):
         ia.append(el_date("end", activity.end_date.isoformat()))
 
     # Contact info
-    #ia.append(el_contact_info(app.config["ORGANISATION"]))
+    #ia.append(el_contact_info(current_app.config["ORGANISATION"]))
 
     # Geography
     ia.append(el_with_code("recipient-country",

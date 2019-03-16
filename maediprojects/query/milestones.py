@@ -4,7 +4,6 @@ from sqlalchemy import *
 
 from maediprojects import models
 from maediprojects.extensions import db
-from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 
 
 def isostring_date(value):

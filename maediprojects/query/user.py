@@ -1,7 +1,6 @@
-import datetime, time
 from functools import wraps
 
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 from flask import flash, redirect, url_for, request
 from flask_login import current_user
 

@@ -1,10 +1,13 @@
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-import sqlalchemy as sa
-import functools as ft
-from .extensions import db
-from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
-from flask_login import login_required, current_user
+import functools as ft
+
+from sqlalchemy.ext.hybrid import hybrid_property
+import sqlalchemy as sa
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import current_user
+
+from .extensions import db
+
 
 cascade_relationship = ft.partial(
     sa.orm.relationship,

@@ -4,15 +4,10 @@ import datetime
 import unicodecsv
 import StringIO
 import re
-import collections
 
-from maediprojects import models
-from maediprojects.extensions import db
 from maediprojects.query import activity as qactivity
 from maediprojects.lib import util
-from maediprojects.lib.codelist_helpers import codelists
 from maediprojects.lib.codelists import get_codelists_lookups
-from maediprojects.lib.spreadsheet_headers import headers, fr_headers
 
 
 def isostring_date(value):

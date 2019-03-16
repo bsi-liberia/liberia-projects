@@ -1,14 +1,14 @@
-import datetime, json, collections
-from collections import defaultdict
+import datetime
+import json
+from collections import OrderedDict, defaultdict
 
-from flask import Blueprint, Flask, render_template, flash, request, Markup, \
-    session, redirect, url_for, escape, Response, abort, send_file, \
+from flask import Blueprint, request, \
+    url_for, Response, send_file, \
     jsonify, current_app
 from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
 import requests
-from dateutil.relativedelta import relativedelta
 
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
@@ -20,9 +20,9 @@ from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
-from maediprojects.lib import codelists, util
+from maediprojects.lib import util
 from maediprojects.lib.codelists import get_codelists_lookups
-from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
+from maediprojects.lib.util import MONTHS_QUARTERS
 from maediprojects import models
 from maediprojects.extensions import db
 
@@ -167,9 +167,9 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             # Return fiscal years here
             years = sorted(set(map(lambda fs: util.date_to_fy_fq(fs["value_date"])[0],
                              forwardspends)))
-            out = collections.OrderedDict()
+            out = OrderedDict()
             for year in years:
-                out[year] = collections.OrderedDict({"year": "FY{}".format(util.fy_to_fyfy(str(year))), "total_value": 0.00})
+                out[year] = OrderedDict({"year": "FY{}".format(util.fy_to_fyfy(str(year))), "total_value": 0.00})
                 for forwardspend in sorted(forwardspends, key=lambda k: k["value_date"]):
                     if util.date_to_fy_fq(forwardspend["period_start_date"])[0] == year:
                         fq = util.date_to_fy_fq(forwardspend["period_start_date"])[1]
@@ -184,7 +184,7 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
                              qactivity.get_activity(activity_id).forwardspends))
             years = sorted(set(map(lambda fs: fs["value_date"].year,
                              forwardspends)))
-            out = collections.OrderedDict()
+            out = OrderedDict()
             for year in years:
                 out[year] = {"year": year, "total_value": 0.00}
                 for forwardspend in forwardspends:

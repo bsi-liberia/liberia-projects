@@ -1,7 +1,4 @@
-import datetime
-
 import normality
-from sqlalchemy import func
 
 from maediprojects import models
 from maediprojects.extensions import db

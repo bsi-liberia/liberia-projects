@@ -1,6 +1,6 @@
-import xlrd, mmap
-import codecs
+import xlrd
 import datetime
+
 
 def getDataFromFile(f, file_contents, sheet, by_id=False):
 

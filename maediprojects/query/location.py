@@ -1,13 +1,14 @@
-from flask_login import current_user
-import activity as qactivity
-from sqlalchemy import *
 from StringIO import StringIO
 from zipfile import ZipFile
+
+from flask_login import current_user
+from sqlalchemy import *
 import requests
 import unicodecsv
 
 from maediprojects import models
 from maediprojects.extensions import db
+import activity as qactivity
 
 
 GEONAMES_URL="http://download.geonames.org/export/dump/%s.zip"

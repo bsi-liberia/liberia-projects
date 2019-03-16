@@ -1,10 +1,7 @@
-import json
-
-from flask import Blueprint, Flask, render_template, flash, request, Markup, \
-    session, redirect, url_for, escape, Response, abort, send_file, jsonify
+from flask import Blueprint, render_template, flash, request, \
+    redirect, url_for
 from flask_login import login_required, current_user
 
-from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import user as quser
