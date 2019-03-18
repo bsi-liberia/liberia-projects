@@ -319,7 +319,7 @@ def api_list_iati_files():
     urls = qactivity.get_iati_list()
     return jsonify(urls = urls)
 
-@blueprint.route("/api/iati_search/", methods=["POST"])
+@blueprint.route("/api/iati_search/")
 def api_iati_search():
     title = request.form["title"]
     reporting_org_code = request.form["reporting_org_code"]
