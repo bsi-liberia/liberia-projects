@@ -36,9 +36,9 @@ def jsonify(*args, **kwargs):
             indent=None if request.is_xhr else 2, cls=JSONEncoder),
         mimetype='application/json')
 
-@app.route("/api/activities/", methods=["POST", "GET"])
+@app.route("/api/activities/")
 def api_activities_country():
-    arguments = request.form.to_dict()
+    arguments = request.args.to_dict()
     if arguments:
         activities = qactivity.list_activities_by_filters(arguments)
     else:
@@ -65,7 +65,7 @@ def api_activities_country():
         "permissions": activity.permissions
     } for activity in activities])
 
-@app.route("/api/activities/<activity_id>.json", methods=["POST", "GET"])
+@app.route("/api/activities/<activity_id>.json")
 def api_activities_by_id(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id)
@@ -73,7 +73,7 @@ def api_activities_by_id(activity_id):
 
     return jsonify(data)
 
-@app.route("/api/activities/complete/<activity_id>.json", methods=["POST", "GET"])
+@app.route("/api/activities/complete/<activity_id>.json")
 def api_activities_by_id_complete(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id).as_jsonable_dict()
@@ -303,8 +303,8 @@ def api_codelists_new():
 @app.route("/api/")
 def api_list_routes():
     return jsonify({
-        "iati": url_for("api_list_iati_files"),
-        "csv": url_for("maedi_activities_csv")
+        "iati": url_for("api_list_iati_files", _external=True),
+        "csv": url_for("activities_csv", _external=True)
     })
 
 @app.route("/api/iati.json")
@@ -320,7 +320,7 @@ def api_iati_search():
     data = json.loads(r.text)
     return jsonify(data)
 
-@app.route("/api/sectors.json", methods=["GET", "POST"])
+@app.route("/api/sectors.json")
 def api_sectors():
     sector_totals = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_disbursement"),
@@ -346,7 +346,7 @@ def api_sectors():
         "fy": s.fiscal_year
     }, sector_totals)))
 
-@app.route("/api/sectors_C_D.json", methods=["GET", "POST"])
+@app.route("/api/sectors_C_D.json")
 def api_sectors_C_D():
     query = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_value"),
@@ -422,7 +422,7 @@ def generate_iati_xml(version, country_code):
     return "ERROR: UNKNOWN VERSION"
 
 @app.route("/api/activities.csv")
-def maedi_activities_csv():
+def activities_csv():
     data = qgenerate_csv.generate_csv()
     data.seek(0)
     return Response(data, mimetype="text/csv")
@@ -434,7 +434,7 @@ def activities_xlsx_transactions():
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @app.route("/api/activities_external.xlsx")
-def maedi_activities_xlsx():
+def activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

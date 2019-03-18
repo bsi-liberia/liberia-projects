@@ -59,7 +59,7 @@ $(document).on("click", "#search_iati",
     "title": title,
     "reporting_org_code": reporting_org_code
   }
-  $.post(api_iati_search_url, data, 
+  $.get(api_iati_search_url, data,
     function(returndata){
       if (returndata["count"] == '0'){
           alert("No activities found from IATI. Try adjusting the title or funding organisation code.");
