@@ -327,10 +327,12 @@ def generate_xlsx_filtered(arguments):
 
 def generate_xlsx_export_template(data, mtef=False):
     if mtef:
-        _headers = [u"ID", u"Project code", u"Activity Title",
-        u"FY19/20 (MTEF)", u"FY20/21 (MTEF)", u"FY21/22 (MTEF)",
-    u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
-    u"County",]
+        current_year = datetime.datetime.utcnow().date().year
+        mtef_cols = [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+3)]
+        _headers = [u"ID", u"Project code", u"Activity Title"]
+        _headers += mtef_cols
+        _headers += [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
+    u"County"]
     else:
         _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
     u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
@@ -373,7 +375,14 @@ def generate_xlsx_export_template(data, mtef=False):
         writer.ws.add_data_validation(v_id)
         #writer.ws.protection.sheet = True
         for activity in activities:
-            writer.writerow(activity_to_json(activity, cl_lookups))
+            existing_activity = activity_to_json(activity, cl_lookups)
+            for mtef_year in mtef_cols:
+                fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                existing_activity[mtef_year] = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
+                    float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
+                    float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
+                    float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+            writer.writerow(existing_activity)
         if mtef == True:
             for rownum in range(1+1, len(activities)+2):
                 writer.ws.cell(row=rownum,column=4).fill = myFill
