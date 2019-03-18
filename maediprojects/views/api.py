@@ -321,8 +321,8 @@ def api_list_iati_files():
 
 @blueprint.route("/api/iati_search/")
 def api_iati_search():
-    title = request.form["title"]
-    reporting_org_code = request.form["reporting_org_code"]
+    title = request.args["title"]
+    reporting_org_code = request.args["reporting_org_code"]
     r = requests.get(OIPA_SEARCH_URL.format(title.encode("utf-8"), reporting_org_code))
     data = json.loads(r.text)
     return jsonify(data)
