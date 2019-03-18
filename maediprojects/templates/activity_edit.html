@@ -10,8 +10,8 @@
 <h1>{% if activity.id %}{{ _('Edit activity') }}
 {% else %}{{ _('New activity') }}{% endif %}</h1>
 {% if activity.id %}
-<a class="btn btn-success btn-large pull-right" href="{{ url_for('activity', activity_id=activity.id) }}">
-  <i class="glyphicon glyphicon-floppy-disk"></i> 
+<a class="btn btn-success btn-large pull-right" href="{{ url_for('activities.activity', activity_id=activity.id) }}">
+  <i class="glyphicon glyphicon-floppy-disk"></i>
   {{ _('Save and exit project') }}
 </a>
 {% endif %}
@@ -70,7 +70,7 @@
         <div class="form-group">
           <label for="description" class="col-sm-2 control-label">{{ _('Description') }}</label>
           <div class="col-sm-10">
-            <textarea name="description" id="description" 
+            <textarea name="description" id="description"
             class="form-control" rows="2">{{ activity.description }}</textarea>
           </div>
         </div>
@@ -101,7 +101,7 @@
           </div>
         </div>
         <div class="form-group select-fg">
-          <label for="activity_status" class="col-sm-2 
+          <label for="activity_status" class="col-sm-2
           control-label">{{ _('Activity Status') }}</label>
           <div class="col-sm-10">
             <select name="activity_status" id="activity_status" class="form-control">
@@ -138,7 +138,7 @@
           <div class="col-sm-10">
             <select name="reporting_org_id" id="reporting_org_id" class="form-control">
               {% for ds in organisations %}
-              <option value="{{ ds.id }}"{% if ds.id == activity.reporting_org_id %} selected{% endif %} 
+              <option value="{{ ds.id }}"{% if ds.id == activity.reporting_org_id %} selected{% endif %}
                 data-name="{{ ds.name }}"
                 data-organisation-code="{{ ds.code }}">{{ ds.name }}</option>
               {% endfor %}
@@ -164,7 +164,7 @@
           <div class="panel panel-default">
             <div class="panel-heading" id="headingDetailed">
               <h4 class="panel-title">
-                <a role="button" data-toggle="collapse" 
+                <a role="button" data-toggle="collapse"
                 data-target="#detailed"
                 href="#detailed" aria-expanded="false"
                 aria-controls="detailed">
@@ -187,7 +187,7 @@
                 <!--
                 <div class="form-group select-fg">
                   <label for="flow_type" class="col-sm-2 control-label">{{ _('Flow type') }}</label>
-                  <div class="col-sm-10">                    
+                  <div class="col-sm-10">
                     <select name="flow_type" id="flow_type" class="form-control">
                       {% for ft in codelists.FlowType %}
                       <option value="{{ ft.code }}"{% if ft.code == activity.flow_type %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
@@ -207,7 +207,7 @@
                 </div>
                 -->
                 <div class="form-group select-fg">
-                  <label for="recipient_country_code" class="col-sm-2 
+                  <label for="recipient_country_code" class="col-sm-2
                   control-label">{{ _('Recipient Country') }}</label>
                   <div class="col-sm-10">
                     <select name="recipient_country_code" id="recipient_country_code" class="form-control">
@@ -218,7 +218,7 @@
                   </div>
                 </div>
                 <div class="form-group select-fg">
-                  <label for="domestic_external" class="col-sm-2 
+                  <label for="domestic_external" class="col-sm-2
                   control-label">{{ _('External or Domestic Finance') }}</label>
                   <div class="col-sm-10">
                     <select name="domestic_external" id="domestic_external" class="form-control">
@@ -229,7 +229,7 @@
                 </div>
                 {% if loggedinuser.administrator %}
                 <div class="form-group select-fg">
-                  <label for="user_id" class="col-sm-2 
+                  <label for="user_id" class="col-sm-2
                   control-label">{{ _('User') }}</label>
                   <div class="col-sm-10">
                     <select name="user_id" id="user_id" class="form-control">
@@ -264,8 +264,8 @@
           <div class="form-group select-fg">
             <label for="{{ classification.code }}" class="col-sm-3 control-label">{{ classification.name }}</label>
             <div class="col-sm-6">
-              <select name="classification_id_{{ classification.id }}" 
-                id="classification_{{ classification.id }}" 
+              <select name="classification_id_{{ classification.id }}"
+                id="classification_{{ classification.id }}"
                 class="form-control classification_{{classification.code}}">
                 {% for ds in codelists[classification.code] %}
                 <option value="{{ ds.id }}"{% if ds.id == item.codelist_code_id %} selected{% endif %}
@@ -276,7 +276,7 @@
             <!-- for now we don't allow editing percentages, as we are not allowing add/delete sectors -->
             <div class="col-sm-2" style="display:none;">
               <div class="input-group">
-                <input type="text" name="classification_percentage_{{ classification.id }}" 
+                <input type="text" name="classification_percentage_{{ classification.id }}"
                 id="classification_percentage_{{ classification.id }}"
                 value="{{ item.percentage }}" class="form-control" placeholder="If known">
                 <span class="input-group-addon">
@@ -306,7 +306,7 @@
 <script id="locations-selector-template" type="x-tmpl-mustache">
   <div class="form-horizontal">
     <div class="form-group">
-      <label for="selectLocationType" 
+      <label for="selectLocationType"
       class="col-sm-3 control-label">{% endraw %}{{ _('Display:') }}{% raw %}</label>
       <div class="col-sm-9">
         <select class="form-control" name="selectLocationType"
@@ -326,12 +326,12 @@
 <script id="locations-template" type="x-tmpl-mustache">
   <div class="list-group" id="locationSelector">
     {{# locations }}
-      <a href="#" class="list-group-item {{ active }}" data-id="{{ id }}" 
-      data-latitude="{{ latitude }}" 
+      <a href="#" class="list-group-item {{ active }}" data-id="{{ id }}"
+      data-latitude="{{ latitude }}"
       data-longitude="{{ longitude }}">{{ name }}</a>
     {{/ locations }}
     {{^ locations }}
-      <a href="#" class="list-group-item"><b><i class="glyphicon 
+      <a href="#" class="list-group-item"><b><i class="glyphicon
     glyphicon-exclamation-sign"></i>{% endraw %}{{ _('No available locations found! You can try the following:') }}{% raw %}</b>
     <ul>
       <li>{% endraw %}{{ _('check you specified the correct country for this project (on the "Basic" tab, under "Adjust default settings" at the bottom of the page)') }}{% raw %}</li>
@@ -370,7 +370,7 @@
   <tr id="financial-{{ id }}" data-financial-id="{{ id }}">
     <td>
       <div class="date form-group">
-        <input type="text" class="form-control transaction-date" 
+        <input type="text" class="form-control transaction-date"
         name="transaction_date" placeholder="{% endraw %}{{ _('yyyy-mm-dd') }}{% raw %}"
         value="{{ transaction_date }}" size="30">
       </div>
@@ -618,7 +618,7 @@
                 <div class="col-sm-12">
                   <a class="btn btn-primary addFinancial"
                   data-transaction-type="C">
-                    <i class="glyphicon glyphicon-plus"></i> 
+                    <i class="glyphicon glyphicon-plus"></i>
                     {{ _('Add commitment') }}
                   </a>
                 </div>
@@ -645,7 +645,7 @@
                 <div class="col-sm-12">
                   <a class="btn btn-primary addFinancial"
                   data-transaction-type="D">
-                    <i class="glyphicon glyphicon-plus"></i> 
+                    <i class="glyphicon glyphicon-plus"></i>
                     {{ _('Add disbursement') }}
                   </a>
                 </div>
@@ -695,13 +695,13 @@
                       <label for="milestone-achieved-{{ milestone.id }}" class="control-label">
                       <input type="checkbox" name="milestone-achieved-{{ milestone.id }}"
                       id="milestone-achieved-{{ milestone.id }}" data-milestone-id="{{ milestone.id }}"
-                      data-milestone-attribute="achieved" 
+                      data-milestone-attribute="achieved"
                        {% if milestone.achieved.status %} checked{%endif%}/> Achieved</label>
                     </div>
                   </td>
                   <td>
                     <div class="form-group">
-                        <textarea class="form-control col-m3-10" name="milestone-notes-{{ milestone.id }}" 
+                        <textarea class="form-control col-m3-10" name="milestone-notes-{{ milestone.id }}"
                         data-milestone-id="{{ milestone.id }}" data-milestone-attribute="notes"
                         rows="1">{{ milestone.notes }}</textarea>
                     </div>
@@ -717,7 +717,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" 
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -765,7 +765,7 @@
 </script>
 {% endraw %}
 
-<div class="modal fade" id="iati-search-results-modal" tabindex="-1" role="dialog" 
+<div class="modal fade" id="iati-search-results-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">

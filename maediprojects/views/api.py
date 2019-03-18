@@ -1,10 +1,15 @@
-from flask import Flask, render_template, flash, request, Markup, \
-    session, redirect, url_for, escape, Response, abort, send_file, \
+import datetime
+import json
+from collections import OrderedDict, defaultdict
+
+from flask import Blueprint, request, \
+    url_for, Response, send_file, \
     jsonify, current_app
 from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
-from maediprojects import app, db, models
+import requests
+
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
@@ -15,13 +20,15 @@ from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
-from maediprojects.lib import codelists, util
+from maediprojects.lib import util
 from maediprojects.lib.codelists import get_codelists_lookups
-from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
-import requests
-import datetime, json, collections
-from dateutil.relativedelta import relativedelta
-from collections import defaultdict
+from maediprojects.lib.util import MONTHS_QUARTERS
+from maediprojects import models
+from maediprojects.extensions import db
+
+
+blueprint = Blueprint('api', __name__, url_prefix='/', static_folder='../static')
+
 
 OIPA_SEARCH_URL = "https://www.oipa.nl/api/activities/?format=json&q=%22{}%22&recipient_country=LR&reporting_organisation_identifier={}"
 
@@ -36,7 +43,7 @@ def jsonify(*args, **kwargs):
             indent=None if request.is_xhr else 2, cls=JSONEncoder),
         mimetype='application/json')
 
-@app.route("/api/activities/")
+@blueprint.route("/api/activities/")
 def api_activities_country():
     arguments = request.args.to_dict()
     if arguments:
@@ -65,7 +72,7 @@ def api_activities_country():
         "permissions": activity.permissions
     } for activity in activities])
 
-@app.route("/api/activities/<activity_id>.json")
+@blueprint.route("/api/activities/<activity_id>.json")
 def api_activities_by_id(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id)
@@ -73,14 +80,14 @@ def api_activities_by_id(activity_id):
 
     return jsonify(data)
 
-@app.route("/api/activities/complete/<activity_id>.json")
+@blueprint.route("/api/activities/complete/<activity_id>.json")
 def api_activities_by_id_complete(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id).as_jsonable_dict()
 
     return jsonify(activity)
 
-@app.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
+@blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
 @login_required
 @quser.permissions_required("view")
 def api_activity_milestones(activity_id):
@@ -97,11 +104,11 @@ def api_activity_milestones(activity_id):
         return "success"
     return "error"
 
-@app.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
+@blueprint.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
 @quser.permissions_required("edit")
 def api_activity_finances(activity_id):
-    """GET returns a list of all financial data for a given activity_id. 
+    """GET returns a list of all financial data for a given activity_id.
     POST also accepts financial data to be added or deleted."""
     if request.method == "POST":
         if request.form["action"] == "add":
@@ -122,11 +129,11 @@ def api_activity_finances(activity_id):
             result = qfinances.delete_finances(activity_id, request.form["transaction_id"])
         return str(result)
     elif request.method == "GET":
-        finances = list(map(lambda x: x.as_dict(), 
+        finances = list(map(lambda x: x.as_dict(),
                          qactivity.get_activity(activity_id).finances))
         return jsonify(finances = finances)
 
-@app.route("/api/activity_finances/<activity_id>/update_finances/", methods=['POST'])
+@blueprint.route("/api/activity_finances/<activity_id>/update_finances/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def finances_edit_attr(activity_id):
@@ -145,8 +152,8 @@ def finances_edit_attr(activity_id):
         return "success"
     return "error"
 
-@app.route("/api/activity_forwardspends/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
-@app.route("/api/activity_forwardspends/<activity_id>/", methods=["GET", "POST"])
+@blueprint.route("/api/activity_forwardspends/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
+@blueprint.route("/api/activity_forwardspends/<activity_id>/", methods=["GET", "POST"])
 @login_required
 @quser.permissions_required("edit")
 def api_activity_forwardspends(activity_id, fiscal_year=True):
@@ -158,11 +165,11 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             forwardspends = list(map(lambda fs_db: fs_db.as_dict(),
                              qactivity.get_activity(activity_id).forwardspends))
             # Return fiscal years here
-            years = sorted(set(map(lambda fs: util.date_to_fy_fq(fs["value_date"])[0], 
+            years = sorted(set(map(lambda fs: util.date_to_fy_fq(fs["value_date"])[0],
                              forwardspends)))
-            out = collections.OrderedDict()
+            out = OrderedDict()
             for year in years:
-                out[year] = collections.OrderedDict({"year": "FY{}".format(util.fy_to_fyfy(str(year))), "total_value": 0.00})
+                out[year] = OrderedDict({"year": "FY{}".format(util.fy_to_fyfy(str(year))), "total_value": 0.00})
                 for forwardspend in sorted(forwardspends, key=lambda k: k["value_date"]):
                     if util.date_to_fy_fq(forwardspend["period_start_date"])[0] == year:
                         fq = util.date_to_fy_fq(forwardspend["period_start_date"])[1]
@@ -175,9 +182,9 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             data = qactivity.get_activity(activity_id).forwardspends
             forwardspends = list(map(lambda fs_db: fs_db.as_dict(),
                              qactivity.get_activity(activity_id).forwardspends))
-            years = sorted(set(map(lambda fs: fs["value_date"].year, 
+            years = sorted(set(map(lambda fs: fs["value_date"].year,
                              forwardspends)))
-            out = collections.OrderedDict()
+            out = OrderedDict()
             for year in years:
                 out[year] = {"year": year, "total_value": 0.00}
                 for forwardspend in forwardspends:
@@ -200,7 +207,7 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             return "success"
         return "error"
 
-@app.route("/api/activity_forwardspends/<activity_id>/update_forwardspends/", methods=['POST'])
+@blueprint.route("/api/activity_forwardspends/<activity_id>/update_forwardspends/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def forwardspends_edit_attr(activity_id):
@@ -214,7 +221,7 @@ def forwardspends_edit_attr(activity_id):
         return "success"
     return "error"
 
-@app.route("/api/activity_locations/")
+@blueprint.route("/api/activity_locations/")
 @login_required
 def api_all_activity_locations():
     """GET returns a list of all locations."""
@@ -222,14 +229,14 @@ def api_all_activity_locations():
     query = qactivity.filter_activities_for_permissions(query)
     activitylocations = query.all()
     locations = list(map(lambda al: ({"locations": al.locations.as_dict(),
-        "title": al.activity.title, 
-        "id": al.activity_id, 
-        "url": url_for('activity', activity_id=al.activity_id, 
-            _external=True)}), 
+        "title": al.activity.title,
+        "id": al.activity_id,
+        "url": url_for('activities.activity', activity_id=al.activity_id,
+            _external=True)}),
         activitylocations))
     return jsonify(locations = locations)
 
-@app.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
+@blueprint.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
 @login_required
 @quser.permissions_required("edit")
 def api_activity_locations(activity_id):
@@ -242,23 +249,23 @@ def api_activity_locations(activity_id):
             result = qlocation.delete_location(activity_id, request.form["location_id"])
         return str(result)
     elif request.method == "GET":
-        locations = list(map(lambda x: x.as_dict(), 
+        locations = list(map(lambda x: x.as_dict(),
                          qactivity.get_activity(activity_id).locations))
         return jsonify(locations = locations)
 
-@app.route("/api/locations/<country_code>/")
+@blueprint.route("/api/locations/<country_code>/")
 def api_locations(country_code):
     """Returns locations and tries to sort them. Note that there may be cases where
     this will break as the geonames data does not always contain
     good information about the hierarchical relationships between locations."""
-    locations = list(map(lambda x: x.as_dict(), 
+    locations = list(map(lambda x: x.as_dict(),
                      qlocation.get_locations_country(country_code)))
     for i, location in enumerate(locations):
         if location["feature_code"] == "ADM2":
             locations[i]["name"] = " - %s" % location["name"]
     return jsonify(locations = locations)
 
-@app.route("/api/codelists/update/", methods=["POST"])
+@blueprint.route("/api/codelists/update/", methods=["POST"])
 @login_required
 @quser.administrator_required
 def api_codelists_update():
@@ -272,7 +279,7 @@ def api_codelists_update():
     else:
         return "ERROR"
 
-@app.route("/api/codelists/delete/", methods=["POST"])
+@blueprint.route("/api/codelists/delete/", methods=["POST"])
 @login_required
 @quser.administrator_required
 def api_codelists_delete():
@@ -286,7 +293,7 @@ def api_codelists_delete():
     else:
         return "ERROR"
 
-@app.route("/api/codelists/new/", methods=["POST"])
+@blueprint.route("/api/codelists/new/", methods=["POST"])
 @login_required
 @quser.administrator_required
 def api_codelists_new():
@@ -300,19 +307,19 @@ def api_codelists_new():
     else:
         return "ERROR"
 
-@app.route("/api/")
+@blueprint.route("/api/")
 def api_list_routes():
     return jsonify({
-        "iati": url_for("api_list_iati_files", _external=True),
-        "csv": url_for("activities_csv", _external=True)
+        "iati": url_for("api.api_list_iati_files", _external=True),
+        "csv": url_for("api.activities_csv", _external=True)
     })
 
-@app.route("/api/iati.json")
+@blueprint.route("/api/iati.json")
 def api_list_iati_files():
     urls = qactivity.get_iati_list()
     return jsonify(urls = urls)
 
-@app.route("/api/iati_search/", methods=["POST"])
+@blueprint.route("/api/iati_search/", methods=["POST"])
 def api_iati_search():
     title = request.form["title"]
     reporting_org_code = request.form["reporting_org_code"]
@@ -320,7 +327,7 @@ def api_iati_search():
     data = json.loads(r.text)
     return jsonify(data)
 
-@app.route("/api/sectors.json")
+@blueprint.route("/api/sectors.json")
 def api_sectors():
     sector_totals = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_disbursement"),
@@ -346,7 +353,7 @@ def api_sectors():
         "fy": s.fiscal_year
     }, sector_totals)))
 
-@app.route("/api/sectors_C_D.json")
+@blueprint.route("/api/sectors_C_D.json")
 def api_sectors_C_D():
     query = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_value"),
@@ -410,7 +417,7 @@ def api_sectors_C_D():
     for s in fy_sector_totals: append_path(root, s)
     return jsonify(sectors = root.values())
 
-@app.route("/api/iati/<version>/<country_code>.xml")
+@blueprint.route("/api/iati/<version>/<country_code>.xml")
 def generate_iati_xml(version, country_code):
     if version == "1.03":
         xml = qgenerate.generate_103(country_code)
@@ -421,39 +428,39 @@ def generate_iati_xml(version, country_code):
 
     return "ERROR: UNKNOWN VERSION"
 
-@app.route("/api/activities.csv")
+@blueprint.route("/api/activities.csv")
 def activities_csv():
     data = qgenerate_csv.generate_csv()
     data.seek(0)
     return Response(data, mimetype="text/csv")
 
-@app.route("/api/activities_external_transactions.xlsx")
+@blueprint.route("/api/activities_external_transactions.xlsx")
 def activities_xlsx_transactions():
     data = qgenerate_xlsx.generate_xlsx_transactions(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@app.route("/api/activities_external.xlsx")
+@blueprint.route("/api/activities_external.xlsx")
 def activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@app.route("/api/activities_all.xlsx")
+@blueprint.route("/api/activities_all.xlsx")
 def all_activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx()
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@app.route("/api/activities_filtered.xlsx")
+@blueprint.route("/api/activities_filtered.xlsx")
 def all_activities_xlsx_filtered():
     arguments = request.args.to_dict()
     data = qgenerate_xlsx.generate_xlsx_filtered(arguments)
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@app.route("/api/export_template.xlsx")
-@app.route("/api/export_template/<organisation_id>.xlsx")
+@blueprint.route("/api/export_template.xlsx")
+@blueprint.route("/api/export_template/<organisation_id>.xlsx")
 def export_donor_template(organisation_id=None):
     fyfq_string = util.column_data_to_string(util.previous_fy_fq())
     if organisation_id:
@@ -473,5 +480,5 @@ def export_donor_template(organisation_id=None):
             activities[a.reporting_org.name].append(a)
     data = qgenerate_xlsx.generate_xlsx_export_template(activities)
     data.seek(0)
-    return send_file(data, as_attachment=True, attachment_filename=filename, 
+    return send_file(data, as_attachment=True, attachment_filename=filename,
         cache_timeout=5)

@@ -1,7 +1,8 @@
-from maediprojects import db, models
-import datetime
 import normality
-from sqlalchemy import func
+
+from maediprojects import models
+from maediprojects.extensions import db
+
 
 def get_organisations():
     return models.Organisation.query.order_by(
@@ -68,7 +69,7 @@ def update_activity_organisation(activityorganisation_id, organisation_id):
 
 def create_organisation(data):
     org = models.Organisation()
-    
+
     for attr, val in data.items():
         setattr(org, attr, val)
     db.session.add(org)
@@ -88,10 +89,10 @@ def delete_org(data):
     # Ensure this org is not attached to any activities
     check = (models.Activity.query.filter_by(
         reporting_org_id = data['id']
-    ).first() or 
+    ).first() or
         models.ActivityOrganisation.query.filter_by(
         organisation_id = data['id']
-    ).first() or 
+    ).first() or
         models.ActivityFinances.query.filter((
                 models.ActivityFinances.provider_org_id == data['id']
             ) | (models.ActivityFinances.receiver_org_id == data['id'])).first())

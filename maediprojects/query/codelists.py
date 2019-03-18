@@ -1,8 +1,12 @@
-from flask_login import current_user
-from maediprojects import db, models
-import activity as qactivity
 import datetime
+
+from flask_login import current_user
 import normality
+
+from maediprojects import models
+from maediprojects.extensions import db
+import activity as qactivity
+
 
 def update_activity_codelist(activitycodelistcode_id, data):
     activity_codelist = models.ActivityCodelistCode.query.filter_by(
@@ -13,7 +17,7 @@ def update_activity_codelist(activitycodelistcode_id, data):
     setattr(activity_codelist, data['attr'], data['value'])
     db.session.add(activity_codelist)
     db.session.commit()
-    qactivity.activity_updated(activity_codelist.activity_id, 
+    qactivity.activity_updated(activity_codelist.activity_id,
         {
         "user_id": current_user.id,
         "mode": "update",
@@ -45,7 +49,7 @@ def get_or_create_code(codelist, name):
 
 def create_code(data):
     codelistcode = models.CodelistCode()
-    
+
     for attr, val in data.items():
         setattr(codelistcode, attr, val)
     db.session.add(codelistcode)

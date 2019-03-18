@@ -15,7 +15,7 @@
 			<tbody>
 				{% for activity in activities %}
 				<tr>
-					<td><a href="{{ url_for('activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
+					<td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
 					<td>{% for organisation in activity.implementing_organisations %}{{ organisation.name }} {% endfor %}</td>
 					{% for milestone in activity.milestones_data %}
 					<td><span class="label label-{{ milestone.achieved.colour }}"><span class="glyphicon {{ milestone.achieved.icon }}"></span></span><span class="sr-only">{{ milestone.achieved.status }}</span></td>

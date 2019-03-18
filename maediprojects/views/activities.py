@@ -1,8 +1,9 @@
-from flask import Flask, render_template, flash, request, Markup, \
-    session, redirect, url_for, escape, Response, abort, send_file, jsonify
+import datetime
+
+from flask import Blueprint, render_template, flash, request, \
+    redirect, url_for, abort, jsonify
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
-from maediprojects import app, db, models
+
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
@@ -10,14 +11,18 @@ from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists, util
-import json, datetime
+
+
+blueprint = Blueprint('activities', __name__, url_prefix='/', static_folder='../static')
+
 
 ALLOWED_EXTENSIONS = set(['xlsx', 'xls'])
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route("/")
+
+@blueprint.route("/")
 @login_required
 def dashboard():
     countries = qactivity.get_iati_list()
@@ -33,7 +38,7 @@ def dashboard():
                 stats = qactivity.get_stats(current_user)
                           )
 
-@app.route("/activities/")
+@blueprint.route("/activities/")
 @login_required
 def activities():
     countries = qactivity.get_iati_list()
@@ -54,7 +59,7 @@ def activities():
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
         ]
-    activity_base_url = url_for("activities")
+    activity_base_url = url_for("activities.activities")
     earliest, latest = qactivity.get_earliest_latest_dates()
     dates = {
         "earliest": earliest.isoformat(),
@@ -70,7 +75,7 @@ def activities():
                 dates=dates
     )
 
-@app.route("/export/")
+@blueprint.route("/export/")
 def export():
     reporting_orgs = qorganisations.get_reporting_orgs()
     available_fys_fqs = util.available_fy_fqs_as_dict()
@@ -81,10 +86,10 @@ def export():
                 previous_fy_fq = previous_fy_fq,
                 available_fys_fqs = available_fys_fqs)
 
-@app.route("/import/", methods=["POST", "GET"])
+@blueprint.route("/import/", methods=["POST", "GET"])
 @login_required
 def import_template():
-    if request.method == "GET": return(redirect(url_for('export')))
+    if request.method == "GET": return(redirect(url_for('activities.export')))
     if 'file' not in request.files:
         flash('Please select a file.', "warning")
         return redirect(request.url)
@@ -101,16 +106,16 @@ def import_template():
         # If there was data for that FY: then don't import
         result = qgenerate_xlsx.import_xls(file, fy_fq)
         if result > 0: flash("{} activities successfully updated!".format(result), "success")
-        else: flash("""No activities were updated. No updated disbursements 
-        were found. Check that you selected the correct file and that it 
+        else: flash("""No activities were updated. No updated disbursements
+        were found. Check that you selected the correct file and that it
         contains {} data. It must be formatted according to
-        the AMCU template format. You can download a copy of this template 
+        the AMCU template format. You can download a copy of this template
         below.""".format(util.column_data_to_string(fy_fq)), "warning")
-        return redirect(url_for('export'))
+        return redirect(url_for('activities.export'))
     flash("Sorry, there was an error, and that file could not be imported", "danger")
-    return redirect(url_for('export'))
+    return redirect(url_for('activities.export'))
 
-@app.route("/activities/new/", methods=['GET', 'POST'])
+@blueprint.route("/activities/new/", methods=['GET', 'POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_new():
@@ -191,9 +196,9 @@ def activity_new():
             flash("Successfully added your activity", "success")
         else:
             flash("An error occurred and your activity couldn't be added", "danger")
-        return redirect(url_for('activity_edit', activity_id=a.id))
+        return redirect(url_for('activities.activity_edit', activity_id=a.id))
 
-@app.route("/activities/<activity_id>/delete/")
+@blueprint.route("/activities/<activity_id>/delete/")
 @login_required
 @quser.permissions_required("edit")
 def activity_delete(activity_id):
@@ -202,57 +207,61 @@ def activity_delete(activity_id):
         flash("Successfully deleted that activity", "success")
     else:
         flash("Sorry, unable to delete that activity", "danger")
-    return redirect(url_for("activities"))
+    return redirect(url_for("activities.activities"))
 
-@app.route("/activities/<activity_id>/")
+
+@blueprint.route("/activities/<activity_id>/")
 @login_required
 @quser.permissions_required("view")
 def activity(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if not activity: return(abort(404))
+    if not activity:
+        return(abort(404))
     locations = qlocation.get_locations_country(
                                     activity.recipient_country_code)
-    #FIXME why are these not url_for()s ?
-    return render_template("activity.html",
-                activity = activity,
-                loggedinuser=current_user,
-                codelists = codelists.get_codelists(),
-                codelist_lookups = codelists.get_codelists_lookups(),
-                locations = locations,
-                api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
-                api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
-                api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
-                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
-                api_iati_search_url = "/api/iati_search/",
-                api_activity_forwardspends_url = url_for("api_activity_forwardspends", activity_id=activity_id),
-                users = quser.user()
-          )
+    return render_template(
+        "activity.html",
+        activity=activity,
+        loggedinuser=current_user,
+        codelists=codelists.get_codelists(),
+        codelist_lookups=codelists.get_codelists_lookups(),
+        locations=locations,
+        api_locations_url=url_for("api.api_locations", country_code=activity.recipient_country_code),
+        api_activity_locations_url=url_for("api.api_activity_locations", activity_id=activity_id),
+        api_activity_finances_url=url_for("api.api_activity_finances", activity_id=activity_id),
+        api_update_activity_finances_url=url_for("api.finances_edit_attr", activity_id=activity_id),
+        api_iati_search_url=url_for("api.api_iati_search"),
+        api_activity_forwardspends_url=url_for("api.api_activity_forwardspends", activity_id=activity_id),
+        users=quser.user()
+    )
 
-@app.route("/activities/<activity_id>/edit/")
+
+@blueprint.route("/activities/<activity_id>/edit/")
 @login_required
 @quser.permissions_required("edit")
 def activity_edit(activity_id):
     activity = qactivity.get_activity(activity_id)
     locations = qlocation.get_locations_country(
                                     activity.recipient_country_code)
-    #FIXME why are these not url_for()s ?
-    return render_template("activity_edit.html",
-                activity = activity,
-                loggedinuser=current_user,
-                codelists = codelists.get_codelists(),
-                organisations = qorganisations.get_organisations(),
-                locations = locations,
-                api_locations_url ="/api/locations/%s/" % activity.recipient_country_code,
-                api_activity_locations_url = "/api/activity_locations/%s/" % activity_id,
-                api_activity_finances_url = "/api/activity_finances/%s/" % activity_id,
-                api_activity_milestones_url = url_for("api_activity_milestones", activity_id=activity_id),
-                api_update_activity_finances_url = "/api/activity_finances/%s/update_finances/" % activity_id,
-                api_iati_search_url = "/api/iati_search/",
-                api_activity_forwardspends_url = url_for("api_activity_forwardspends", activity_id=activity_id),
-                users = quser.user()
-          )
+    return render_template(
+        "activity_edit.html",
+        activity=activity,
+        loggedinuser=current_user,
+        codelists=codelists.get_codelists(),
+        organisations=qorganisations.get_organisations(),
+        locations=locations,
+        api_locations_url=url_for("api.api_locations", country_code=activity.recipient_country_code),
+        api_activity_locations_url=url_for("api.api_activity_locations", activity_id=activity_id),
+        api_activity_finances_url=url_for("api.api_activity_finances", activity_id=activity_id),
+        api_activity_milestones_url=url_for("api.api_activity_milestones", activity_id=activity_id),
+        api_update_activity_finances_url=url_for("api.finances_edit_attr", activity_id=activity_id),
+        api_iati_search_url=url_for("api.api_iati_search"),
+        api_activity_forwardspends_url=url_for("api.api_activity_forwardspends", activity_id=activity_id),
+        users=quser.user()
+    )
 
-@app.route("/activities/<activity_id>/edit/update_result/", methods=['POST'])
+
+@blueprint.route("/activities/<activity_id>/edit/update_result/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_edit_result_attr(activity_id):
@@ -266,7 +275,7 @@ def activity_edit_result_attr(activity_id):
         return "success"
     return "error"
 
-@app.route("/activities/<activity_id>/edit/update_indicator/", methods=['POST'])
+@blueprint.route("/activities/<activity_id>/edit/update_indicator/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_edit_indicator_attr(activity_id):
@@ -280,7 +289,7 @@ def activity_edit_indicator_attr(activity_id):
         return "success"
     return "error"
 
-@app.route("/activities/<activity_id>/edit/update_period/", methods=['POST'])
+@blueprint.route("/activities/<activity_id>/edit/update_period/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_edit_period_attr(activity_id):
@@ -294,7 +303,7 @@ def activity_edit_period_attr(activity_id):
         return "success"
     return "error"
 
-@app.route("/activities/<activity_id>/edit/delete_result_data/", methods=['POST'])
+@blueprint.route("/activities/<activity_id>/edit/delete_result_data/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_delete_result_data(activity_id):
@@ -307,7 +316,7 @@ def activity_delete_result_data(activity_id):
         return "success"
     return "error"
 
-@app.route("/activities/<activity_id>/edit/add_result_data/", methods=['POST'])
+@blueprint.route("/activities/<activity_id>/edit/add_result_data/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_add_results_data(activity_id):
@@ -323,7 +332,7 @@ def activity_add_results_data(activity_id):
         return jsonify(status_dict)
     return "error"
 
-@app.route("/activities/<activity_id>/edit/update_activity/", methods=['POST'])
+@blueprint.route("/activities/<activity_id>/edit/update_activity/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def activity_edit_attr(activity_id):

@@ -1,29 +1,27 @@
 # -*- coding: UTF-8 -*-
 
-from maediprojects import app, db, models
 import datetime
-from maediprojects.query import activity as qactivity
-from maediprojects.lib import util
-from maediprojects.lib.codelist_helpers import codelists 
-from maediprojects.lib.codelists import get_codelists_lookups
-from maediprojects.lib.spreadsheet_headers import headers, fr_headers
 import unicodecsv
 import StringIO
 import re
-import collections
+
+from maediprojects.query import activity as qactivity
+from maediprojects.lib import util
+from maediprojects.lib.codelists import get_codelists_lookups
+
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
     return datetime.datetime.strptime(value, "%Y-%m-%d")
-    
+
 def date_isostring(value):
     # Returns a string of format YYYY-MM-DD from a date object
     return value.isoformat()
-    
+
 def current_datetime():
     return datetime.datetime.now().replace(
             microsecond=0).isoformat()
-    
+
 def actual_or_planned(value):
     date = isostring_date(value)
     current_datetime = datetime.datetime.now()
@@ -37,40 +35,40 @@ def valid_transaction(transaction):
 def activity_to_json(activity, cl_lookups):
     activity_commitments = filter(valid_transaction, activity.commitments)
     sum_commitments = sum(map(lambda c: c.transaction_value, activity_commitments))
-    
+
     activity_disbursements = filter(valid_transaction, activity.disbursements)
     sum_disbursements = sum(map(lambda d: d.transaction_value, activity_disbursements))
-    
+
     def get_code_or_blank(activity, codelist):
         if codelist in activity.classification_data:
             return ",".join(list(map(lambda x: x.codelist_code.name, activity.classification_data[codelist]["entries"])))
         return ""
-    
+
     data = {u'Reported by': activity.reporting_org.name,
         u'ID': activity.id,
         u'Project code': activity.code,
         u'Domestic/External': activity.domestic_external,
         u'Activity Title': re.sub("\t|\n|\r", "", activity.title),
         u'Activity Description': re.sub("\t|\n|\r", "", activity.description),
-        u'Activity Status': cl_lookups["ActivityStatus"].get(activity.activity_status), 
+        u'Activity Status': cl_lookups["ActivityStatus"].get(activity.activity_status),
         u'Activity Dates (Start Date)': activity.start_date.isoformat() if activity.start_date else "",
         u'Activity Dates (End Date)': activity.end_date.isoformat() if activity.end_date else "",
         u'County': ", ".join(list(map(lambda l: l.locations.name, activity.locations))),
-        u'Funded by': ",".join(list(map(lambda x: x.name, activity.funding_organisations))), 
+        u'Funded by': ",".join(list(map(lambda x: x.name, activity.funding_organisations))),
         u'Implemented by': ",".join(list(map(lambda x: x.name, activity.implementing_organisations))),
-        u'Sector (DAC CRS)': cl_lookups["Sector"].get(activity.dac_sector, ""), 
+        u'Sector (DAC CRS)': cl_lookups["Sector"].get(activity.dac_sector, ""),
         u'MTEF Sector': get_code_or_blank(activity, "mtef-sector"),
         u'Aligned Ministry/Agency': get_code_or_blank(activity, "aligned-ministry-agency"),
         u'AfT Pillar': get_code_or_blank(activity, "aft-pillar"),
-        u'Collaboration Type (Donor Type)': cl_lookups["CollaborationType"].get(activity.collaboration_type), 
+        u'Collaboration Type (Donor Type)': cl_lookups["CollaborationType"].get(activity.collaboration_type),
         u'Finance Type (Type of Assistance)': cl_lookups["FinanceType"].get(activity.finance_type),
         u'Aid Type (Aid Modality)': cl_lookups["AidType"].get(activity.aid_type),
         u'Activity Budget': "",
-        u'Planned Disbursements': "", 
-        u'Total Commitments': sum_commitments, 
+        u'Planned Disbursements': "",
+        u'Total Commitments': sum_commitments,
         u'Total Disbursements': sum_disbursements,
-        u'Activity Documents': "", 
-        u'Activity Website': "", 
+        u'Activity Documents': "",
+        u'Activity Website': "",
         u'Last updated date': activity.updated_date.date().isoformat(),
     }
     # Add Disbursements data
@@ -81,9 +79,9 @@ def activity_to_json(activity, cl_lookups):
 
 def generate_disb_fys():
     #FIXME don't hard code start/end years
-    disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy), 
+    disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
                      "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy),
-                     "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy), 
+                     "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
                      "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
                      ) for fy in range(2013, 2019)]
     return [item for sublist in disbFYs_QTRs for item in sublist]

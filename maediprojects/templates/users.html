@@ -3,8 +3,8 @@
 {% block content %}
 <h1>{{ _('Users') }}</h1>
 
-<a class="btn btn-success btn-large pull-right" href="{{ url_for('users_new') }}">
-  <i class="glyphicon glyphicon-plus"></i> 
+<a class="btn btn-success btn-large pull-right" href="{{ url_for('users.users_new') }}">
+  <i class="glyphicon glyphicon-plus"></i>
   {{ _('New user') }}
 </a>
 <table class="table" id="usersList">
@@ -22,7 +22,7 @@
       <td>{{ user.name }}</td>
       <td>{{ user.organisation }}</td>
       <td>{{ user.recipient_country.name }}</td>
-      <td><a href="{{url_for('users_edit', 
+      <td><a href="{{url_for('users.users_edit',
             user_id = user.id)}}"
             class="btn btn-default btn-xs">
             <span class="glyphicon glyphicon-pencil"></span>

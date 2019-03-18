@@ -4,19 +4,19 @@
 
 <h1>{{ _('Export data in Excel format') }}</h1>
 <p class="lead">Download all data according to the AMCU Excel export format.</p>
-<p><a class="btn btn-sm btn-primary" href="{{url_for('activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+<p><a class="btn btn-sm btn-primary" href="{{url_for('api.activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
 <h2>Advanced download formats</h2>
 <p class="lead">Download detailed AMCU financial transactions data for analysis.</p>
-<p><a class="btn btn-sm btn-default" href="{{url_for('activities_xlsx_transactions')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+<p><a class="btn btn-sm btn-default" href="{{url_for('api.activities_xlsx_transactions')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
 <p class="lead">Download integrated dataset of AMCU and PSIP projects.</p>
-<p><a class="btn btn-sm btn-default" href="{{url_for('all_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+<p><a class="btn btn-sm btn-default" href="{{url_for('api.all_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
 <hr />
 <h1>{{ _('Excel reporting templates') }}</h1>
 <p class="lead">You can import data that donors have entered on the
   AMCU quarterly reporting template. This means you do not have to go through
   each project and manually update it: you can upload one file for each donor.</p>
 <h3><span class="glyphicon glyphicon-download"></span> Download donor quarterly reporting templates</h3>
-<p class="lead">Generate quarterly reporting templates for <i>{{ previous_fy_fq }}</i> for one or all donors. You should 
+<p class="lead">Generate quarterly reporting templates for <i>{{ previous_fy_fq }}</i> for one or all donors. You should
   then send the template to the relevant donor via email, as an Excel attachment.</p>
 <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -24,22 +24,22 @@
   </button>
   <ul class="dropdown-menu">
     <li>
-      <a href="{{ url_for('export_donor_template')}}">
+      <a href="{{ url_for('api.export_donor_template')}}">
         Download templates for all donors
       </a>
     </li>
     <li role="separator" class="divider"></li>
     {% for org in funding_orgs %}
-    <li><a href="{{ url_for('export_donor_template', organisation_id=org.id) }}">
+    <li><a href="{{ url_for('api.export_donor_template', organisation_id=org.id) }}">
       Template for {{ org.name }}
     </a></li>
     {% endfor %}
   </ul>
 </div>
 <h3><span class="glyphicon glyphicon-upload"></span> Import data from quarterly reporting template</h3>
-<p class="lead">Import Excel files following the donor quarterly reporting 
+<p class="lead">Import Excel files following the donor quarterly reporting
   template format.</p>
-<form class="form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('import_template')}}">
+<form class="form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('activities.import_template')}}">
   <div class="form-group">
     <label for="file" class="col-sm-2 control-label">Template file</label>
     <div class="col-sm-10">
@@ -71,12 +71,12 @@
 <h1>{{ _('Other formats') }}</h1>
 <dl class="dl-horizontal">
   <dt>IATI XML file</dt>
-  <dd><code><a href="{{url_for('generate_iati_xml', version='2.01', country_code='LR')}}">
-    {{url_for('generate_iati_xml', version='2.01', country_code='LR', _external=True)}}
+  <dd><code><a href="{{url_for('api.generate_iati_xml', version='2.01', country_code='LR')}}">
+    {{url_for('api.generate_iati_xml', version='2.01', country_code='LR', _external=True)}}
   </a></code></dd>
   <dt>CSV file</dt>
-  <dd><code><a href="{{url_for('activities_csv')}}">
-    {{ url_for('activities_csv', _external=True) }}
+  <dd><code><a href="{{url_for('api.activities_csv')}}">
+    {{ url_for('api.activities_csv', _external=True) }}
   </a></code></dd>
 </dl>
 <p></p>
