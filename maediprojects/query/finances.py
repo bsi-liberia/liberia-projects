@@ -161,6 +161,31 @@ def create_missing_forward_spends(from_date, to_date, activity_id):
     forward_spends = create_forward_spends_from_periods(new_periods)
     return forward_spends
 
+def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
+    # NB quarters are in calendar quarters, not Liberian fiscal quarters
+    start_day, start_month = QUARTERS_MONTH_DAY[quarter]["start"]
+    end_day, end_month = QUARTERS_MONTH_DAY[quarter]["end"]
+    start_date = datetime.datetime(year, start_month, start_day).date()
+    end_date = datetime.datetime(year, end_month, end_day).date()
+    fs = models.ActivityForwardSpend.query.filter_by(activity_id=activity_id,
+        period_start_date=start_date).first()
+    if fs:
+        fs.value = value
+        db.session.add(fs)
+        db.session.commit()
+        return fs
+    else:
+        fs = models.ActivityForwardSpend()
+        fs.activity_id = activity_id
+        fs.value = value
+        fs.value_date = start_date
+        fs.value_currency = currency
+        fs.period_start_date = start_date
+        fs.period_end_date = end_date
+        db.session.add(fs)
+        db.session.commit()
+        return fs
+
 def create_forward_spend(quarter, year, value, currency):
     # NB quarters are in calendar quarters, not Liberian fiscal quarters
     fs = models.ActivityForwardSpend()
