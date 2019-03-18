@@ -239,7 +239,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                 input_file.filename, input_file.read(), sheet_id, True)
             for row in data: # each row is one ID
                 if column_name not in row:
-                    flash("The column {} containing financial data was not \
+                    flash(u"The column {} containing financial data was not \
                     found in the uploaded spreadsheet!".format(column_name), "danger")
                     raise Exception
                 if ((row[column_name] == "") or 
@@ -249,7 +249,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                 activity_id = row[u"ID"]
                 activity = qactivity.get_activity(activity_id)
                 if not activity:
-                    flash("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                    flash(u"Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
                         and was not imported! Please create this activity in the \
                         system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
                     continue
@@ -265,9 +265,10 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                 )
                 db.session.add(activity)
                 num_updated_activities += 1
+                qactivity.activity_updated(activity.id)
 
                 if existing_activity.get(column_name):
-                    flash("Updated {} for {} (Project ID: {}); previous value was {}; \
+                    flash(u"Updated {} for {} (Project ID: {}); previous value was {}; \
                         new value is {}. New entry for {} added.".format(
                     util.column_data_to_string(column_name),
                     activity.title, activity.id,
@@ -276,16 +277,16 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                     difference
                     ), "success")
                 else:
-                    flash("Updated {} for {} (Project ID: {})".format(
+                    flash(u"Updated {} for {} (Project ID: {})".format(
                     util.column_data_to_string(column_name),
                     activity.title, activity.id), "success")
     except Exception, e:
         if activity_id:
-            flash("""There was an unexpected error when importing your
+            flash(u"""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}. 
             The error was: {}""".format(activity_id, e), "danger")
         else:
-            flash("""There was an unexpected error when importing your projects, 
+            flash(u"""There was an unexpected error when importing your projects, 
         the error was: {}""".format(e), "danger")
     db.session.commit()
     return num_updated_activities
