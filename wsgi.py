@@ -1,0 +1,1 @@
+from maediprojects import app
