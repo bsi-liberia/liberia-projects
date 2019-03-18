@@ -79,7 +79,7 @@ class xlsxDictWriter(object):
 def tidy_amount(amount_value):
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
-    if re.match(r'-?(\d*\.?\d*)', amount_value):  # 2000 or -2000
+    if re.match(r'-?\d*\.?\d*', amount_value):  # 2000 or -2000
         return (float(amount_value), u"USD")
     elif re.match(r"^(\d*)m (\D*)$", amount_value):  # 20m EUR
         result = re.match(r"^(\d*)m (\D*)$", amount_value).groups()
