@@ -3,6 +3,7 @@
 from maediprojects import app, db, models
 import datetime
 from maediprojects.query import activity as qactivity
+from maediprojects.query import finances as qfinances
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists 
@@ -134,6 +135,95 @@ def process_transaction(activity, amount, currency, column_name):
     disbursement.aid_type = activity.aid_type
     disbursement.classifications = process_transaction_classifications(activity)
     return disbursement
+
+def update_activity_data(activity, existing_activity, row, codelists):
+    updated = False
+    start_date = datetime.datetime.strptime(row[u"Activity Dates (Start Date)"], "%d/%m/%Y").date()
+    end_date = datetime.datetime.strptime(row[u"Activity Dates (End Date)"], "%d/%m/%Y").date()
+    if existing_activity[u"Activity Status"] != row[u"Activity Status"]:
+        activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
+        updated = True
+    if existing_activity[u"Activity Dates (Start Date)"] != start_date.isoformat():
+        activity.start_date = start_date
+        updated = True
+    if existing_activity[u"Activity Dates (End Date)"] != end_date.isoformat():
+        activity.end_date = end_date
+        updated = True
+    activity.forwardspends += qfinances.create_missing_forward_spends(start_date, end_date, activity.id)
+    return updated
+
+def import_xls_mtef(input_file):
+    xl_workbook = xlrd.open_workbook(filename=input_file.filename,
+        file_contents=input_file.read())
+    num_sheets = len(xl_workbook.sheet_names())
+    num_updated_activities = 0
+    activity_id = None
+    cl_lookups = get_codelists_lookups()
+    cl_lookups_by_name = get_codelists_lookups_by_name()
+    def filter_mtef(column):
+        pattern = "(.*) \(MTEF\)$"
+        return re.match(pattern, column)
+    try:
+        for sheet_id in range(0,num_sheets):
+            input_file.seek(0)
+            data = xlsx_to_csv.getDataFromFile(
+                input_file.filename, input_file.read(), sheet_id, True)
+            mtef_cols = filter(filter_mtef, data[0].keys())
+            if len(mtef_cols) == 0:
+                flash("No columns containing MTEF projections data \
+                were found in the uploaded spreadsheet!", "danger")
+                raise Exception
+            for row in data: # each row is one ID
+                activity_id = row[u"ID"]
+                activity = qactivity.get_activity(activity_id)
+                if not activity:
+                    flash("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                        and was not imported! Please create this activity in the \
+                        system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
+                    continue
+                existing_activity = activity_to_json(activity, cl_lookups)
+                updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
+                updated_years = []
+                for mtef_year in mtef_cols:
+                    new_fy_value, row_currency = tidy_amount(row[mtef_year])
+                    fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                    existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
+                        float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
+                        float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
+                        float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+                    #FIXME need to handle multiple currencies later... also handle this in process_transaction()
+                    difference = new_fy_value-existing_fy_value
+                    # We ignore differences < 1 USD, because this can be due to rounding errors
+                    # when we divided input date by 4.
+                    if round(difference) == 0:
+                        continue
+                    # Create 1/4 of new_fy_value for each quarter in this FY
+                    value = round(new_fy_value/4.0, 2)
+                    for _fq in [1,2,3,4]:
+                        year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
+                        inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
+                    updated_years.append(u"FY{}/{}".format(fy_start, fy_end))
+                if updated_years or updated_activity_data:
+                    num_updated_activities += 1
+                    qactivity.activity_updated(activity.id)
+                if updated_years:
+                    #FIXME there is an issue with a maximum number of flash messages
+                    # so this sometimes breaks -- this is the reason we only display
+                    # for MTEF updates as for these it is more important.
+                    flash(u"Updated MTEF projections for {} for {} (Project ID: {})".format(
+                        ", ".join(updated_years),
+                        activity.title,
+                        activity.id), "success")
+    except Exception, e:
+        if activity_id:
+            flash("""There was an unexpected error when importing your
+            projects, there appears to be an error around activity ID {}. 
+            The error was: {}""".format(activity_id, e), "danger")
+        else:
+            flash("""There was an unexpected error when importing your projects, 
+        the error was: {}""".format(e), "danger")
+    db.session.commit()
+    return num_updated_activities
 
 def import_xls(input_file, column_name=u"2018 Q1 (D)"):
     xl_workbook = xlrd.open_workbook(filename=input_file.filename,
