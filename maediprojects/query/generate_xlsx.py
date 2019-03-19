@@ -138,6 +138,13 @@ def update_activity_data(activity, existing_activity, row, codelists):
     updated = False
     start_date = datetime.datetime.strptime(row[u"Activity Dates (Start Date)"], "%d/%m/%Y").date()
     end_date = datetime.datetime.strptime(row[u"Activity Dates (End Date)"], "%d/%m/%Y").date()
+
+    # The older templates did not contain these columns, so we return here if these
+    # columns are not present, in order to avoid a key error
+    if ((row.get(u"Activity Status") == None) or
+        (row.get(u"Activity Dates (Start Date)") == None) or
+        (row.get(u"Activity Dates (End Date)") == None)):
+        return False
     if existing_activity[u"Activity Status"] != row[u"Activity Status"]:
         activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
         updated = True
@@ -230,6 +237,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
     num_updated_activities = 0
     activity_id = None
     cl_lookups = get_codelists_lookups()
+    cl_lookups_by_name = get_codelists_lookups_by_name()
     try:
         for sheet_id in range(0,num_sheets):
             input_file.seek(0)
@@ -253,19 +261,25 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
                 row_value, row_currency = tidy_amount(row[column_name])
-
+                updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
                 #FIXME need to handle multiple currencies later... also handle this in process_transaction()
                 difference = row_value-float(existing_activity.get(column_name, 0))
-                if difference == 0:
+                if (difference == 0) and (updated_activity_data == False):
                     continue
-                activity.finances.append(
-                    process_transaction(activity, difference, row_currency, column_name)
-                )
+                if difference != 0:
+                    activity.finances.append(
+                        process_transaction(activity, difference, row_currency, column_name)
+                    )
                 db.session.add(activity)
                 num_updated_activities += 1
                 qactivity.activity_updated(activity.id)
 
-                if existing_activity.get(column_name):
+                if difference == 0:
+                    # Financial values not updated, only other activity data
+                    flash(u"Updated {} (Project ID: {})".format(
+                    activity.title, activity.id), "success")
+                elif existing_activity.get(column_name, 0) != 0:
+                    # Non-zero financial values were previously provided and should be adjusted upwards/downwards
                     flash(u"Updated {} for {} (Project ID: {}); previous value was {}; \
                         new value is {}. New entry for {} added.".format(
                     util.column_data_to_string(column_name),
@@ -275,6 +289,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                     difference
                     ), "success")
                 else:
+                    # Financial values were not previously provided, and are now entered
                     flash(u"Updated {} for {} (Project ID: {})".format(
                     util.column_data_to_string(column_name),
                     activity.title, activity.id), "success")
