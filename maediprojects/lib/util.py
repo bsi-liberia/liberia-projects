@@ -1,6 +1,6 @@
 import datetime, re
 
-ALLOWED_YEARS = range(2013, 2019)
+ALLOWED_YEARS = range(2013, datetime.datetime.utcnow().year+3)
 
 MONTHS_QUARTERS = {
     1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2, 7: 3, 8: 3, 9: 3, 10: 4, 
@@ -42,6 +42,21 @@ LR_PERIODS_MONTH_DAY = {
     "M5": {"start": (1, 11), "end": (30, 11)},
     "M6": {"start": (1, 12), "end": (31, 12)}
 }
+
+LR_QUARTERS_CAL_QUARTERS = {
+    1: 3,
+    2: 4,
+    3: 1,
+    4: 2
+}
+
+def lr_quarter_to_cal_quarter(_fy, _fq):
+    if _fq in (3,4):
+        year = _fy+1
+    else:
+        year = _fy
+    quarter = LR_QUARTERS_CAL_QUARTERS[_fq]
+    return year, quarter
 
 def fp_fy_to_date(fp, fy, start_end='start'):
     """Convert from LR FP, FY to real date."""

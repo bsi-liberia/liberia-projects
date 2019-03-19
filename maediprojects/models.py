@@ -29,7 +29,7 @@ FWDDATA_QUERY = u"""
     END AS fiscal_quarter
     FROM forwardspend
     WHERE forwardspend.activity_id = '%s'
-    AND value > 0
+    AND value != 0
     GROUP BY fiscal_quarter, fiscal_year
     ORDER BY forwardspend.period_start_date DESC
     """
@@ -47,7 +47,7 @@ FYDATA_QUERY = u"""
     FROM activityfinances
     WHERE activityfinances.activity_id = '%s'
     AND activityfinances.transaction_type IN (%s)
-    AND transaction_value > 0
+    AND transaction_value != 0
     GROUP BY fiscal_quarter, fiscal_year
     ORDER BY activityfinances.transaction_date DESC
     """
@@ -338,6 +338,8 @@ class ActivityForwardSpend(db.Model):
     value_currency = sa.Column(sa.UnicodeText)
     period_start_date = sa.Column(sa.Date)
     period_end_date = sa.Column(sa.Date)
+
+    __table_args__ = (sa.UniqueConstraint('activity_id','period_start_date'),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
