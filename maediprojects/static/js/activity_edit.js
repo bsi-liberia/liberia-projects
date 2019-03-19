@@ -278,7 +278,9 @@ $( '.set-column-visibility li' ).on( 'click', function( event ) {
     }
     /*$("."+_target).toggle();*/
     return false;
-}); 
+});
+
+/*  Financials */
 $(document).on("click", ".addFinancial", function(e) {
   e.preventDefault();
   var transaction_type = $(this).attr("data-transaction-type");
@@ -402,7 +404,7 @@ var setupFinances = function() {
 };
 setupFinances()
 
-$(document).on("change", "#finances input[type=text], #finances select", function(e) {
+$(document).on("change", ".finances-data input[type=text], #finances select", function(e) {
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
     'attr': this.name,
@@ -431,7 +433,7 @@ var setupForwardSpend = function() {
 };
 setupForwardSpend()
 
-$(document).on("change", "#financial-data-FS input[type=text]", function(e) {
+$(document).on("change", ".forwardspends-data input[type=text]", function(e) {
   if ($(this).attr("data-forwardspend-id")) {
     var data = {
       'id': $(this).attr("data-forwardspend-id"),

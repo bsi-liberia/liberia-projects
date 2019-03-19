@@ -75,16 +75,21 @@ def activity_to_json(activity, cl_lookups):
     data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_disbursements_dict.items())))
     # Add MTEF data
     data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_forward_spend_dict.items())))
+
+    data.update(dict(map(lambda d: (d, 0.00), list(filter(lambda h: h not in data, generate_disb_fys())))))
     return data
 
 def generate_disb_fys():
-    #FIXME don't hard code start/end years
+    #FIXME don't hard code start year
     disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
                      "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy),
                      "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
                      "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
-                     ) for fy in range(2013, 2019)]
-    return [item for sublist in disbFYs_QTRs for item in sublist]
+                     ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
+    MTEFFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
+                     "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy)
+                     ) for fy in range(datetime.datetime.utcnow().year+1, datetime.datetime.utcnow().year+4)]
+    return [item for sublist in disbFYs_QTRs for item in sublist]+[item for sublist in MTEFFYs_QTRs for item in sublist]
 
 def generate_csv():
     csv_file = StringIO.StringIO()

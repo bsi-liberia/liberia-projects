@@ -98,19 +98,28 @@ def import_template():
         flash('Please select a file.', "warning")
         return redirect(request.url)
     if file and allowed_file(file.filename):
-        fy_fq = request.form['fy_fq']
-        # For each sheet: convert to dict
-        # For each line in each sheet:
-        # Process (financial data) import column
-        # If no data in that FQ: then import
-        # If there was data for that FY: then don't import
-        result = qgenerate_xlsx.import_xls(file, fy_fq)
-        if result > 0: flash("{} activities successfully updated!".format(result), "success")
-        else: flash("""No activities were updated. No updated disbursements
-        were found. Check that you selected the correct file and that it
-        contains {} data. It must be formatted according to
-        the AMCU template format. You can download a copy of this template
-        below.""".format(util.column_data_to_string(fy_fq)), "warning")
+        if request.args.get('mtef'):
+            result = qgenerate_xlsx.import_xls_mtef(file)
+            if result > 0: flash("{} activities successfully updated!".format(result), "success")
+            else: flash("""No activities were updated. No updated MTEF projections
+            were found. Check that you selected the correct file and that it
+            contains update MTEF projections data. It must be formatted according to
+            the AMCU template format. You can download a copy of this template
+            below.""", "warning")
+        elif request.args.get('mtef') == None:
+            fy_fq = request.form['fy_fq']
+            # For each sheet: convert to dict
+            # For each line in each sheet:
+            # Process (financial data) import column
+            # If no data in that FQ: then import
+            # If there was data for that FY: then don't import
+            result = qgenerate_xlsx.import_xls(file, fy_fq)
+            if result > 0: flash("{} activities successfully updated!".format(result), "success")
+            else: flash("""No activities were updated. No updated disbursements
+            were found. Check that you selected the correct file and that it
+            contains {} data. It must be formatted according to
+            the AMCU template format. You can download a copy of this template
+            below.""".format(util.column_data_to_string(fy_fq)), "warning")
         return redirect(url_for('activities.export'))
     flash("Sorry, there was an error, and that file could not be imported", "danger")
     return redirect(url_for('activities.export'))
