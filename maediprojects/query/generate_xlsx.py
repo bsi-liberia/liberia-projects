@@ -332,6 +332,7 @@ def generate_xlsx_export_template(data, mtef=False):
         _headers += [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
     u"County"]
     else:
+        mtef_cols = []
         _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
     u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
     u"County",]
