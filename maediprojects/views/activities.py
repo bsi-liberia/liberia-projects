@@ -62,8 +62,8 @@ def activities():
     activity_base_url = url_for("activities.activities")
     earliest, latest = qactivity.get_earliest_latest_dates()
     dates = {
-        "earliest": earliest.isoformat(),
-        "latest": latest.isoformat()
+        "earliest": earliest.isoformat() if earliest else None,
+        "latest": latest.isoformat() if latest else None
     }
     return render_template("activities.html",
                 countries=countries,
