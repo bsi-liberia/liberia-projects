@@ -32,7 +32,7 @@ def register_extensions(app):
     extensions.migrate.init_app(app, extensions.db)
     extensions.babel.init_app(app)
     extensions.mail.init_app(app)
-    extensions.login_manager.setup_app(app)
+    extensions.login_manager.init_app(app)
 
 
 def register_blueprints(app):
