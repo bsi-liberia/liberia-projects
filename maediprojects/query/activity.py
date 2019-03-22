@@ -50,7 +50,7 @@ def filter_activities_for_permissions(query):
         return query.filter(models.Activity.domestic_external == "external")
     elif permissions.get("domestic_external") == "external":
         return query.filter(models.Activity.domestic_external == "external")
-    elif "organisations" in permissions:
+    elif "organisations" in permissions and permissions["organisations"]:
         return query.filter(models.Activity.reporting_org_id.in_(permissions["organisations"].keys()))
     return query
 
