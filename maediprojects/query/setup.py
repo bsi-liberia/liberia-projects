@@ -54,19 +54,19 @@ def create_codes_codelists():
     
     local_codelist_files = [
         {
-            "name": "Aligned Ministry / Agency",
+            "name": u"Aligned Ministry / Agency",
             "filename": "aligned-ministry-agency.csv"
          },
         {
-            "name": "MTEF Sector",
+            "name": u"MTEF Sector",
             "filename": "mtef-sector.csv"
          },
         {
-            "name": "AfT Pillar",
+            "name": u"AfT Pillar",
             "filename": "aft-pillar.csv"
          },
         {
-            "name": "SDG Goals",
+            "name": u"SDG Goals",
             "filename": "sdg-goals.csv"
          }]
     
