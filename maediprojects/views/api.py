@@ -39,8 +39,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 def jsonify(*args, **kwargs):
-    return current_app.response_class(json.dumps(dict(*args, **kwargs),
-            indent=None if request.is_xhr else 2, cls=JSONEncoder),
+    return current_app.response_class(json.dumps(dict(*args, **kwargs), cls=JSONEncoder),
         mimetype='application/json')
 
 @blueprint.route("/api/activities/")
