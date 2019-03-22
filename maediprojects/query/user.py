@@ -110,8 +110,8 @@ def updateUser(data):
     if current_user.administrator:
         # Only an admin user can give administrative privileges
         checkU.administrator = bool(data.get('administrator'))
-        setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
-        setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
+        setPermission(checkU, u"domestic_external", data.get("domestic_external", "none"))
+        setPermission(checkU, u"domestic_external_edit", data.get("domestic_external_edit", "none"))
 
     db.session.add(checkU)
     db.session.commit()
@@ -133,8 +133,8 @@ def addUser(data):
             )
         db.session.add(newU)
         db.session.commit()
-        setPermission(newU, "domestic_external", data.get("domestic_external"))
-        setPermission(newU, "domestic_external_edit", data.get("domestic_external_edit"))
+        setPermission(newU, u"domestic_external", data.get("domestic_external"))
+        setPermission(newU, u"domestic_external_edit", data.get("domestic_external_edit"))
         return newU
     return checkU
 

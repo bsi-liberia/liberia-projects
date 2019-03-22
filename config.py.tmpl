@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
+
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'maediprojects.db')
@@ -7,12 +9,12 @@ DEBUG = True
 SECRET_KEY = "YOUR-REALLY-SECRET-KEY"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 ADMIN_USER = {
-    "username": "admin",
-    "password": "SOME_ADMIN_PASSWORD",
-    "name": "YOUR_NAME",
-    "email_address": "YOUR_EMAIL",
-    "organisation": "YOUR_ORG",
-    "recipient_country_code": "ML",
+    "username": u"admin",
+    "password": u"SOME_ADMIN_PASSWORD",
+    "name": u"YOUR_NAME",
+    "email_address": u"YOUR_EMAIL",
+    "organisation": u"YOUR_ORG",
+    "recipient_country_code": u"ML",
     "administrator": True
 }
 ORGANISATION = {

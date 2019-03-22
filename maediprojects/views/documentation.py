@@ -31,10 +31,10 @@ def help():
 @login_required
 def milestones():
     activities = models.Activity.query.filter_by(
-            domestic_external="domestic"
+            domestic_external=u"domestic"
         ).all()
     milestones = models.Milestone.query.filter_by(
-        domestic_external="domestic"
+        domestic_external=u"domestic"
         ).order_by(models.Milestone.milestone_order
         ).all()
 
