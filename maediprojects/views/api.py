@@ -3,8 +3,7 @@ import json
 from collections import OrderedDict, defaultdict
 
 from flask import Blueprint, request, \
-    url_for, Response, send_file, \
-    jsonify, current_app
+    url_for, Response, send_file, current_app
 from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
