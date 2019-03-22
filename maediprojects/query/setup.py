@@ -66,6 +66,10 @@ def create_codes_codelists():
             "filename": "aft-pillar.csv"
          },
         {
+            "name": u"PAPD Pillar",
+            "filename": "papd-pillar.csv"
+         },
+        {
             "name": u"SDG Goals",
             "filename": "sdg-goals.csv"
          }]
