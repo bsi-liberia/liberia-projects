@@ -6,7 +6,7 @@ import sqlalchemy as sa
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 
-from .extensions import db
+from maediprojects.extensions import db
 
 
 cascade_relationship = ft.partial(

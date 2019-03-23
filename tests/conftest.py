@@ -7,8 +7,7 @@ from maediprojects import create_app
 from maediprojects.extensions import db as _db
 from maediprojects.query.user import addUser, deleteUser
 from maediprojects.query.setup import create_codes_codelists
-
-from .config import SQLALCHEMY_DATABASE_URI as TEST_DATABASE_URI
+from tests.config import SQLALCHEMY_DATABASE_URI as TEST_DATABASE_URI
 
 
 @pytest.fixture(scope='session')

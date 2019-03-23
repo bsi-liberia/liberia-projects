@@ -1,7 +1,7 @@
 from flask import Flask, render_template, session, request
 from flask_login import current_user
 
-from . import commands, views, extensions
+from maediprojects import commands, views, extensions
 
 
 def create_app(config_object='config'):
