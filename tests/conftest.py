@@ -38,13 +38,9 @@ def client(app, db):
 @pytest.fixture(scope='session')
 def db(app, request):
     """Session-wide test database."""
-    testdb_path = TEST_DATABASE_URI[9:]
-    if os.path.exists(testdb_path):
-        os.unlink(testdb_path)
-
     def teardown():
+        _db.session.remove()
         _db.drop_all()
-        os.unlink(testdb_path)
 
     _db.app = app
     _db.create_all()
