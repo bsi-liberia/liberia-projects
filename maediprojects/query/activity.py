@@ -213,7 +213,8 @@ def list_activities_by_filters(filters):
                     models.ActivityFinancesCodelistCode
                 )
     codelist_names = codelists.get_db_codelists().keys()
-    codelist_names.remove("organisation")
+    if "organisation" in codelist_names:
+        codelist_names.remove("organisation")
     codelist_vals = []
     for filter_name, filter_value in filters.items():
         if filter_value == "all": continue
