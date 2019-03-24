@@ -27,15 +27,6 @@ def app(request):
 
 
 @pytest.fixture(scope='session')
-def client(app, db):
-    """A Flask test client. An instance of :class:`flask.testing.TestClient`
-    by default.
-    """
-    with app.test_client() as client:
-        yield client
-
-
-@pytest.fixture(scope='session')
 def db(app, request):
     """Session-wide test database."""
     def teardown():
@@ -49,6 +40,15 @@ def db(app, request):
 
     request.addfinalizer(teardown)
     return _db
+
+
+@pytest.fixture(scope='session')
+def client(app, db):
+    """A Flask test client. An instance of :class:`flask.testing.TestClient`
+    by default.
+    """
+    with app.test_client() as client:
+        yield client
 
 
 @pytest.fixture(scope='function')
