@@ -8,6 +8,7 @@ from maediprojects import app, db, models
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
+from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate as qgenerate
@@ -144,6 +145,60 @@ def finances_edit_attr(activity_id):
     if update_status == True:
         return "success"
     return "error"
+
+@app.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
+@login_required
+@quser.permissions_required("edit")
+def api_activity_counterpart_funding(activity_id):
+    """GET returns a list of all counterpart funding for a given activity_id.
+    POST also accepts counterpart funding data to be added, deleted, updated."""
+    if request.method == "POST":
+        if request.form["action"] == "add":
+            required_date = util.fq_fy_to_date(1,
+                int(request.form["required_fy"])).date().isoformat()
+            data = {
+                "required_value": request.form["required_value"],
+                "required_date": required_date,
+                "budgeted": False,
+                "allotted": False,
+                "disbursed": False,
+            }
+            result = qcounterpart_funding.add_entry(activity_id, data)
+        elif request.form["action"] == "delete":
+            result = qcounterpart_funding.delete_entry(activity_id, request.form["id"])
+        elif request.form["action"] == "update":
+            attr = request.form['attr']
+            value = request.form['value']
+            if value == "true":
+                value = True
+            elif value == "false":
+                value = False
+            if attr == "required_fy":
+                attr = "required_date"
+                value = util.fq_fy_to_date(1,
+                    int(value)).date().isoformat()
+            data = {
+                'activity_id': activity_id,
+                'attr': attr,
+                'value': value,
+                'id': request.form['id'],
+            }
+            update_status = qcounterpart_funding.update_entry(data)
+            if update_status == True:
+                return "success"
+            return "error"
+        return str(result)
+    elif request.method == "GET":
+        def to_fy(counterpart_funding):
+            cf = counterpart_funding.as_dict()
+            cf["required_fy"], fq = util.date_to_fy_fq(counterpart_funding.required_date)
+            return cf
+        counterpart_funding = sorted(
+                        list(map(lambda cf: to_fy(cf),
+                        qactivity.get_activity(activity_id).counterpart_funding)),
+            key=lambda x: x["required_date"])
+        return jsonify(counterpart_funding = counterpart_funding,
+                       fiscal_years = range(2013,2025))
 
 @app.route("/api/activity_forwardspends/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
 @app.route("/api/activity_forwardspends/<activity_id>/", methods=["GET", "POST"])
