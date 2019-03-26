@@ -216,16 +216,29 @@ var setupLocations = function() {
 };
 
 
-$('#confirm-delete').on('click', '.btn-ok', function(e) {
-  var $modalDiv = $(e.delegateTarget);
-  var transaction_id = $(this).data('transaction_id');
-  deleteFinancial(transaction_id);
-  $modalDiv.modal('hide');
+$("#confirm-delete").on('show.bs.modal', function(e) {
+  if ($(e.relatedTarget).closest("tbody").attr("id") == "counterpart-funding-rows") {
+    var target = $(e.relatedTarget).closest("tr").attr("data-counterpart-funding-id");
+    $('.btn-ok', this).data("counterpart_funding_id", target);
+    $('.btn-ok', this).data("delete_target", "counterpart_funding");
+  } else {
+    var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
+    $('.btn-ok', this).data("transaction_id", target);
+    $('.btn-ok', this).data("delete_target", "transaction");
+  }
 });
 
-$("#confirm-delete").on('show.bs.modal', function(e) {
-  var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
-  $('.btn-ok', this).data("transaction_id", target);
+$('#confirm-delete').on('click', '.btn-ok', function(e) {
+  var $modalDiv = $(e.delegateTarget);
+  var delete_target = $(this).data('delete_target');
+  if (delete_target == "counterpart_funding") {
+    var counterpart_funding_id = $(this).data('counterpart_funding_id');
+    deleteCounterpartFunding(counterpart_funding_id)
+  } else if (delete_target == "transaction") {
+    var transaction_id = $(this).data('transaction_id');
+    /*deleteFinancial(transaction_id);*/
+  }
+  $modalDiv.modal('hide');
 });
 
 function deleteFinancial(transaction_id) {
@@ -236,9 +249,25 @@ function deleteFinancial(transaction_id) {
   $.post(api_activity_finances_url, data, 
     function(returndata){
       if (returndata == 'False'){
-          alert("There was an error updating that financial data.");
+          alert("There was an error deleting that data.");
       } else {
         $("tr#financial-" + data["transaction_id"]).fadeOut();
+      }
+    }
+  );
+}
+
+function deleteCounterpartFunding(counterpart_funding_id) {
+  var data = {
+    "id": counterpart_funding_id,
+    "action": "delete"
+  }
+  $.post(api_activity_counterpart_funding_url, data,
+    function(returndata){
+      if (returndata == 'False'){
+          alert("There was an error deleting that data.");
+      } else {
+        $("tr#counterpart-funding-" + data["id"]).fadeOut().remove();
       }
     }
   );
