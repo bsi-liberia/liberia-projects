@@ -134,6 +134,8 @@ class Activity(db.Model):
             cascade="all, delete-orphan")
     milestones = sa.orm.relationship("ActivityMilestone",
             cascade="all, delete-orphan")
+    counterpart_funding = sa.orm.relationship("ActivityCounterpartFunding",
+            cascade="all, delete-orphan")
     domestic_external = sa.Column(sa.UnicodeText)
 
     @hybrid_property
@@ -526,6 +528,24 @@ class ActivityMilestone(db.Model):
                         "Milestone")
 
     __table_args__ = (sa.UniqueConstraint('activity_id','milestone_id'),)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ActivityCounterpartFunding(db.Model):
+    __tablename__ = 'activitycounterpartfunding'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(sa.Integer,
+            sa.ForeignKey('activity.id'),
+            nullable=False,
+            index=True)
+    required_value = sa.Column(sa.Float(precision=2))
+    required_date = sa.Column(sa.Date)
+    budgeted = sa.Column(sa.Boolean)
+    allotted = sa.Column(sa.Boolean)
+    disbursed = sa.Column(sa.Boolean)
+
+    __table_args__ = (sa.UniqueConstraint('activity_id','required_date'),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
