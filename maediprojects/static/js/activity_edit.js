@@ -306,7 +306,7 @@ $(document).on("click", ".addFinancial", function(e) {
       if (returndata == 'False'){
           alert("There was an error updating that financial data.");
       } else {
-        var row_financial_template = $('#row-financial-template').html();
+        var row_financial_template = $('#template-financial-row').html();
         data["id"] = returndata;
         var codelists = generateCodelists()
         var row = generateTransaction(data, codelists)
@@ -362,9 +362,9 @@ var generateTransaction = function(d, codelists) {
 // FINANCES
 var updateFinances = function(finances) {
   // Render finances template
-	var financial_template = $('#financial-template').html();
+	var financial_template = $('#template-financial').html();
 	Mustache.parse(financial_template);   // optional, speeds up future uses
-	partials = {"row-financial-template": $('#row-financial-template').html(),
+	partials = {"template-financial-row": $('#template-financial-row').html(),
               "column-codelist-template": $('#column-codelist-template').html()
             };
   function isC(finance) {
@@ -403,7 +403,6 @@ var setupFinances = function() {
 	});
 };
 setupFinances()
-
 $(document).on("change", ".finances-data input[type=text], #finances select", function(e) {
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
@@ -420,9 +419,9 @@ $(document).on("change", ".finances-data input[type=text], #finances select", fu
 });
 
 var setupForwardSpendForm = function(forwardspends) {
-	var forward_spend_template = $('#forward-spend-template').html();
+	var forward_spend_template = $('#template-forward-spend').html();
 	Mustache.parse(forward_spend_template);
-	partials = {"row-forward-spend-template": $('#row-forward-spend-template').html()};
+	partials = {"template-forward-spend-row": $('#template-forward-spend-row').html()};
 	var rendered_FS = Mustache.render(forward_spend_template, forwardspends, partials);
 	$('#financial-data-FS').html(rendered_FS);
 }
