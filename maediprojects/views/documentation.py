@@ -37,6 +37,18 @@ def milestones():
                 loggedinuser=current_user
         )
 
+@app.route("/counterpart_funding/")
+@login_required
+def counterpart_funding():
+    activities = models.Activity.query.filter_by(
+            domestic_external="external"
+        ).all()
+    return render_template("counterpart_funding.html",
+                activities = activities,
+                #milestones = milestones,
+                loggedinuser=current_user
+        )
+
 @app.route("/disbursements/")
 @app.route("/disbursements/<visualisation_type>")
 @login_required
