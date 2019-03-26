@@ -22,8 +22,8 @@ act_ForeignKey = ft.partial(
 def fwddata_query(_self, fiscalyear_modifier):
     return db.session.query(
             func.sum(ActivityForwardSpend.value).label("value"),
-            func.STRFTIME('%Y', 
-                func.DATE(ActivityForwardSpend.period_start_date, 
+            func.STRFTIME('%Y',
+                func.DATE(ActivityForwardSpend.period_start_date,
                     'start of month', '-{} month'.format(fiscalyear_modifier))
                 ).label("fiscal_year"),
             case(
@@ -52,8 +52,8 @@ def fwddata_query(_self, fiscalyear_modifier):
 def fydata_query(_self, fiscalyear_modifier, _transaction_types):
     return db.session.query(
             func.sum(ActivityFinances.transaction_value).label("value"),
-            func.STRFTIME('%Y', 
-                func.DATE(ActivityFinances.transaction_date, 
+            func.STRFTIME('%Y',
+                func.DATE(ActivityFinances.transaction_date,
                     'start of month', '-{} month'.format(fiscalyear_modifier))
                 ).label("fiscal_year"),
             case(
