@@ -187,6 +187,49 @@ class Activity(db.Model):
                                              ActivityFinances.transaction_type==u"D",
                                              ActivityFinances.activity_id==self.id).all()
 
+    def FY_disbursements_for_FY(self, FY):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        result = db.session.query(
+                func.sum(ActivityFinances.transaction_value).label("value")
+            ).filter(
+                ActivityFinances.activity_id == self.id,
+                ActivityFinances.transaction_type.in_((u'D', u'E')),
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityFinances.transaction_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ) == FY
+            ).scalar()
+        if result is None: return 0.00
+        return result
+
+    def FY_forwardspends_for_FY(self, FY):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        result = db.session.query(
+                func.sum(ActivityForwardSpend.value).label("value")
+            ).filter(
+                ActivityForwardSpend.activity_id == self.id,
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityForwardSpend.period_start_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ) == FY
+            ).scalar()
+        if result is None: return 0.00
+        return result
+
+    def FY_counterpart_funding_for_FY(self, FY):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        result = db.session.query(
+                func.sum(ActivityCounterpartFunding.required_value).label("value")
+            ).filter(
+                ActivityCounterpartFunding.activity_id == self.id,
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityCounterpartFunding.required_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ) == FY
+            ).scalar()
+        if result is None: return 0.00
+        return result
+
     @hybrid_property
     def FY_disbursements_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
