@@ -8,7 +8,7 @@
   <div class="col-md-2">
     {% if loggedinuser.permissions_dict.domestic_external_edit != "none" %}
     <br />
-    <a class="btn btn-success btn-large pull-right" href="{{url_for('activity_new')}}">
+    <a class="btn btn-success btn-large pull-right" href="{{url_for('activities.activity_new')}}">
       <i class="glyphicon glyphicon-plus"></i>
       {{ _('New activity') }}
     </a>
@@ -62,7 +62,7 @@
     </div>
   </div>
   <div class="col-md-3">
-    <a class="btn btn-primary pull-right" id="download_excel" href="{{ url_for('all_activities_xlsx_filtered')}}?mtef-sector=55"><span class="glyphicon glyphicon-save"></span> Export selection to Excel</a>
+    <a class="btn btn-primary pull-right" id="download_excel" href="{{ url_for('api.all_activities_xlsx_filtered')}}?mtef-sector=55"><span class="glyphicon glyphicon-save"></span> Export selection to Excel</a>
   </div>
 </div>
 
@@ -139,7 +139,7 @@
 {% endraw %}
 
 <script type="text/javascript">
-var activity_dates = {{ dates|safe }};
+var activity_dates = {{ dates|tojson }};
 </script>
 <script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.min.js')}}" type="text/javascript"></script>
 <script src="{{url_for('static', filename='vendor/bootstrap-slider/dist/bootstrap-slider.min.js')}}"></script>

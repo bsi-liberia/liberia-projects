@@ -1,7 +1,7 @@
-from flask import Flask
-from flask_mail import Mail, Message
+from flask_mail import Message
 from maediprojects import app, mail
 from maediprojects.query import activity as qactivity
+
 
 def send_async_email():
     with app.app_context():

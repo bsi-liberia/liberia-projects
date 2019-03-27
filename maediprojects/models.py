@@ -1,12 +1,15 @@
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+import datetime
+import functools as ft
+
+import sqlalchemy as sa
 from sqlalchemy.sql.expression import case
 from sqlalchemy import func
-import sqlalchemy as sa
-import functools as ft
-from maediprojects import db
+from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
-import datetime
-from flask_login import login_required, current_user
+from flask_login import current_user
+
+from maediprojects.extensions import db
+
 
 cascade_relationship = ft.partial(
     sa.orm.relationship,
@@ -19,11 +22,12 @@ act_ForeignKey = ft.partial(
     ondelete="CASCADE"
 )
 
+
 def fwddata_query(_self, fiscalyear_modifier):
     return db.session.query(
             func.sum(ActivityForwardSpend.value).label("value"),
-            func.STRFTIME('%Y', 
-                func.DATE(ActivityForwardSpend.period_start_date, 
+            func.STRFTIME('%Y',
+                func.DATE(ActivityForwardSpend.period_start_date,
                     'start of month', '-{} month'.format(fiscalyear_modifier))
                 ).label("fiscal_year"),
             case(
@@ -49,11 +53,12 @@ def fwddata_query(_self, fiscalyear_modifier):
         ).order_by(ActivityForwardSpend.period_start_date.desc()
         ).all()
 
+
 def fydata_query(_self, fiscalyear_modifier, _transaction_types):
     return db.session.query(
             func.sum(ActivityFinances.transaction_value).label("value"),
-            func.STRFTIME('%Y', 
-                func.DATE(ActivityFinances.transaction_date, 
+            func.STRFTIME('%Y',
+                func.DATE(ActivityFinances.transaction_date,
                     'start of month', '-{} month'.format(fiscalyear_modifier))
                 ).label("fiscal_year"),
             case(
@@ -229,7 +234,7 @@ class Activity(db.Model):
     def classification_data(self):
         def append_path(root, classification):
             if classification:
-                sector = root.setdefault("{}".format(classification.codelist_code.codelist.code), 
+                sector = root.setdefault("{}".format(classification.codelist_code.codelist.code),
                     { "entries": [],
                       "name": classification.codelist_code.codelist.name,
                       "code": classification.codelist_code.codelist.code,
@@ -275,8 +280,8 @@ class Activity(db.Model):
 class ActivityFinances(db.Model):
     __tablename__ = 'activityfinances'
     id = sa.Column(sa.Integer, primary_key=True)
-    activity_id = sa.Column(sa.Integer, 
-            sa.ForeignKey('activity.id'), 
+    activity_id = sa.Column(sa.Integer,
+            sa.ForeignKey('activity.id'),
             nullable=False,
             index=True)
     activity = sa.orm.relationship("Activity")
@@ -400,7 +405,7 @@ class ActivityLocation(db.Model):
 
 class Organisation(db.Model):
     __tablename__ = 'organisation'
-    id = sa.Column(sa.Integer, 
+    id = sa.Column(sa.Integer,
                             primary_key=True)
     code = sa.Column(sa.UnicodeText) # eventually rename to iati_code
     budget_code = sa.Column(sa.UnicodeText)
@@ -511,11 +516,11 @@ class ActivityMilestone(db.Model):
     __tablename__ = 'activitymilestone'
     id = sa.Column(sa.Integer, primary_key=True)
     activity_id = sa.Column(
-            act_ForeignKey('activity.id'), 
+            act_ForeignKey('activity.id'),
             nullable=False,
             index=True)
     milestone_id = sa.Column(
-            act_ForeignKey('milestone.id'), 
+            act_ForeignKey('milestone.id'),
             nullable=False,
             index=True)
     achieved = sa.Column(sa.Boolean)
@@ -534,7 +539,7 @@ class ActivityResult(db.Model):
     __tablename__ = 'activityresult'
     id = sa.Column(sa.Integer, primary_key=True)
     activity_id = sa.Column(
-            act_ForeignKey('activity.id'), 
+            act_ForeignKey('activity.id'),
             nullable=False,
             index=True)
     result_title = sa.Column(sa.UnicodeText)
@@ -547,12 +552,12 @@ class ActivityResult(db.Model):
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-    
+
 class ActivityResultIndicator(db.Model):
     __tablename__ = 'activityresultindicator'
     id = sa.Column(sa.Integer, primary_key=True)
     result_id = sa.Column(
-            act_ForeignKey('activityresult.id'), 
+            act_ForeignKey('activityresult.id'),
             nullable=False,
             index=True)
     indicator_title = sa.Column(sa.UnicodeText)
@@ -566,12 +571,12 @@ class ActivityResultIndicator(db.Model):
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-    
+
 class ActivityResultIndicatorPeriod(db.Model):
     __tablename__ = 'activityresultindicatorperiod'
     id = sa.Column(sa.Integer, primary_key=True)
     indicator_id = sa.Column(
-            act_ForeignKey('activityresultindicator.id'), 
+            act_ForeignKey('activityresultindicator.id'),
             nullable=False,
             index=True)
     period_start = sa.Column(sa.Date)
@@ -584,7 +589,7 @@ class ActivityResultIndicatorPeriod(db.Model):
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-    
+
 class User(db.Model):
     __tablename__ = 'maediuser'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -627,7 +632,7 @@ class User(db.Model):
         self.administrator = administrator
         if id is not None:
             self.id = id
-    
+
     def check_password(self, password):
         return check_password_hash(self.pw_hash, password)
 
@@ -648,7 +653,7 @@ class User(db.Model):
         permissions = dict(map(lambda p: (p.permission_name, p.permission_value), self.permissions))
         permissions["organisations"] = dict(map(lambda op: (op.organisation_id, op.as_dict()), self.organisations))
         return permissions
-        
+
 class UserPermission(db.Model):
     __tablename__ = 'userpermission'
     id = sa.Column(sa.Integer, primary_key=True)

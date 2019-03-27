@@ -1,16 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from maediprojects import app, db, models
 import datetime
-from maediprojects.query import activity as qactivity
-from maediprojects.query import finances as qfinances
-from maediprojects.lib import xlsx_to_csv, util
-from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
-from maediprojects.lib.codelist_helpers import codelists 
-from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
 from io import BytesIO
 import re
-from generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
@@ -19,6 +11,17 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from flask import flash
 from openpyxl.styles import Color, PatternFill, Font, Border, Protection
 import xlrd
+
+from maediprojects import models
+from maediprojects.extensions import db
+from maediprojects.query import activity as qactivity
+from maediprojects.query import finances as qfinances
+from maediprojects.lib import xlsx_to_csv, util
+from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
+from maediprojects.lib.codelist_helpers import codelists
+from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
+from generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
+
 
 def guess_types(cell_value):
     if cell_value == None: return ""
@@ -222,10 +225,10 @@ def import_xls_mtef(input_file):
     except Exception, e:
         if activity_id:
             flash("""There was an unexpected error when importing your
-            projects, there appears to be an error around activity ID {}. 
+            projects, there appears to be an error around activity ID {}.
             The error was: {}""".format(activity_id, e), "danger")
         else:
-            flash("""There was an unexpected error when importing your projects, 
+            flash("""There was an unexpected error when importing your projects,
         the error was: {}""".format(e), "danger")
     db.session.commit()
     return num_updated_activities
@@ -248,7 +251,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                     flash(u"The column {} containing financial data was not \
                     found in the uploaded spreadsheet!".format(column_name), "danger")
                     raise Exception
-                if ((row[column_name] == "") or 
+                if ((row[column_name] == "") or
                     (float(row[column_name]) == 0) or
                     (float(row[column_name]) == "-")):
                     continue
@@ -296,10 +299,10 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
     except Exception, e:
         if activity_id:
             flash(u"""There was an unexpected error when importing your
-            projects, there appears to be an error around activity ID {}. 
+            projects, there appears to be an error around activity ID {}.
             The error was: {}""".format(activity_id, e), "danger")
         else:
-            flash(u"""There was an unexpected error when importing your projects, 
+            flash(u"""There was an unexpected error when importing your projects,
         the error was: {}""".format(e), "danger")
     db.session.commit()
     return num_updated_activities

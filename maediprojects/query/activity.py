@@ -1,13 +1,16 @@
-from maediprojects import db, models
-from maediprojects.query import finances as qfinances
 import datetime
 from flask import url_for, session, flash
 from flask_login import current_user
 from collections import OrderedDict
-from maediprojects.lib.util import isostring_date, isostring_year
-from maediprojects.lib import codelists, util
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
+
+from maediprojects.lib.util import isostring_date, isostring_year
+from maediprojects.lib import codelists, util
+from maediprojects.query import finances as qfinances
+from maediprojects import models
+from maediprojects.extensions import db
+
 
 def get_earliest_latest_dates():
     earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)).scalar()
@@ -16,21 +19,21 @@ def get_earliest_latest_dates():
 
 def activity_C_D_FSs():
     commitments_query = db.session.query(
-        models.ActivityFinances.activity_id, 
+        models.ActivityFinances.activity_id,
         func.sum(models.ActivityFinances.transaction_value).label("total_commitments")
     ).filter(models.ActivityFinances.transaction_type==u'C'
     ).group_by(models.ActivityFinances.activity_id
     ).all()
     commitments = dict(map(lambda c: (c.activity_id, c.total_commitments), commitments_query))
     disbursements_query = db.session.query(
-        models.ActivityFinances.activity_id, 
+        models.ActivityFinances.activity_id,
         func.sum(models.ActivityFinances.transaction_value).label("total_disbursements")
     ).filter(models.ActivityFinances.transaction_type==u'D'
     ).group_by(models.ActivityFinances.activity_id
     ).all()
     disbursements = dict(map(lambda d: (d.activity_id, d.total_disbursements), disbursements_query))
     forward_disbursements_query = db.session.query(
-        models.ActivityForwardSpend.activity_id, 
+        models.ActivityForwardSpend.activity_id,
         func.sum(models.ActivityForwardSpend.value).label("total_forward_disbursements")
     ).group_by(models.ActivityForwardSpend.activity_id
     ).all()
@@ -47,7 +50,7 @@ def filter_activities_for_permissions(query):
         return query.filter(models.Activity.domestic_external == "external")
     elif permissions.get("domestic_external") == "external":
         return query.filter(models.Activity.domestic_external == "external")
-    elif "organisations" in permissions:
+    elif "organisations" in permissions and permissions["organisations"]:
         return query.filter(models.Activity.reporting_org_id.in_(permissions["organisations"].keys()))
     return query
 
@@ -61,11 +64,11 @@ def get_iati_list():
           {
               "country": x.recipient_country.as_dict(),
               "urls":
-                  {"1.03": url_for('generate_iati_xml',
+                  {"1.03": url_for('api.generate_iati_xml',
                                    version="1.03",
                                    country_code=x.recipient_country_code,
                                    _external=True),
-                   "2.01": url_for('generate_iati_xml',
+                   "2.01": url_for('api.generate_iati_xml',
                                    version="2.01",
                                    country_code=x.recipient_country_code,
                                    _external=True),
@@ -104,7 +107,7 @@ def activity_add_log(activity_id, user_id, mode, target, old_value, value):
 
 def activity_updated(activity_id, update_data=False):
     activity = models.Activity.query.filter_by(id=activity_id).first()
-    if not activity: 
+    if not activity:
         flash("Could not update last updated date for activity ID {}: activity not found".format(
             activity_id), "danger")
         return False
@@ -121,9 +124,9 @@ def create_activity(data):
     # Dates have to be converted to date format
     data["start_date"] = isostring_date(data["start_date"])
     data["end_date"] = isostring_date(data["end_date"])
-    
+
     classifications = []
-    for cl in ["sdg-goals", "mtef-sector", "aft-pillar", 
+    for cl in ["sdg-goals", "mtef-sector", "aft-pillar",
         "aligned-ministry-agency", "papd-pillar"]:
         cl_id = 'classification_id_{}'.format(cl)
         cl_pct = 'classification_percentage_{}'.format(cl)
@@ -159,7 +162,7 @@ def delete_activity(activity_id):
     activity = models.Activity.query.filter_by(
         id = activity_id
     ).first()
-    if ((getattr(current_user, "id") == activity.user_id) or 
+    if ((getattr(current_user, "id") == activity.user_id) or
         (getattr(current_user, "administrator"))):
        # Allow this activity to be deleted
        db.session.delete(activity)
@@ -210,7 +213,8 @@ def list_activities_by_filters(filters):
                     models.ActivityFinancesCodelistCode
                 )
     codelist_names = codelists.get_db_codelists().keys()
-    codelist_names.remove("organisation")
+    if "organisation" in codelist_names:
+        codelist_names.remove("organisation")
     codelist_vals = []
     for filter_name, filter_value in filters.items():
         if filter_value == "all": continue
@@ -262,11 +266,11 @@ def update_attr(data):
         db.session.add(new_clc)
         db.session.commit()
         return True
-    
+
     activity = models.Activity.query.filter_by(
         id = data['id']
     ).first()
-    
+
     if data['attr'].endswith('date'):
         data['value'] = isostring_date(data['value'])
         if data['attr'] == "start_date":
@@ -285,7 +289,7 @@ def update_attr(data):
             if data['value'].date() < activity.end_date:
                 # FIXME: need to remove 0-valued forward spend periods
                 print("Warning: activity end date moved earlier")
-        
+
     if (data['attr'].startswith("total_") and data['value'] == ""):
         data['value'] = 0
     setattr(activity, data['attr'], data['value'])
@@ -293,7 +297,7 @@ def update_attr(data):
     db.session.add(activity)
     db.session.commit()
     return True
-    
+
 def update_result_attr(data):
     result = models.ActivityResult.query.filter_by(
         id = data['id']
@@ -302,7 +306,7 @@ def update_result_attr(data):
     db.session.add(result)
     db.session.commit()
     return result
-    
+
 def update_indicator_attr(data):
     indicator = models.ActivityResultIndicator.query.filter_by(
         id = data['id']
@@ -313,7 +317,7 @@ def update_indicator_attr(data):
     db.session.add(indicator)
     db.session.commit()
     return indicator
-    
+
 def update_indicator_period_attr(data):
     period = models.ActivityResultIndicatorPeriod.query.filter_by(
         id = data['id']
@@ -324,7 +328,7 @@ def update_indicator_period_attr(data):
     db.session.add(period)
     db.session.commit()
     return period
-    
+
 def add_indicator_period(data, indicator_id, commit=True):
     p = models.ActivityResultIndicatorPeriod()
     p.period_start = isostring_date(data.get("period_start"))
@@ -337,7 +341,7 @@ def add_indicator_period(data, indicator_id, commit=True):
     db.session.add(p)
     db.session.commit()
     return p
-    
+
 def add_indicator(data, result_id, commit=True):
     print "indicator"
     i = models.ActivityResultIndicator()
@@ -349,10 +353,10 @@ def add_indicator(data, result_id, commit=True):
     db.session.add(i)
     db.session.commit()
     if data.get("periods"):
-        [add_indicator_period(period, i.id, False) for 
+        [add_indicator_period(period, i.id, False) for
                               period in data['periods']]
     return i
-    
+
 def add_result(data, activity_id, organisation_slug, commit=True):
     r = models.ActivityResult()
     r.result_title = data.get('result_title')
@@ -363,14 +367,14 @@ def add_result(data, activity_id, organisation_slug, commit=True):
     db.session.add(r)
     db.session.commit()
     if data.get("indicators"):
-        [add_indicator(indicator, r.id, False) for 
+        [add_indicator(indicator, r.id, False) for
                        indicator in data['indicators']]
     return r
 
 def add_results_data(results, activity_id, organisation_slug):
-    [add_result(result, activity_id, organisation_slug, 
+    [add_result(result, activity_id, organisation_slug,
                 False) for result in results]
-                
+
 def add_result_data(activity_id, data):
     if data['type'] == "result":
         r = models.ActivityResult()
@@ -379,7 +383,7 @@ def add_result_data(activity_id, data):
         r = models.ActivityResultIndicator()
     elif data['type'] == "period":
         r = models.ActivityResultIndicatorPeriod()
-        
+
     for k, v in data.items():
         if k.startswith('period'):
             v = isostring_date(v)
@@ -390,7 +394,7 @@ def add_result_data(activity_id, data):
     db.session.add(r)
     db.session.commit()
     return r
-                
+
 def delete_result_data(data):
     if data['result_type'] == "result":
         r = models.ActivityResult.query.filter_by(

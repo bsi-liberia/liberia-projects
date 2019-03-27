@@ -1,12 +1,18 @@
 # -*- coding: UTF-8 -*-
 
-from maediprojects import app, db, models
+import os
+
+from flask import current_app
+import normality
+import unicodecsv
+
+from maediprojects import models
 from maediprojects.lib import codelists
 from maediprojects.query import user as quser
 from maediprojects.query import organisations as qorganisations
-import normality
-import unicodecsv
-import os
+from maediprojects.extensions import db
+
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -48,19 +54,23 @@ def create_codes_codelists():
     
     local_codelist_files = [
         {
-            "name": "Aligned Ministry / Agency",
+            "name": u"Aligned Ministry / Agency",
             "filename": "aligned-ministry-agency.csv"
          },
         {
-            "name": "MTEF Sector",
+            "name": u"MTEF Sector",
             "filename": "mtef-sector.csv"
          },
         {
-            "name": "AfT Pillar",
+            "name": u"AfT Pillar",
             "filename": "aft-pillar.csv"
          },
         {
-            "name": "SDG Goals",
+            "name": u"PAPD Pillar",
+            "filename": "papd-pillar.csv"
+         },
+        {
+            "name": u"SDG Goals",
             "filename": "sdg-goals.csv"
          }]
     
@@ -77,7 +87,7 @@ def create_codes_codelists():
     f.close()
 
 def create_user():
-    data = app.config["ADMIN_USER"]
+    data = current_app.config["ADMIN_USER"]
     if quser.addUser(data):
         return "OK"
     return "FAILED"

@@ -1,16 +1,20 @@
-from flask_login import current_user
-from maediprojects import db, models
-import activity as qactivity
-from sqlalchemy import *
 from StringIO import StringIO
 from zipfile import ZipFile
+
+from flask_login import current_user
+from sqlalchemy import *
 import requests
 import unicodecsv
 
+from maediprojects import models
+from maediprojects.extensions import db
+import activity as qactivity
+
+
 GEONAMES_URL="http://download.geonames.org/export/dump/%s.zip"
-GEONAMES_FIELDNAMES = ['geonameid', 'name', 'asciiname', 'alternatenames', 
-'latitude', 'longitude', 'feature_class', 'feature_code', 'country_code', 
-'cc2', 'admin1_code', 'admin2_code', 'admin3_code', 'admin4_code', 
+GEONAMES_FIELDNAMES = ['geonameid', 'name', 'asciiname', 'alternatenames',
+'latitude', 'longitude', 'feature_class', 'feature_code', 'country_code',
+'cc2', 'admin1_code', 'admin2_code', 'admin3_code', 'admin4_code',
 'population', 'elevation', 'dem', 'timezone', 'modification_date']
 ALLOWED_FEATURE_CODES = ["ADM1", "ADM2", "ADM3"]
 
@@ -41,7 +45,7 @@ def add_location(activity_id, location_id):
         db.session.add(aL)
         db.session.commit()
 
-        qactivity.activity_updated(activity_id, 
+        qactivity.activity_updated(activity_id,
             {
             "user_id": current_user.id,
             "mode": "add",
@@ -64,7 +68,7 @@ def delete_location(activity_id, location_id):
         db.session.commit()
 
 
-        qactivity.activity_updated(activity_id, 
+        qactivity.activity_updated(activity_id,
             {
             "user_id": current_user.id,
             "mode": "delete",
@@ -82,7 +86,7 @@ def import_locations(country_code):
     """Downloads geolocations from Geonames."""
     r = requests.get(GEONAMES_URL % country_code)
     zipfile = ZipFile(StringIO(r.content))
-    csv = unicodecsv.DictReader(zipfile.open("%s.txt" % country_code), 
+    csv = unicodecsv.DictReader(zipfile.open("%s.txt" % country_code),
                                 fieldnames=GEONAMES_FIELDNAMES,
                                 dialect='excel-tab',
                                 quoting=unicodecsv.QUOTE_NONE)
