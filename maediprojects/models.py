@@ -1,8 +1,10 @@
 import datetime
 import functools as ft
 
-from sqlalchemy.ext.hybrid import hybrid_property
 import sqlalchemy as sa
+from sqlalchemy.sql.expression import case
+from sqlalchemy import func
+from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 
@@ -20,40 +22,68 @@ act_ForeignKey = ft.partial(
     ondelete="CASCADE"
 )
 
-FWDDATA_QUERY = u"""
-    SELECT sum(value) AS value,
-    strftime('%%Y', DATE(period_start_date, 'start of month', '-%s month'))
-    AS fiscal_year,
-    CASE
-        WHEN strftime('%%m', DATE(period_start_date, 'start of month', '-%s month')) IN ('01','02','03') THEN 'Q1'
-        WHEN strftime('%%m', DATE(period_start_date, 'start of month', '-%s month')) IN ('04','05','06') THEN 'Q2'
-        WHEN strftime('%%m', DATE(period_start_date, 'start of month', '-%s month')) IN ('07','08','09') THEN 'Q3'
-        WHEN strftime('%%m', DATE(period_start_date, 'start of month', '-%s month')) IN ('10','11','12') THEN 'Q4'
-    END AS fiscal_quarter
-    FROM forwardspend
-    WHERE forwardspend.activity_id = '%s'
-    AND value != 0
-    GROUP BY fiscal_quarter, fiscal_year
-    ORDER BY forwardspend.period_start_date DESC
-    """
 
-FYDATA_QUERY = u"""
-    SELECT sum(transaction_value) AS value,
-    strftime('%%Y', DATE(transaction_date, 'start of month', '-%s month'))
-    AS fiscal_year,
-    CASE
-        WHEN strftime('%%m', DATE(transaction_date, 'start of month', '-%s month')) IN ('01','02','03') THEN 'Q1'
-        WHEN strftime('%%m', DATE(transaction_date, 'start of month', '-%s month')) IN ('04','05','06') THEN 'Q2'
-        WHEN strftime('%%m', DATE(transaction_date, 'start of month', '-%s month')) IN ('07','08','09') THEN 'Q3'
-        WHEN strftime('%%m', DATE(transaction_date, 'start of month', '-%s month')) IN ('10','11','12') THEN 'Q4'
-    END AS fiscal_quarter
-    FROM activityfinances
-    WHERE activityfinances.activity_id = '%s'
-    AND activityfinances.transaction_type IN (%s)
-    AND transaction_value != 0
-    GROUP BY fiscal_quarter, fiscal_year
-    ORDER BY activityfinances.transaction_date DESC
-    """
+def fwddata_query(_self, fiscalyear_modifier):
+    return db.session.query(
+            func.sum(ActivityForwardSpend.value).label("value"),
+            func.STRFTIME('%Y',
+                func.DATE(ActivityForwardSpend.period_start_date,
+                    'start of month', '-{} month'.format(fiscalyear_modifier))
+                ).label("fiscal_year"),
+            case(
+                [
+                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('01','02','03')), 'Q1'),
+                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('04','05','06')), 'Q2'),
+                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('07','08','09')), 'Q3'),
+                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('10','11','12')), 'Q4'),
+                ]
+            ).label("fiscal_quarter")
+        ).filter(
+            ActivityForwardSpend.activity_id == _self.id,
+            ActivityForwardSpend.value != 0
+        ).group_by("fiscal_quarter", "fiscal_year"
+        ).order_by(ActivityForwardSpend.period_start_date.desc()
+        ).all()
+
+
+def fydata_query(_self, fiscalyear_modifier, _transaction_types):
+    return db.session.query(
+            func.sum(ActivityFinances.transaction_value).label("value"),
+            func.STRFTIME('%Y',
+                func.DATE(ActivityFinances.transaction_date,
+                    'start of month', '-{} month'.format(fiscalyear_modifier))
+                ).label("fiscal_year"),
+            case(
+                [
+                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('01','02','03')), 'Q1'),
+                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('04','05','06')), 'Q2'),
+                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('07','08','09')), 'Q3'),
+                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
+                      'start of month', '-{} month'.format(fiscalyear_modifier))
+                        ).in_(('10','11','12')), 'Q4'),
+                ]
+            ).label("fiscal_quarter")
+        ).filter(
+            ActivityFinances.activity_id == _self.id,
+            ActivityFinances.transaction_value != 0,
+            ActivityFinances.transaction_type.in_(_transaction_types)
+        ).group_by("fiscal_quarter", "fiscal_year"
+        ).order_by(ActivityFinances.transaction_date.desc()
+        ).all()
 
 class Activity(db.Model):
     __tablename__ = 'activity'
@@ -163,14 +193,8 @@ class Activity(db.Model):
     @hybrid_property
     def FY_disbursements_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = db.engine.execute(FYDATA_QUERY %
-                        (fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         self.id, u"'D','E'")
-                                  ).fetchall()
+        fydata = fydata_query(self, fiscalyear_modifier, (u'D', u'E'))
+
         return {
                     "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
@@ -183,14 +207,7 @@ class Activity(db.Model):
     @hybrid_property
     def FY_commitments_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = db.engine.execute(FYDATA_QUERY %
-                        (fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         self.id, u"'C'")
-                                  ).fetchall()
+        fydata = fydata_query(self, fiscalyear_modifier, (u'C'))
         return {
                     "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
@@ -203,14 +220,7 @@ class Activity(db.Model):
     @hybrid_property
     def FY_forward_spend_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = db.engine.execute(FWDDATA_QUERY %
-                        (fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         fiscalyear_modifier,
-                         self.id)
-                                  ).fetchall()
+        fydata = fwddata_query(self, fiscalyear_modifier)
         return {
                     "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
