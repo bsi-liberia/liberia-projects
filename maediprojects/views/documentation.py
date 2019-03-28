@@ -52,7 +52,6 @@ def counterpart_funding():
         ).all()
     return render_template("counterpart_funding.html",
                 activities = activities,
-                #milestones = milestones,
                 loggedinuser=current_user
         )
 
