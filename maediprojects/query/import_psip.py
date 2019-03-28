@@ -1,18 +1,20 @@
 # -*- coding: UTF-8 -*-
 
-from maediprojects import app, db, models
-from maediprojects.lib import codelists, xlsx_to_csv, util
-from maediprojects.query import user as quser
+import os
+import re
+import datetime as dt
+
+import unicodecsv
+
+from maediprojects import models
+from maediprojects.lib import codelists, util
 from maediprojects.query import activity as qactivity
-from maediprojects.query import codelists as qcodelists
-from maediprojects.query import location as qlocations
 from maediprojects.query import finances as qfinances
 from maediprojects.query import organisations as qorganisations
-import normality
-import os, re
-import datetime as dt
-import unicodecsv
+
+
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 
 def preprocess_data(csv):
     def append_path(root, data):

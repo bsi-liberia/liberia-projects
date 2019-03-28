@@ -10,7 +10,7 @@
 <h1>{% if activity.id %}{{ _('Edit activity') }}
 {% else %}{{ _('New activity') }}{% endif %}</h1>
 {% if activity.id %}
-<a class="btn btn-success btn-large pull-right" href="{{ url_for('activity', activity_id=activity.id) }}">
+<a class="btn btn-success btn-large pull-right" href="{{ url_for('activities.activity', activity_id=activity.id) }}">
   <i class="glyphicon glyphicon-floppy-disk"></i>
   {{ _('Save and exit project') }}
 </a>

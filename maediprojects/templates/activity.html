@@ -18,8 +18,8 @@
   </div>
   {% if activity.permissions.edit == True %}
   <div class="col-md-2">
-    <a class="btn btn-success btn-large pull-right" href="{{ url_for('activity_edit', activity_id=activity.id) }}">
-      <i class="glyphicon glyphicon-pencil"></i> 
+    <a class="btn btn-success btn-large pull-right" href="{{ url_for('activities.activity_edit', activity_id=activity.id) }}">
+      <i class="glyphicon glyphicon-pencil"></i>
       {{ _('Edit project') }}
     </a>
   </div>
@@ -112,7 +112,7 @@
           <td>FY{{commitment.fiscal_year}} {{commitment.fiscal_quarter}}</td>
           <td>{{commitment.value}}</td>
         </tr>
-        {% endfor %}  
+        {% endfor %}
       </tbody>
     </table>
   </div>
@@ -129,7 +129,7 @@
           <td>FY{{disbursement.fiscal_year}} {{disbursement.fiscal_quarter}}</td>
           <td>{{disbursement.value}}</td>
         </tr>
-        {% endfor %}  
+        {% endfor %}
       </tbody>
     </table>
   </div>
@@ -149,7 +149,7 @@
           <td>FY{{fs.fiscal_year}} {{fs.fiscal_quarter}}</td>
           <td>{{fs.value}}</td>
         </tr>
-        {% endfor %}  
+        {% endfor %}
       </tbody>
     </table>
   </div>

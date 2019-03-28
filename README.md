@@ -61,9 +61,9 @@ The current software has a few limitations which could be improved upon:
 ## Deployment and getting up and running
 
 1. Clone the repository:
-  ```
-  git clone git@github.com:bsi-liberia/liberia-projects.git
-  ```
+   ```
+   git clone git@github.com:bsi-liberia/liberia-projects.git
+   ```
 
 2. Set up a virtualenv:
    ```
@@ -85,26 +85,21 @@ The current software has a few limitations which could be improved upon:
    cp config.py.tmpl config.py
    ```
 
-6. Create an environment variable for the app:
-   ```
-   export FLASK_APP=maediprojects/__init__.py
-   ```
-
-7. Run database migrations:
+6. Run database migrations:
    ```
    flask db upgrade
    ```
 
-8. Run initial setup:
+7. Run initial setup:
    ```
    flask setup
    ```
 
-9. Run the server:
+8. Run the development server:
    ```
-   python manage.py runserver
+   flask run
    ```
 
-10. You can log in using the admin username and password defined in your `config.py`
+9. You can log in using the admin username and password defined in your `config.py`
 
-11. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists" / "Gérer les listes de codes". Click on the "Locations" / "Localisations" tab, then choose a country to import.
+10. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists" / "Gérer les listes de codes". Click on the "Locations" / "Localisations" tab, then choose a country to import.

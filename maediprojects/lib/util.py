@@ -1,4 +1,6 @@
-import datetime, re
+import datetime
+import re
+
 
 ALLOWED_YEARS = range(2013, datetime.datetime.utcnow().year+3)
 

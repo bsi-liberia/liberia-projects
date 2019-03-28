@@ -1,18 +1,21 @@
-from maediprojects import db, models
-from werkzeug.security import generate_password_hash, check_password_hash
-import datetime, time
+from functools import wraps
+
+from werkzeug.security import generate_password_hash
 from flask import flash, redirect, url_for, request
 from flask_login import current_user
-from functools import wraps
+
+from maediprojects import models
+from maediprojects.extensions import db
 import organisations as qorganisations
 import activity as qactivity
+
 
 def administrator_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.administrator is False:
             flash("You must be an administrator to access that page.", "danger")
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("activities.dashboard"))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -30,7 +33,7 @@ def check_activity_permissions(permission_name, activity_id):
         if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
             # If the user is attached to an organisation, then they should always
             # at least have view rights.
-            if permission_name == "view": return True 
+            if permission_name == "view": return True
             if current_user.permissions_dict["organisations"][act.reporting_org_id]["permission_value"] == permission_name:
                 return True
     return False
@@ -44,9 +47,9 @@ def permissions_required(permission_name, activity_id=None):
     def wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if kwargs.get('activity_id'): 
+            if kwargs.get('activity_id'):
                 activity_id = kwargs.get('activity_id')
-                check = (not check_activity_permissions(permission_name, activity_id) 
+                check = (not check_activity_permissions(permission_name, activity_id)
                     and not check_permissions(permission_name))
             elif permission_name == "edit":
                 check = (not check_new_activity_permission() and not check_permissions(permission_name))
@@ -56,7 +59,7 @@ def permissions_required(permission_name, activity_id=None):
                 flash("You do not have sufficient permissions to access that page.", "danger")
                 if request.referrer != None:
                     return redirect(request.referrer)
-                return redirect(url_for("dashboard"))
+                return redirect(url_for("activities.dashboard"))
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
@@ -107,8 +110,8 @@ def updateUser(data):
     if current_user.administrator:
         # Only an admin user can give administrative privileges
         checkU.administrator = bool(data.get('administrator'))
-        setPermission(checkU, "domestic_external", data.get("domestic_external", "none"))
-        setPermission(checkU, "domestic_external_edit", data.get("domestic_external_edit", "none"))
+        setPermission(checkU, u"domestic_external", data.get("domestic_external", "none"))
+        setPermission(checkU, u"domestic_external_edit", data.get("domestic_external_edit", "none"))
 
     db.session.add(checkU)
     db.session.commit()
@@ -130,8 +133,8 @@ def addUser(data):
             )
         db.session.add(newU)
         db.session.commit()
-        setPermission(newU, "domestic_external", data.get("domestic_external"))
-        setPermission(newU, "domestic_external_edit", data.get("domestic_external_edit"))
+        setPermission(newU, u"domestic_external", data.get("domestic_external"))
+        setPermission(newU, u"domestic_external_edit", data.get("domestic_external_edit"))
         return newU
     return checkU
 

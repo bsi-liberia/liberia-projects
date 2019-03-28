@@ -1,7 +1,10 @@
 import unicodecsv
 import os
-from maediprojects import app, db, models
+
 import flask_babel as babel
+
+from maediprojects import models
+
 
 def get_db_codelist_names():
     codelists = models.Codelist.query.all()
@@ -27,11 +30,11 @@ def get_codelists(LANG=None):
         LANG = babel.get_locale()
 
     current_dir = os.path.join(os.path.dirname(__file__))
-    
+
     def only_csv(filename):
         if filename.endswith(".csv"): return True
         return False
-    
+
     codelists = filter(only_csv, os.listdir(os.path.join(current_dir, "data")))
     out = {}
     for codelist in codelists:
@@ -40,7 +43,7 @@ def get_codelists(LANG=None):
         cl_file = open(os.path.join(current_dir, "data", codelist), "r")
         csv = unicodecsv.DictReader(cl_file)
         for row in csv:
-            out[cl_name].append({"code": row["code"], 
+            out[cl_name].append({"code": row["code"],
                 "id": row.get("id", row.get("code")),
                 "name": row["name_%s" % LANG]})
     out.update(get_db_codelists())
@@ -79,6 +82,6 @@ def get_codelists_ids_by_name():
     for cl, cl_items in in_codelists.items():
         codelists[cl] = {}
         for cl_item in cl_items:
-            codelists[cl][cl_item["name"]] = cl_item.get("id", 
+            codelists[cl][cl_item["name"]] = cl_item.get("id",
                 cl_item.get("code"))
     return codelists

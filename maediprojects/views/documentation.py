@@ -1,16 +1,23 @@
-from flask import Flask, render_template, flash, request, Markup, \
-    session, redirect, url_for, escape, Response, abort, send_file, jsonify
-from flask_login import login_required, current_user
-from maediprojects import app, db, models
-from maediprojects.views import activities, api, users, codelists
-from maediprojects.query import activity as qactivity
-from maediprojects.lib import util
 import os
-import mistune
 import datetime
 import functools
 
-@app.route("/help/")
+from flask import Blueprint, Flask, render_template, flash, request, Markup, \
+    session, redirect, url_for, escape, Response, abort, send_file, jsonify
+from flask_login import login_required, current_user
+import mistune
+
+from maediprojects import models
+from maediprojects.extensions import db
+from maediprojects.views import activities, api, users, codelists
+from maediprojects.query import activity as qactivity
+from maediprojects.lib import util
+
+
+blueprint = Blueprint('documentation', __name__, url_prefix='/', static_folder='../static')
+
+
+@blueprint.route("/help/")
 @login_required
 def help():
     current_dir = os.path.join(os.path.dirname(__file__))
@@ -20,14 +27,14 @@ def help():
                 loggedinuser=current_user
         )
 
-@app.route("/milestones/")
+@blueprint.route("/milestones/")
 @login_required
 def milestones():
     activities = models.Activity.query.filter_by(
-            domestic_external="domestic"
+            domestic_external=u"domestic"
         ).all()
     milestones = models.Milestone.query.filter_by(
-        domestic_external="domestic"
+        domestic_external=u"domestic"
         ).order_by(models.Milestone.milestone_order
         ).all()
 
@@ -37,7 +44,7 @@ def milestones():
                 loggedinuser=current_user
         )
 
-@app.route("/counterpart_funding/")
+@blueprint.route("/counterpart_funding/")
 @login_required
 def counterpart_funding():
     activities = models.Activity.query.filter_by(
@@ -49,8 +56,8 @@ def counterpart_funding():
                 loggedinuser=current_user
         )
 
-@app.route("/disbursements/")
-@app.route("/disbursements/<visualisation_type>")
+@blueprint.route("/disbursements/")
+@blueprint.route("/disbursements/<visualisation_type>")
 @login_required
 def disbursements_dashboard(visualisation_type='forwardspends'):
     def filter_relevant(finances, transaction_type=u'D'):
@@ -58,11 +65,11 @@ def disbursements_dashboard(visualisation_type='forwardspends'):
         year_end = datetime.date(2019,06,30)
         year_start = datetime.date(2018,07,01)
         if hasattr(finances, 'transaction_date'):
-            return bool((finances.transaction_date <= year_end) and 
-                (finances.transaction_date >= year_start) and 
+            return bool((finances.transaction_date <= year_end) and
+                (finances.transaction_date >= year_start) and
                 (finances.transaction_type==transaction_type))
         elif hasattr(finances, 'period_end_date'):
-            return bool((finances.period_end_date <= year_end) and 
+            return bool((finances.period_end_date <= year_end) and
                 (finances.period_end_date >= year_start))
 
     def make_pct(value1, value2):
@@ -82,7 +89,7 @@ def disbursements_dashboard(visualisation_type='forwardspends'):
         sum_disbursements = sum(map(lambda l: l.transaction_value, filter(functools.partial(filter_relevant, transaction_type=u"D"), activity.finances)))
         #sum_forwardspends = sum(map(lambda l: l.transaction_value, filter(functools.partial(filter_relevant, transaction_type=u"C"), activity.finances)))
         sum_forwardspends = sum(map(lambda l: l.value, filter(functools.partial(filter_relevant, transaction_type=u"D"), activity.forwardspends)))
-        
+
         pct = make_pct(sum_disbursements,sum_forwardspends)
         if (pct >0) and (sum_forwardspends>1000000):
             act = activity.as_jsonable_dict()

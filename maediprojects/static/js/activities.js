@@ -81,7 +81,7 @@ var queryProjectsData = function() {
   $("#activities_count").text("loading...");
   $("#projectsList").html('<p class="lead">Loading data, please wait... <span class="glyphicon glyphicon-refresh loader" aria-hidden="true"></span></p>');
 
-  $.post("/api/activities/", data, function(resultdata) {
+  $.get("/api/activities/", data, function(resultdata) {
     updateProjects(resultdata);
   });
   $("#download_excel").attr("href", "/api/activities_filtered.xlsx" + query);

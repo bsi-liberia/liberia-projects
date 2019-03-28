@@ -1,10 +1,14 @@
+import datetime
+
 from flask_login import current_user
 from sqlalchemy import *
-import datetime
-from maediprojects import db, models
+
+from maediprojects import models
+from maediprojects.extensions import db
 from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 import activity as qactivity
+
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
@@ -32,7 +36,7 @@ def add_finances(activity_id, data):
     db.session.add(aF)
     db.session.commit()
 
-    qactivity.activity_updated(activity_id, 
+    qactivity.activity_updated(activity_id,
         {
         "user_id": current_user.id,
         "mode": "add",
@@ -78,7 +82,7 @@ def delete_finances(activity_id, finances_id):
         db.session.commit()
         print "Return True"
 
-        qactivity.activity_updated(checkF.activity_id, 
+        qactivity.activity_updated(checkF.activity_id,
             {
             "user_id": current_user.id,
             "mode": "delete",
@@ -100,7 +104,7 @@ def update_attr(data):
     old_value = getattr(finance, data['attr'])
 
     if data['attr'].endswith('date'):
-        if data["value"] == "": 
+        if data["value"] == "":
             data["value"] = None
         else:
             data['value'] = isostring_date(data['value'])
@@ -111,7 +115,7 @@ def update_attr(data):
     db.session.add(finance)
     db.session.commit()
 
-    qactivity.activity_updated(finance.activity_id, 
+    qactivity.activity_updated(finance.activity_id,
         {
         "user_id": current_user.id,
         "mode": "update",
@@ -152,7 +156,7 @@ def create_missing_forward_spends(from_date, to_date, activity_id):
     required_periods = create_periods(from_date, to_date)
     fs = models.ActivityForwardSpend.query.filter_by(activity_id=activity_id).all()
     existing_periods = list(map(lambda f: (
-        util.MONTHS_QUARTERS[f.period_start_date.month], 
+        util.MONTHS_QUARTERS[f.period_start_date.month],
         f.period_start_date.year), fs))
 
     def filter_from_existing(required_period):
@@ -222,4 +226,4 @@ def update_fs_attr(data):
     fs.value = data['value']
     db.session.add(fs)
     db.session.commit()
-    return True    
+    return True
