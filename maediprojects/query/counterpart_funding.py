@@ -1,7 +1,8 @@
 from flask_login import current_user
 from sqlalchemy import *
 import datetime
-from maediprojects import db, models
+from maediprojects import models
+from maediprojects.extensions import db
 from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 import activity as qactivity
