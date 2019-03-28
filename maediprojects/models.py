@@ -397,7 +397,7 @@ class ActivityForwardSpend(db.Model):
     period_start_date = sa.Column(sa.Date)
     period_end_date = sa.Column(sa.Date)
 
-    __table_args__ = (sa.UniqueConstraint('activity_id','period_start_date'),)
+    # __table_args__ = (sa.UniqueConstraint('activity_id','period_start_date'),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
