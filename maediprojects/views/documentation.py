@@ -48,7 +48,7 @@ def milestones():
 @login_required
 def counterpart_funding():
     activities = models.Activity.query.filter_by(
-            domestic_external="external"
+            domestic_external=u"external"
         ).all()
     return render_template("counterpart_funding.html",
                 activities = activities,
