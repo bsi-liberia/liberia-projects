@@ -21,7 +21,7 @@
 			<tbody>
 				{% for activity in activities %}
 				<tr>
-					<td><a href="{{ url_for('activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
+					<td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
 					<td>{{ activity.reporting_org.name }}</td>
 					<td>{% for ministry in activity.classification_data['aligned-ministry-agency']['entries'] %}
 						{{ ministry.codelist_code.name }}
