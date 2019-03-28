@@ -37,7 +37,6 @@ def add_entry(activity_id, data):
     return CF.id
 
 def delete_entry(activity_id, counterpartfunding_id):
-    print "Delete activity id {} counterpart funding id {}".format(activity_id, counterpartfunding_id)
     checkCF = models.ActivityCounterpartFunding.query.filter_by(
         activity_id = activity_id,
         id = counterpartfunding_id
@@ -46,8 +45,6 @@ def delete_entry(activity_id, counterpartfunding_id):
         old_value = checkCF.as_dict()
         db.session.delete(checkCF)
         db.session.commit()
-        print "Return True"
-
         qactivity.activity_updated(checkCF.activity_id,
             {
             "user_id": current_user.id,
@@ -59,7 +56,6 @@ def delete_entry(activity_id, counterpartfunding_id):
             }
             )
         return True
-    print "Return False"
     return False
 
 # Counterpart funding data
