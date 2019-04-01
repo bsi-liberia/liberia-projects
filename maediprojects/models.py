@@ -139,6 +139,8 @@ class Activity(db.Model):
             cascade="all, delete-orphan")
     milestones = sa.orm.relationship("ActivityMilestone",
             cascade="all, delete-orphan")
+    counterpart_funding = sa.orm.relationship("ActivityCounterpartFunding",
+            cascade="all, delete-orphan")
     domestic_external = sa.Column(sa.UnicodeText)
 
     @hybrid_property
@@ -189,6 +191,49 @@ class Activity(db.Model):
         return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
                                              ActivityFinances.transaction_type==u"D",
                                              ActivityFinances.activity_id==self.id).all()
+
+    def FY_disbursements_for_FY(self, FY):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        result = db.session.query(
+                func.sum(ActivityFinances.transaction_value).label("value")
+            ).filter(
+                ActivityFinances.activity_id == self.id,
+                ActivityFinances.transaction_type.in_((u'D', u'E')),
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityFinances.transaction_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ) == FY
+            ).scalar()
+        if result is None: return 0.00
+        return result
+
+    def FY_forwardspends_for_FY(self, FY):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        result = db.session.query(
+                func.sum(ActivityForwardSpend.value).label("value")
+            ).filter(
+                ActivityForwardSpend.activity_id == self.id,
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityForwardSpend.period_start_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ) == FY
+            ).scalar()
+        if result is None: return 0.00
+        return result
+
+    def FY_counterpart_funding_for_FY(self, FY):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        result = db.session.query(
+                func.sum(ActivityCounterpartFunding.required_value).label("value")
+            ).filter(
+                ActivityCounterpartFunding.activity_id == self.id,
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityCounterpartFunding.required_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ) == FY
+            ).scalar()
+        if result is None: return 0.00
+        return result
 
     @hybrid_property
     def FY_disbursements_dict(self):
@@ -531,6 +576,24 @@ class ActivityMilestone(db.Model):
                         "Milestone")
 
     __table_args__ = (sa.UniqueConstraint('activity_id','milestone_id'),)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ActivityCounterpartFunding(db.Model):
+    __tablename__ = 'activitycounterpartfunding'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(sa.Integer,
+            sa.ForeignKey('activity.id'),
+            nullable=False,
+            index=True)
+    required_value = sa.Column(sa.Float(precision=2))
+    required_date = sa.Column(sa.Date)
+    budgeted = sa.Column(sa.Boolean)
+    allotted = sa.Column(sa.Boolean)
+    disbursed = sa.Column(sa.Boolean)
+
+    __table_args__ = (sa.UniqueConstraint('activity_id','required_date'),)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

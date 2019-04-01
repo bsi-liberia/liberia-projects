@@ -17,6 +17,7 @@ class TestDocumentation:
             (url_for('documentation.help'), 200),
             (url_for('documentation.milestones'), 200),
             (url_for('documentation.disbursements_dashboard'), 200),
+            (url_for('documentation.counterpart_funding'), 200),
         ]
         for route, status_code in routes:
             res = client.get(route)

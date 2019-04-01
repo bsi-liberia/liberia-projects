@@ -266,6 +266,7 @@ def activity_edit(activity_id):
         api_update_activity_finances_url=url_for("api.finances_edit_attr", activity_id=activity_id),
         api_iati_search_url=url_for("api.api_iati_search"),
         api_activity_forwardspends_url=url_for("api.api_activity_forwardspends", activity_id=activity_id),
+        api_activity_counterpart_funding_url = url_for("api.api_activity_counterpart_funding", activity_id=activity_id),
         users=quser.user()
     )
 

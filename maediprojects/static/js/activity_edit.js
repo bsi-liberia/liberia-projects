@@ -217,16 +217,29 @@ var setupLocations = function() {
 };
 
 
-$('#confirm-delete').on('click', '.btn-ok', function(e) {
-  var $modalDiv = $(e.delegateTarget);
-  var transaction_id = $(this).data('transaction_id');
-  deleteFinancial(transaction_id);
-  $modalDiv.modal('hide');
+$("#confirm-delete").on('show.bs.modal', function(e) {
+  if ($(e.relatedTarget).closest("tbody").attr("id") == "counterpart-funding-rows") {
+    var target = $(e.relatedTarget).closest("tr").attr("data-counterpart-funding-id");
+    $('.btn-ok', this).data("counterpart_funding_id", target);
+    $('.btn-ok', this).data("delete_target", "counterpart_funding");
+  } else {
+    var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
+    $('.btn-ok', this).data("transaction_id", target);
+    $('.btn-ok', this).data("delete_target", "transaction");
+  }
 });
 
-$("#confirm-delete").on('show.bs.modal', function(e) {
-  var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
-  $('.btn-ok', this).data("transaction_id", target);
+$('#confirm-delete').on('click', '.btn-ok', function(e) {
+  var $modalDiv = $(e.delegateTarget);
+  var delete_target = $(this).data('delete_target');
+  if (delete_target == "counterpart_funding") {
+    var counterpart_funding_id = $(this).data('counterpart_funding_id');
+    deleteCounterpartFunding(counterpart_funding_id)
+  } else if (delete_target == "transaction") {
+    var transaction_id = $(this).data('transaction_id');
+    /*deleteFinancial(transaction_id);*/
+  }
+  $modalDiv.modal('hide');
 });
 
 function deleteFinancial(transaction_id) {
@@ -237,9 +250,25 @@ function deleteFinancial(transaction_id) {
   $.post(api_activity_finances_url, data, 
     function(returndata){
       if (returndata == 'False'){
-          alert("There was an error updating that financial data.");
+          alert("There was an error deleting that data.");
       } else {
         $("tr#financial-" + data["transaction_id"]).fadeOut();
+      }
+    }
+  );
+}
+
+function deleteCounterpartFunding(counterpart_funding_id) {
+  var data = {
+    "id": counterpart_funding_id,
+    "action": "delete"
+  }
+  $.post(api_activity_counterpart_funding_url, data,
+    function(returndata){
+      if (returndata == 'False'){
+          alert("There was an error deleting that data.");
+      } else {
+        $("tr#counterpart-funding-" + data["id"]).fadeOut().remove();
       }
     }
   );
@@ -307,7 +336,7 @@ $(document).on("click", ".addFinancial", function(e) {
       if (returndata == 'False'){
           alert("There was an error updating that financial data.");
       } else {
-        var row_financial_template = $('#row-financial-template').html();
+        var row_financial_template = $('#template-financial-row').html();
         data["id"] = returndata;
         var codelists = generateCodelists()
         var row = generateTransaction(data, codelists)
@@ -363,9 +392,9 @@ var generateTransaction = function(d, codelists) {
 // FINANCES
 var updateFinances = function(finances) {
   // Render finances template
-	var financial_template = $('#financial-template').html();
+	var financial_template = $('#template-financial').html();
 	Mustache.parse(financial_template);   // optional, speeds up future uses
-	partials = {"row-financial-template": $('#row-financial-template').html(),
+	partials = {"template-financial-row": $('#template-financial-row').html(),
               "column-codelist-template": $('#column-codelist-template').html()
             };
   function isC(finance) {
@@ -404,7 +433,6 @@ var setupFinances = function() {
 	});
 };
 setupFinances()
-
 $(document).on("change", ".finances-data input[type=text], #finances select", function(e) {
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
@@ -421,9 +449,9 @@ $(document).on("change", ".finances-data input[type=text], #finances select", fu
 });
 
 var setupForwardSpendForm = function(forwardspends) {
-	var forward_spend_template = $('#forward-spend-template').html();
+	var forward_spend_template = $('#template-forward-spend').html();
 	Mustache.parse(forward_spend_template);
-	partials = {"row-forward-spend-template": $('#row-forward-spend-template').html()};
+	partials = {"template-forward-spend-row": $('#template-forward-spend-row').html()};
 	var rendered_FS = Mustache.render(forward_spend_template, forwardspends, partials);
 	$('#financial-data-FS').html(rendered_FS);
 }
@@ -477,6 +505,106 @@ $(document).on("change", "#milestones input[type=checkbox], #milestones textarea
   }).fail(function(){
     errorFormGroup(input);
   });
+});
+
+/* Counterpart Funding */
+var updateCF = function(counterpart_funding_data) {
+  // Render finances template
+  var counterpart_funding_template = $('#template-counterpart-funding').html();
+  Mustache.parse(counterpart_funding_template); // optional, speeds up future uses
+
+  selected_val = {true:" selected", false: ""}
+  $.map(counterpart_funding_data.counterpart_funding,
+      function(d, i) {
+      d['fiscal_years'] = $.map(counterpart_funding_data.fiscal_years,
+            function(dfy, ify) {
+              return {
+                'text': "FY" + dfy + "/" + (parseInt(dfy)+1),
+                'value': dfy,
+                'selected': selected_val[d.required_fy==dfy]};
+      });
+    return d; });
+  partials = {"template-counterpart-funding-row": $('#template-counterpart-funding-row').html()};
+  var rendered = Mustache.render(counterpart_funding_template, counterpart_funding_data, partials);
+  $('#counterpart-funding-data').html(rendered);
+}
+var counterpart_funding_template;
+var counterpart_funding_data;
+var setupCF = function() {
+  $.getJSON(api_activity_counterpart_funding_url, function(data) {
+      counterpart_funding_data = data;
+      updateCF(counterpart_funding_data);
+  });
+};
+setupCF()
+$(document).on("change", ".table-counterpart-funding input[type=text], \
+    .table-counterpart-funding input[type=checkbox], \
+    .table-counterpart-funding select", function(e) {
+      console.log(this.name);
+  if (['budgeted', 'allotted', 'disbursed'].indexOf(this.name) >= 0) {
+    if (this.checked) {
+      value = true;
+    } else {
+      value = false;
+    }
+  } else {
+    value = this.value;
+  }
+  var data = {
+    'id': $(this).closest("tr").attr("data-counterpart-funding-id"),
+    'attr': this.name,
+    'value': value,
+    'action': "update"
+  }
+  var input = this;
+  resetFormGroup(input);
+  $.post(api_activity_counterpart_funding_url, data, function(resultdata) {
+    successFormGroup(input);
+  }).fail(function(){
+    errorFormGroup(input);
+  });
+});
+/*  Add Counterpart Funding */
+$(document).on("click", ".addCounterpartFunding", function(e) {
+  e.preventDefault();
+  var required_value = 0.0;
+  var available_fys = $.map(
+      $('#counterpart-funding-rows tr select[name="required_fy"]'), function(v, i) {
+      console.log(v);
+        return parseInt(v.value);
+    });
+  if (available_fys.length > 0) {
+    var required_fy = Math.max.apply(Math, available_fys)+1;
+  } else {
+    var required_fy = moment().date(1).format('YYYY');
+  }
+  var data = {
+    "required_value": required_value,
+    "required_fy": required_fy,
+    "action": "add"
+  }
+  $.post(api_activity_counterpart_funding_url, data,
+    function(returndata){
+      if (returndata == 'False'){
+          alert("There was an error adding new counterpart funding.");
+      } else {
+        var template_counterpart_funding_row = $('#template-counterpart-funding-row').html();
+        data["id"] = returndata;
+        selected_val = {true:" selected", false: ""}
+        data["fiscal_years"] = $.map(counterpart_funding_data.fiscal_years,
+            function(dfy, ify) {
+              console.log(dfy)
+              console.log(required_fy)
+              return {
+                'text': "FY" + dfy + "/" + (parseInt(dfy)+1),
+                'value': dfy,
+                'selected': selected_val[required_fy==dfy]};
+        });
+        var rendered_row = Mustache.render(template_counterpart_funding_row, data);
+        $('#counterpart-funding-rows').append(rendered_row);
+      }
+    }
+  );
 });
 
 // Javascript to enable link to tab

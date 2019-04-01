@@ -19,14 +19,17 @@ body {
   white-space: nowrap;
 }
 #finances td.has-feedback span.form-control-feedback,
-#milestones td.has-feedback span.form-control-feedback {
+#milestones td.has-feedback span.form-control-feedback,
+#conditions td.has-feedback span.form-control-feedback {
   top: 7px;
-  right: 7px;
+  right: 20px;
 }
-#milestones .checkbox {
+#milestones .checkbox,
+#conditions .checkbox {
   margin-top: 0px;
 }
-#milestones .checkbox span.form-control-feedback {
+#milestones .checkbox span.form-control-feedback,
+#conditions .checkbox span.form-control-feedback {
   line-height:20px;
 }
 
@@ -148,7 +151,9 @@ body {
 #finances table th {
   white-space: nowrap;
 }
-#finances table td div.form-group, #milestones table td div.form-group {
+#finances table td div.form-group,
+#milestones table td div.form-group,
+#counterpart-funding-data table td div.form-group {
   margin-bottom: 0px;
 }
 .intro {

@@ -1,0 +1,47 @@
+{% set active_page='counterpart_funding' %}{% extends "layout.html" %}
+{% block title %}{{ _('Counterpart funding') }}{% endblock %}
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<h1>Counterpart funding</h1>
+		<p class="lead">Activities with counterpart funding requirements for FY19.</p>
+		<table class="table" id="milestones">
+			<thead>
+				<tr>
+					<th style="width:25%;" rowspan="2">Title</th>
+					<th rowspan="2">Donor</th>
+					<th rowspan="2">Ministry</th>
+					<th colspan="2">Requested and planned expenditure for FY19 only</th>
+				</tr>
+				<tr>
+					<th>GoL (requested)</th>
+					<th>Donor (planned)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for activity in activities %}
+				<tr>
+					<td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
+					<td>{{ activity.reporting_org.name }}</td>
+					<td>{% for ministry in activity.classification_data['aligned-ministry-agency']['entries'] %}
+						{{ ministry.codelist_code.name }}
+					{% endfor %}</td>
+					<td>{{ activity.FY_counterpart_funding_for_FY("2019") }}</td>
+					<td>{{ activity.FY_forwardspends_for_FY("2019") }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+<script type="text/javascript">
+
+  $("#milestones").tablesorter( {
+      sortList: [[4,1]],
+      theme : "bootstrap",
+      widthFixed: true,
+      headerTemplate : '{content} {icon}',
+      widgets : [ "uitheme"]
+  } );
+</script>
+{% endblock %}
