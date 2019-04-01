@@ -45,6 +45,7 @@ $('#datetimepicker_start, #datetimepicker_end')
   resetFormGroup(input);
   $.post("update_activity/", data, function(resultdata) {
     successFormGroup(input);
+    setupForwardSpend();
   }).fail(function(){
     errorFormGroup(input);
   });
@@ -455,24 +456,6 @@ $(document).on("change", ".forwardspends-data input[type=text]", function(e) {
       $(this_field).trigger("change");
     });
   }
-});
-
-// We have to handle datetimepickers slightly differently from other form
-// inputs.
-$('#datetimepicker_start, #datetimepicker_end')
-.on("dp.change", function(e) {
-  var data = {
-    'attr': e.target.firstElementChild.name,
-    'value': e.target.firstElementChild.value,
-  }
-  var input = e.target.firstElementChild;
-  resetFormGroup(input);
-  $.post("update_activity/", data, function(resultdata) {
-    successFormGroup(input);
-  }).fail(function(){
-    errorFormGroup(input);
-  });
-  setupForwardSpend()
 });
 
 /* Handle milestones */
