@@ -60,6 +60,12 @@ The current software has a few limitations which could be improved upon:
 
 ## Deployment and getting up and running
 
+Some basic server setup stuff, if you don't have all of this already:
+
+```
+apt-get install python2.7 python-pip python-dev libxml2-dev libxslt-dev build-essential libssl-dev zlib1g-dev git
+```
+
 1. Clone the repository:
    ```
    git clone git@github.com:bsi-liberia/liberia-projects.git
@@ -103,3 +109,72 @@ The current software has a few limitations which could be improved upon:
 9. You can log in using the admin username and password defined in your `config.py`
 
 10. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists" / "Gérer les listes de codes". Click on the "Locations" / "Localisations" tab, then choose a country to import.
+
+## Running with Apache
+
+1. Install Apache and `mod_wsgi`:
+
+   ```
+   apt-get install apache2 libapache2-mod-wsgi
+   ```
+
+2. Create a _.wsgi_ file. Assuming you used a `virtualenv`, you need to provide the path to the virtualenv and then the application. It should look something like this:
+   ```
+   import logging, sys
+   logging.basicConfig(stream=sys.stderr)
+   sys.path.insert(0, '/path-to-liberia-projects/pyenv/lib/python2.7/site-packages')
+   sys.path.insert(0, '/path-to-liberia-projects')
+   from wsgi import create_app
+   application=create_app()
+   ```
+
+3. Edit the Apache config file (in `/etc/apache2/sites-available/liberiaprojects.conf`) to point to the new .wsgi file. In this example, 
+   ```
+    <VirtualHost *:80>
+            #ServerName www.example.com
+            ServerAdmin webmaster@localhost
+            WSGIDaemonProcess liberiaprojects user=www-data group=www-data threads=5
+            WSGIScriptAlias / /var/www/liberiaprojects/liberiaprojects.wsgi
+
+            <Directory /var/wwww/liberiaprojects>
+                    WSGIProcessGroup liberiaprojects
+                    WSGIApplicationGroup %{GLOBAL}
+                    Order deny,allow
+                    Allow from all
+            </Directory>
+
+            #LogLevel info ssl:warn
+
+            ErrorLog ${APACHE_LOG_DIR}/error.log
+            CustomLog ${APACHE_LOG_DIR}/access.log combined
+    </VirtualHost>
+   ```
+
+4. Give the Apache user group `www-data` group ownership of the database, and the database's parent folder:
+   ```
+   chown :www-data /path-to-liberia-projects/db/merged.db
+   chown :www-data /path-to-liberia-projects/db/
+   ```
+
+5. Enable the new site and restart Apache, e.g. if it's called `liberiaprojects.conf`:
+   ```
+   a2ensite liberiaprojects
+   systemctl reload apache2
+   ```
+
+## Setup `certbot` to allow for HTTPS
+
+1. Setup certbot following [these instructions](https://certbot.eff.org/lets-encrypt/ubuntubionic-apache). 
+2. Opt to redirect all requests to HTTPS when prompted.
+3. At some point, you will probably stumble across an error similar to this:
+   ```
+   AH00526: Syntax error on line 12 of /etc/apache2/sites-enabled/000-default.conf:
+   Name duplicates previous WSGI daemon definition.
+   ```
+   * In `/etc/apache2/sites-enabled/000-default.conf`, comment out the line beginning `WSGIDaemonProcess`.
+   * Run `sudo certbot --apache` again (opting for `1: Attempt to reinstall this existing certificate`).
+   * Go back to `000-default.conf` and uncomment the line beginning `WSGIDaemonProcess` (the same line in `000-default-le-ssl.conf` remains commented out)
+   * Reload the configuration and restart the server:
+   ```
+   a2dissite 000-default 000-default-le-ssl && a2ensite 000-default 000-default-le-ssl && systemctl reload apache2
+   ```
