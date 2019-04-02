@@ -171,10 +171,10 @@ apt-get install python2.7 python-pip python-dev libxml2-dev libxslt-dev build-es
    AH00526: Syntax error on line 12 of /etc/apache2/sites-enabled/000-default.conf:
    Name duplicates previous WSGI daemon definition.
    ```
-  In `/etc/apache2/sites-enabled/000-default.conf`, comment out the line beginning `WSGIDaemonProcess`.
-  Run `sudo certbot --apache` again (opting for `1: Attempt to reinstall this existing certificate`).
-  Go back to `000-default.conf` and uncomment the line beginning `WSGIDaemonProcess` (the same line in `000-default-le-ssl.conf` remains commented out)
-  Reload the configuration and restart the server:
-  ```
-  a2dissite 000-default 000-default-le-ssl && a2ensite 000-default 000-default-le-ssl && systemctl reload apache2
-  ```
+   * In `/etc/apache2/sites-enabled/000-default.conf`, comment out the line beginning `WSGIDaemonProcess`.
+   * Run `sudo certbot --apache` again (opting for `1: Attempt to reinstall this existing certificate`).
+   * Go back to `000-default.conf` and uncomment the line beginning `WSGIDaemonProcess` (the same line in `000-default-le-ssl.conf` remains commented out)
+   * Reload the configuration and restart the server:
+   ```
+   a2dissite 000-default 000-default-le-ssl && a2ensite 000-default 000-default-le-ssl && systemctl reload apache2
+   ```
