@@ -32,6 +32,9 @@ body {
 #conditions .checkbox span.form-control-feedback {
   line-height:20px;
 }
+td.number, th.number {
+  text-align: right;
+}
 
 /* D3 TIP */
 .d3-tip {
