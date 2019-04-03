@@ -5,7 +5,6 @@ import functools
 from flask import Blueprint, Flask, render_template, flash, request, Markup, \
     session, redirect, url_for, escape, Response, abort, send_file, jsonify
 from flask_login import login_required, current_user
-import mistune
 
 from maediprojects import models
 from maediprojects.extensions import db
