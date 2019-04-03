@@ -11,11 +11,11 @@
 					<th style="width:25%;" rowspan="2">Title</th>
 					<th rowspan="2">Donor</th>
 					<th rowspan="2">Ministry</th>
-					<th colspan="2">Requested and planned expenditure for FY19 only</th>
+					<th colspan="2">Requested and planned expenditure for FY19 only (USD)</th>
 				</tr>
 				<tr>
-					<th>GoL (requested)</th>
-					<th>Donor (planned)</th>
+					<th class="number">GoL (requested)</th>
+					<th class="number">Donor (planned)</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -26,8 +26,8 @@
 					<td>{% for ministry in activity.classification_data['aligned-ministry-agency']['entries'] %}
 						{{ ministry.codelist_code.name }}
 					{% endfor %}</td>
-					<td>{{ activity.FY_counterpart_funding_for_FY("2019") }}</td>
-					<td>{{ activity.FY_forwardspends_for_FY("2019") }}</td>
+					<td class="number">{{ "{:,.2f}".format(activity.FY_counterpart_funding_for_FY("2019")) }}</td>
+					<td class="number">{{ "{:,.2f}".format(activity.FY_forwardspends_for_FY("2019")) }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>
