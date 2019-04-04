@@ -44,8 +44,8 @@ def counterpart_funding():
 def disbursements_dashboard(visualisation_type='forwardspends'):
     def filter_relevant(finances, transaction_type=u'D'):
         print transaction_type
-        year_end = datetime.date(2019,06,30)
-        year_start = datetime.date(2018,07,01)
+        year_end = datetime.date(2019, 6, 30)
+        year_start = datetime.date(2018, 7, 1)
         if hasattr(finances, 'transaction_date'):
             return bool((finances.transaction_date <= year_end) and
                 (finances.transaction_date >= year_start) and
