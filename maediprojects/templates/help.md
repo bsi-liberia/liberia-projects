@@ -103,7 +103,7 @@ A number of standard reports are automatically updated as the data is updated th
     * change by sector over time (you can select to see this by disbursements, projected disbursements, or new commitments)
     * commitments and disbursements by sector and source to date
 * On the reports drop-down (from the menu at the top of the page):
-    * [counterpart funding requirements](/reports/counterpart_funding) (for AMCU projects)
+    * [counterpart funding requirements](/reports/counterpart-funding) (for AMCU projects)
     * [milestone tracking](/reports/milestones) (for PSIP projects)
 
 You may not have access to all of these reports.
