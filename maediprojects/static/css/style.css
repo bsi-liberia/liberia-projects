@@ -304,3 +304,7 @@ img.brand {
 #filtersAppliedLabel a {
   color: #ffffff;
 }
+.help-page h2, .help-page h3 {
+    padding-top: 70px;
+    margin-top: -50px;
+}
