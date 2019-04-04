@@ -31,7 +31,7 @@ def milestones():
     )
 
 
-@blueprint.route("/reports/counterpart_funding/")
+@blueprint.route("/reports/counterpart-funding/")
 @login_required
 def counterpart_funding():
     activities = models.Activity.query.filter_by(
