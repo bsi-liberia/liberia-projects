@@ -84,7 +84,7 @@ var queryProjectsData = function() {
   $.get("/api/activities/", data, function(resultdata) {
     updateProjects(resultdata);
   });
-  $("#download_excel").attr("href", "/api/activities_filtered.xlsx" + query);
+  $("#download_excel").attr("href", "/exports/activities_filtered.xlsx" + query);
   window.location.hash = query;
 }
 $(document).on("change", ".filter-select", function(e) {
