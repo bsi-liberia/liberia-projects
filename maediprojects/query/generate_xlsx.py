@@ -16,6 +16,7 @@ from maediprojects import models
 from maediprojects.extensions import db
 from maediprojects.query import activity as qactivity
 from maediprojects.query import finances as qfinances
+from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists
@@ -171,12 +172,16 @@ def import_xls_mtef(input_file):
     def filter_mtef(column):
         pattern = "(.*) \(MTEF\)$"
         return re.match(pattern, column)
+    def filter_counterpart(column):
+        pattern = "(.*) \(GoL counterpart fund request\)$"
+        return re.match(pattern, column)
     try:
         for sheet_id in range(0,num_sheets):
             input_file.seek(0)
             data = xlsx_to_csv.getDataFromFile(
                 input_file.filename, input_file.read(), sheet_id, True)
             mtef_cols = filter(filter_mtef, data[0].keys())
+            counterpart_funding_cols = filter(filter_counterpart, data[0].keys())
             if len(mtef_cols) == 0:
                 flash("No columns containing MTEF projections data \
                 were found in the uploaded spreadsheet!", "danger")
@@ -192,6 +197,7 @@ def import_xls_mtef(input_file):
                 existing_activity = activity_to_json(activity, cl_lookups)
                 updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
                 updated_years = []
+                # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
                     new_fy_value, row_currency = tidy_amount(row[mtef_year])
                     fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
@@ -211,7 +217,19 @@ def import_xls_mtef(input_file):
                         year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
                         inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
                     updated_years.append(u"FY{}/{}".format(fy_start, fy_end))
-                if updated_years or updated_activity_data:
+                # Parse counterpart funding columns
+                updated_counterpart_years = []
+                for counterpart_year in counterpart_funding_cols:
+                    new_fy_value, row_currency = tidy_amount(row[counterpart_year])
+                    cfy_start, cfy_end = re.match("FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
+                    existing_cfy_value = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
+                    difference = new_fy_value-existing_cfy_value
+                    if difference == 0:
+                        continue
+                    cf_date = util.fq_fy_to_date(1, int("20{}".format(cfy_start))).date()
+                    inserted = qcounterpart_funding.create_or_update_counterpart_funding(activity_id, cf_date, new_fy_value)
+                    updated_counterpart_years.append(u"FY{}/{}".format(cfy_start, cfy_end))
+                if updated_years or updated_counterpart_years or updated_activity_data:
                     num_updated_activities += 1
                     qactivity.activity_updated(activity.id)
                 if updated_years:
