@@ -15,13 +15,6 @@ from maediprojects.lib import codelists, util
 
 blueprint = Blueprint('activities', __name__, url_prefix='/', static_folder='../static')
 
-
-ALLOWED_EXTENSIONS = set(['xlsx', 'xls'])
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
 @blueprint.route("/")
 @login_required
 def dashboard():

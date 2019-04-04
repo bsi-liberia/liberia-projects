@@ -2,7 +2,7 @@ from collections import OrderedDict, defaultdict
 
 from flask import Blueprint, request, \
     url_for, Response, send_file, current_app, \
-    render_template, redirect
+    render_template, redirect, flash
 from flask_login import login_required, current_user
 
 from maediprojects.query import activity as qactivity
@@ -16,6 +16,11 @@ from maediprojects.extensions import db
 
 
 blueprint = Blueprint('exports', __name__, url_prefix='/', static_folder='../static')
+
+ALLOWED_EXTENSIONS = set(['xlsx', 'xls'])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Legacy URL
 @blueprint.route("/export/")
