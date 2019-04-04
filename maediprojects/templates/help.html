@@ -1,4 +1,7 @@
 {% set active_page='help' %}{% extends "layout.html" %}
+
+{% block body_classes %}help-page{% endblock %}
+
 {% block title %}{{ _('Help') }}{% endblock %}
 {% block content %}
 {{ markdown_text }}

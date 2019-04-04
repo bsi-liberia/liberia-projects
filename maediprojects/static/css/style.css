@@ -32,6 +32,37 @@ body {
 #conditions .checkbox span.form-control-feedback {
   line-height:20px;
 }
+td.number, th.number {
+  text-align: right;
+}
+
+.toc {
+  border: 1px solid #eeeeee;
+  padding: 8px;
+  float: right;
+  width: 350px;
+  clear: none; }
+  @media screen and (max-width: 600px) {
+    .toc {
+      width: 100%; } }
+  .toc .toctitle {
+    font-size: 24px;
+  }
+  .toc li {
+    list-style-type: none;}
+  .toc ul {
+    margin-left: 0px; }
+  .toc ul li {
+    list-style-type: square;}
+  .toc ul li ul {
+    margin-left: 0px;
+  }
+  .toc ul li ul li {
+    list-style-type: circle;
+  }
+
+  .toc li > ul, .toc li > ol {
+    margin-left: 10px; }
 
 /* D3 TIP */
 .d3-tip {
@@ -272,4 +303,8 @@ img.brand {
 }
 #filtersAppliedLabel a {
   color: #ffffff;
+}
+.help-page h2, .help-page h3 {
+    padding-top: 70px;
+    margin-top: -50px;
 }

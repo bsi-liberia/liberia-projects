@@ -23,7 +23,7 @@
     }
     </style>
 </head>
-<body>
+<body class="{% block body_classes %}{% endblock %}">
     <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -43,11 +43,22 @@
           <ul class="nav navbar-nav">
             <li {% if active_page == "dashboard" %}class="active"{% endif %}><a href="{{ url_for('activities.dashboard') }}">Home</a></li>
             <li {% if active_page == "activities" %}class="active"{% endif %}><a href="{{ url_for('activities.activities') }}">Activities</a></li>
+            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              Reports
+              <b class="caret"></b>
+              </a>
+              <ul class="dropdown-menu">
+              {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "both"] %}
+              <li><a href="{{ url_for('reports.milestones') }}">{{ _('Milestones') }}</a></li>
+              {% endif %}
+              <li><a href="{{ url_for('reports.counterpart_funding') }}">{{ _('Counterpart funding') }}</a></li>
+              </ul>
+            </li>
+            {% endif %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            {% if loggedinuser.permissions_dict["domestic_external"] == "domestic" %}
-            <li><a href="{{ url_for('milestones') }}">{{ _('Milestones') }}</a></li>
-            {% endif %}
             <li><a href="{{ url_for('activities.export') }}">{{ _('Export data') }}</a></li>
             <li><a href="{{ url_for('documentation.help') }}">{{ _('Help') }}</a></li>
             <li class="dropdown">
