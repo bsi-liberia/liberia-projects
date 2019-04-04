@@ -61,6 +61,10 @@ class xlsxDictWriter(object):
         self.writerow(dict(map(
             lambda x: (x, x), self.header_mapping.keys()
         )))
+        for col in range(1, len(self.header_mapping)+1):
+            self.ws['{}1'.format(
+                get_column_letter(col)
+            )].font = Font(bold=True)
 
     def delete_first_sheet(self):
         self.wb.remove(self.wb.worksheets[0])
