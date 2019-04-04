@@ -345,7 +345,9 @@ def generate_xlsx_export_template(data, mtef=False):
     if mtef:
         current_year = datetime.datetime.utcnow().date().year
         mtef_cols = [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+3)]
+        counterpart_funding_cols = [u"FY{}/{} (GoL counterpart fund request)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+1)]
         _headers = [u"ID", u"Project code", u"Activity Title"]
+        _headers += counterpart_funding_cols
         _headers += mtef_cols
         _headers += [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
     u"County"]
@@ -357,8 +359,12 @@ def generate_xlsx_export_template(data, mtef=False):
     writer = xlsxDictWriter(_headers)
     cl_lookups = get_codelists_lookups()
 
-    myFill = PatternFill(start_color='FFFF00',
+    yellowFill = PatternFill(start_color='FFFF00',
                          end_color='FFFF00',
+                         fill_type = 'solid')
+
+    orangeFill = PatternFill(start_color='F79646',
+                         end_color='F79646',
                          fill_type = 'solid')
 
     statuses = get_codelists_lookups_by_name()["ActivityStatus"].keys()
@@ -399,35 +405,41 @@ def generate_xlsx_export_template(data, mtef=False):
                     float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+            for counterpart_year in counterpart_funding_cols:
+                cfy_start, cfy_end = re.match("FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
+                existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
             writer.writerow(existing_activity)
         if mtef == True:
             for rownum in range(1+1, len(activities)+2):
-                writer.ws.cell(row=rownum,column=4).fill = myFill
-                writer.ws.cell(row=rownum,column=5).fill = myFill
-                writer.ws.cell(row=rownum,column=6).fill = myFill
+                writer.ws.cell(row=rownum,column=4).fill = orangeFill
+                writer.ws.cell(row=rownum,column=5).fill = yellowFill
+                writer.ws.cell(row=rownum,column=6).fill = yellowFill
+                writer.ws.cell(row=rownum,column=7).fill = yellowFill
                 writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
                 writer.ws.cell(row=rownum,column=5).number_format = u'"USD "#,##0.00'
                 writer.ws.cell(row=rownum,column=6).number_format = u'"USD "#,##0.00'
-            writer.ws.column_dimensions[u"C"].width = 70
-            writer.ws.column_dimensions[u"D"].width = 15
-            writer.ws.column_dimensions[u"E"].width = 15
-            writer.ws.column_dimensions[u"F"].width = 15
-            writer.ws.column_dimensions[u"G"].width = 15
-            writer.ws.column_dimensions[u"H"].width = 20
+                writer.ws.cell(row=rownum,column=7).number_format = u'"USD "#,##0.00'
+            writer.ws.column_dimensions[u"C"].width = 50
+            writer.ws.column_dimensions[u"D"].width = 35
+            writer.ws.column_dimensions[u"E"].width = 18
+            writer.ws.column_dimensions[u"F"].width = 18
+            writer.ws.column_dimensions[u"G"].width = 18
+            writer.ws.column_dimensions[u"H"].width = 18
             writer.ws.column_dimensions[u"I"].width = 20
+            writer.ws.column_dimensions[u"J"].width = 20
             v_id.add('A2:A{}'.format(len(activities)+2))
-            v_number.add('D2:F{}'.format(len(activities)+2))
-            v_status.add('G2:G{}'.format(len(activities)+2))
-            v_date.add('H2:I{}'.format(len(activities)+2))
+            v_number.add('D2:G{}'.format(len(activities)+2))
+            v_status.add('H2:H{}'.format(len(activities)+2))
+            v_date.add('I2:J{}'.format(len(activities)+2))
         elif mtef == False:
             for rownum in range(1+1, len(activities)+2):
-                writer.ws.cell(row=rownum,column=4).fill = myFill
+                writer.ws.cell(row=rownum,column=4).fill = yellowFill
                 writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
             writer.ws.column_dimensions[u"C"].width = 70
-            writer.ws.column_dimensions[u"D"].width = 15
-            writer.ws.column_dimensions[u"E"].width = 15
+            writer.ws.column_dimensions[u"D"].width = 18
+            writer.ws.column_dimensions[u"E"].width = 18
             writer.ws.column_dimensions[u"F"].width = 20
-            writer.ws.column_dimensions[u"G"].width = 15
+            writer.ws.column_dimensions[u"G"].width = 20
             v_id.add('A2:A{}'.format(len(activities)+2))
             v_number.add('D2:D{}'.format(len(activities)+2))
             v_status.add('E2:E{}'.format(len(activities)+2))
