@@ -42,7 +42,7 @@ def register_blueprints(app):
     app.register_blueprint(views.documentation.blueprint)
     app.register_blueprint(views.users.blueprint)
     app.register_blueprint(views.reports.blueprint)
-
+    app.register_blueprint(views.exports.blueprint)
 
 def register_errorhandlers(app):
     def render_error(error):
