@@ -88,3 +88,61 @@ def update_entry(data):
         )
 
     return True
+
+def create_or_update_counterpart_funding(activity_id, required_date, value):
+    """
+    Updates the value of required counterpart funding for a given `activity_id`
+    and `required_date`.
+
+    If the value is 0, then the row is deleted from the database.
+
+    If there is no existing row, a new row is added to the database.
+
+    If there is an existing row, that row is updated.
+    """
+    print required_date
+    cf = models.ActivityCounterpartFunding.query.filter_by(
+        activity_id = activity_id,
+        required_date = required_date
+    ).first()
+    # If 0, we just remove the row from database
+    if cf and value == 0:
+        old_value = cf.as_dict()
+        db.session.delete(cf)
+        db.session.commit()
+        qactivity.activity_updated(cf.activity_id,
+            {
+            "user_id": current_user.id,
+            "mode": "delete",
+            "target": "ActivityCounterpartFunding",
+            "target_id": cf.id,
+            "old_value": old_value,
+            "value": None
+            }
+        )
+        return True
+    # If no existing row, we create one
+    if not cf:
+        cf = models.ActivityCounterpartFunding()
+        cf.activity_id = activity_id
+        cf.required_date = required_date
+        mode = "add"
+        old_value = None
+    # There is an existing row, so we use it
+    else:
+        mode = "update"
+        old_value = cf.as_dict()
+    cf.required_value = value
+    db.session.add(cf)
+    db.session.commit()
+    qactivity.activity_updated(cf.activity_id,
+            {
+            "user_id": current_user.id,
+            "mode": mode,
+            "target": "ActivityCounterpartFunding",
+            "target_id": cf.id,
+            "old_value": old_value,
+            "value": cf.as_dict()
+            }
+        )
+    return True
