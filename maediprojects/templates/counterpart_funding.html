@@ -26,8 +26,8 @@
 					<td>{% for ministry in activity.classification_data['aligned-ministry-agency']['entries'] %}
 						{{ ministry.codelist_code.name }}
 					{% endfor %}</td>
-					<td class="number">{{ "{:,.2f}".format(activity.FY_counterpart_funding_for_FY("2019")) }}</td>
-					<td class="number">{{ "{:,.2f}".format(activity.FY_forwardspends_for_FY("2019")) }}</td>
+					<td class="number">{{ "{:,.2f}".format(activity._fy_counterpart_funding) }}</td>
+					<td class="number">{{ "{:,.2f}".format(activity._fy_forwardspends) }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>

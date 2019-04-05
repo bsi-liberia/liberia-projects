@@ -5,6 +5,7 @@ from flask import Blueprint, render_template
 from flask_login import login_required, current_user
 
 from maediprojects import models
+from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.lib import util
 
 
@@ -37,10 +38,14 @@ def counterpart_funding():
     activities = models.Activity.query.filter_by(
             domestic_external=u"external"
         ).all()
+
+    activities = qcounterpart_funding.annotate_activities_with_aggregates(
+        activities)
+
     return render_template(
         "counterpart_funding.html",
-        activities=activities,
-        loggedinuser=current_user
+        activities = activities,
+        loggedinuser = current_user
     )
 
 
