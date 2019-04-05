@@ -106,7 +106,7 @@ def process_transaction_classifications(activity):
     return classifications
 
 def get_data_from_header(column_name):
-    pattern = "(\d*) Q(\d) \(D\)"
+    pattern = r"(\d*) Q(\d) \(D\)"
     result = re.match(pattern, column_name).groups()
     return (result[1], result[0])
 
@@ -174,10 +174,10 @@ def import_xls_mtef(input_file):
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
     def filter_mtef(column):
-        pattern = "(.*) \(MTEF\)$"
+        pattern = r"(.*) \(MTEF\)$"
         return re.match(pattern, column)
     def filter_counterpart(column):
-        pattern = "(.*) \(GoL counterpart fund request\)$"
+        pattern = r"(.*) \(GoL counterpart fund request\)$"
         return re.match(pattern, column)
     try:
         for sheet_id in range(0,num_sheets):
@@ -204,7 +204,7 @@ def import_xls_mtef(input_file):
                 # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
                     new_fy_value, row_currency = tidy_amount(row[mtef_year])
-                    fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                    fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                     existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
@@ -225,7 +225,7 @@ def import_xls_mtef(input_file):
                 updated_counterpart_years = []
                 for counterpart_year in counterpart_funding_cols:
                     new_fy_value, row_currency = tidy_amount(row[counterpart_year])
-                    cfy_start, cfy_end = re.match("FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
+                    cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
                     existing_cfy_value = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
                     difference = new_fy_value-existing_cfy_value
                     if difference == 0:
@@ -422,13 +422,13 @@ def generate_xlsx_export_template(data, mtef=False):
         for activity in activities:
             existing_activity = activity_to_json(activity, cl_lookups)
             for mtef_year in mtef_cols:
-                fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                 existing_activity[mtef_year] = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
             for counterpart_year in counterpart_funding_cols:
-                cfy_start, cfy_end = re.match("FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
+                cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
                 existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
             writer.writerow(existing_activity)
         if mtef == True:
