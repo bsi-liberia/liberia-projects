@@ -44,8 +44,8 @@ def counterpart_funding():
 
     return render_template(
         "counterpart_funding.html",
-        activities=activities,
-        loggedinuser=current_user
+        activities = activities,
+        loggedinuser = current_user
     )
 
 
