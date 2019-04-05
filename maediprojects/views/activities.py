@@ -8,9 +8,8 @@ from maediprojects.query import codelists as qcodelists
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
-from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
-from maediprojects.lib import codelists, util
+from maediprojects.lib import codelists
 
 
 blueprint = Blueprint('activities', __name__, url_prefix='/', static_folder='../static')

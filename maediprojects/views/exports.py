@@ -1,18 +1,14 @@
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from flask import Blueprint, request, \
-    url_for, Response, send_file, current_app, \
-    render_template, redirect, flash
+    url_for, Response, send_file, render_template, redirect, flash
 from flask_login import login_required, current_user
 
 from maediprojects.query import activity as qactivity
 from maediprojects.query import organisations as qorganisations
-from maediprojects.query import generate as qgenerate
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.lib import util
-from maediprojects import models
-from maediprojects.extensions import db
 
 
 blueprint = Blueprint('exports', __name__, url_prefix='/', static_folder='../static')
