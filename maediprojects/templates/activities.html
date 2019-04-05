@@ -99,8 +99,8 @@
     <thead>
       <th>{% endraw %}{{ _('Title') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Organisation') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Commitments') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Disbursements') }}{% raw %}</th>
+      <th class="number">{% endraw %}{{ _('Commitments') }}{% raw %}</th>
+      <th class="number">{% endraw %}{{ _('Disbursements') }}{% raw %}</th>
       <th>{% endraw %}{{ _('User') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Last updated') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Edit') }}{% raw %}</th>
@@ -111,8 +111,8 @@
       <tr>
         <td><a href="{% endraw %}{{ activity_base_url }}{% raw %}{{ id }}/">{{ title }}</a></td>
         <td>{{ reporting_org }}</td>
-        <td>{{ total_commitments }}</td>
-        <td>{{ total_disbursements }}</td>
+        <td class="number">{{ total_commitments }}</td>
+        <td class="number">{{ total_disbursements }}</td>
         <td>{{ user }}</td>
         <td>{{ updated_date }}</td>
         <td>{{#permissions.edit}}<a href="{% endraw %}{{ activity_base_url }}{% raw %}{{ id }}/edit/"
