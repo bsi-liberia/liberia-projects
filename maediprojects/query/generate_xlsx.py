@@ -16,6 +16,7 @@ from maediprojects import models
 from maediprojects.extensions import db
 from maediprojects.query import activity as qactivity
 from maediprojects.query import finances as qfinances
+from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists
@@ -60,6 +61,10 @@ class xlsxDictWriter(object):
         self.writerow(dict(map(
             lambda x: (x, x), self.header_mapping.keys()
         )))
+        for col in range(1, len(self.header_mapping)+1):
+            self.ws['{}1'.format(
+                get_column_letter(col)
+            )].font = Font(bold=True)
 
     def delete_first_sheet(self):
         self.wb.remove(self.wb.worksheets[0])
@@ -101,7 +106,7 @@ def process_transaction_classifications(activity):
     return classifications
 
 def get_data_from_header(column_name):
-    pattern = "(\d*) Q(\d) \(D\)"
+    pattern = r"(\d*) Q(\d) \(D\)"
     result = re.match(pattern, column_name).groups()
     return (result[1], result[0])
 
@@ -169,7 +174,10 @@ def import_xls_mtef(input_file):
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
     def filter_mtef(column):
-        pattern = "(.*) \(MTEF\)$"
+        pattern = r"(.*) \(MTEF\)$"
+        return re.match(pattern, column)
+    def filter_counterpart(column):
+        pattern = r"(.*) \(GoL counterpart fund request\)$"
         return re.match(pattern, column)
     try:
         for sheet_id in range(0,num_sheets):
@@ -177,6 +185,7 @@ def import_xls_mtef(input_file):
             data = xlsx_to_csv.getDataFromFile(
                 input_file.filename, input_file.read(), sheet_id, True)
             mtef_cols = filter(filter_mtef, data[0].keys())
+            counterpart_funding_cols = filter(filter_counterpart, data[0].keys())
             if len(mtef_cols) == 0:
                 flash("No columns containing MTEF projections data \
                 were found in the uploaded spreadsheet!", "danger")
@@ -192,9 +201,10 @@ def import_xls_mtef(input_file):
                 existing_activity = activity_to_json(activity, cl_lookups)
                 updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
                 updated_years = []
+                # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
                     new_fy_value, row_currency = tidy_amount(row[mtef_year])
-                    fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                    fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                     existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
@@ -211,7 +221,19 @@ def import_xls_mtef(input_file):
                         year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
                         inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
                     updated_years.append(u"FY{}/{}".format(fy_start, fy_end))
-                if updated_years or updated_activity_data:
+                # Parse counterpart funding columns
+                updated_counterpart_years = []
+                for counterpart_year in counterpart_funding_cols:
+                    new_fy_value, row_currency = tidy_amount(row[counterpart_year])
+                    cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
+                    existing_cfy_value = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
+                    difference = new_fy_value-existing_cfy_value
+                    if difference == 0:
+                        continue
+                    cf_date = util.fq_fy_to_date(1, int("20{}".format(cfy_start))).date()
+                    inserted = qcounterpart_funding.create_or_update_counterpart_funding(activity_id, cf_date, new_fy_value)
+                    updated_counterpart_years.append(u"FY{}/{}".format(cfy_start, cfy_end))
+                if updated_years or updated_counterpart_years or updated_activity_data:
                     num_updated_activities += 1
                     qactivity.activity_updated(activity.id)
                 if updated_years:
@@ -345,7 +367,9 @@ def generate_xlsx_export_template(data, mtef=False):
     if mtef:
         current_year = datetime.datetime.utcnow().date().year
         mtef_cols = [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+3)]
+        counterpart_funding_cols = [u"FY{}/{} (GoL counterpart fund request)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+1)]
         _headers = [u"ID", u"Project code", u"Activity Title"]
+        _headers += counterpart_funding_cols
         _headers += mtef_cols
         _headers += [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
     u"County"]
@@ -357,8 +381,12 @@ def generate_xlsx_export_template(data, mtef=False):
     writer = xlsxDictWriter(_headers)
     cl_lookups = get_codelists_lookups()
 
-    myFill = PatternFill(start_color='FFFF00',
+    yellowFill = PatternFill(start_color='FFFF00',
                          end_color='FFFF00',
+                         fill_type = 'solid')
+
+    orangeFill = PatternFill(start_color='F79646',
+                         end_color='F79646',
                          fill_type = 'solid')
 
     statuses = get_codelists_lookups_by_name()["ActivityStatus"].keys()
@@ -394,40 +422,46 @@ def generate_xlsx_export_template(data, mtef=False):
         for activity in activities:
             existing_activity = activity_to_json(activity, cl_lookups)
             for mtef_year in mtef_cols:
-                fy_start, fy_end = re.match("FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                 existing_activity[mtef_year] = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+            for counterpart_year in counterpart_funding_cols:
+                cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
+                existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
             writer.writerow(existing_activity)
         if mtef == True:
             for rownum in range(1+1, len(activities)+2):
-                writer.ws.cell(row=rownum,column=4).fill = myFill
-                writer.ws.cell(row=rownum,column=5).fill = myFill
-                writer.ws.cell(row=rownum,column=6).fill = myFill
+                writer.ws.cell(row=rownum,column=4).fill = orangeFill
+                writer.ws.cell(row=rownum,column=5).fill = yellowFill
+                writer.ws.cell(row=rownum,column=6).fill = yellowFill
+                writer.ws.cell(row=rownum,column=7).fill = yellowFill
                 writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
                 writer.ws.cell(row=rownum,column=5).number_format = u'"USD "#,##0.00'
                 writer.ws.cell(row=rownum,column=6).number_format = u'"USD "#,##0.00'
-            writer.ws.column_dimensions[u"C"].width = 70
-            writer.ws.column_dimensions[u"D"].width = 15
-            writer.ws.column_dimensions[u"E"].width = 15
-            writer.ws.column_dimensions[u"F"].width = 15
-            writer.ws.column_dimensions[u"G"].width = 15
-            writer.ws.column_dimensions[u"H"].width = 20
+                writer.ws.cell(row=rownum,column=7).number_format = u'"USD "#,##0.00'
+            writer.ws.column_dimensions[u"C"].width = 50
+            writer.ws.column_dimensions[u"D"].width = 35
+            writer.ws.column_dimensions[u"E"].width = 18
+            writer.ws.column_dimensions[u"F"].width = 18
+            writer.ws.column_dimensions[u"G"].width = 18
+            writer.ws.column_dimensions[u"H"].width = 18
             writer.ws.column_dimensions[u"I"].width = 20
+            writer.ws.column_dimensions[u"J"].width = 20
             v_id.add('A2:A{}'.format(len(activities)+2))
-            v_number.add('D2:F{}'.format(len(activities)+2))
-            v_status.add('G2:G{}'.format(len(activities)+2))
-            v_date.add('H2:I{}'.format(len(activities)+2))
+            v_number.add('D2:G{}'.format(len(activities)+2))
+            v_status.add('H2:H{}'.format(len(activities)+2))
+            v_date.add('I2:J{}'.format(len(activities)+2))
         elif mtef == False:
             for rownum in range(1+1, len(activities)+2):
-                writer.ws.cell(row=rownum,column=4).fill = myFill
+                writer.ws.cell(row=rownum,column=4).fill = yellowFill
                 writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
             writer.ws.column_dimensions[u"C"].width = 70
-            writer.ws.column_dimensions[u"D"].width = 15
-            writer.ws.column_dimensions[u"E"].width = 15
+            writer.ws.column_dimensions[u"D"].width = 18
+            writer.ws.column_dimensions[u"E"].width = 18
             writer.ws.column_dimensions[u"F"].width = 20
-            writer.ws.column_dimensions[u"G"].width = 15
+            writer.ws.column_dimensions[u"G"].width = 20
             v_id.add('A2:A{}'.format(len(activities)+2))
             v_number.add('D2:D{}'.format(len(activities)+2))
             v_status.add('E2:E{}'.format(len(activities)+2))

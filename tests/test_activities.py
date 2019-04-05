@@ -4,7 +4,6 @@ from flask import url_for
 class TestActivities:
     def test_nonauth_routes_work(self, client):
         routes = [
-            (url_for('activities.export'), 200),
             (url_for('activities.dashboard'), 302),
             (url_for('activities.activities'), 302),
             (url_for('activities.activity_new'), 302),

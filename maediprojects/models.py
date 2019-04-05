@@ -589,9 +589,9 @@ class ActivityCounterpartFunding(db.Model):
             index=True)
     required_value = sa.Column(sa.Float(precision=2))
     required_date = sa.Column(sa.Date)
-    budgeted = sa.Column(sa.Boolean)
-    allotted = sa.Column(sa.Boolean)
-    disbursed = sa.Column(sa.Boolean)
+    budgeted = sa.Column(sa.Boolean, default=False)
+    allotted = sa.Column(sa.Boolean, default=False)
+    disbursed = sa.Column(sa.Boolean, default=False)
 
     __table_args__ = (sa.UniqueConstraint('activity_id','required_date'),)
 

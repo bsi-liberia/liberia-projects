@@ -1,9 +1,9 @@
 import datetime
 import json
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from flask import Blueprint, request, \
-    url_for, Response, send_file, current_app
+    url_for, Response, current_app
 from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
@@ -18,7 +18,6 @@ from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate as qgenerate
 from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
-from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import user as quser
 from maediprojects.lib import util
 from maediprojects.lib.codelists import get_codelists_lookups
@@ -364,7 +363,7 @@ def api_codelists_new():
 def api_list_routes():
     return jsonify({
         "iati": url_for("api.api_list_iati_files", _external=True),
-        "csv": url_for("api.activities_csv", _external=True)
+        "csv": url_for("exports.activities_csv", _external=True)
     })
 
 @blueprint.route("/api/iati.json")
@@ -480,63 +479,3 @@ def generate_iati_xml(version, country_code):
         return Response(xml, mimetype='text/xml')
 
     return "ERROR: UNKNOWN VERSION"
-
-@blueprint.route("/api/activities.csv")
-def activities_csv():
-    data = qgenerate_csv.generate_csv()
-    data.seek(0)
-    return Response(data, mimetype="text/csv")
-
-@blueprint.route("/api/activities_external_transactions.xlsx")
-def activities_xlsx_transactions():
-    data = qgenerate_xlsx.generate_xlsx_transactions(u"domestic_external", u"external")
-    data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-@blueprint.route("/api/activities_external.xlsx")
-def activities_xlsx():
-    data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
-    data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-@blueprint.route("/api/activities_all.xlsx")
-def all_activities_xlsx():
-    data = qgenerate_xlsx.generate_xlsx()
-    data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-@blueprint.route("/api/activities_filtered.xlsx")
-def all_activities_xlsx_filtered():
-    arguments = request.args.to_dict()
-    data = qgenerate_xlsx.generate_xlsx_filtered(arguments)
-    data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-@blueprint.route("/api/export_template.xlsx")
-@blueprint.route("/api/export_template/<organisation_id>.xlsx")
-def export_donor_template(organisation_id=None, mtef=False):
-    if request.args.get('mtef'):
-        fyfq_string = u"MTEF Forward Projections"
-        mtef = True
-    else:
-        fyfq_string = util.column_data_to_string(util.previous_fy_fq())
-        mtef = False
-    if organisation_id:
-        reporting_org_name = qorganisations.get_organisation_by_id(
-            organisation_id).name
-        filename = "AMCU {} Template {}.xlsx".format(fyfq_string, reporting_org_name)
-        activities = {reporting_org_name: qactivity.list_activities_by_filters({
-            u"reporting_org_id": organisation_id}) }
-    else:
-        filename = "AMCU {} Template All Donors.xlsx".format(fyfq_string)
-        all_activities = qactivity.list_activities_by_filters({
-                u"domestic_external": u"external"
-            })
-
-        activities = defaultdict(list)
-        for a in all_activities:
-            activities[a.reporting_org.name].append(a)
-    data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef)
-    data.seek(0)
-    return send_file(data, as_attachment=True, attachment_filename=filename,
-        cache_timeout=5)
