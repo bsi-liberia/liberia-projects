@@ -104,13 +104,13 @@
     <table class="table" id="commitments-table">
       <thead>
         <th>Period</th>
-        <th>Value</th>
+        <th class="number">Value</th>
       </thead>
       <tbody>
         {% for k, commitment in activity.FY_commitments_dict.items() %}
         <tr>
           <td>FY{{commitment.fiscal_year}} {{commitment.fiscal_quarter}}</td>
-          <td>{{commitment.value}}</td>
+          <td class="number">{{ "{:,.2f}".format(commitment.value) }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -121,13 +121,13 @@
     <table class="table" id="disbursements-table">
       <thead>
         <th>Period</th>
-        <th>Value</th>
+        <th class="number">Value</th>
       </thead>
       <tbody>
         {% for k, disbursement in activity.FY_disbursements_dict.items() %}
         <tr>
           <td>FY{{disbursement.fiscal_year}} {{disbursement.fiscal_quarter}}</td>
-          <td>{{disbursement.value}}</td>
+          <td class="number">{{ "{:,.2f}".format(disbursement.value) }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -141,13 +141,13 @@
     <table class="table" id="mtef-projections-table">
       <thead>
         <th>Period</th>
-        <th>Value</th>
+        <th class="number">Value</th>
       </thead>
       <tbody>
         {% for k, fs in activity.FY_forward_spend_dict.items() %}
         <tr>
           <td>FY{{fs.fiscal_year}} {{fs.fiscal_quarter}}</td>
-          <td>{{fs.value}}</td>
+          <td class="number">{{ "{:,.2f}".format(fs.value) }}</td>
         </tr>
         {% endfor %}
       </tbody>
