@@ -100,7 +100,7 @@ def create_or_update_counterpart_funding(activity_id, required_date, value):
 
     If there is an existing row, that row is updated.
     """
-    print required_date
+    print(required_date)
     cf = models.ActivityCounterpartFunding.query.filter_by(
         activity_id = activity_id,
         required_date = required_date
