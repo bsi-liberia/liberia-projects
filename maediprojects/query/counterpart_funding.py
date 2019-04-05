@@ -1,5 +1,4 @@
 from flask_login import current_user
-from sqlalchemy import *
 import datetime
 from maediprojects import models
 from maediprojects.extensions import db
