@@ -551,7 +551,6 @@ setupCF()
 $(document).on("change", ".table-counterpart-funding input[type=text], \
     .table-counterpart-funding input[type=checkbox], \
     .table-counterpart-funding select", function(e) {
-      console.log(this.name);
   if (['budgeted', 'allotted', 'disbursed'].indexOf(this.name) >= 0) {
     if (this.checked) {
       value = true;
@@ -581,7 +580,6 @@ $(document).on("click", ".addCounterpartFunding", function(e) {
   var required_value = 0.0;
   var available_fys = $.map(
       $('#counterpart-funding-rows tr select[name="required_fy"]'), function(v, i) {
-      console.log(v);
         return parseInt(v.value);
     });
   if (available_fys.length > 0) {
@@ -604,8 +602,6 @@ $(document).on("click", ".addCounterpartFunding", function(e) {
         selected_val = {true:" selected", false: ""}
         data["fiscal_years"] = $.map(counterpart_funding_data.fiscal_years,
             function(dfy, ify) {
-              console.log(dfy)
-              console.log(required_fy)
               return {
                 'text': "FY" + dfy + "/" + (parseInt(dfy)+1),
                 'value': dfy,
