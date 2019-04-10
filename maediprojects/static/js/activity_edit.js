@@ -237,7 +237,7 @@ $('#confirm-delete').on('click', '.btn-ok', function(e) {
     deleteCounterpartFunding(counterpart_funding_id)
   } else if (delete_target == "transaction") {
     var transaction_id = $(this).data('transaction_id');
-    /*deleteFinancial(transaction_id);*/
+    deleteFinancial(transaction_id);
   }
   $modalDiv.modal('hide');
 });
