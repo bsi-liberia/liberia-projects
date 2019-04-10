@@ -141,13 +141,22 @@ def finances_edit_attr(activity_id):
         'value': request.form['value'],
         'finances_id': request.form['finances_id'],
     }
-    if data["attr"] == "mtef_sector":
+
+    #FIXME
+    if (data.get("attr") == "currency_automatic") and (data.get("value") == "1"):
+        # Handle update, and then return required data
+        return jsonify({
+        "currency_rate": "1.5",
+        "currency_value_date": "2019-01-01",
+        "currency_source": "OECD something"
+        })
+    elif data["attr"] == "mtef_sector":
         data["attr"] = 'mtef-sector' #FIXME make consistent
         update_status = qfinances.update_finances_classification(data)
     else:
         update_status = qfinances.update_attr(data)
-    if update_status == True:
-        return "success"
+    if update_status:
+        return jsonify(update_status.as_dict())
     return "error"
 
 @blueprint.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
