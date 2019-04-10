@@ -127,7 +127,7 @@ def api_activity_finances(activity_id):
             result = qfinances.delete_finances(activity_id, request.form["transaction_id"])
         return str(result)
     elif request.method == "GET":
-        finances = list(map(lambda x: x.as_dict(),
+        finances = list(map(lambda transaction: transaction.as_dict(),
                          qactivity.get_activity(activity_id).finances))
         return jsonify(finances = finances)
 
