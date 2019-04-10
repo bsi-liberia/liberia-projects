@@ -69,6 +69,7 @@ def update_finances_classification(data):
         "value": {data["attr"]: data["value"]}
         }
         )
+    return models.ActivityFinances.query.filter_by(id=data["finances_id"]).first()
 
 def delete_finances(activity_id, finances_id):
     print "Delete activity id {} finances id {}".format(activity_id, finances_id)
@@ -126,7 +127,7 @@ def update_attr(data):
         }
         )
 
-    return True
+    return finance
 
 # Forward spend data
 
