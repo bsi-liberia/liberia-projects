@@ -386,6 +386,9 @@ var generateTransaction = function(d, codelists) {
       return {"name": c.name, "code": c.code, "selected": selected};
     });
   });
+  d["transaction_value_original"] = d["transaction_value"];
+  d["transaction_value"] = d["transaction_value"].toLocaleString(
+    undefined, {maximumFractionDigits:2, minimumFractionDigits:2});
   return d;
 }
 
@@ -433,7 +436,10 @@ var setupFinances = function() {
 	});
 };
 setupFinances()
-$(document).on("change", ".finances-data input[type=text], #finances select", function(e) {
+$(document).on("change", ".finances-data input[type=text], #finances select, .finances-data input[type=hidden]", function(e) {
+  var change_name = this.name;
+  var change_value = this.value;
+  var finances_id = $(this).closest("tr").attr("data-financial-id");
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
     'attr': this.name,
@@ -443,6 +449,11 @@ $(document).on("change", ".finances-data input[type=text], #finances select", fu
   resetFormGroup(input);
   $.post(api_update_activity_finances_url, data, function(resultdata) {
     successFormGroup(input);
+    if ((input.name == 'currency_automatic') && (input.value == "1")) {
+      $("#financial-" + finances_id + " input[name=currency_rate]").val(resultdata["currency_rate"]);
+      $("#financial-" + finances_id + " input[name=currency_value_date]").val(resultdata["currency_value_date"]);
+      $("#financial-" + finances_id + " input[name=currency_source]").val(resultdata["currency_source"]);
+    }
   }).fail(function(){
     errorFormGroup(input);
   });  
@@ -620,4 +631,43 @@ if (url.match('#')) {
 $('.nav-tabs a').on('shown.bs.tab', function (e) {
     window.location.hash = e.target.hash;
     window.scrollTo(0, 0);
-})
+});
+// Adjust currency popup
+$("#adjustCurrency").on('show.bs.modal', function(e) {
+  var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
+  $(this).data("financial-id", target);
+  var row_id = $(e.relatedTarget).closest("tr")[0].id;
+  var row_data = {}
+  $.each($("#" + row_id + " input, #" + row_id + " select").serializeArray(), function() {
+    row_data[this.name] = this.value;
+  });
+  $("#adjustCurrency select[name='currency']").val([row_data['currency']]);
+  $("#adjustCurrency input[name='currency_automatic']").val([row_data['currency_automatic']]);
+  $("#adjustCurrency_currency_rate").val(row_data['currency_rate']);
+  $("#adjustCurrency_currency_value_date").val(row_data['currency_value_date']);
+  $("#adjustCurrency_currency_source").val(row_data['currency_source']);
+});
+$('#adjustCurrency').on('click', '.btn-ok', function(e) {
+  var $modalDiv = $(e.delegateTarget);
+  var tr_id = $modalDiv.data('financial-id');
+  /* NB: if currency_automatic is 0 (manual), then disabled fields
+  are NOT updated because they aren't returned in serializeArray() */
+  $.each($("#adjustCurrency input, #adjustCurrency select").serializeArray(), function() {
+    var changedName = this.name;
+    var changedValue = this.value;
+    $("tr#financial-" + tr_id + " input[name='" + changedName + "'], \
+      tr#financial-" + tr_id + " select[name='" + changedName + "']").val(changedValue).trigger("change");
+  });
+  $modalDiv.modal('hide');
+});
+$("#adjustCurrency input[name='currency_automatic']").on("change", function(e) {
+  if (this.value == "1") {
+    $("#adjustCurrency_currency_rate, \
+      #adjustCurrency_currency_value_date, \
+      #adjustCurrency_currency_source").prop( "disabled", true );
+  } else {
+    $("#adjustCurrency_currency_rate, \
+      #adjustCurrency_currency_value_date, \
+      #adjustCurrency_currency_source").prop( "disabled", false );
+  }
+});
