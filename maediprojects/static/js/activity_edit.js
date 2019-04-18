@@ -81,7 +81,7 @@ $(document).on("click", "#iati-search-results-area .import a",
   tr = $(this).closest("tr")
   iati_identifier = tr.find("td.iati_identifier a").html();
   description = tr.find("td.description").html();
-  $("#code").val(iati_identifier);
+  $("#code").val(iati_identifier.trim());
   //$("#description").val(description);
   $('#iati-search-results-modal').modal('hide');
   $("#code").trigger("change");
