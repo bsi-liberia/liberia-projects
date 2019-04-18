@@ -32,6 +32,13 @@ body {
 #conditions .checkbox span.form-control-feedback {
   line-height:20px;
 }
+#finances td.currency-conversion.has-feedback span.form-control-feedback {
+  top: 7px;
+  left: 0px;
+}
+#finances td div.has-feedback .input-group span.form-control-feedback {
+  right: 40px;
+}
 td.number, th.number {
   text-align: right;
 }
