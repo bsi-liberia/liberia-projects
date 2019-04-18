@@ -224,13 +224,10 @@ def process_transaction_classifications(activity):
 def process_transaction(activity, amount, currency, column_name):
     provider = activity.funding_organisations[0].id
     receiver = activity.implementing_organisations[0].id
-
     fq, fy = util.get_data_from_header(column_name)
-    end_fq_date = util.fq_fy_to_date(fq, fy, "end")
-
+    end_fq_date = util.fq_fy_to_date(int(fq), int(fy), "end")
     disbursement = models.ActivityFinances()
-    disbursement.transaction_date = datetime.datetime.strptime(end_fq_date,
-        "%Y-%m-%d")
+    disbursement.transaction_date = end_fq_date
     disbursement.transaction_type = u"D"
     disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU template".format(
         fq, fy
@@ -404,7 +401,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                 row_value = row[column_name]
                 updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
                 fq, fy = util.get_data_from_header(column_name)
-                column_date = util.fq_fy_to_date(fq, fy, "end")
+                column_date = util.fq_fy_to_date(int(fq), int(fy), "end")
                 existing_value = float(existing_activity.get(column_name, 0))
                 existing_value_same_currency = qexchangerates.convert_to_currency(
                     currency = currency,
