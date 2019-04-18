@@ -235,8 +235,10 @@ def process_transaction(activity, amount, currency, column_name):
     disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU template".format(
         fq, fy
     )
-    disbursement.transaction_value = amount
     disbursement.currency = currency
+    disbursement.currency_automatic = True
+    disbursement.currency_source, disbursement.currency_rate, disbursement.currency_value_date = qexchangerates.get_exchange_rate(disbursement.transaction_date, disbursement.currency)
+    disbursement.transaction_value_original = amount
     disbursement.provider_org_id = provider
     disbursement.receiver_org_id = receiver
     disbursement.finance_type = activity.finance_type
@@ -281,8 +283,14 @@ def import_xls_mtef(input_file):
     def filter_counterpart(column):
         pattern = r"(.*) \(GoL counterpart fund request\)$"
         return re.match(pattern, column)
+    if u"Instructions" in xl_workbook.sheet_names():
+        currency = xl_workbook.sheet_by_name(u"Instructions").cell_value(5,2)
+        begin_sheet = 1
+    else:
+        currency = u"USD"
+        begin_sheet = 0
     try:
-        for sheet_id in range(0,num_sheets):
+        for sheet_id in range(begin_sheet,num_sheets):
             input_file.seek(0)
             data = xlsx_to_csv.getDataFromFile(
                 input_file.filename, input_file.read(), sheet_id, True)
@@ -305,20 +313,24 @@ def import_xls_mtef(input_file):
                 updated_years = []
                 # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
-                    new_fy_value, row_currency = tidy_amount(row[mtef_year])
+                    new_fy_value = row[mtef_year]
                     fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                     existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
-                    #FIXME need to handle multiple currencies later... also handle this in process_transaction()
-                    difference = new_fy_value-existing_fy_value
+
+                    new_fy_value_in_usd = qexchangerates.convert_from_currency(
+                        currency = currency,
+                        _date = datetime.datetime.utcnow().date(),
+                        value = new_fy_value)
+                    difference = new_fy_value_in_usd-existing_fy_value
                     # We ignore differences < 1 USD, because this can be due to rounding errors
                     # when we divided input date by 4.
                     if round(difference) == 0:
                         continue
                     # Create 1/4 of new_fy_value for each quarter in this FY
-                    value = round(new_fy_value/4.0, 2)
+                    value = round(new_fy_value_in_usd/4.0, 4)
                     for _fq in [1,2,3,4]:
                         year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
                         inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
@@ -326,7 +338,7 @@ def import_xls_mtef(input_file):
                 # Parse counterpart funding columns
                 updated_counterpart_years = []
                 for counterpart_year in counterpart_funding_cols:
-                    new_fy_value, row_currency = tidy_amount(row[counterpart_year])
+                    new_fy_value = row[counterpart_year]
                     cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
                     existing_cfy_value = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
                     difference = new_fy_value-existing_cfy_value
@@ -365,8 +377,14 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
     activity_id = None
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
+    if u"Instructions" in xl_workbook.sheet_names():
+        currency = xl_workbook.sheet_by_name(u"Instructions").cell_value(5,2)
+        begin_sheet = 1
+    else:
+        currency = u"USD"
+        begin_sheet = 0
     try:
-        for sheet_id in range(0,num_sheets):
+        for sheet_id in range(begin_sheet, num_sheets):
             input_file.seek(0)
             data = xlsx_to_csv.getDataFromFile(
                 input_file.filename, input_file.read(), sheet_id, True)
@@ -383,21 +401,27 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                         system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
-                row_value, row_currency = tidy_amount(row[column_name])
+                row_value = row[column_name]
                 updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
-                #FIXME need to handle multiple currencies later... also handle this in process_transaction()
-                difference = row_value-float(existing_activity.get(column_name, 0))
-                if (difference == 0) and (updated_activity_data == False):
+                fq, fy = util.get_data_from_header(column_name)
+                column_date = util.fq_fy_to_date(fq, fy, "end")
+                existing_value = float(existing_activity.get(column_name, 0))
+                existing_value_same_currency = qexchangerates.convert_to_currency(
+                    currency = currency,
+                    _date = column_date,
+                    value = existing_value)
+                difference = round(row_value - existing_value_same_currency, 4)
+                if (round(difference) == 0) and (updated_activity_data == False):
                     continue
-                if difference != 0:
+                if round(difference) != 0:
                     activity.finances.append(
-                        process_transaction(activity, difference, row_currency, column_name)
+                        process_transaction(activity, difference, currency, column_name)
                     )
                 db.session.add(activity)
                 num_updated_activities += 1
                 qactivity.activity_updated(activity.id)
 
-                if difference == 0:
+                if round(difference) == 0:
                     # Financial values not updated, only other activity data
                     flash(u"Updated {} (Project ID: {})".format(
                     activity.title, activity.id), "success")
@@ -407,8 +431,8 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                         new value is {}. New entry for {} added.".format(
                     util.column_data_to_string(column_name),
                     activity.title, activity.id,
-                    existing_activity.get(column_name),
-                    row.get(column_name),
+                    existing_value_same_currency,
+                    row_value,
                     difference
                     ), "success")
                 else:
