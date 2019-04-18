@@ -7,6 +7,7 @@ from maediprojects import models
 from maediprojects.extensions import db
 from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
+from maediprojects.query import exchangerates as qexchangerates
 import activity as qactivity
 
 
@@ -24,6 +25,9 @@ def add_finances(activity_id, data):
     classifications = data.get("classifications")
     data.pop("classifications")
     data["transaction_date"] = isostring_date(data["transaction_date"])
+    aF.currency_automatic=True
+    aF.currency_source, aF.currency_rate, aF.currency_value_date = qexchangerates.get_exchange_rate(
+        data["transaction_date"], data.get("currency", u"USD"))
     for key, value in data.items():
         setattr(aF, key, value)
     _classifications = []
