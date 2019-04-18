@@ -316,7 +316,11 @@ $( '.set-column-visibility li' ).on( 'click', function( event ) {
 $(document).on("click", ".addFinancial", function(e) {
   e.preventDefault();
   var transaction_type = $(this).attr("data-transaction-type");
-  var transaction_date = last_quarter_transaction_date()
+  var currency = $(this).closest(".panel-body").find("input[name='currency']").last().val();
+  if (currency == undefined) {
+    currency = "USD"
+  }
+  var transaction_date = last_quarter_transaction_date();
   var aid_type = $("#basic #aid_type option:selected")[0].value;
   var finance_type = $("#basic #finance_type option:selected")[0].value;
   var provider_org_id = $("#basic .organisations_select_1:first option:selected")[0].value;
@@ -327,6 +331,7 @@ $(document).on("click", ".addFinancial", function(e) {
     "transaction_date": transaction_date,
     "transaction_value": "0.00",
     "aid_type": aid_type,
+    "currency": currency,
     "finance_type": finance_type,
     "provider_org_id": provider_org_id,
     "receiver_org_id": receiver_org_id,
@@ -339,7 +344,7 @@ $(document).on("click", ".addFinancial", function(e) {
           alert("There was an error updating that financial data.");
       } else {
         var row_financial_template = $('#template-financial-row').html();
-        data["id"] = returndata;
+        data = returndata;
         var codelists = generateCodelists()
         var row = generateTransaction(data, codelists)
         partials = {"column-codelist-template": $('#column-codelist-template').html()};
@@ -388,7 +393,7 @@ var generateTransaction = function(d, codelists) {
       return {"name": c.name, "code": c.code, "selected": selected};
     });
   });
-  d["transaction_value_original"] = d["transaction_value"];
+  d["currency_automatic"] = {"false": 0, "true": 1}[d["currency_automatic"]];
   d["transaction_value"] = d["transaction_value"].toLocaleString(
     undefined, {maximumFractionDigits:2, minimumFractionDigits:2});
   return d;
@@ -451,11 +456,10 @@ $(document).on("change", ".finances-data input[type=text], #finances select, .fi
   resetFormGroup(input);
   $.post(api_update_activity_finances_url, data, function(resultdata) {
     successFormGroup(input);
-    if ((input.name == 'currency_automatic') && (input.value == "1")) {
-      $("#financial-" + finances_id + " input[name=currency_rate]").val(resultdata["currency_rate"]);
-      $("#financial-" + finances_id + " input[name=currency_value_date]").val(resultdata["currency_value_date"]);
-      $("#financial-" + finances_id + " input[name=currency_source]").val(resultdata["currency_source"]);
-    }
+    $("#financial-" + finances_id + " input[name=currency_rate]").val(resultdata["currency_rate"]);
+    $("#financial-" + finances_id + " input[name=currency_value_date]").val(resultdata["currency_value_date"]);
+    $("#financial-" + finances_id + " input[name=currency_source]").val(resultdata["currency_source"]);
+    syncFinancesValue("financial-" + finances_id);
   }).fail(function(){
     errorFormGroup(input);
   });  
@@ -644,6 +648,7 @@ $("#adjustCurrency").on('show.bs.modal', function(e) {
   $("#adjustCurrency_currency_rate").val(row_data['currency_rate']);
   $("#adjustCurrency_currency_value_date").val(row_data['currency_value_date']);
   $("#adjustCurrency_currency_source").val(row_data['currency_source']);
+  disableCurrencyFields(row_data['currency_automatic']);
 });
 $('#adjustCurrency').on('click', '.btn-ok', function(e) {
   var $modalDiv = $(e.delegateTarget);
@@ -656,10 +661,28 @@ $('#adjustCurrency').on('click', '.btn-ok', function(e) {
     $("tr#financial-" + tr_id + " input[name='" + changedName + "'], \
       tr#financial-" + tr_id + " select[name='" + changedName + "']").val(changedValue).trigger("change");
   });
+  $("tr#financial-" + tr_id + " .currency-label a").text($("#adjustCurrency select[name='currency']").val());
   $modalDiv.modal('hide');
 });
-$("#adjustCurrency input[name='currency_automatic']").on("change", function(e) {
-  if (this.value == "1") {
+function syncFinancesValue(finances_id) {
+  var tr = $("#" + finances_id);
+  var transaction_value = parseFloat(tr.find("input[name='transaction_value_original']").first().val());
+  var currency_rate = parseFloat(tr.find("input[name='currency_rate']").first().val());
+  tr.find("p.transaction_value").first().text(function(f) {
+    return (transaction_value*currency_rate).toLocaleString(
+      undefined, {maximumFractionDigits:2, minimumFractionDigits:2});
+  });
+}
+$(document).on("change", ".finances-data input[name='currency_rate']", function() {
+  var tr = $(this).closest("tr");
+  syncFinancesValue(tr.attr("id"));
+});
+$(document).on("keyup", ".finances-data input[name='transaction_value_original']", function() {
+  var tr = $(this).closest("tr");
+  syncFinancesValue(tr.attr("id"));
+});
+function disableCurrencyFields(automatic) {
+  if (automatic == "1") {
     $("#adjustCurrency_currency_rate, \
       #adjustCurrency_currency_value_date, \
       #adjustCurrency_currency_source").prop( "disabled", true );
@@ -668,4 +691,7 @@ $("#adjustCurrency input[name='currency_automatic']").on("change", function(e) {
       #adjustCurrency_currency_value_date, \
       #adjustCurrency_currency_source").prop( "disabled", false );
   }
+}
+$("#adjustCurrency input[name='currency_automatic']").on("change", function(e) {
+  disableCurrencyFields(this.value);
 });
