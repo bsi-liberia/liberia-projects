@@ -773,18 +773,9 @@
   <p class="lead">This project starts on <em>{% endraw %}{{activity.start_date}}{%raw%} </em>
   and ends on <em>{% endraw %}{{activity.end_date}}{%raw%}</em>. Please provide
   forward spend projections by quarter for the lifetime of this project.</p>
-  <p class="lead">To provide forward spend projections for earlier or later dates, adjust the project start
-  and end dates and new rows will automatically be created below.</p>
-  <form class="form-horizontal">
-    <div class="form-group">
-      <label for="currency" class="col-sm-2 control-label">{% endraw %}{{ _('Currency') }}{% raw %}</label>
-      <div class="col-sm-3">
-        <select id="currency" name="currency" class="form-control">
-          <option name="USD">USD</option>
-        </select>
-      </div>
-      </div>
-  </form>
+  <p class="lead">To provide forward spend projections for earlier or later dates,
+  adjust the project start and end dates and new rows will automatically be created below.</p>
+  <p class="lead">Currency: <b>USD</b></p>
   <div class="form-group">
   </div>
   <table class="table">
