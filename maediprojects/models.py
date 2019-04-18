@@ -2,8 +2,9 @@ import datetime
 import functools as ft
 
 import sqlalchemy as sa
+from sqlalchemy import func, union_all
+from sqlalchemy.orm import validates, aliased
 from sqlalchemy.sql.expression import case
-from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
@@ -22,6 +23,48 @@ act_ForeignKey = ft.partial(
     ondelete="CASCADE"
 )
 
+# Adapted from here:
+# https://stackoverflow.com/questions/42552696/sqlalchemy-nearest-datetime
+def get_closest_date(the_date, the_currency):
+    """
+    Returns the highest-scoring conversion rate. The score is derived from:
+      * the proximity to the requested date `the_date` for a given
+        currency `the_currency`
+      * multiplied by a score given to each exchange rate source.
+
+    For example, we set FRED (daily) rates to have a score of 1 and
+    OECD (monthly) rates to have a score of 33. This means a FRED rate can
+    have a date up to 33 days further away from the requested date to score
+    the same as an OECD rate on the same day as the requested date.
+    """
+    greater = db.session.query(ExchangeRate
+        ).filter(ExchangeRate.rate_date > the_date,
+            Currency.code == the_currency
+        ).join(Currency
+        ).order_by(ExchangeRate.rate_date.asc()).limit(30).subquery().select()
+
+    lesser = db.session.query(ExchangeRate
+        ).filter(ExchangeRate.rate_date <= the_date,
+            Currency.code == the_currency
+        ).join(Currency
+        ).order_by(ExchangeRate.rate_date.desc()).limit(30).subquery().select()
+
+    the_union = union_all(lesser, greater).alias()
+    the_alias = aliased(ExchangeRate, the_union)
+    abs_diff = func.abs(func.julianday(getattr(the_alias, "rate_date")) - func.julianday(the_date))
+    score_alias = aliased(ExchangeRateSource, the_union)
+    abs_score = (func.abs(getattr(score_alias, "weight")) *
+        1+(func.abs(func.julianday(getattr(the_alias, "rate_date")) -
+            func.julianday(the_date))))
+
+    return db.session.query(the_alias,
+        abs_diff,
+        abs_score
+        ).join(ExchangeRateSource, the_alias.exchangeratesource_id == ExchangeRateSource.id
+        ).join(Currency, the_alias.currency_code == Currency.code
+        ).filter(Currency.code == the_currency
+        ).order_by(abs_score.asc()
+        ).first()
 
 def fwddata_query(_self, fiscalyear_modifier):
     return db.session.query(
@@ -84,6 +127,51 @@ def fydata_query(_self, fiscalyear_modifier, _transaction_types):
         ).group_by("fiscal_quarter", "fiscal_year"
         ).order_by(ActivityFinances.transaction_date.desc()
         ).all()
+
+
+class Currency(db.Model):
+    __tablename__ = 'currency'
+    code = sa.Column(sa.UnicodeText,
+        nullable=False, primary_key=True)
+    name = sa.Column(sa.UnicodeText,
+        nullable=False)
+
+    def as_dict(self):
+        return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
+
+
+class ExchangeRateSource(db.Model):
+    __tablename__ = 'exchangeratesource'
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.UnicodeText, nullable=False)
+    weight = sa.Column(sa.Float,
+        default=1, nullable=False)
+
+    def as_dict(self):
+        return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
+
+
+class ExchangeRate(db.Model):
+    __tablename__ = 'exchangerate'
+    id = sa.Column(sa.Integer, primary_key=True)
+    exchangeratesource_id = sa.Column(
+        act_ForeignKey('exchangeratesource.id'),
+        nullable=False, index=True)
+    exchangeratesource = sa.orm.relationship("ExchangeRateSource")
+    currency_code = sa.Column(
+        act_ForeignKey('currency.code'),
+        nullable=False, index=True)
+    currency = sa.orm.relationship("Currency")
+    rate_date = sa.Column(sa.Date,
+        nullable=False, index=True)
+    rate = sa.Column(sa.Float, nullable=False)
+
+    def as_dict(self):
+       ret_data = {}
+       ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
+       ret_data.update({key: getattr(self, key).as_dict() for key in self.__mapper__.relationships.keys()})
+       return ret_data
+
 
 class Activity(db.Model):
     __tablename__ = 'activity'
@@ -350,6 +438,28 @@ class ActivityFinances(db.Model):
             foreign_keys=[receiver_org_id])
     classifications = sa.orm.relationship("ActivityFinancesCodelistCode",
             cascade="all, delete-orphan")
+
+    transaction_value_original = sa.Column(sa.Float(precision=2),
+        default=0, nullable=False)
+    currency_automatic = sa.Column(sa.Boolean,
+        default=True, nullable=False)
+    currency_source = sa.Column(sa.UnicodeText,
+        default=u"USD", nullable=False)
+    currency_rate = sa.Column(sa.Float,
+        default=1.0, nullable=False)
+    currency_value_date = sa.Column(sa.Date)
+
+    @validates("currency_rate")
+    def update_transaction_value_rate(self, key, currency_rate):
+        if self.transaction_value_original and currency_rate:
+            self.transaction_value = float(currency_rate)*float(self.transaction_value_original)
+        return currency_rate
+
+    @validates("transaction_value_original")
+    def update_transaction_value_original(self, key, transaction_value_original):
+        if self.currency_rate and transaction_value_original:
+            self.transaction_value = float(self.currency_rate)*float(transaction_value_original)
+        return transaction_value_original
 
     @hybrid_property
     def disaggregated_transactions(self):
