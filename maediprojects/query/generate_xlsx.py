@@ -105,26 +105,12 @@ def process_transaction_classifications(activity):
     classifications.append(cl)
     return classifications
 
-def get_data_from_header(column_name):
-    pattern = r"(\d*) Q(\d) \(D\)"
-    result = re.match(pattern, column_name).groups()
-    return (result[1], result[0])
-
-def get_fy_fq_date(fq, fy):
-    qtrs = {"1": "09-30",
-            "2": "12-31",
-            "3": "03-31",
-            "4": "06-30"}
-    if fq in ("3","4"):
-        fy = int(fy)+1
-    return "{}-{}".format(fy,qtrs[fq])
-
 def process_transaction(activity, amount, currency, column_name):
     provider = activity.funding_organisations[0].id
     receiver = activity.implementing_organisations[0].id
 
-    fq, fy = get_data_from_header(column_name)
-    end_fq_date = get_fy_fq_date(fq, fy)
+    fq, fy = util.get_data_from_header(column_name)
+    end_fq_date = util.fq_fy_to_date(fq, fy, "end")
 
     disbursement = models.ActivityFinances()
     disbursement.transaction_date = datetime.datetime.strptime(end_fq_date,
