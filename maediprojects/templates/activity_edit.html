@@ -678,8 +678,11 @@
     <td>
       <div class="form-group">
         <div class="input-group">
-          <div class="input-group-addon">
-            USD
+          <div class="input-group-addon currency-label">
+            <a title="Adjust currency and conversion rate" href="#"
+              data-toggle="modal" data-target="#adjustCurrency">
+            {{ currency }}
+          </a>
           </div>
           <input type="text" class="form-control" name="transaction_value_original" value="{{ transaction_value_original }}">
           <div class="input-group-addon">
