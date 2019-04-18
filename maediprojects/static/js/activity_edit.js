@@ -252,7 +252,9 @@ function deleteFinancial(transaction_id) {
       if (returndata == 'False'){
           alert("There was an error deleting that data.");
       } else {
-        $("tr#financial-" + data["transaction_id"]).fadeOut();
+        $("tr#financial-" + data["transaction_id"]).fadeOut("slow", function() {
+          $(this).remove();
+        });
       }
     }
   );
