@@ -50,7 +50,7 @@ def add_finances(activity_id, data):
         "value": aF.as_dict()
         }
         )
-    return aF.id
+    return aF
 
 def update_finances_classification(data):
     checkF = models.ActivityFinancesCodelistCode.query.filter_by(
