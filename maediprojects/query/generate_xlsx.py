@@ -310,7 +310,8 @@ def import_xls_mtef(input_file):
                 updated_years = []
                 # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
-                    new_fy_value = row[mtef_year]
+                    if row[mtef_year] in ("", "-"): row[mtef_year] = 0
+                    new_fy_value = float(row[mtef_year])
                     fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                     existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
@@ -398,7 +399,8 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                         system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
-                row_value = row[column_name]
+                if row[column_name] in ("", "-"): row[column_name] = 0
+                row_value = float(row[column_name])
                 updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
                 fq, fy = util.get_data_from_header(column_name)
                 column_date = util.fq_fy_to_date(int(fq), int(fy), "end")
