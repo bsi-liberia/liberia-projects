@@ -117,13 +117,14 @@ def all_activities_xlsx_filtered():
 
 @blueprint.route("/exports/export_template.xlsx")
 @blueprint.route("/exports/export_template/<organisation_id>.xlsx")
-def export_donor_template(organisation_id=None, mtef=False):
+def export_donor_template(organisation_id=None, mtef=False, currency=u"USD"):
     if request.args.get('mtef'):
         fyfq_string = u"MTEF Forward Projections"
         mtef = True
     else:
         fyfq_string = util.column_data_to_string(util.previous_fy_fq())
         mtef = False
+    currency = request.args.get("currency", u"USD")
     if organisation_id:
         reporting_org_name = qorganisations.get_organisation_by_id(
             organisation_id).name
@@ -139,7 +140,7 @@ def export_donor_template(organisation_id=None, mtef=False):
         activities = defaultdict(list)
         for a in all_activities:
             activities[a.reporting_org.name].append(a)
-    data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef)
+    data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef, currency)
     data.seek(0)
     return send_file(data, as_attachment=True, attachment_filename=filename,
         cache_timeout=5)
