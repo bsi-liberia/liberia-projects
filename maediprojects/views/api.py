@@ -153,7 +153,7 @@ def finances_edit_attr(activity_id):
             finances_id = data["finances_id"],
             force_update = True)
         return jsonify(update_status.as_dict())
-    elif (data.get("attr") == "currency"):
+    elif (data.get("attr") in ("currency", "transaction_date")):
         update_curency = qfinances.update_attr(data)
         update_status = qexchangerates.automatic_currency_conversion(
             finances_id = data["finances_id"],
