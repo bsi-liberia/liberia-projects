@@ -1,4 +1,5 @@
 from collections import defaultdict
+import datetime
 
 from flask import Blueprint, request, \
     url_for, Response, send_file, render_template, redirect, flash
@@ -8,6 +9,7 @@ from maediprojects.query import activity as qactivity
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
+from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.lib import util
 
 
@@ -28,11 +30,21 @@ def export():
     reporting_orgs = qorganisations.get_reporting_orgs()
     available_fys_fqs = util.available_fy_fqs_as_dict()
     previous_fy_fq = util.column_data_to_string(util.previous_fy_fq())
+    currencies = qexchangerates.get_currencies()
+    def make_expanded():
+        budget_preparation_month = 3
+        if datetime.datetime.utcnow().date().month == budget_preparation_month:
+            return {"mtef": " in", "disbursements": ""}
+        else:
+            return {"mtef": "", "disbursements": " in "}
+    expanded = make_expanded()
     return render_template("export.html",
                 loggedinuser = current_user,
                 funding_orgs=reporting_orgs,
                 previous_fy_fq = previous_fy_fq,
-                available_fys_fqs = available_fys_fqs)
+                available_fys_fqs = available_fys_fqs,
+                currencies = currencies,
+                expanded = expanded)
 
 @blueprint.route("/exports/import/", methods=["POST", "GET"])
 @login_required
