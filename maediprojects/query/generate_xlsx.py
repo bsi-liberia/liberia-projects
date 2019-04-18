@@ -9,7 +9,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.writer.excel import save_virtual_workbook
 from openpyxl.worksheet.datavalidation import DataValidation
 from flask import flash
-from openpyxl.styles import Color, PatternFill, Font, Border, Protection
+from openpyxl.styles import Color, PatternFill, Font, Border, Protection, Alignment
+from openpyxl.styles.borders import Border, Side
 import xlrd
 
 from maediprojects import models
@@ -17,6 +18,7 @@ from maediprojects.extensions import db
 from maediprojects.query import activity as qactivity
 from maediprojects.query import finances as qfinances
 from maediprojects.query import counterpart_funding as qcounterpart_funding
+from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists
@@ -86,10 +88,115 @@ class xlsxDictWriter(object):
         self.wb.save(out)
         return out
 
-    def __init__(self, headers):
+    def write_instructions_sheet(self):
+        ws = self.wb.create_sheet(u"Instructions")
+        ws["A1"] = u"Instructions"
+        ws["A1"].font = Font(bold=True, size=14)
+        ws["A2"] = u"Thank you for providing your data to AMCU! Capturing high quality data is vitally important to strengthening aid effectiveness in Liberia."
+        ws["A2"].font = Font(size=14)
+        ws["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells("A2:K4")
+        ws["A6"] = u"Currency"
+        ws["A6"].font = Font(bold=True, size=14)
+        ws["A7"] = u"Please provide your data in the currency stated above. Please contact AMCU if you would like this template in a different currency (your existing data will be exported in your desired currency to ensure consistency)."
+        ws["A7"].font = Font(size=14)
+        ws["A7"].alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells("A7:K10")
+        ws["C6"] = self.template_currency
+        ws["C6"].font = Font(size=14)
+        yellow_fill = PatternFill(start_color='FFFF00',
+                             end_color='FFFF00',
+                             fill_type = 'solid')
+        thin_border = Border(left=Side(style='thin'),
+                     right=Side(style='thin'),
+                     top=Side(style='thin'),
+                     bottom=Side(style='thin'))
+
+        ws["C6"].fill = yellow_fill
+        ws["C6"].border = thin_border
+        ws["A12"] = u"How to fill in this template"
+        ws["A12"].font = Font(bold=True, size=14)
+        ws["A13"] = u"On the next sheet, you will see a list of projects currently known to AMCU. Fill out the sheet as follows (if you have any further questions, contact AMCU):"
+        ws["A13"].font = Font(size=14)
+        ws["A13"].alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells("A13:K15")
+        if self._type == "mtef":
+            ws["A16"] = u"Counterpart funding"
+            ws["A16"].font = Font(size=14)
+            ws["A16"].alignment = Alignment(vertical="top")
+            ws["A16"].fill = orangeFill
+            ws.row_dimensions[16].height=22
+            ws.merge_cells("A16:C17")
+            ws["D16"] = u"The amount that GoL has agreed to provide as counterpart funding for this project, for the coming Fiscal Year, in USD."
+            ws["D16"].font = Font(size=14)
+            ws["D16"].alignment = Alignment(wrap_text=True, vertical="top")
+            ws.merge_cells("D16:K17")
+
+            ws["A18"] = u"MTEF Projections"
+            ws["A18"].font = Font(size=14)
+            ws["A18"].fill = yellowFill
+            ws.merge_cells("A18:C18")
+            ws["D18"] = u"The amount you plan to spend in each of the next 3 Fiscal Years, in {}.".format(self.template_currency)
+            ws["D18"].font = Font(size=14)
+            ws.merge_cells("D18:K18")
+
+            ws["A19"] = u"Other project data"
+            ws["A19"].font = Font(size=14)
+            ws.merge_cells("A19:C19")
+            ws["D19"] = u"Please check other project data and update it as required."
+            ws["D19"].font = Font(size=14)
+            ws.merge_cells("D19:K19")
+
+            ws["A20"] = u"New projects"
+            ws["A20"].font = Font(size=14)
+            ws["A20"].alignment = Alignment(vertical="top")
+            ws.merge_cells("A20:C21")
+            ws["D20"] = u"For new projects, add new rows at the bottom of the sheet. Leave the ID column blank."
+            ws["D20"].font = Font(size=14)
+            ws["D20"].alignment = Alignment(wrap_text=True, vertical="top")
+            ws.row_dimensions[20].height=22
+            ws.merge_cells("D20:K21")
+        else:
+            ws["A16"] = util.previous_fy_fq()
+            ws["A16"].font = Font(size=14)
+            ws["A16"].fill = yellowFill
+            ws.merge_cells("A16:C16")
+            ws["D16"] = u"The amount you spent on this project in the last fiscal quarter, in {}.".format(self.template_currency)
+            ws["D16"].font = Font(size=14)
+            ws.merge_cells("D16:K16")
+
+            ws["A17"] = u"Other project data"
+            ws["A17"].font = Font(size=14)
+            ws.merge_cells("A17:C17")
+            ws["D17"] = u"Please check other project data and update it as required."
+            ws["D17"].font = Font(size=14)
+            ws.merge_cells("D17:K17")
+
+            ws["A18"] = u"New projects"
+            ws["A18"].font = Font(size=14)
+            ws["A18"].alignment = Alignment(vertical="top")
+            ws.merge_cells("A18:C19")
+            ws["D18"] = u"For new projects, add new rows at the bottom of the sheet. Leave the ID column blank."
+            ws["D18"].font = Font(size=14)
+            ws["D18"].alignment = Alignment(wrap_text=True, vertical="top")
+            ws.row_dimensions[18].height=22
+            ws.merge_cells("D18:K19")
+
+        # Protect sheet
+        ws.protection.sheet = True
+
+
+    def __init__(self, headers, _type=u"disbursements",
+            template_currency=u"USD",
+            instructions_sheet=False):
         self.wb = Workbook()
+        self.template_currency = template_currency
+        self.instructions_sheet = instructions_sheet
+        self._type = _type
         ws = self.wb.worksheets[0]
-        ws.title=u"Data"
+        ws.title = u"Data"
+        if instructions_sheet:
+            self.write_instructions_sheet()
         self.header_mapping = dict(
             map(lambda x: (x[1], x[0]), enumerate(headers, start=1)))
 
@@ -354,7 +461,7 @@ def generate_xlsx_filtered(arguments):
     writer.delete_first_sheet()
     return writer.save()
 
-def generate_xlsx_export_template(data, mtef=False):
+def generate_xlsx_export_template(data, mtef=False, currency=u"USD"):
     if mtef:
         current_year = datetime.datetime.utcnow().date().year
         mtef_cols = [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+3)]
@@ -366,10 +473,14 @@ def generate_xlsx_export_template(data, mtef=False):
     u"County"]
     else:
         mtef_cols = []
+        counterpart_funding_cols = []
         _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
     u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
     u"County",]
-    writer = xlsxDictWriter(_headers)
+    writer = xlsxDictWriter(_headers,
+        _type={True: "mtef", False: "disbursements"}[mtef],
+        template_currency=currency,
+        instructions_sheet=True)
     cl_lookups = get_codelists_lookups()
 
     statuses = get_codelists_lookups_by_name()["ActivityStatus"].keys()
@@ -410,6 +521,20 @@ def generate_xlsx_export_template(data, mtef=False):
                     float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
                     float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+                if writer.template_currency != u"USD":
+                    # N.B.: we convert at (close to) today's date,
+                    # because these are *projections* and we store in USD
+                    existing_activity[mtef_year] = qexchangerates.convert_to_currency(
+                        currency = writer.template_currency,
+                        _date = datetime.datetime.utcnow().date(),
+                        value = existing_activity[mtef_year])
+            # Convert disbursement data to writer.template_currency
+            if writer.template_currency != u"USD":
+                existing_activity[util.previous_fy_fq()] = qexchangerates.convert_to_currency(
+                    currency = writer.template_currency,
+                    _date = util.previous_fy_fq_date(),
+                    value = existing_activity[util.previous_fy_fq()])
+            # Leave in USD always
             for counterpart_year in counterpart_funding_cols:
                 cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
                 existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
@@ -421,9 +546,9 @@ def generate_xlsx_export_template(data, mtef=False):
                 writer.ws.cell(row=rownum,column=6).fill = yellowFill
                 writer.ws.cell(row=rownum,column=7).fill = yellowFill
                 writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
-                writer.ws.cell(row=rownum,column=5).number_format = u'"USD "#,##0.00'
-                writer.ws.cell(row=rownum,column=6).number_format = u'"USD "#,##0.00'
-                writer.ws.cell(row=rownum,column=7).number_format = u'"USD "#,##0.00'
+                writer.ws.cell(row=rownum,column=5).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
+                writer.ws.cell(row=rownum,column=6).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
+                writer.ws.cell(row=rownum,column=7).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
             writer.ws.column_dimensions[u"C"].width = 50
             writer.ws.column_dimensions[u"D"].width = 35
             writer.ws.column_dimensions[u"E"].width = 18
@@ -439,7 +564,7 @@ def generate_xlsx_export_template(data, mtef=False):
         elif mtef == False:
             for rownum in range(1+1, len(activities)+2):
                 writer.ws.cell(row=rownum,column=4).fill = yellowFill
-                writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
+                writer.ws.cell(row=rownum,column=4).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
             writer.ws.column_dimensions[u"C"].width = 70
             writer.ws.column_dimensions[u"D"].width = 18
             writer.ws.column_dimensions[u"E"].width = 18
