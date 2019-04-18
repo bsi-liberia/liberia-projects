@@ -332,7 +332,7 @@ class Activity(db.Model):
                     "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
-                    "value": round(fyval.value, 2)
+                    "value": round(fyval.value, 4)
                     }
                     for fyval in fydata
                 }
@@ -345,7 +345,7 @@ class Activity(db.Model):
                     "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
-                    "value": round(fyval.value, 2)
+                    "value": round(fyval.value, 4)
                     }
                     for fyval in fydata
                 }
@@ -358,7 +358,7 @@ class Activity(db.Model):
                     "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
-                    "value": round(fyval.value, 2)
+                    "value": round(fyval.value, 4)
                     }
                     for fyval in fydata
                 }
