@@ -37,3 +37,23 @@ def import_psip():
     """Import psip data."""
     from query import import_psip as qpsipimport
     qpsipimport.import_file()
+
+
+@click.command()
+@with_appcontext
+def import_currencies():
+    """ Import currency data"""
+    from query import exchangerates as qexchangerates
+    qexchangerates.import_exchange_rates()
+
+
+@click.command()
+@click.argument('date')
+@click.argument('currency')
+@with_appcontext
+def test_closest_date(date, currency):
+    """ Import currency data"""
+    from query import exchangerates as qexchangerates
+    from lib import util
+    date = util.isostring_date(date)
+    print qexchangerates.closest_exchange_rate(date, currency)

@@ -25,6 +25,8 @@ def register_commands(app):
     app.cli.add_command(commands.setup_country)
     app.cli.add_command(commands.import_liberia)
     app.cli.add_command(commands.import_psip)
+    app.cli.add_command(commands.import_currencies)
+    app.cli.add_command(commands.test_closest_date)
 
 
 def register_extensions(app):
