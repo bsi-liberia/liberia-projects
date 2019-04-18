@@ -8,6 +8,7 @@ from maediprojects.query import codelists as qcodelists
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
+from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
 
@@ -202,6 +203,7 @@ def activity_edit(activity_id):
         codelists=codelists.get_codelists(),
         organisations=qorganisations.get_organisations(),
         locations=locations,
+        currencies = qexchangerates.get_currencies(),
         api_locations_url=url_for("api.api_locations", country_code=activity.recipient_country_code),
         api_activity_locations_url=url_for("api.api_activity_locations", activity_id=activity_id),
         api_activity_finances_url=url_for("api.api_activity_finances", activity_id=activity_id),

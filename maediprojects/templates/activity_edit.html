@@ -954,9 +954,9 @@
             <label for="currency" class="col-sm-4 control-label">Currency</label>
             <div class="col-sm-8">
               <select class="form-control" name="currency" id="adjustCurrency_currency">
-                <option value="EUR">EU (European Union)</option>
-                <option value="UAC">UAC (AfDB)</option>
-                <option value="USD">USD (United States)</option>
+                {% for currency in currencies %}
+                <option value="{{ currency.code }}">{{ currency.name }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>
