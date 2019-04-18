@@ -24,6 +24,15 @@ from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_loo
 from generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
 
 
+yellowFill = PatternFill(start_color='FFFF00',
+                     end_color='FFFF00',
+                     fill_type = 'solid')
+
+orangeFill = PatternFill(start_color='F79646',
+                     end_color='F79646',
+                     fill_type = 'solid')
+
+
 def guess_types(cell_value):
     if cell_value == None: return ""
     try:
@@ -366,14 +375,6 @@ def generate_xlsx_export_template(data, mtef=False):
     u"County",]
     writer = xlsxDictWriter(_headers)
     cl_lookups = get_codelists_lookups()
-
-    yellowFill = PatternFill(start_color='FFFF00',
-                         end_color='FFFF00',
-                         fill_type = 'solid')
-
-    orangeFill = PatternFill(start_color='F79646',
-                         end_color='F79646',
-                         fill_type = 'solid')
 
     statuses = get_codelists_lookups_by_name()["ActivityStatus"].keys()
 
