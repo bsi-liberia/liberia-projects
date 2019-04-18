@@ -268,10 +268,6 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                     flash(u"The column {} containing financial data was not \
                     found in the uploaded spreadsheet!".format(column_name), "danger")
                     raise Exception
-                if ((row[column_name] == "") or
-                    (float(row[column_name]) == 0) or
-                    (float(row[column_name]) == "-")):
-                    continue
                 activity_id = row[u"ID"]
                 activity = qactivity.get_activity(activity_id)
                 if not activity:
