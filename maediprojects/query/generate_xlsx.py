@@ -212,6 +212,12 @@ def tidy_amount(amount_value):
         result = re.match(r"^(\d*) (\D*)$", amount_value).groups()
         return (float(result[0]), unicode(result[1].upper()))
 
+
+def clean_value(amount_value):
+    if amount_value.strip() in ("", "-"): return 0
+    return float(amount_value.strip())
+
+
 def process_transaction_classifications(activity):
     activity_classification = activity.classification_data["mtef-sector"]["entries"][0]
     classifications = []
@@ -310,8 +316,7 @@ def import_xls_mtef(input_file):
                 updated_years = []
                 # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
-                    if row[mtef_year] in ("", "-"): row[mtef_year] = 0
-                    new_fy_value = float(row[mtef_year])
+                    new_fy_value = clean_value(row[mtef_year])
                     fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
                     existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
                         float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
@@ -336,7 +341,7 @@ def import_xls_mtef(input_file):
                 # Parse counterpart funding columns
                 updated_counterpart_years = []
                 for counterpart_year in counterpart_funding_cols:
-                    new_fy_value = row[counterpart_year]
+                    new_fy_value = clean_value(row[counterpart_year])
                     cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
                     existing_cfy_value = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
                     difference = new_fy_value-existing_cfy_value
@@ -399,8 +404,7 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                         system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
-                if row[column_name] in ("", "-"): row[column_name] = 0
-                row_value = float(row[column_name])
+                row_value = clean_value(row[column_name])
                 updated_activity_data = update_activity_data(activity, existing_activity, row, cl_lookups_by_name)
                 fq, fy = util.get_data_from_header(column_name)
                 column_date = util.fq_fy_to_date(int(fq), int(fy), "end")
