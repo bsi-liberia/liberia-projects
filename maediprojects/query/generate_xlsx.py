@@ -361,7 +361,11 @@ def import_xls_mtef(input_file):
                         ", ".join(updated_years),
                         activity.title,
                         activity.id), "success")
-    except Exception, e:
+    except xlrd.xldate.XLDateNegative as e:
+        flash(u"""There was an unexpected error when importing your projects,
+        one of the dates in your sheet has a negative value: {}. Please check your sheet
+        and try again.""".format(e), "danger")
+    except Exception as e:
         if activity_id:
             flash("""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
@@ -443,14 +447,18 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
                     flash(u"Updated {} for {} (Project ID: {})".format(
                     util.column_data_to_string(column_name),
                     activity.title, activity.id), "success")
-    except Exception, e:
+    except xlrd.xldate.XLDateNegative as e:
+        flash(u"""There was an unexpected error when importing your projects,
+        one of the dates in your sheet has a negative value: {}. Please check your sheet
+        and try again.""".format(e), "danger")
+    except Exception as e:
         if activity_id:
             flash(u"""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
-            The error was: {}""".format(activity_id, e), "danger")
+            The error was: {} {}""".format(activity_id, e), "danger")
         else:
             flash(u"""There was an unexpected error when importing your projects,
-        the error was: {}""".format(e), "danger")
+        the error was: {} {}""".format(exc_type, exc_value), "danger")
     db.session.commit()
     return num_updated_activities
 
