@@ -226,10 +226,6 @@ class Activity(db.Model):
             index=True)
     recipient_country = sa.orm.relationship("Country")
     dac_sector = sa.Column(sa.UnicodeText)
-    #local_sector = sa.Column(
-    #        act_ForeignKey('codelistcode.code'),
-    #        nullable=False,
-    #        index=True)
     collaboration_type = sa.Column(sa.UnicodeText) # ADDED
     finance_type = sa.Column(sa.UnicodeText) # ADDED
     tied_status = sa.Column(sa.UnicodeText) # ADDED
