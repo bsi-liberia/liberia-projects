@@ -226,6 +226,11 @@ def list_activities_by_filters(filters):
                 models.ActivityFinances.transaction_date < getJSONDate(filter_value))
         elif filter_name in codelist_names:
             codelist_vals.append(int(filter_value))
+        elif filter_name == 'implementing_org_type':
+            query = query.filter(
+                models.Activity.implementing_organisations.any(
+                    models.Organisation._type == filter_value)
+            )
         else:
             query = query.filter(
                 getattr(models.Activity, filter_name)==filter_value
