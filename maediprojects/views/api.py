@@ -1,5 +1,6 @@
 import datetime
 import json
+import re
 from collections import OrderedDict
 
 from flask import Blueprint, request, \
@@ -395,7 +396,7 @@ def api_list_iati_files():
 @blueprint.route("/api/iati_search/")
 def api_iati_search():
     title = request.args["title"]
-    reporting_org_code = request.args["reporting_org_code"]
+    reporting_org_code = re.sub(r"\|", ",", request.args["reporting_org_code"]) # For OR, OIPA uses , rather than |
     r = requests.get(OIPA_SEARCH_URL.format(title.encode("utf-8"), reporting_org_code))
     data = json.loads(r.text)
     return jsonify(data)
