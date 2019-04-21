@@ -274,17 +274,17 @@ class Activity(db.Model):
         "view": (bool(current_user.permissions_dict["domestic_external"] != "none") or (op in ("view", "edit")))
         }
 
-    @hybrid_property
-    def implementing_organisations(self):
-        return Organisation.query.filter(ActivityOrganisation.activity_id==self.id,
-                                         ActivityOrganisation.role==4
-                                  ).join(ActivityOrganisation).all()
+    implementing_organisations = sa.orm.relationship("Organisation",
+        secondary="activityorganisation",
+        secondaryjoin="""and_(ActivityOrganisation.role==4,
+            ActivityOrganisation.organisation_id==Organisation.id)"""
+        )
 
-    @hybrid_property
-    def funding_organisations(self):
-        return Organisation.query.filter(ActivityOrganisation.activity_id==self.id,
-                                         ActivityOrganisation.role==1
-                                  ).join(ActivityOrganisation).all()
+    funding_organisations = sa.orm.relationship("Organisation",
+        secondary="activityorganisation",
+        secondaryjoin="""and_(ActivityOrganisation.role==1,
+            ActivityOrganisation.organisation_id==Organisation.id)"""
+        )
 
     @hybrid_property
     def total_commitments(self):
