@@ -21,6 +21,7 @@ from maediprojects.query import generate as qgenerate
 from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
+from maediprojects.query import import_iati as qimport_iati
 from maediprojects.lib import util
 from maediprojects.lib.codelists import get_codelists_lookups
 from maediprojects.lib.util import MONTHS_QUARTERS
@@ -400,6 +401,16 @@ def api_iati_search():
     r = requests.get(OIPA_SEARCH_URL.format(title.encode("utf-8"), reporting_org_code))
     data = json.loads(r.text)
     return jsonify(data)
+
+
+@blueprint.route("/api/iati_fetch_data/<activity_id>/")
+@login_required
+@quser.permissions_required("edit")
+def api_iati_fetch_data(activity_id):
+    iati_identifier = request.args["iati_identifier"]
+    iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
+    return str(iati_document_result)
+
 
 @blueprint.route("/api/sectors.json")
 def api_sectors():
