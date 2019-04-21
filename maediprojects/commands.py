@@ -57,3 +57,11 @@ def test_closest_date(date, currency):
     from lib import util
     date = util.isostring_date(date)
     print qexchangerates.closest_exchange_rate(date, currency)
+
+
+@click.command()
+@with_appcontext
+def import_iati():
+    """Import Liberia data."""
+    from query import import_iati as qiatiimport
+    qiatiimport.import_documents()
