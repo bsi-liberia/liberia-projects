@@ -27,6 +27,9 @@
     <li role="presentation"><a href="#milestones" aria-controls="milestones" role="tab" data-toggle="tab" id="milestonesTab">{{ _('Milestones') }}</a></li>
     {% endif %}
     <li role="presentation"><a href="#conditions" aria-controls="conditions" role="tab" data-toggle="tab" id="conditionsTab">{{ _('Conditions') }}</a></li>
+    {% if activity.documents %}
+    <li role="presentation"><a href="#documents" aria-controls="documents" role="tab" data-toggle="tab" id="documentsTab">{{ _('Documents') }}</a></li>
+    {% endif %}
     {% endif %}
    <!-- <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">Results</a></li>-->
   </ul>
@@ -582,6 +585,35 @@
       </div>
     -->
     </div>
+
+    {% if activity.documents %}
+    <div role="tabpanel" class="tab-pane" id="documents">
+      <h2>{{ _('Documents') }}</h2>
+      <div class="alert alert-info">
+        These documents were automatically captured from this donor's IATI data.
+      </div>
+      <table class="table">
+        <thead>
+          <th width="50%">Title</th>
+          <th>Type</th>
+          <th>Date</th>
+        </thead>
+        <tbody>
+          {% for document in activity.documents %}
+          <tr>
+            <td><a href="{{ document.url }}">{{ document.title }}</a></td>
+            <td>
+              {% for category_code in document.categories %}
+              <span class="label label-default">{{ codelist_lookups["DocumentCategory"][category_code.code] }}</span>
+              {% endfor %}
+            </td>
+            <td>{{ document.document_date or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
 </div>
 
