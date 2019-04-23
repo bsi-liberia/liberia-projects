@@ -34,8 +34,8 @@ def dashboard():
 @blueprint.route("/activities/")
 @login_required
 def activities():
-    countries = qactivity.get_iati_list()
-    reporting_orgs = list(map(lambda o: {"id": o.id, "name": o.name}, qorganisations.get_reporting_orgs()))
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    organisation_types = qorganisations.get_organisation_types()
     cl = codelists.get_codelists()
     _cl_domestic_external = [
         {"id": "domestic",
@@ -45,6 +45,7 @@ def activities():
     ]
     filters_codelists = [
         ("Reported by", "reporting_org_id", reporting_orgs),
+        ("Type of Implementer", "implementing_org_type", organisation_types),
         ("Sector", "mtef-sector", cl["mtef-sector"]),
         ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
         ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
@@ -59,11 +60,9 @@ def activities():
         "latest": latest.isoformat() if latest else None
     }
     return render_template("activities.html",
-                countries=countries,
                 reporting_orgs=reporting_orgs,
                 codelists=filters_codelists,
                 loggedinuser=current_user,
-                stats = qactivity.get_stats(current_user),
                 activity_base_url = activity_base_url,
                 dates=dates
     )

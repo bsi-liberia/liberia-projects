@@ -30,6 +30,11 @@ def get_organisation_by_name(name):
     if org: return org
     return False
 
+def get_organisation_types():
+    types = [('gol', 'Government of Liberia'),
+        ('donor', 'Donor'), ('ngo', 'NGO')]
+    return list(map(lambda t: {"id": t[0], "name": t[1]}, types))
+
 def get_reporting_orgs():
     return db.session.query(models.Organisation
         ).join(models.Activity, models.Activity.reporting_org_id==models.Organisation.id

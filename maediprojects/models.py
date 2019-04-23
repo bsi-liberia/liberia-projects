@@ -226,10 +226,6 @@ class Activity(db.Model):
             index=True)
     recipient_country = sa.orm.relationship("Country")
     dac_sector = sa.Column(sa.UnicodeText)
-    #local_sector = sa.Column(
-    #        act_ForeignKey('codelistcode.code'),
-    #        nullable=False,
-    #        index=True)
     collaboration_type = sa.Column(sa.UnicodeText) # ADDED
     finance_type = sa.Column(sa.UnicodeText) # ADDED
     tied_status = sa.Column(sa.UnicodeText) # ADDED
@@ -274,17 +270,17 @@ class Activity(db.Model):
         "view": (bool(current_user.permissions_dict["domestic_external"] != "none") or (op in ("view", "edit")))
         }
 
-    @hybrid_property
-    def implementing_organisations(self):
-        return Organisation.query.filter(ActivityOrganisation.activity_id==self.id,
-                                         ActivityOrganisation.role==4
-                                  ).join(ActivityOrganisation).all()
+    implementing_organisations = sa.orm.relationship("Organisation",
+        secondary="activityorganisation",
+        secondaryjoin="""and_(ActivityOrganisation.role==4,
+            ActivityOrganisation.organisation_id==Organisation.id)"""
+        )
 
-    @hybrid_property
-    def funding_organisations(self):
-        return Organisation.query.filter(ActivityOrganisation.activity_id==self.id,
-                                         ActivityOrganisation.role==1
-                                  ).join(ActivityOrganisation).all()
+    funding_organisations = sa.orm.relationship("Organisation",
+        secondary="activityorganisation",
+        secondaryjoin="""and_(ActivityOrganisation.role==1,
+            ActivityOrganisation.organisation_id==Organisation.id)"""
+        )
 
     @hybrid_property
     def total_commitments(self):
