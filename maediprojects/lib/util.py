@@ -124,6 +124,10 @@ def previous_fy_fq_numeric():
     year, quarter = date_to_fy_fq(datetime.datetime.utcnow())
     return subtract_one_quarter(year, quarter)
 
+def previous_fy_fq_date(start_end="end"):
+    year, quarter = previous_fy_fq_numeric()
+    return fq_fy_to_date(quarter, year, start_end)
+
 def available_fy_fqs_as_dict():
     return [{'value': fyfqstring,
              'text': column_data_to_string(fyfqstring),
@@ -132,7 +136,7 @@ def available_fy_fqs_as_dict():
               } for fyfqstring in available_fy_fqs()]
 
 def get_data_from_header(column_name):
-    pattern = "(\d*) Q(\d) \(D\)"
+    pattern = r"(\d*) Q(\d) \(D\)"
     result = re.match(pattern, column_name).groups()
     return (result[1], result[0])
 

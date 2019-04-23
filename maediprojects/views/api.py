@@ -12,6 +12,7 @@ import requests
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
+from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import organisations as qorganisations
@@ -118,16 +119,17 @@ def api_activity_finances(activity_id):
                 "finance_type": request.form["finance_type"],
                 "provider_org_id": request.form["provider_org_id"],
                 "receiver_org_id": request.form["receiver_org_id"],
+                "currency": request.form.get("currency", u"USD"),
                 "classifications": {
                     "mtef-sector": request.form["mtef_sector"]
                 }
             }
-            result = qfinances.add_finances(activity_id, data)
+            result = jsonify(qfinances.add_finances(activity_id, data).as_dict())
         elif request.form["action"] == "delete":
-            result = qfinances.delete_finances(activity_id, request.form["transaction_id"])
-        return str(result)
+            result = str(qfinances.delete_finances(activity_id, request.form["transaction_id"]))
+        return result
     elif request.method == "GET":
-        finances = list(map(lambda x: x.as_dict(),
+        finances = list(map(lambda transaction: transaction.as_dict(),
                          qactivity.get_activity(activity_id).finances))
         return jsonify(finances = finances)
 
@@ -141,13 +143,29 @@ def finances_edit_attr(activity_id):
         'value': request.form['value'],
         'finances_id': request.form['finances_id'],
     }
-    if data["attr"] == "mtef_sector":
+
+    #Run currency conversion if:
+    # we now set to automatic
+    # we change the currency and have set to automatic
+    if (data.get("attr") == "currency_automatic") and (data.get("value") == "1"):
+        # Handle update, and then return required data
+        update_status = qexchangerates.automatic_currency_conversion(
+            finances_id = data["finances_id"],
+            force_update = True)
+        return jsonify(update_status.as_dict())
+    elif (data.get("attr") in ("currency", "transaction_date")):
+        update_curency = qfinances.update_attr(data)
+        update_status = qexchangerates.automatic_currency_conversion(
+            finances_id = data["finances_id"],
+            force_update = False)
+        return jsonify(update_status.as_dict())
+    elif data["attr"] == "mtef_sector":
         data["attr"] = 'mtef-sector' #FIXME make consistent
         update_status = qfinances.update_finances_classification(data)
     else:
         update_status = qfinances.update_attr(data)
-    if update_status == True:
-        return "success"
+    if update_status:
+        return jsonify(update_status.as_dict())
     return "error"
 
 @blueprint.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
@@ -249,10 +267,13 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             return jsonify(forwardspends=out, quarters=quarters)
 
     elif request.method == "POST":
-
+        if request.form["value"] in (None, " ", ""):
+            value = 0
+        else:
+            value = request.form["value"]
         data = {
             "id": request.form["id"],
-            "value": request.form["value"]
+            "value": value
         }
         update_status = qfinances.update_fs_attr(data)
         if update_status == True:

@@ -81,7 +81,7 @@ $(document).on("click", "#iati-search-results-area .import a",
   tr = $(this).closest("tr")
   iati_identifier = tr.find("td.iati_identifier a").html();
   description = tr.find("td.description").html();
-  $("#code").val(iati_identifier);
+  $("#code").val(iati_identifier.trim());
   //$("#description").val(description);
   $('#iati-search-results-modal').modal('hide');
   $("#code").trigger("change");
@@ -252,7 +252,9 @@ function deleteFinancial(transaction_id) {
       if (returndata == 'False'){
           alert("There was an error deleting that data.");
       } else {
-        $("tr#financial-" + data["transaction_id"]).fadeOut();
+        $("tr#financial-" + data["transaction_id"]).fadeOut("slow", function() {
+          $(this).remove();
+        });
       }
     }
   );
@@ -314,7 +316,11 @@ $( '.set-column-visibility li' ).on( 'click', function( event ) {
 $(document).on("click", ".addFinancial", function(e) {
   e.preventDefault();
   var transaction_type = $(this).attr("data-transaction-type");
-  var transaction_date = last_quarter_transaction_date()
+  var currency = $(this).closest(".panel-body").find("input[name='currency']").last().val();
+  if (currency == undefined) {
+    currency = "USD"
+  }
+  var transaction_date = last_quarter_transaction_date();
   var aid_type = $("#basic #aid_type option:selected")[0].value;
   var finance_type = $("#basic #finance_type option:selected")[0].value;
   var provider_org_id = $("#basic .organisations_select_1:first option:selected")[0].value;
@@ -325,6 +331,7 @@ $(document).on("click", ".addFinancial", function(e) {
     "transaction_date": transaction_date,
     "transaction_value": "0.00",
     "aid_type": aid_type,
+    "currency": currency,
     "finance_type": finance_type,
     "provider_org_id": provider_org_id,
     "receiver_org_id": receiver_org_id,
@@ -337,7 +344,7 @@ $(document).on("click", ".addFinancial", function(e) {
           alert("There was an error updating that financial data.");
       } else {
         var row_financial_template = $('#template-financial-row').html();
-        data["id"] = returndata;
+        data = returndata;
         var codelists = generateCodelists()
         var row = generateTransaction(data, codelists)
         partials = {"column-codelist-template": $('#column-codelist-template').html()};
@@ -386,6 +393,9 @@ var generateTransaction = function(d, codelists) {
       return {"name": c.name, "code": c.code, "selected": selected};
     });
   });
+  d["currency_automatic"] = {"false": 0, "true": 1}[d["currency_automatic"]];
+  d["transaction_value"] = d["transaction_value"].toLocaleString(
+    undefined, {maximumFractionDigits:2, minimumFractionDigits:2});
   return d;
 }
 
@@ -433,7 +443,10 @@ var setupFinances = function() {
 	});
 };
 setupFinances()
-$(document).on("change", ".finances-data input[type=text], #finances select", function(e) {
+$(document).on("change", ".finances-data input[type=text], #finances select, .finances-data input[type=hidden]", function(e) {
+  var change_name = this.name;
+  var change_value = this.value;
+  var finances_id = $(this).closest("tr").attr("data-financial-id");
   var data = {
     'finances_id': $(this).closest("tr").attr("data-financial-id"),
     'attr': this.name,
@@ -443,6 +456,10 @@ $(document).on("change", ".finances-data input[type=text], #finances select", fu
   resetFormGroup(input);
   $.post(api_update_activity_finances_url, data, function(resultdata) {
     successFormGroup(input);
+    $("#financial-" + finances_id + " input[name=currency_rate]").val(resultdata["currency_rate"]);
+    $("#financial-" + finances_id + " input[name=currency_value_date]").val(resultdata["currency_value_date"]);
+    $("#financial-" + finances_id + " input[name=currency_source]").val(resultdata["currency_source"]);
+    syncFinancesValue("financial-" + finances_id);
   }).fail(function(){
     errorFormGroup(input);
   });  
@@ -540,7 +557,6 @@ setupCF()
 $(document).on("change", ".table-counterpart-funding input[type=text], \
     .table-counterpart-funding input[type=checkbox], \
     .table-counterpart-funding select", function(e) {
-      console.log(this.name);
   if (['budgeted', 'allotted', 'disbursed'].indexOf(this.name) >= 0) {
     if (this.checked) {
       value = true;
@@ -570,7 +586,6 @@ $(document).on("click", ".addCounterpartFunding", function(e) {
   var required_value = 0.0;
   var available_fys = $.map(
       $('#counterpart-funding-rows tr select[name="required_fy"]'), function(v, i) {
-      console.log(v);
         return parseInt(v.value);
     });
   if (available_fys.length > 0) {
@@ -593,8 +608,6 @@ $(document).on("click", ".addCounterpartFunding", function(e) {
         selected_val = {true:" selected", false: ""}
         data["fiscal_years"] = $.map(counterpart_funding_data.fiscal_years,
             function(dfy, ify) {
-              console.log(dfy)
-              console.log(required_fy)
               return {
                 'text': "FY" + dfy + "/" + (parseInt(dfy)+1),
                 'value': dfy,
@@ -620,4 +633,65 @@ if (url.match('#')) {
 $('.nav-tabs a').on('shown.bs.tab', function (e) {
     window.location.hash = e.target.hash;
     window.scrollTo(0, 0);
-})
+});
+// Adjust currency popup
+$("#adjustCurrency").on('show.bs.modal', function(e) {
+  var target = $(e.relatedTarget).closest("tr").attr("data-financial-id");
+  $(this).data("financial-id", target);
+  var row_id = $(e.relatedTarget).closest("tr")[0].id;
+  var row_data = {}
+  $.each($("#" + row_id + " input, #" + row_id + " select").serializeArray(), function() {
+    row_data[this.name] = this.value;
+  });
+  $("#adjustCurrency select[name='currency']").val([row_data['currency']]);
+  $("#adjustCurrency input[name='currency_automatic']").val([row_data['currency_automatic']]);
+  $("#adjustCurrency_currency_rate").val(row_data['currency_rate']);
+  $("#adjustCurrency_currency_value_date").val(row_data['currency_value_date']);
+  $("#adjustCurrency_currency_source").val(row_data['currency_source']);
+  disableCurrencyFields(row_data['currency_automatic']);
+});
+$('#adjustCurrency').on('click', '.btn-ok', function(e) {
+  var $modalDiv = $(e.delegateTarget);
+  var tr_id = $modalDiv.data('financial-id');
+  /* NB: if currency_automatic is 0 (manual), then disabled fields
+  are NOT updated because they aren't returned in serializeArray() */
+  $.each($("#adjustCurrency input, #adjustCurrency select").serializeArray(), function() {
+    var changedName = this.name;
+    var changedValue = this.value;
+    $("tr#financial-" + tr_id + " input[name='" + changedName + "'], \
+      tr#financial-" + tr_id + " select[name='" + changedName + "']").val(changedValue).trigger("change");
+  });
+  $("tr#financial-" + tr_id + " .currency-label a").text($("#adjustCurrency select[name='currency']").val());
+  $modalDiv.modal('hide');
+});
+function syncFinancesValue(finances_id) {
+  var tr = $("#" + finances_id);
+  var transaction_value = parseFloat(tr.find("input[name='transaction_value_original']").first().val());
+  var currency_rate = parseFloat(tr.find("input[name='currency_rate']").first().val());
+  tr.find("p.transaction_value").first().text(function(f) {
+    return (transaction_value*currency_rate).toLocaleString(
+      undefined, {maximumFractionDigits:2, minimumFractionDigits:2});
+  });
+}
+$(document).on("change", ".finances-data input[name='currency_rate']", function() {
+  var tr = $(this).closest("tr");
+  syncFinancesValue(tr.attr("id"));
+});
+$(document).on("keyup", ".finances-data input[name='transaction_value_original']", function() {
+  var tr = $(this).closest("tr");
+  syncFinancesValue(tr.attr("id"));
+});
+function disableCurrencyFields(automatic) {
+  if (automatic == "1") {
+    $("#adjustCurrency_currency_rate, \
+      #adjustCurrency_currency_value_date, \
+      #adjustCurrency_currency_source").prop( "disabled", true );
+  } else {
+    $("#adjustCurrency_currency_rate, \
+      #adjustCurrency_currency_value_date, \
+      #adjustCurrency_currency_source").prop( "disabled", false );
+  }
+}
+$("#adjustCurrency input[name='currency_automatic']").on("change", function(e) {
+  disableCurrencyFields(this.value);
+});

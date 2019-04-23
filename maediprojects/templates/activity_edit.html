@@ -648,10 +648,8 @@
   <table class="table">
     <thead>
       <th>{% endraw %}{{ _('Date') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Value (USD)') }}{% raw %}</th>
-      <!--
-      <th>{% endraw %}{{ _('Currency') }}{% raw %}</th>
-      -->
+      <th>{% endraw %}{{ _('Value') }}{% raw %}</th>
+      <th class="number text-muted">{% endraw %}{{ _('Value (USD)') }}{% raw %}</th>
       <th>{% endraw %}{{ _('Description') }}{% raw %}</th>
       <th class="table-visibility-provider-org">{% endraw %}{{ _('Funder') }}{% raw %}</th>
       <th class="table-visibility-receiver-org">{% endraw %}{{ _('Implementer') }}{% raw %}</th>
@@ -679,18 +677,33 @@
     </td>
     <td>
       <div class="form-group">
-        <input type="text" class="form-control" name="transaction_value" value="{{ transaction_value }}">
-      </div>
+        <div class="input-group">
+          <div class="input-group-addon currency-label">
+            <a title="Adjust currency and conversion rate" href="#"
+              data-toggle="modal" data-target="#adjustCurrency">
+            {{ currency }}
+          </a>
+          </div>
+          <input type="text" class="form-control" name="transaction_value_original" value="{{ transaction_value_original }}">
+          <div class="input-group-addon">
+            <a title="Adjust currency and conversion rate" href="#"
+              data-toggle="modal" data-target="#adjustCurrency">
+              <span class="glyphicon glyphicon-cog"></span>
+            </a></div>
+        </div>
+      </div
     </td>
-    <!--
-    <td>
+    <td class="number currency-conversion">
       <div class="form-group">
-        <select id="currency" name="currency" class="form-control">
-          <option name="USD">USD</option>
-        </select>
+        <p class="form-control-static transaction_value text-muted">{{ transaction_value }}</p>
+        <input type="hidden" name="transaction_value" value="{{ transaction_value }}" />
+        <input type="hidden" name="currency" value="{{ currency }}" />
+        <input type="hidden" name="currency_automatic" value="{{ currency_automatic }}" />
+        <input type="hidden" name="currency_source" value="{{ currency_source }}" />
+        <input type="hidden" name="currency_rate" value="{{ currency_rate }}" />
+        <input type="hidden" name="currency_value_date" value="{{ currency_value_date }}" />
       </div>
     </td>
-    -->
     <td>
       <div class="form-group">
         <input type="text" class="form-control" name="transaction_description"
@@ -744,8 +757,9 @@
     </td>
     <td>
       <a class="btn btn-sm btn-default deleteFinancial"
-       data-toggle="modal" data-target="#confirm-delete">
-        <i class="glyphicon glyphicon-trash"></i>
+       data-toggle="modal" data-target="#confirm-delete"
+       title="Delete this row">
+        <span class="glyphicon glyphicon-trash"></span>
       </a>
     </td>
   </tr>
@@ -759,18 +773,9 @@
   <p class="lead">This project starts on <em>{% endraw %}{{activity.start_date}}{%raw%} </em>
   and ends on <em>{% endraw %}{{activity.end_date}}{%raw%}</em>. Please provide
   forward spend projections by quarter for the lifetime of this project.</p>
-  <p class="lead">To provide forward spend projections for earlier or later dates, adjust the project start
-  and end dates and new rows will automatically be created below.</p>
-  <form class="form-horizontal">
-    <div class="form-group">
-      <label for="currency" class="col-sm-2 control-label">{% endraw %}{{ _('Currency') }}{% raw %}</label>
-      <div class="col-sm-3">
-        <select id="currency" name="currency" class="form-control">
-          <option name="USD">USD</option>
-        </select>
-      </div>
-      </div>
-  </form>
+  <p class="lead">To provide forward spend projections for earlier or later dates,
+  adjust the project start and end dates and new rows will automatically be created below.</p>
+  <p class="lead">Currency: <b>USD</b></p>
   <div class="form-group">
   </div>
   <table class="table">
@@ -934,6 +939,77 @@
   </table>
 </script>
 {% endraw %}
+
+
+<div class="modal fade" id="adjustCurrency" tabindex="-1" role="dialog" aria-labelledby="adjustCurrencyLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="adjustCurrencyLabel">Currency conversion settings</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal">
+          <div class="form-group">
+            <label for="currency" class="col-sm-4 control-label">Currency</label>
+            <div class="col-sm-8">
+              <select class="form-control" name="currency" id="adjustCurrency_currency">
+                {% for currency in currencies %}
+                <option value="{{ currency.code }}">{{ currency.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-4 control-label">Set conversion rate</label>
+            <div class="col-sm-8">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="currency_automatic" id="automatic" value="1">
+                  Automatically (recommended)
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="currency_automatic" id="manual" value="0">
+                  Manually
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="adjustCurrency_currency_source" class="col-sm-4 control-label">Source</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" name="currency_source"
+              id="adjustCurrency_currency_source" placeholder="e.g. OECD"
+              value="OECD (rate for 2019-01-01)" disabled>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="adjustCurrency_currency_rate" class="col-sm-4 control-label">Rate to USD</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" name="currency_rate"
+              id="adjustCurrency_currency_rate" placeholder="e.g. 1"
+              value="1" disabled>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="adjustCurrency_currency_value_date" class="col-sm-4 control-label">Value date</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" name="currency_value_date"
+              id="adjustCurrency_currency_value_date" placeholder="e.g. 2019-01-01"
+              value="2019-01-01" disabled>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary btn-ok">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal fade" id="iati-search-results-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">

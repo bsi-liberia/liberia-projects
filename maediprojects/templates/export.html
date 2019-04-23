@@ -25,28 +25,44 @@
         </a>
       </h4>
     </div>
-    <div id="collapseDisb" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingDisb">
+    <div id="collapseDisb" class="panel-collapse collapse{{expanded.disbursements}}" role="tabpanel" aria-labelledby="headingDisb">
       <div class="panel-body">
         <h3><span class="glyphicon glyphicon-download"></span> Download templates</h3>
         <p class="lead">Generate quarterly reporting templates for <i>{{ previous_fy_fq }}</i> for one or all donors. You should
           then send the template to the relevant donor via email, as an Excel attachment.</p>
-        <div class="btn-group">
-          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="glyphicon glyphicon-save" aria-hidden="true"></span> Select template to download  <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <a href="{{ url_for('exports.export_donor_template')}}">
-                Download templates for all donors
-              </a>
-            </li>
-            <li role="separator" class="divider"></li>
-            {% for org in funding_orgs %}
-            <li><a href="{{ url_for('exports.export_donor_template', organisation_id=org.id) }}">
-              Template for {{ org.name }}
-            </a></li>
-            {% endfor %}
-          </ul>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="btn-group">
+              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="glyphicon glyphicon-save" aria-hidden="true"></span> Select template to download  <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" id="disbursementtemplates">
+                <li>
+                  <a href="{{ url_for('exports.export_donor_template')}}">
+                    Download templates for all donors
+                  </a>
+                </li>
+                <li role="separator" class="divider"></li>
+                {% for org in funding_orgs %}
+                <li><a href="{{ url_for('exports.export_donor_template', organisation_id=org.id) }}">
+                  Template for {{ org.name }}
+                </a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <form class="form-inline">
+              <div class="form-group">
+                <label for="currency_disbursements" class="control-label">Currency</label>
+                <select class="select form-control" name="currency_disbursements">
+                {% for currency in currencies %}
+                  <option value="{{ currency.code }}">{{ currency.name }}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </form>
+          </div>
         </div>
         <hr />
         <h3><span class="glyphicon glyphicon-upload"></span> Import data from template</h3>
@@ -91,28 +107,44 @@
         </a>
       </h4>
     </div>
-    <div id="collapseMTEF" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="collapseMTEF">
+    <div id="collapseMTEF" class="panel-collapse collapse{{expanded.mtef}}" role="tabpanel" aria-labelledby="collapseMTEF">
       <div class="panel-body">
         <h3><span class="glyphicon glyphicon-download"></span> Download templates</h3>
         <p class="lead">Generate annual forward projections reporting templates for one or all donors. You should
           then send the template to the relevant donor via email, as an Excel attachment.</p>
-        <div class="btn-group">
-          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="glyphicon glyphicon-save" aria-hidden="true"></span> Select template to download  <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <a href="{{ url_for('exports.export_donor_template', mtef=True)}}">
-                Download templates for all donors
-              </a>
-            </li>
-            <li role="separator" class="divider"></li>
-            {% for org in funding_orgs %}
-            <li><a href="{{ url_for('exports.export_donor_template', mtef=True, organisation_id=org.id) }}">
-              Template for {{ org.name }}
-            </a></li>
-            {% endfor %}
-          </ul>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="btn-group">
+              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="glyphicon glyphicon-save" aria-hidden="true"></span> Select template to download  <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" id="mteftemplates">
+                <li>
+                  <a href="{{ url_for('exports.export_donor_template', mtef=True)}}">
+                    Download templates for all donors
+                  </a>
+                </li>
+                <li role="separator" class="divider"></li>
+                {% for org in funding_orgs %}
+                <li><a href="{{ url_for('exports.export_donor_template', mtef=True, organisation_id=org.id) }}">
+                  Template for {{ org.name }}
+                </a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <form class="form-inline">
+              <div class="form-group">
+                <label for="currency_mtef" class="control-label">Currency</label>
+                <select class="select form-control" name="currency_mtef">
+                {% for currency in currencies %}
+                  <option value="{{ currency.code }}">{{ currency.name }}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </form>
+          </div>
         </div>
         <hr />
         <h3><span class="glyphicon glyphicon-upload"></span> Import data from templates</h3>
@@ -150,5 +182,6 @@
   </a></code></dd>
 </dl>
 <p></p>
+<script src="{{url_for('static', filename='js/export.js')}}" type="text/javascript"></script>
 
 {% endblock %}

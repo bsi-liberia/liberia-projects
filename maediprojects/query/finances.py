@@ -7,6 +7,7 @@ from maediprojects import models
 from maediprojects.extensions import db
 from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
+from maediprojects.query import exchangerates as qexchangerates
 import activity as qactivity
 
 
@@ -24,6 +25,9 @@ def add_finances(activity_id, data):
     classifications = data.get("classifications")
     data.pop("classifications")
     data["transaction_date"] = isostring_date(data["transaction_date"])
+    aF.currency_automatic=True
+    aF.currency_source, aF.currency_rate, aF.currency_value_date = qexchangerates.get_exchange_rate(
+        data["transaction_date"], data.get("currency", u"USD"))
     for key, value in data.items():
         setattr(aF, key, value)
     _classifications = []
@@ -46,7 +50,7 @@ def add_finances(activity_id, data):
         "value": aF.as_dict()
         }
         )
-    return aF.id
+    return aF
 
 def update_finances_classification(data):
     checkF = models.ActivityFinancesCodelistCode.query.filter_by(
@@ -69,6 +73,7 @@ def update_finances_classification(data):
         "value": {data["attr"]: data["value"]}
         }
         )
+    return models.ActivityFinances.query.filter_by(id=data["finances_id"]).first()
 
 def delete_finances(activity_id, finances_id):
     print "Delete activity id {} finances id {}".format(activity_id, finances_id)
@@ -126,7 +131,7 @@ def update_attr(data):
         }
         )
 
-    return True
+    return finance
 
 # Forward spend data
 
