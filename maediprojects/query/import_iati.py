@@ -46,7 +46,7 @@ def process_activity(doc, activity, activity_code):
 def import_documents(activity_id=None, activity_code=None):
     if activity_id is not None:
         activity = models.Activity.query.get(activity_id)
-        r = requests.get(DPORTAL_URL.format(activity.code))
+        r = requests.get(DPORTAL_URL.format(activity_code))
         doc = et.fromstring(r.text)
         found_documents = process_activity(doc, activity, activity_code)
     else:
