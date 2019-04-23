@@ -293,16 +293,12 @@ class Activity(db.Model):
                         ).filter(ActivityFinances.transaction_type==u"D",
                          ActivityFinances.activity_id==self.id).first()[0]
 
-    @hybrid_property
-    def commitments(self):
-        return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
-                                             ActivityFinances.transaction_type==u"C",
-                                             ActivityFinances.activity_id==self.id).all()
-    @hybrid_property
-    def disbursements(self):
-        return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
-                                             ActivityFinances.transaction_type==u"D",
-                                             ActivityFinances.activity_id==self.id).all()
+    commitments = sa.orm.relationship("ActivityFinances",
+        primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_type=='C')""")
+    disbursements = sa.orm.relationship("ActivityFinances",
+        primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_type=='D')""")
 
     def FY_disbursements_for_FY(self, FY):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
