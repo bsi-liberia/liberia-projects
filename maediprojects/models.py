@@ -297,6 +297,10 @@ class Activity(db.Model):
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
         ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type=='C')""")
+    allotments = sa.orm.relationship("ActivityFinances",
+        primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_value!=0,
+        ActivityFinances.transaction_type=='99-A')""")
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
         ActivityFinances.transaction_value!=0,
