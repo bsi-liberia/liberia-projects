@@ -295,9 +295,11 @@ class Activity(db.Model):
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type=='C')""")
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type=='D')""")
 
     def FY_disbursements_for_FY(self, FY):
