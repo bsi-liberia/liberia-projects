@@ -201,6 +201,7 @@ def activity_edit(activity_id):
         activity=activity,
         loggedinuser=current_user,
         codelists=codelists.get_codelists(),
+        codelist_lookups=codelists.get_codelists_lookups(),
         organisations=qorganisations.get_organisations(),
         locations=locations,
         currencies = qexchangerates.get_currencies(),
@@ -210,6 +211,7 @@ def activity_edit(activity_id):
         api_activity_milestones_url=url_for("api.api_activity_milestones", activity_id=activity_id),
         api_update_activity_finances_url=url_for("api.finances_edit_attr", activity_id=activity_id),
         api_iati_search_url=url_for("api.api_iati_search"),
+        api_iati_fetch_data_url = url_for("api.api_iati_fetch_data", activity_id=activity_id),
         api_activity_forwardspends_url=url_for("api.api_activity_forwardspends", activity_id=activity_id),
         api_activity_counterpart_funding_url = url_for("api.api_activity_counterpart_funding", activity_id=activity_id),
         users=quser.user()
@@ -286,6 +288,7 @@ def activity_add_results_data(activity_id):
                 status_dict[k] = str(v)[0:10]
         return jsonify(status_dict)
     return "error"
+
 
 @blueprint.route("/activities/<activity_id>/edit/update_activity/", methods=['POST'])
 @login_required

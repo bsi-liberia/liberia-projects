@@ -50,42 +50,69 @@ $('#datetimepicker_start, #datetimepicker_end')
     errorFormGroup(input);
   });
 });
-$(document).on("click", "#search_iati",
-    function(e) {
-  e.preventDefault();
-  var title = $("#title").val();
-  var reporting_org_code = $("#reporting_org_id option:selected")[0].getAttribute("data-organisation-code");
-  console.log(reporting_org_code);
+$(document).on("click", "#search_iati", function(e) {
+    e.preventDefault();
+    var title = $("#title").val();
+    var reporting_org_code = $("#reporting_org_id option:selected")[0].getAttribute("data-organisation-code");
+    var reporting_org_name = $("#reporting_org_id option:selected")[0].getAttribute("data-name");
+    console.log(reporting_org_code);
+    $('#iati-search-results-modal').modal();
+    search_for_iati_data(title, reporting_org_code, reporting_org_name);
+});
+$(document).on("click", "#search_modal_button", function(e) {
+    e.preventDefault();
+    var title = $("#search_modal_title").val();
+    var reporting_org_code = $("#reporting_org_id option:selected")[0].getAttribute("data-organisation-code");
+    var reporting_org_name = $("#reporting_org_id option:selected")[0].getAttribute("data-name");
+    search_for_iati_data(title, reporting_org_code, reporting_org_name);
+  }
+)
+function search_for_iati_data(title, reporting_org_code, reporting_org_name) {
+  $("#iati-search-results-area").html('<p class="text-muted">Loading...</p>');
   var data = {
-    "title": title,
-    "reporting_org_code": reporting_org_code
+  "title": title,
+  "reporting_org_code": reporting_org_code
   }
   $.get(api_iati_search_url, data,
     function(returndata){
       if (returndata["count"] == '0'){
-          alert("No activities found from IATI. Try adjusting the title or funding organisation code.");
+        var results = null;
       } else {
-        $('#iati-search-results-modal').modal();
-        // Render locations selector
-      	var iati_results_template = $('#iati-search-results-template').html();
-      	Mustache.parse(iati_results_template);
-      	var rendered_search_results = Mustache.render(iati_results_template, {"title": title, "results": returndata["results"]});
-      	$('#iati-search-results-area').html(rendered_search_results);
+        var results = returndata["results"];
       }
+        // Render locations selector
+        var iati_results_template = $('#iati-search-results-template').html();
+        Mustache.parse(iati_results_template);
+        var rendered_search_results = Mustache.render(iati_results_template, {
+          "title": title, "reporting_org": reporting_org_name, "results": results});
+        $('#iati-search-results-area').html(rendered_search_results);
     }
   );
-});
+}
+
 $(document).on("click", "#iati-search-results-area .import a",
   function(e) {
   e.preventDefault();
   tr = $(this).closest("tr")
-  iati_identifier = tr.find("td.iati_identifier a").html();
+  iati_identifier = tr.find("td.iati_identifier a").html().trim();
   description = tr.find("td.description").html();
-  $("#code").val(iati_identifier.trim());
+  $("#code").val(iati_identifier);
   //$("#description").val(description);
   $('#iati-search-results-modal').modal('hide');
   $("#code").trigger("change");
   //$("#description").trigger("change");
+  var data = {
+    "iati_identifier": iati_identifier
+  }
+  $.get(api_iati_fetch_data_url, data,
+    function(returndata){
+      if (returndata == 'True'){
+        alert("Found documents for this activity! Reload the page to see them.");
+      } else {
+        alert("No documents found for this activity.")
+      }
+    }
+  );
 });
 
 // LOCATIONS

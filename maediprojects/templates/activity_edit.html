@@ -27,6 +27,9 @@
     <li role="presentation"><a href="#milestones" aria-controls="milestones" role="tab" data-toggle="tab" id="milestonesTab">{{ _('Milestones') }}</a></li>
     {% endif %}
     <li role="presentation"><a href="#conditions" aria-controls="conditions" role="tab" data-toggle="tab" id="conditionsTab">{{ _('Conditions') }}</a></li>
+    {% if activity.documents %}
+    <li role="presentation"><a href="#documents" aria-controls="documents" role="tab" data-toggle="tab" id="documentsTab">{{ _('Documents') }}</a></li>
+    {% endif %}
     {% endif %}
    <!-- <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">Results</a></li>-->
   </ul>
@@ -582,6 +585,35 @@
       </div>
     -->
     </div>
+
+    {% if activity.documents %}
+    <div role="tabpanel" class="tab-pane" id="documents">
+      <h2>{{ _('Documents') }}</h2>
+      <div class="alert alert-info">
+        These documents were automatically captured from this donor's IATI data.
+      </div>
+      <table class="table">
+        <thead>
+          <th width="50%">Title</th>
+          <th>Type</th>
+          <th>Date</th>
+        </thead>
+        <tbody>
+          {% for document in activity.documents %}
+          <tr>
+            <td><a href="{{ document.url }}">{{ document.title }}</a></td>
+            <td>
+              {% for category_code in document.categories %}
+              <span class="label label-default">{{ codelist_lookups["DocumentCategory"][category_code.code] }}</span>
+              {% endfor %}
+            </td>
+            <td>{{ document.document_date or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
 </div>
 
@@ -914,7 +946,25 @@
 
 
 <script id="iati-search-results-template" type="x-tmpl-mustache">
-  <p>The following results were found in IATI for <i>{{ title }}</i>.</p>
+  <p>The following results were found in <i>{{ reporting_org }}</i>'s IATI data for <i>{{ title }}</i>.</p>
+  <form class="form-horizontal">
+    <div class="form-group">
+      <label for="search_modal_title" class="col-sm-2 control-label">Repeat search</label>
+        <div class="col-sm-10">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search_modal_title"
+            id="search_modal_title" placeholder="e.g. Mount Coffee"
+            value="{{ title }}">
+            <div class="input-group-addon">
+              <a href="#" id="search_modal_button" title="Search">
+                <span class="glyphicon glyphicon-search"></span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
   <table class="table">
     <thead>
       <th title="IATI Identifier">Project code</th>
@@ -926,13 +976,18 @@
       {{# results }}
       <tr>
         <td class="iati_identifier"><a href="http://d-portal.org/q.html?aid={{ iati_identifier }}" target="_blank">{{ iati_identifier }}</a</td>
-        <td class="title">{{# title }}{{# narratives }}{{ text }}<br />{{/ narratives }}{{/ title }}</td>
-        <td class="description">{{# descriptions }}{{# narratives }}{{ text }}{{/ narratives }}{{/ descriptions }}</td>
+        <td class="title">{{# title }}{{# narratives }}<p>{{ text }}</p>{{/ narratives }}{{/ title }}</td>
+        <td class="description">{{# descriptions }}{{# narratives }}<p>{{ text }}</p>{{/ narratives }}{{/ descriptions }}</td>
         <td class="import">
           <a class="btn btn-xs btn-success">
             <span class="glyphicon glyphicon-ok"></span>
           </a>
         </td>
+      </tr>
+      {{/ results }}
+      {{^ results }}
+      <tr>
+        <td colspan="4">No results found. Try adjusting your search terms above.</td>
       </tr>
       {{/ results }}
     </tbody>
@@ -1020,7 +1075,9 @@
         <h4 class="modal-title">{{ _('IATI Search Results') }}</h4>
       </div>
       <div class="modal-body">
-        <div id="iati-search-results-area"></div>
+        <div id="iati-search-results-area">
+          <p class="text-muted">Loading...</p>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('OK') }}</button>
@@ -1038,6 +1095,7 @@ var api_update_activity_finances_url = "{{ api_update_activity_finances_url }}";
 var api_activity_milestones_url =  "{{ api_activity_milestones_url }}";
 var api_activity_counterpart_funding_url =  "{{ api_activity_counterpart_funding_url }}";
 var api_iati_search_url = "{{ api_iati_search_url }}";
+var api_iati_fetch_data_url = "{{ api_iati_fetch_data_url }}";
 </script>
 
 <link type="text/css" media="screen" href="{{url_for('static', filename='vendor/leaflet/0.7.7/leaflet.css')}}" rel="stylesheet" />

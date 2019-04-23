@@ -173,6 +173,31 @@ class ExchangeRate(db.Model):
        return ret_data
 
 
+class ActivityDocumentLink(db.Model):
+    __tablename__ = 'activitydocumentlink'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(
+        act_ForeignKey('activity.id'),
+        nullable=False, index=True)
+    title = sa.Column(sa.UnicodeText)
+    url = sa.Column(sa.UnicodeText)
+    categories = sa.orm.relationship("ActivityDocumentLinkCategory",
+            cascade="all, delete-orphan")
+    document_date = sa.Column(sa.Date)
+
+    def as_dict(self):
+        return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
+
+
+class ActivityDocumentLinkCategory(db.Model):
+    __tablename__ = 'activitydocumentlinkcategory'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activitydocumentlink_id = sa.Column(
+        act_ForeignKey('activitydocumentlink.id'),
+        nullable=False, index=True)
+    code = sa.Column(sa.UnicodeText)
+
+
 class Activity(db.Model):
     __tablename__ = 'activity'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -230,6 +255,9 @@ class Activity(db.Model):
     counterpart_funding = sa.orm.relationship("ActivityCounterpartFunding",
             cascade="all, delete-orphan")
     domestic_external = sa.Column(sa.UnicodeText)
+
+    documents = sa.orm.relationship("ActivityDocumentLink",
+            cascade="all, delete-orphan")
 
     @hybrid_property
     def permissions(self):
