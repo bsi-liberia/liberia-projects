@@ -46,6 +46,16 @@ def automatic_currency_conversion(finances_id, force_update=False):
     return aF
 
 
+def add_names_to_currencies():
+    _currencynamesf = open("maediprojects/lib/data/Currency.csv", "r")
+    _currencynamescsv = unicodecsv.DictReader(_currencynamesf)
+    _currencies_names = dict(map(lambda c: (c["code"], c["name_en"]), _currencynamescsv))
+    for currency in models.Currency.query.all():
+        currency.name = unicode(_currencies_names.get(currency.code, ""))
+        db.session.add(currency)
+    db.session.commit()
+
+
 def import_exchange_rates():
     _erf = open("consolidated-exchangerates.csv", "r")
     _ercsv = unicodecsv.DictReader(_erf)
@@ -79,6 +89,7 @@ def import_exchange_rates():
     oecd.weight = 33
     db.session.add(oecd)
     db.session.commit()
+    add_names_to_currencies()
 
 
 def closest_exchange_rate(_date, currency):
