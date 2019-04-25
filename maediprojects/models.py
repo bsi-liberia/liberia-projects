@@ -352,7 +352,7 @@ class Activity(db.Model):
     @hybrid_property
     def FY_disbursements_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, (u'D', u'E'))
+        fydata = fydata_query(self, fiscalyear_modifier, [u'D', u'E'])
 
         return {
                     "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
@@ -364,9 +364,23 @@ class Activity(db.Model):
                 }
 
     @hybrid_property
+    def FY_allotments_dict(self):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        fydata = fydata_query(self, fiscalyear_modifier, [u'99-A'])
+
+        return {
+                    "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "value": round(fyval.value, 4)
+                    }
+                    for fyval in fydata
+                }
+
+    @hybrid_property
     def FY_commitments_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, (u'C'))
+        fydata = fydata_query(self, fiscalyear_modifier, [u'C'])
         return {
                     "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,
