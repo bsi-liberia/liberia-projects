@@ -51,6 +51,7 @@ def import_documents(activity_id=None, activity_code=None):
         found_documents = process_activity(doc, activity, activity_code)
     else:
         activities = models.Activity.query.filter(
+            models.Activity.domestic_external==u'external',
             models.Activity.code != u"").all()
         iati_identifiers = set(map(lambda a: a.code, activities))
         r = requests.get(DATASTORE_URL.format("|".join(iati_identifiers)))
