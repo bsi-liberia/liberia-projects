@@ -65,3 +65,11 @@ def import_iati():
     """Import Liberia data."""
     from query import import_iati as qiatiimport
     qiatiimport.import_documents()
+
+
+@click.command()
+@with_appcontext
+def import_psip_transactions():
+    """ Import currency data"""
+    from query import import_psip_transactions as qimportpsip
+    qimportpsip.import_transactions()

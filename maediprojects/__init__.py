@@ -28,6 +28,7 @@ def register_commands(app):
     app.cli.add_command(commands.import_currencies)
     app.cli.add_command(commands.test_closest_date)
     app.cli.add_command(commands.import_iati)
+    app.cli.add_command(commands.import_psip_transactions)
 
 
 def register_extensions(app):
