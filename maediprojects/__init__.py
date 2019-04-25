@@ -66,6 +66,10 @@ def register_hooks(app):
             session["permissions"] = current_user.permissions_dict
         else:
             session["permissions"] = {}
+            current_user.permissions_dict = {
+                'domestic_external': 'none',
+                'domestic_external_edit': 'none'
+            }
             if request.headers['Host'] == "psip.liberiaprojects.org":
                 session["permissions"]["domestic_external"] = "domestic"
             elif request.headers['Host'] == "liberiaprojects.org":
