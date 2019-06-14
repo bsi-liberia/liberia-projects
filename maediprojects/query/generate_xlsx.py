@@ -316,28 +316,48 @@ def import_xls_mtef(input_file):
                 updated_years = []
                 # Parse MTEF projections columns
                 for mtef_year in mtef_cols:
-                    new_fy_value = clean_value(row[mtef_year])
-                    fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
-                    existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
-                        float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
-                        float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
-                        float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+                    if u'Q' in mtef_year: # Quarterly MTEF projections
+                        new_fy_value = clean_value(row[mtef_year])
+                        _mtef_year_year, _mtef_year_quarter = re.match(r"(\d*) Q(\d*) \(MTEF\)", mtef_year).groups()
+                        existing_fy_value = float(existing_activity["{} Q{} (MTEF)".format(
+                            _mtef_year_year, _mtef_year_quarter)])
 
-                    new_fy_value_in_usd = qexchangerates.convert_from_currency(
-                        currency = currency,
-                        _date = datetime.datetime.utcnow().date(),
-                        value = new_fy_value)
-                    difference = new_fy_value_in_usd-existing_fy_value
-                    # We ignore differences < 1 USD, because this can be due to rounding errors
-                    # when we divided input date by 4.
-                    if round(difference) == 0:
-                        continue
-                    # Create 1/4 of new_fy_value for each quarter in this FY
-                    value = round(new_fy_value_in_usd/4.0, 4)
-                    for _fq in [1,2,3,4]:
-                        year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
+                        new_fy_value_in_usd = qexchangerates.convert_from_currency(
+                            currency = currency,
+                            _date = datetime.datetime.utcnow().date(),
+                            value = new_fy_value)
+                        difference = new_fy_value_in_usd-existing_fy_value
+                        # We ignore differences < 1 USD, because this can be due to rounding errors
+                        # when we divided input data by 4.
+                        if round(difference) == 0:
+                            continue
+                        value = new_fy_value_in_usd
+                        year, quarter = util.lr_quarter_to_cal_quarter(int("{}".format(_mtef_year_year)), int(_mtef_year_quarter))
                         inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
-                    updated_years.append(u"FY{}/{}".format(fy_start, fy_end))
+                        updated_years.append(u"FY{} Q{}".format(_mtef_year_year, _mtef_year_quarter))
+                    else: # Annual MTEF projections
+                        new_fy_value = clean_value(row[mtef_year])
+                        fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
+                        existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
+                            float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
+                            float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
+                            float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+
+                        new_fy_value_in_usd = qexchangerates.convert_from_currency(
+                            currency = currency,
+                            _date = datetime.datetime.utcnow().date(),
+                            value = new_fy_value)
+                        difference = new_fy_value_in_usd-existing_fy_value
+                        # We ignore differences < 1 USD, because this can be due to rounding errors
+                        # when we divided input data by 4.
+                        if round(difference) == 0:
+                            continue
+                        # Create 1/4 of new_fy_value for each quarter in this FY
+                        value = round(new_fy_value_in_usd/4.0, 4)
+                        for _fq in [1,2,3,4]:
+                            year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
+                            inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
+                        updated_years.append(u"FY{}/{}".format(fy_start, fy_end))
                 # Parse counterpart funding columns
                 updated_counterpart_years = []
                 for counterpart_year in counterpart_funding_cols:
