@@ -7,6 +7,8 @@ python:
 apt:
   packages:
     - chromium-chromedriver
+before_install:
+  - export PATH="$HOME/bin:$PATH"
 install:
   - pip install -r requirements_dev.txt
 before_script:
