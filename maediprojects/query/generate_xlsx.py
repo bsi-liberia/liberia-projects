@@ -475,10 +475,10 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
         if activity_id:
             flash(u"""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
-            The error was: {} {}""".format(activity_id, e), "danger")
+            The error was: {}""".format(activity_id, str(e)), "danger")
         else:
             flash(u"""There was an unexpected error when importing your projects,
-        the error was: {} {}""".format(exc_type, exc_value), "danger")
+        the error was: {}""".format(str(e)), "danger")
     db.session.commit()
     return num_updated_activities
 
