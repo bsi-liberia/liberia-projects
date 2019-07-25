@@ -260,7 +260,7 @@ class Activity(db.Model):
         # TODO eventually this will vary by activity, as permissions can be
         # selective for different organisations.
         def _check_org_permission():
-            org_permission = self.reporting_org_id in current_user.permissions_dict["organisations"]
+            org_permission = self.reporting_org_id in current_user.permissions_dict.get("organisations", [])
             if org_permission:
                 return current_user.permissions_dict["organisations"][self.reporting_org_id]["permission_value"]
             return False
@@ -296,15 +296,15 @@ class Activity(db.Model):
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
         ActivityFinances.transaction_value!=0,
-        ActivityFinances.transaction_type=='C')""")
+        ActivityFinances.transaction_type==u'C')""")
     allotments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
         ActivityFinances.transaction_value!=0,
-        ActivityFinances.transaction_type=='99-A')""")
+        ActivityFinances.transaction_type==u'99-A')""")
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
         ActivityFinances.transaction_value!=0,
-        ActivityFinances.transaction_type=='D')""")
+        ActivityFinances.transaction_type==u'D')""")
 
     def FY_disbursements_for_FY(self, FY):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
