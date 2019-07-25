@@ -11,6 +11,5 @@ install:
   - pip install -r requirements_dev.txt
 before_script:
   - ln -s /usr/lib/chromium-browser/chromedriver ~/bin/chromedriver
-  - export PATH=$HOME/bin/chromedriver:$PATH
 script:
   - pytest --driver Chrome
