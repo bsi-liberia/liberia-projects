@@ -1,3 +1,4 @@
+sudo: false
 addons:
   - chrome: stable
 language: python
@@ -12,7 +13,6 @@ before_install:
 install:
   - pip install -r requirements_dev.txt
 before_script:
-  - ln -s /usr/lib/chromium-browser/chromedriver "${HOME}/bin/chromedriver"
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 script:
-  - pytest --driver Chrome --driver-path "${HOME}/bin/chromedriver"
+  - pytest --driver Chrome --driver-path /usr/lib/chromium-browser/chromedriver
