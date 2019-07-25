@@ -1,12 +1,11 @@
+sudo: required
+addons:
+  - chrome: stable
 language: python
 cache: pip
 python:
   - 2.7
 install:
   - pip install -r requirements_dev.txt
-before_script:
-  - wget http://chromedriver.storage.googleapis.com/2.24/chromedriver_linux64.zip
-  - unzip chromedriver_linux64.zip -d /home/travis/virtualenv/python2.7/bin/
-  - export CHROME_BIN=chromium-browser
 script:
   - pytest --driver Chrome
