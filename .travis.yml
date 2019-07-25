@@ -5,9 +5,6 @@ language: python
 cache: pip
 python:
   - 2.7
-apt:
-  packages:
-    - chromium-chromedriver
 before_install:
   - mkdir /tmp/chromedriver
   - wget https://chromedriver.storage.googleapis.com/75.0.3770.140/chromedriver_linux64.zip -O /tmp/chromedriver/chromedriver.zip
