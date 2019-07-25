@@ -12,6 +12,7 @@ before_install:
 install:
   - pip install -r requirements_dev.txt
 before_script:
-  - ln -s /usr/lib/chromium-browser/chromedriver ~/bin/chromedriver
+  - ln -s /usr/lib/chromium-browser/chromedriver "${HOME}/bin/chromedriver"
+  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 script:
   - pytest --driver Chrome
