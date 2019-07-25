@@ -1,6 +1,6 @@
 sudo: false
 addons:
-  - chrome: stable
+  - chrome: latest
 language: python
 cache: pip
 python:
