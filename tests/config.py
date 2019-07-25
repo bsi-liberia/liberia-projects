@@ -27,3 +27,7 @@ USER = {
     "recipient_country_code": u"ML",
     "administrator": False
 }
+SERVER_NAME = "0.0.0.0"
+LIVESERVER_PORT=8943
+selenium_capture_debug="ALWAYS"
+RESERVE_CONTEXT_ON_EXCEPTION=True
