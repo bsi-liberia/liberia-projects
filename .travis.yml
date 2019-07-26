@@ -10,6 +10,8 @@ cache: pip
 python:
   - 2.7
 before_install:
+  - whereis google-chrome-stable
+  - google-chrome-stable --version
   - mkdir /tmp/chromedriver
   - wget https://chromedriver.storage.googleapis.com/76.0.3809.68/chromedriver_linux64.zip -O /tmp/chromedriver/chromedriver.zip
   - unzip /tmp/chromedriver/chromedriver.zip -d /tmp/chromedriver
