@@ -46,6 +46,7 @@ def app():
             time.sleep(1)
         yield app
         _db.session.close()
+        _db.session.remove()
         _db.drop_all()
 
 
