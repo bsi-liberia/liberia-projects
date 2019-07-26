@@ -14,11 +14,15 @@ from maediprojects.query import activity as qactivity
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+import time
+import base64
 
-@pytest.fixture
+
+@pytest.fixture(scope="session")
 def app():
     """Session-wide test `Flask` application."""
     app = create_app('tests.config')
+    app.testing = True
 
     with app.app_context() as client:
         _db.app = app
@@ -28,16 +32,31 @@ def app():
 
         user_dict = app.config["ADMIN_USER"]
         user = addUser(user_dict)
+        _db.session.commit()
+        # Confirm everything was set up properly
+        assert models.User.query.get(user.id).username == user_dict["username"]
+        assert len(models.User.query.get(user.id).permissions) == 2
+        assert models.User.query.get(user.id).permissions[0].permission_name == "domestic_external"
+        assert models.User.query.get(user.id).permissions[1].permission_name == "domestic_external_edit"
+        assert len(models.User.query.get(user.id).permissions_dict) == 3
+        assert models.User.query.get(user.id).permissions_dict["organisations"] == {}
         with app.test_client() as client:
             client.post(url_for('users.login'), data=user_dict)
             import_test_data(user.id)
+            time.sleep(1)
         yield app
         _db.session.close()
         _db.drop_all()
 
 
-@pytest.fixture
+@pytest.mark.usefixtures("live_server")
+class LiveServerClass:
+    time.sleep(3)
+    pass
+
+@pytest.fixture()
 def selenium_login(app, selenium):
+    time.sleep(1)
     user_dict = app.config["ADMIN_USER"]
     selenium.get(url_for('users.login', _external=True))
     selenium.find_element_by_name("username").send_keys(user_dict["username"])
@@ -106,9 +125,6 @@ def user(request, app, client):
     request.addfinalizer(teardown)
 
     return user
-
-
-import base64
 
 
 def pytest_selenium_capture_debug(item, report, extra):
