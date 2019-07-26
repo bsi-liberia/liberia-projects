@@ -1,14 +1,16 @@
 sudo: false
+language: python
+cache: pip
+python:
+  - 2.7
 addons:
   apt:
     sources:
       - google-chrome
     packages:
       - google-chrome-stable
-language: python
-cache: pip
-python:
-  - 2.7
+env:
+  - FLASK_ENV=development
 before_install:
   - whereis google-chrome-stable
   - google-chrome-stable --version
