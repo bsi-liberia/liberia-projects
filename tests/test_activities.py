@@ -35,7 +35,7 @@ class TestActivitiesLoad():
     def test_activities_load(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activities', _external=True))
         WebDriverWait(selenium, 5).until(
-            EC.presence_of_element_located((By.ID, 'activities_count'))
+            EC.presence_of_element_located((By.ID, 'projectsList'))
         )
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"
         assert len(selenium.find_elements(By.XPATH, "//table/tbody/tr")) == 10
