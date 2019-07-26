@@ -20,4 +20,4 @@ before_install:
 install:
   - pip install -r requirements_dev.txt
 script:
-  - pytest --driver Chrome
+  - pytest --driver Chrome --driver-path /tmp/chromedriver/chromedriver
