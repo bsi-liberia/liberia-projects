@@ -4,6 +4,8 @@ import warnings
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+import time
+from conftest import LiveServerClass
 
 @pytest.mark.usefixtures('client_class')
 class TestActivities:
@@ -29,12 +31,11 @@ class TestActivities:
             assert res.status_code == status_code
 
 
-@pytest.mark.usefixtures('live_server')
 @pytest.mark.usefixtures('client_class')
-class TestActivitiesLoad():
+class TestActivitiesLoad(LiveServerClass):
     def test_activities_load(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activities', _external=True))
-        WebDriverWait(selenium, 5).until(
+        WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.ID, 'projectsList'))
         )
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"

@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import json
 import time
+from conftest import LiveServerClass
 
 @pytest.mark.usefixtures('client_class')
 class TestActivity:
@@ -21,17 +22,16 @@ class TestActivity:
             assert len(json.loads(res.data)["finances"]) == 1
 
 
-@pytest.mark.usefixtures('live_server')
 @pytest.mark.usefixtures('client_class')
-class TestActivityLoads():
+class TestActivityLoads(LiveServerClass):
 
     def test_activity_editor_finances_tab(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activity_edit', activity_id=1, _external=True))
-        WebDriverWait(selenium, 5).until(
+        WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.ID, 'financesTab'))
         )
         selenium.find_element(By.ID, "financesTab").click()
-        WebDriverWait(selenium, 5).until(
+        WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#financial-data-D table tbody tr'))
         )
         assert selenium.find_element(By.CSS_SELECTOR, "#financial-data-D table tbody tr"
@@ -40,12 +40,12 @@ class TestActivityLoads():
 
     def test_add_activity_finances(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activity_edit', activity_id=1, _external=True))
-        WebDriverWait(selenium, 5).until(
+        WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.ID, 'financesTab'))
         )
         selenium.find_element(By.ID, "financesTab").click()
         selenium.find_element(By.CSS_SELECTOR, "#collapseDisbursements .addFinancial").click()
-        WebDriverWait(selenium, 5).until(
+        WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#financial-data-D table tbody tr:nth-child(2)'))
         )
         assert len(selenium.find_elements(By.CSS_SELECTOR, "#financial-data-D table tbody tr")) == 2
