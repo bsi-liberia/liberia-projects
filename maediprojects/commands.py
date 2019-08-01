@@ -41,10 +41,34 @@ def import_psip():
 
 @click.command()
 @with_appcontext
-def import_currencies():
-    """ Import currency data"""
+def import_currencies_from_file():
+    """Import currency data"""
     from query import exchangerates as qexchangerates
-    qexchangerates.import_exchange_rates()
+    qexchangerates.import_exchange_rates_from_file()
+
+
+@click.command()
+@click.option('-f', '--full-download', required=False, default=True)
+@click.option('-s', '--since-date', required=False, default=None)
+@with_appcontext
+def import_currencies_from_url(full_download, since_date):
+    """Import currency data from URL"""
+    from query import exchangerates as qexchangerates
+    if full_download != True:
+        full_download = False
+        if since_date == None:
+            yesterday = datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
+            since_date = yesterday.isoformat()
+    qexchangerates.import_exchange_rates_from_url(full_download, since_date)
+
+
+@click.command()
+@with_appcontext
+def delete_currencies():
+    """Delete currency data"""
+    from query import exchangerates as qexchangerates
+    qexchangerates.delete_existing_exchange_rates()
+    print("Deleted all existing currencies.")
 
 
 @click.command()

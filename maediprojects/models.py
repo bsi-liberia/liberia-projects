@@ -166,6 +166,10 @@ class ExchangeRate(db.Model):
         nullable=False, index=True)
     rate = sa.Column(sa.Float, nullable=False)
 
+    __table_args__ = (
+        db.UniqueConstraint('exchangeratesource_id', 'currency_code', 'rate_date', name='unique_exchange_rate'),
+    )
+
     def as_dict(self):
        ret_data = {}
        ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
@@ -547,7 +551,10 @@ class ActivityForwardSpend(db.Model):
     period_start_date = sa.Column(sa.Date)
     period_end_date = sa.Column(sa.Date)
 
-    __table_args__ = (sa.UniqueConstraint('activity_id','period_start_date'),)
+
+    __table_args__ = (
+        sa.UniqueConstraint('activity_id','period_start_date', name='forward_spend_constraint'),
+    )
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
