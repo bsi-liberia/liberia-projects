@@ -15,7 +15,7 @@ before_install:
   - whereis google-chrome-stable
   - google-chrome-stable --version
   - mkdir /tmp/chromedriver
-  - wget https://chromedriver.storage.googleapis.com/73.0.3683.68/chromedriver_linux64.zip -O /tmp/chromedriver/chromedriver.zip
+  - wget https://chromedriver.storage.googleapis.com/76.0.3809.68/chromedriver_linux64.zip -O /tmp/chromedriver/chromedriver.zip
   - unzip /tmp/chromedriver/chromedriver.zip -d /tmp/chromedriver
   - chmod 700 /tmp/chromedriver/chromedriver
   - google-chrome-stable --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &
