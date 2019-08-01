@@ -54,6 +54,7 @@ def import_currencies_from_file():
 def import_currencies_from_url(full_download, since_date):
     """Import currency data from URL"""
     from query import exchangerates as qexchangerates
+    import datetime
     if full_download != True:
         full_download = False
         if since_date == None:
