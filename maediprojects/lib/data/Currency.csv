@@ -31,7 +31,7 @@ CDF,Congolese Franc,,,,active
 CHF,Swiss Franc,,,,active
 CLF,Unidades de fomento,,,,active
 CLP,Chilean Peso,,,,active
-CNY,Yuan Renminbi,,,,active
+CNY,Chinese Yuan Renminbi,,,,active
 COP,Colombian Peso,,,,active
 COU,Unidad de Valor Real,,,,active
 CRC,Costa Rican Colon,,,,active
@@ -50,7 +50,7 @@ ETB,Ethiopian Birr,,,,active
 EUR,Euro,,,,active
 FJD,Fiji Dollar,,,,active
 FKP,Falkland Islands Pound,,,,active
-GBP,Pound Sterling,,,,active
+GBP,British Pound Sterling,,,,active
 GEL,Lari,,,,active
 GHS,Cedi,,,,active
 GIP,Gibraltar Pound,,,,active
@@ -62,22 +62,22 @@ HKD,Hong Kong Dollar,,,,active
 HNL,Lempira,,,,active
 HRK,Kuna,,,,active
 HTG,Gourde,,,,active
-HUF,Forint,,,,active
-IDR,Rupiah,,,,active
+HUF,Hungarian Forint,,,,active
+IDR,Indonesian Rupiah,,,,active
 ILS,New Israeli Sheqel,,,,active
 INR,Indian Rupee,,,,active
 IQD,Iraqi Dinar,,,,active
 IRR,Iranian Rial,,,,active
-ISK,Iceland Krona,,,,active
+ISK,Icelandic Krona,,,,active
 JMD,Jamaican Dollar,,,,active
 JOD,Jordanian Dinar,,,,active
-JPY,Yen,,,,active
+JPY,Japanese Yen,,,,active
 KES,Kenyan Shilling,,,,active
 KGS,Som,,,,active
 KHR,Riel,,,,active
 KMF,Comoro Franc,,,,active
 KPW,North Korean Won,,,,active
-KRW,Won,,,,active
+KRW,Korean Won,,,,active
 KWD,Kuwaiti Dinar,,,,active
 KYD,Cayman Islands Dollar,,,,active
 KZT,Tenge,,,,active
@@ -117,7 +117,7 @@ PEN,Nuevo Sol,,,,active
 PGK,Kina,,,,active
 PHP,Philippine Peso,,,,active
 PKR,Pakistan Rupee,,,,active
-PLN,Zloty,,,,active
+PLN,Polish Zloty,,,,active
 PYG,Guarani,,,,active
 QAR,Qatari Rial,,,,active
 RON,Romanian Leu,,,,active
@@ -140,7 +140,7 @@ STN,Dobra,,,,active
 SVC,El Salvador Colon,,,,active
 SYP,Syrian Pound,,,,active
 SZL,Lilangeni,,,,active
-THB,Baht,,,,active
+THB,Thai Baht,,,,active
 TJS,Somoni,,,,active
 TMT,Manat,,,,active
 TND,Tunisian Dinar,,,,active
@@ -157,7 +157,7 @@ USS,US Dollar (Same day),Withdrawn from ISO Currency codelist.,,,withdrawn
 UYI,Uruguay Peso en Unidades Indexadas,,,,active
 UYU,Peso Uruguayo,,,,active
 UZS,Uzbekistan Sum,,,,active
-VEF,Bolivar,,,,withdrawn
+VEF,Venezuelan Bolivar,,,,withdrawn
 VES,Bolivar Soberano,,,,active
 VND,Dong,,,,active
 VUV,Vatu,,,,active
@@ -169,7 +169,7 @@ XDR,International Monetary Fund (IMF) Special Drawing Right (SDR),,,,active
 XOF,CFA Franc BCEAO,,,,active
 XPF,CFP Franc,,,,active
 YER,Yemeni Rial,,,,active
-ZAR,Rand,,,,active
+ZAR,South African Rand,,,,active
 ZMK,Zambian Kwacha,Withdrawn from ISO Country codelist. Use code ZMW.,,,withdrawn
 ZMW,Zambian Kwacha,,,,active
 ZWL,Zimbabwe Dollar,,,,active
