@@ -101,7 +101,7 @@
 <div class="row">
   <div class="col-md-6">
     <h3>{% if activity.domestic_external == "external" %}Commitments{% else %}Appropriations{% endif %}</h3>
-    <table class="table" id="commitments-table">
+    <table class="table financial-table" id="commitments-table">
       <thead>
         <th>Period</th>
         <th class="number">Value</th>
@@ -118,7 +118,7 @@
   </div>
   <div class="col-md-6">
     <h3>Disbursements</h3>
-    <table class="table" id="disbursements-table">
+    <table class="table financial-table" id="disbursements-table">
       <thead>
         <th>Period</th>
         <th class="number">Value</th>
@@ -134,11 +134,11 @@
     </table>
   </div>
 </div>
-{% if activity.FY_forward_spend_dict %}
 <div class="row">
+  {% if activity.FY_forward_spend_dict %}
   <div class="col-md-6">
     <h3>{% if activity.domestic_external == "external" %}MTEF Projections{% else %}Spending Plan{% endif %}</h3>
-    <table class="table" id="mtef-projections-table">
+    <table class="table financial-table" id="mtef-projections-table">
       <thead>
         <th>Period</th>
         <th class="number">Value</th>
@@ -153,8 +153,27 @@
       </tbody>
     </table>
   </div>
+  {% endif %}
+  {% if activity.FY_allotments_dict %}
+  <div class="col-md-6">
+    <h3>Allotments</h3>
+    <table class="table financial-table" id="allotments-table">
+      <thead>
+        <th>Period</th>
+        <th class="number">Value</th>
+      </thead>
+      <tbody>
+        {% for k, allotment in activity.FY_allotments_dict.items() %}
+        <tr>
+          <td>FY{{allotment.fiscal_year}} {{allotment.fiscal_quarter}}</td>
+          <td class="number">{{ "{:,.2f}".format(allotment.value) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
 </div>
-{% endif %}
 
 <script src="{{url_for('static', filename='vendor/moment-2.11.0/moment.min.js')}}" type="text/javascript"></script>
 <script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
@@ -165,25 +184,7 @@ var api_locations_url = "{{ api_locations_url }}";
 var api_activity_locations_url = "{{ api_activity_locations_url }}";
 </script>
 <script type="text/javascript">
-  $("#mtef-projections-table").tablesorter( {
-      sortList: [[0,1]],
-      theme : "bootstrap",
-      widthFixed: true,
-      headerTemplate : '{content} {icon}',
-      widgets : [ "uitheme"]
-  } );
-</script>
-<script type="text/javascript">
-  $("#commitments-table").tablesorter( {
-      sortList: [[0,1]],
-      theme : "bootstrap",
-      widthFixed: true,
-      headerTemplate : '{content} {icon}',
-      widgets : [ "uitheme"]
-  } );
-</script>
-<script type="text/javascript">
-  $("#disbursements-table").tablesorter( {
+  $(".financial-table").tablesorter( {
       sortList: [[0,1]],
       theme : "bootstrap",
       widthFixed: true,

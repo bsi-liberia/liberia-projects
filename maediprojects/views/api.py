@@ -491,8 +491,8 @@ def api_sectors_C_D():
 
     def append_path(root, paths):
         if paths:
-            sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {'Commitments': 0.0, 'Disbursements': 0.0, 'Disbursement Projection': 0.0})
-            sector[{"C": "Commitments", "D": "Disbursements", "FS": "Disbursement Projection"}[paths.transaction_type]] = paths.total_value
+            sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {'Commitments': 0.0, 'Disbursements': 0.0, 'Allotments': 0.0, 'Disbursement Projection': 0.0})
+            sector[{"C": "Commitments", "D": "Disbursements", "99-A": "Allotments", "FS": "Disbursement Projection"}[paths.transaction_type]] = paths.total_value
             sector["name"] = paths.name
             sector["code"] = paths.code
             sector["domestic_external"] = paths.domestic_external

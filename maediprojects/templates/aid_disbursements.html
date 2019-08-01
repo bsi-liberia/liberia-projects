@@ -1,10 +1,10 @@
-{% set active_page='disbursements' %}{% extends "layout.html" %}
-{% block title %}{{ _('Disbursement tracking') }}{% endblock %}
+{% set active_page='aid_disbursements' %}{% extends "layout.html" %}
+{% block title %}{{ _('Aid disbursement tracking') }}{% endblock %}
 {% block content %}
 <div class="row">
 	<div class="col-md-12">
-		<h1>Disbursement tracking</h1>
-		<p class="lead">Showing {{ activities|length }} activities with planned disbursements over
+		<h1>Aid disbursement tracking</h1>
+		<p class="lead">Showing {{ activities|length }} aid activities with planned disbursements over
 		USD 1 million. Planned and actual disbursements are restricted to amounts in FY18 only.</p>
 		<table class="table" id="milestones">
 			<thead>

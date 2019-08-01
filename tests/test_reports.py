@@ -5,7 +5,8 @@ class TestDocumentation:
     def test_nonauth_routes_work(self, client):
         routes = [
             (url_for('reports.milestones'), 302),
-            (url_for('reports.disbursements_dashboard'), 302),
+            (url_for('reports.aid_disbursements'), 302),
+            (url_for('reports.psip_disbursements'), 302),
         ]
         for route, status_code in routes:
             res = client.get(route)
@@ -14,7 +15,8 @@ class TestDocumentation:
     def test_auth_routes_work(self, client, user):
         routes = [
             (url_for('reports.milestones'), 200),
-            (url_for('reports.disbursements_dashboard'), 200),
+            (url_for('reports.aid_disbursements'), 200),
+            (url_for('reports.psip_disbursements'), 200),
             (url_for('reports.counterpart_funding'), 200),
         ]
         for route, status_code in routes:

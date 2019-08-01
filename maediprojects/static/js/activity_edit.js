@@ -440,6 +440,9 @@ var updateFinances = function(finances) {
   function isD(finance) {
     return finance["transaction_type"] == "D";
   }
+  function is99A(finance) {
+    return finance["transaction_type"] == "99-A";
+  }
   var codelists = generateCodelists()
   function generateFinancialData(data) {
     return $.map(data, function(d,i) {
@@ -448,14 +451,19 @@ var updateFinances = function(finances) {
   }
   financialDataC = generateFinancialData(financialData["finances"].filter(isC));
   financialDataD = generateFinancialData(financialData["finances"].filter(isD));
+  financialData99A = generateFinancialData(financialData["finances"].filter(is99A));
   finances_C = {"finances": financialDataC,
                 "transaction_type": "C"}
   finances_D = {"finances": financialDataD,
                 "transaction_type": "D"}
+  finances_99A = {"finances": financialData99A,
+                "transaction_type": "99-A"}
 	var rendered_C = Mustache.render(financial_template, finances_C, partials);
 	$('#financial-data-C').html(rendered_C);
 	var rendered_D = Mustache.render(financial_template, finances_D, partials);
 	$('#financial-data-D').html(rendered_D);
+  var rendered_99A = Mustache.render(financial_template, finances_99A, partials);
+  $('#financial-data-99-A').html(rendered_99A);
 }
 
 var setupFinancesForm = function(finances) {

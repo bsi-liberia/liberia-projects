@@ -10,6 +10,7 @@ from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import exchangerates as qexchangerates
+from maediprojects.query import import_psip_transactions as qimport_psip_transactions
 from maediprojects.lib import util
 
 
@@ -20,10 +21,12 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 # Legacy URL
 @blueprint.route("/export/")
 def export_redirect():
     return redirect(url_for("exports.export"))
+
 
 @blueprint.route("/exports/")
 def export():
@@ -45,6 +48,27 @@ def export():
                 available_fys_fqs = available_fys_fqs,
                 currencies = currencies,
                 expanded = expanded)
+
+@blueprint.route("/exports/import_psip/", methods=["POST", "GET"])
+@login_required
+def import_psip_transactions():
+    if request.method == "GET": return(redirect(url_for('activities.export')))
+    if 'file' not in request.files:
+        flash('Please select a file.', "warning")
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('Please select a file.', "warning")
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        result = qimport_psip_transactions.import_transactions_from_upload(file)
+        if result > 0: flash("{} activities successfully updated!".format(result), "success")
+        else: flash("""No activities were updated. Ensure that projects have the correct
+        IFMIS project code specified under the "project code" field.""", "warning")
+        return redirect(url_for('exports.export'))
+    flash("Sorry, there was an error, and that file could not be imported", "danger")
+    return redirect(url_for('exports.export'))
+
 
 @blueprint.route("/exports/import/", methods=["POST", "GET"])
 @login_required

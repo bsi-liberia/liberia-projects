@@ -28,6 +28,7 @@ def register_commands(app):
     app.cli.add_command(commands.import_currencies)
     app.cli.add_command(commands.test_closest_date)
     app.cli.add_command(commands.import_iati)
+    app.cli.add_command(commands.import_psip_transactions)
 
 
 def register_extensions(app):
@@ -65,6 +66,10 @@ def register_hooks(app):
             session["permissions"] = current_user.permissions_dict
         else:
             session["permissions"] = {}
+            current_user.permissions_dict = {
+                'domestic_external': 'none',
+                'domestic_external_edit': 'none'
+            }
             if request.headers['Host'] == "psip.liberiaprojects.org":
                 session["permissions"]["domestic_external"] = "domestic"
             elif request.headers['Host'] == "liberiaprojects.org":

@@ -260,7 +260,7 @@ class Activity(db.Model):
         # TODO eventually this will vary by activity, as permissions can be
         # selective for different organisations.
         def _check_org_permission():
-            org_permission = self.reporting_org_id in current_user.permissions_dict["organisations"]
+            org_permission = self.reporting_org_id in current_user.permissions_dict.get("organisations", [])
             if org_permission:
                 return current_user.permissions_dict["organisations"][self.reporting_org_id]["permission_value"]
             return False
@@ -293,16 +293,18 @@ class Activity(db.Model):
                         ).filter(ActivityFinances.transaction_type==u"D",
                          ActivityFinances.activity_id==self.id).first()[0]
 
-    @hybrid_property
-    def commitments(self):
-        return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
-                                             ActivityFinances.transaction_type==u"C",
-                                             ActivityFinances.activity_id==self.id).all()
-    @hybrid_property
-    def disbursements(self):
-        return ActivityFinances.query.filter(ActivityFinances.transaction_value!=0,
-                                             ActivityFinances.transaction_type==u"D",
-                                             ActivityFinances.activity_id==self.id).all()
+    commitments = sa.orm.relationship("ActivityFinances",
+        primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_value!=0,
+        ActivityFinances.transaction_type==u'C')""")
+    allotments = sa.orm.relationship("ActivityFinances",
+        primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_value!=0,
+        ActivityFinances.transaction_type==u'99-A')""")
+    disbursements = sa.orm.relationship("ActivityFinances",
+        primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
+        ActivityFinances.transaction_value!=0,
+        ActivityFinances.transaction_type==u'D')""")
 
     def FY_disbursements_for_FY(self, FY):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
@@ -350,7 +352,7 @@ class Activity(db.Model):
     @hybrid_property
     def FY_disbursements_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, (u'D', u'E'))
+        fydata = fydata_query(self, fiscalyear_modifier, [u'D', u'E'])
 
         return {
                     "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
@@ -362,9 +364,23 @@ class Activity(db.Model):
                 }
 
     @hybrid_property
+    def FY_allotments_dict(self):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        fydata = fydata_query(self, fiscalyear_modifier, [u'99-A'])
+
+        return {
+                    "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "value": round(fyval.value, 4)
+                    }
+                    for fyval in fydata
+                }
+
+    @hybrid_property
     def FY_commitments_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, (u'C'))
+        fydata = fydata_query(self, fiscalyear_modifier, [u'C'])
         return {
                     "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
                     "fiscal_year": fyval.fiscal_year,

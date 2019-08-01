@@ -11,6 +11,7 @@
 <p class="lead">Download integrated dataset of AMCU and PSIP projects.</p>
 <p><a class="btn btn-sm btn-default" href="{{url_for('exports.all_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
 <hr />
+{% if loggedinuser.permissions_dict["domestic_external_edit"] in ('external', 'both') %}
 <h1>{{ _('Excel reporting templates') }}</h1>
 <p class="lead">You can import data that donors have entered on
   AMCU reporting templates. This means you do not have to go through
@@ -170,6 +171,27 @@
     </div>
   </div>
 <hr />
+{% endif %}
+{% if loggedinuser.permissions_dict["domestic_external_edit"] in ('domestic', 'both') %}
+<h3><span class="glyphicon glyphicon-upload"></span> Upload data for PSIP projects from IFMIS</h3>
+<p class="lead">Upload an Excel file containing data on PSIP projects exported from IFMIS.</p>
+<form class="form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('exports.import_psip_transactions')}}">
+  <div class="form-group">
+    <label for="file" class="col-sm-2 control-label">IFMIS file</label>
+    <div class="col-sm-10">
+      <input type="file" id="file" name="file">
+      <p class="help-block">Select an Excel file to import. The file must
+        be formatted according to the IFMIS Excel import template.</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">
+      <span class="glyphicon glyphicon-open"></span> Import data from IFMIS</button>
+    </div>
+  </div>
+</form>
+{% endif %}
 <h1>{{ _('Other formats') }}</h1>
 <dl class="dl-horizontal">
   <dt>IATI XML file</dt>

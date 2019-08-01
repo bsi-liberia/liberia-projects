@@ -378,7 +378,7 @@
           <div class="panel-heading" role="tab" id="headingCommitments">
             <h4 class="panel-title">
               <a role="button" data-toggle="collapse" href="#collapseCommitments" aria-expanded="true" aria-controls="collapseCommitments">
-                {{ _('Commitments') }}
+                {% if activity.domestic_external =='domestic'%}{{ _('Appropriations') }}{% else %}{{ _('Commitments') }}{% endif %}
               </a>
             </h4>
           </div>
@@ -394,13 +394,42 @@
                   <a class="btn btn-primary addFinancial"
                   data-transaction-type="C">
                     <i class="glyphicon glyphicon-plus"></i>
-                    {{ _('Add commitment') }}
+                    {% if activity.domestic_external=='domestic'%}{{ _('Add appropriation') }}{% else %}{{ _('Add commitment') }}{% endif %}
                   </a>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        {% if activity.domestic_external=='domestic' %}
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingAllotments">
+            <h4 class="panel-title">
+              <a class="collapsed" role="button" data-toggle="collapse" href="#collapseAllotments" aria-expanded="false" aria-controls="collapseAllotments">
+                {{ _('Allotments') }}
+              </a>
+            </h4>
+          </div>
+          <div id="collapseAllotments" class="panel-collapse collapse in finances-data" role="tabpanel" aria-labelledby="headingAllotments">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div id="financial-data-99-A"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <a class="btn btn-primary addFinancial"
+                  data-transaction-type="99-A">
+                    <i class="glyphicon glyphicon-plus"></i>
+                    {{ _('Add allotment') }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
         <div class="panel panel-default">
           <div class="panel-heading" role="tab" id="headingDisbursements">
             <h4 class="panel-title">
