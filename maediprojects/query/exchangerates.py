@@ -2,7 +2,13 @@ from maediprojects import models
 from maediprojects.extensions import db
 from maediprojects.lib import util
 import unicodecsv
+import requests
 
+
+EXCHANGE_RATES_API_FULL = "https://api.morph.io/markbrough/exchangerates-scraper/data.csv?key={}&query=select%20*%20from%20%22rates%22"
+EXCHANGE_RATES_API_SUBSET = "https://api.morph.io/markbrough/exchangerates-scraper/data.csv?key={}&query=select%20*%20from%20%22rates%22%20where%20ratefirstseen%20%3E%20%22{}%22%20order%20by%20ratefirstseen%20desc"
+
+MORPHIO_API_KEY = "Tcr9JXltPMYFcngZFKs9"
 
 def convert_from_currency(currency, _date, value):
     if currency == u"USD": return value
@@ -56,9 +62,26 @@ def add_names_to_currencies():
     db.session.commit()
 
 
-def import_exchange_rates():
+def import_exchange_rates_from_file():
     _erf = open("consolidated-exchangerates.csv", "r")
     _ercsv = unicodecsv.DictReader(_erf)
+    import_exchange_rates_file(_ercsv)
+
+
+def import_exchange_rates_from_url(full_download=True, since_date=None):
+    if full_download:
+        print("Downloading full set of exchange rate data...")
+        f = requests.get(EXCHANGE_RATES_API_FULL.format(MORPHIO_API_KEY), stream=True)
+    else:
+        print("Downloading new exchange rate data since {}...".format(since_date))
+        f = requests.get(EXCHANGE_RATES_API_SUBSET.format(MORPHIO_API_KEY, since_date), stream=True)
+    _ercsv = unicodecsv.DictReader(f.iter_lines())
+    assert(_ercsv.fieldnames == [u'Date', u'Rate', u'Currency', u'Frequency', u'Source', u'RateFirstSeen'])
+    print("Download begun, beginning import...")
+    import_exchange_rates_file(_ercsv)
+
+
+def import_exchange_rates_file(_ercsv):
     currencies = dict(map(lambda c: (c.code, c.code), models.Currency.query.all()))
     sources = dict(map(lambda s: (s.name, s.id), models.ExchangeRateSource.query.all()))
     for row in _ercsv:
@@ -90,6 +113,11 @@ def import_exchange_rates():
     db.session.add(oecd)
     db.session.commit()
     add_names_to_currencies()
+
+
+def delete_existing_exchange_rates():
+    models.ExchangeRate.query.delete()
+    db.session.commit()
 
 
 def closest_exchange_rate(_date, currency):
