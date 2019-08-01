@@ -5,3 +5,5 @@ static/vendor/jquery/1.7.1
 /config.py
 *.db
 *.sqlite
+~*.xlsx
+test_*.png

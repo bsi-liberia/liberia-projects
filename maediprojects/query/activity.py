@@ -8,6 +8,7 @@ from sqlalchemy.orm import aliased
 from maediprojects.lib.util import isostring_date, isostring_year
 from maediprojects.lib import codelists, util
 from maediprojects.query import finances as qfinances
+from maediprojects.query import organisations as qorganisations
 from maediprojects import models
 from maediprojects.extensions import db
 
@@ -115,6 +116,27 @@ def activity_updated(activity_id, update_data=False):
     db.session.add(activity)
     db.session.commit()
     print update_data
+    return True
+
+def create_activity_for_test(data, user_id):
+    act = models.Activity()
+    act.reporting_org_id = qorganisations.get_organisation_by_name(unicode(data.get(u"Funded by"))).id
+    funding_org = models.ActivityOrganisation()
+    funding_org.role = 1
+    funding_org.organisation_id = qorganisations.get_organisation_by_name(unicode(data.get(u"Funded by"))).id
+    implementing_org = models.ActivityOrganisation()
+    implementing_org.role = 4
+    implementing_org.organisation_id = qorganisations.get_or_create_organisation(unicode(data.get(u"Implemented by")))
+    act.organisations = [implementing_org, funding_org]
+    mtef_sector = models.ActivityCodelistCode()
+    mtef_sector.codelist_code_id = codelists.get_codelists_ids_by_name()['mtef-sector'][data.get(u"MTEF Sector")]
+    act.classifications = [mtef_sector]
+    act.title = unicode(data.get(u"Activity Title"))
+    act.description = u""
+    act.recipient_country_code = u"LR"
+    act.user_id = user_id
+    db.session.add(act)
+    db.session.commit()
     return True
 
 def create_activity(data):
