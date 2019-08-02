@@ -27,6 +27,7 @@ USER = {
     "recipient_country_code": u"ML",
     "administrator": False
 }
+MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
 LIVESERVER_PORT=8943
 selenium_capture_debug="ALWAYS"
