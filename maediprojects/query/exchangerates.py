@@ -9,8 +9,6 @@ from flask import current_app
 EXCHANGE_RATES_API_FULL = "https://api.morph.io/markbrough/exchangerates-scraper/data.csv?key={}&query=select%20*%20from%20%22rates%22"
 EXCHANGE_RATES_API_SUBSET = "https://api.morph.io/markbrough/exchangerates-scraper/data.csv?key={}&query=select%20*%20from%20%22rates%22%20where%20ratefirstseen%20%3E%20%22{}%22%20order%20by%20ratefirstseen%20desc"
 
-MORPHIO_API_KEY = current_app.config["MORPHIO_API_KEY"]
-
 def convert_from_currency(currency, _date, value):
     if currency == u"USD": return value
     source, rate, value_date = closest_exchange_rate(_date, currency)
@@ -70,6 +68,7 @@ def import_exchange_rates_from_file():
 
 
 def import_exchange_rates_from_url(full_download=True, since_date=None):
+    MORPHIO_API_KEY = current_app.config["MORPHIO_API_KEY"]
     if full_download:
         print("Downloading full set of exchange rate data...")
         f = requests.get(EXCHANGE_RATES_API_FULL.format(MORPHIO_API_KEY), stream=True)
