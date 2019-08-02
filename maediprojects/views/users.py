@@ -192,8 +192,9 @@ def user_permissions_edit(user_id):
 def login():
     if request.method == "POST" and "username" in request.form:
         user = quser.user_by_username(request.form["username"])
+        remember = True if request.form.get('remember') else False
         if (user and user.check_password(request.form["password"])):
-            if login_user(user):
+            if login_user(user, remember=remember):
                 flash(gettext(u"Logged in!"), "success")
                 if request.args.get("next"):
                     redir_url = request.script_root + request.args.get("next")
