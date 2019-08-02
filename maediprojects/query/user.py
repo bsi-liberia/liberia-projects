@@ -8,7 +8,10 @@ from maediprojects import models
 from maediprojects.extensions import db
 import organisations as qorganisations
 import activity as qactivity
+import send_email as qsend_email
 
+import datetime
+import uuid
 
 def administrator_required(f):
     @wraps(f)
@@ -76,6 +79,13 @@ def user(user_id=None):
 def user_by_username(username=None):
     if username:
         user = models.User.query.filter_by(username=username
+                    ).first()
+        return user
+    return None
+
+def user_by_email_address(email_address=None):
+    if email_address:
+        user = models.User.query.filter_by(email_address=email_address
                     ).first()
         return user
     return None
@@ -200,3 +210,89 @@ def updateOrganisationPermission(data):
     db.session.add(checkOP)
     db.session.commit()
     return checkOP
+
+def check_password_reset(email_address, reset_password_key):
+    user = models.User.query.filter(models.User.email_address == email_address,
+            models.User.reset_password_key == reset_password_key,
+            models.User.reset_password_expiry > datetime.datetime.now()
+        ).first()
+    if user:
+        return True
+    return False
+
+def process_reset_password(email_address, reset_password_key, password):
+    if not check_password_reset(email_address, reset_password_key):
+        return False
+    user = user_by_email_address(email_address)
+    user.pw_hash = generate_password_hash(password)
+    user.reset_password_key = None
+    user.reset_password_expiry = None
+    db.session.add(user)
+    db.session.commit()
+    return True
+
+
+def send_unknown_user_password_reset_email(email_address):
+    message_body = """
+LIBERIA PROJECT DASHBOARD
+
+Reset Password
+==============
+
+Someone, possibly you, requested to reset your password on the Liberia Project Dashboard.
+
+However, there was no account found associated with this email address. Please contact MFDP if you think this is in error, or if you would like an account to be created for you.
+    """
+    qsend_email.send_async_email(
+        message_recipient=email_address,
+        message_subject="Liberia Project Dashboard - Password Reset",
+        message_body=message_body)
+
+
+def send_user_password_reset_email(email_address, user):
+    message_body = """
+LIBERIA PROJECT DASHBOARD
+
+Reset Password
+==============
+
+Someone, possibly you, requested to reset your password on the Liberia Project Dashboard.
+
+Your username is: {}
+
+If you didn't request your password to be reset, please ignore this message.
+
+If you would like to reset your password, please click the following link:
+{}
+
+If you can't click the link, go to the following page:
+{}
+
+And copy/paste the following password reset key into the box:
+{}
+    """.format(
+        user.username,
+        url_for('users.reset_password_with_key',
+                email_address=email_address,
+                reset_password_key=user.reset_password_key,
+                _external=True),
+        url_for('users.reset_password_with_key',
+                _external=True),
+        user.reset_password_key
+    )
+    qsend_email.send_async_email(
+        message_recipient=email_address,
+        message_subject="Liberia Project Dashboard - Password Reset",
+        message_body=message_body)
+
+
+def make_password_reset_key(email_address):
+    user = user_by_email_address(request.form["email_address"])
+    if not user:
+        send_unknown_user_password_reset_email(email_address)
+    else:
+        user.reset_password_key = uuid.uuid4().hex
+        user.reset_password_expiry = datetime.datetime.now() + datetime.timedelta(days=1)
+        db.session.add(user)
+        db.session.commit()
+        send_user_password_reset_email(email_address, user)
