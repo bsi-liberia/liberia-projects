@@ -3,12 +3,13 @@ from maediprojects.extensions import db
 from maediprojects.lib import util
 import unicodecsv
 import requests
+from flask import current_app
 
 
 EXCHANGE_RATES_API_FULL = "https://api.morph.io/markbrough/exchangerates-scraper/data.csv?key={}&query=select%20*%20from%20%22rates%22"
 EXCHANGE_RATES_API_SUBSET = "https://api.morph.io/markbrough/exchangerates-scraper/data.csv?key={}&query=select%20*%20from%20%22rates%22%20where%20ratefirstseen%20%3E%20%22{}%22%20order%20by%20ratefirstseen%20desc"
 
-MORPHIO_API_KEY = "Tcr9JXltPMYFcngZFKs9"
+MORPHIO_API_KEY = current_app.config["MORPHIO_API_KEY"]
 
 def convert_from_currency(currency, _date, value):
     if currency == u"USD": return value
