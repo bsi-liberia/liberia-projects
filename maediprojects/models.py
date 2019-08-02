@@ -817,6 +817,7 @@ class User(db.Model):
     name = sa.Column(sa.UnicodeText)
     email_address = sa.Column(sa.UnicodeText)
     reset_password_key = sa.Column(sa.UnicodeText)
+    reset_password_expiry = sa.Column(sa.DateTime)
     pw_hash = db.Column(sa.String(255))
     organisation = sa.Column(sa.UnicodeText)
     administrator = sa.Column(sa.Boolean,
