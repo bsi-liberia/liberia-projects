@@ -208,6 +208,81 @@ def login():
     return render_template("login.html",
              loggedinuser=current_user)
 
+
+@blueprint.route("/reset-password/password/", methods=["GET", "POST"])
+def reset_password_new_password():
+    if request.method == "GET":
+        return render_template("reset_password_password.html",
+            email_address=request.args.get("email_address"),
+            reset_password_key=request.args.get("reset_password_key"),
+            loggedinuser=current_user
+            )
+    else:
+        if not (request.form.get("password") == request.form.get("password_2")):
+            flash("Please make sure you enter the same password twice.", "danger")
+        elif request.form.get("password") == "":
+            flash("Please enter a password.", "danger")
+        else:
+            if quser.process_reset_password(
+                email_address=request.form.get("email_address"),
+                reset_password_key=request.form.get("reset_password_key"),
+                password=request.form.get("password")
+                ):
+                flash("Password successfully changed! Please login with your new password.", "success")
+                return redirect(url_for('users.login'))
+            else:
+                flash("Sorry, something went wrong, and your password could not be changed.", "danger")
+    return render_template("reset_password_password.html",
+        email_address=request.args.get("email_address"),
+        reset_password_key=request.args.get("reset_password_key"),
+        loggedinuser=current_user
+        )
+
+
+@blueprint.route("/reset-password/key/", methods=["GET", "POST"])
+def reset_password_with_key():
+    if ((request.method == "GET") and
+        (request.args.get("email_address", "") != "") and
+        (request.args.get("reset_password_key", "") != "")):
+        if quser.check_password_reset(request.args["email_address"], request.args["reset_password_key"]):
+            return redirect(url_for('users.reset_password_new_password',
+                email_address=request.args.get("email_address"),
+                reset_password_key=request.args.get("reset_password_key")
+                ))
+        flash("Sorry, could not reset that passsword key. Please try resetting your password again, and make sure you use the reset key within 24 hours.", "danger")
+        return redirect(url_for('users.reset_password'))
+
+    elif request.method == "POST":
+        if (request.form.get("email_address", "") != "") and (request.form.get("reset_password_key", "") != ""):
+            if quser.check_password_reset(request.form["email_address"], request.form["reset_password_key"]):
+                return redirect(url_for('users.reset_password_new_password',
+                    email_address=request.form.get("email_address"),
+                    reset_password_key=request.form.get("reset_password_key")
+                    ))
+            flash("Sorry, could not reset that passsword key. Please try resetting your password again, and make sure you use the reset key within 24 hours.", "danger")
+            return redirect(url_for('users.reset_password'))
+        else:
+            flash(gettext(u"Please enter an email address and key."), "danger")
+    email_address = request.args.get('email_address', "")
+    return render_template("reset_password_with_key.html",
+            email_address=email_address,
+            loggedinuser=current_user)
+
+
+@blueprint.route("/reset-password/", methods=["GET", "POST"])
+def reset_password():
+    if request.method == "POST":
+        if request.form.get("email_address", "") != "":
+            quser.make_password_reset_key(request.form["email_address"])
+            flash(gettext(u"Sent an email to {} - please check your email for further instructions on how to reset your password.".format(request.form['email_address'])), "success")
+            return redirect(url_for('users.reset_password_with_key',
+                email_address=request.form["email_address"]))
+        else:
+            flash(gettext(u"Please enter an email address."), "danger")
+    return render_template("reset_password.html",
+             loggedinuser=current_user)
+
+
 @blueprint.route('/logout/')
 @login_required
 def logout():
