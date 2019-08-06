@@ -15,7 +15,16 @@ ADMIN_USER = {
     "name": u"YOUR_NAME",
     "email_address": u"YOUR_EMAIL",
     "organisation": u"YOUR_ORG",
-    "recipient_country_code": u"ML",
+    "recipient_country_code": u"LR",
+    "administrator": True
+}
+ADMIN_USER_2 = {
+    "username": u"admin2",
+    "password": u"admin2",
+    "name": u"YOUR_NAME2",
+    "email_address": u"YOUR_EMAIL2",
+    "organisation": u"YOUR_ORG2",
+    "recipient_country_code": u"LR",
     "administrator": True
 }
 USER = {
@@ -24,7 +33,7 @@ USER = {
     "name": u"YOUR_NAME",
     "email_address": u"YOUR_EMAIL",
     "organisation": u"YOUR_ORG",
-    "recipient_country_code": u"ML",
+    "recipient_country_code": u"LR",
     "administrator": False
 }
 MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]

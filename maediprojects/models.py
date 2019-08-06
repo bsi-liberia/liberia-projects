@@ -14,7 +14,6 @@ from maediprojects.extensions import db
 
 cascade_relationship = ft.partial(
     sa.orm.relationship,
-    cascade="all,delete",
     passive_deletes=True,
 )
 
@@ -241,7 +240,8 @@ class Activity(db.Model):
     created_date = sa.Column(sa.DateTime, default=datetime.datetime.utcnow) # ADDED
     updated_date = sa.Column(sa.DateTime, default=datetime.datetime.utcnow) # ADDED
     results = sa.orm.relationship("ActivityResult",
-            cascade="all, delete-orphan")
+            cascade="all, delete-orphan",
+            backref="activity")
     locations = sa.orm.relationship("ActivityLocation",
             cascade="all, delete-orphan")
     finances = sa.orm.relationship("ActivityFinances",
@@ -309,6 +309,30 @@ class Activity(db.Model):
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
         ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'D')""")
+
+    result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
+        secondary="join(ActivityResultIndicator, ActivityResult, ActivityResult.id == ActivityResultIndicator.result_id)",
+        primaryjoin="and_(Activity.id == ActivityResult.activity_id, ActivityResult.id == ActivityResultIndicator.result_id)",
+        secondaryjoin="ActivityResultIndicator.id == ActivityResultIndicatorPeriod.indicator_id",
+        viewonly = True
+        )
+
+    @hybrid_property
+    def results_average(self):
+        numerical_periods = filter(lambda ip: ip.percent_complete != None, self.result_indicator_periods)
+        return sum(list(map(lambda ip: ip.percent_complete, numerical_periods)))/len(numerical_periods)
+
+    @hybrid_property
+    def results_average_status(self):
+        return "primary"
+        if self.results_average is not None:
+            if self.results_average >= 80:
+                return "success"
+            elif self.results_average >= 40:
+                return "warning"
+            else:
+                return "danger"
+        return None
 
     def FY_disbursements_for_FY(self, FY):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
@@ -766,9 +790,8 @@ class ActivityResult(db.Model):
     result_description = sa.Column(sa.UnicodeText)
     result_type = sa.Column(sa.Integer)
     indicators = cascade_relationship(
-                        "ActivityResultIndicator")
-    activity = sa.orm.relationship(
-                        "Activity")
+        "ActivityResultIndicator",
+        backref="result")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -786,8 +809,8 @@ class ActivityResultIndicator(db.Model):
     baseline_value = sa.Column(sa.UnicodeText)
     baseline_comment = sa.Column(sa.UnicodeText)
     periods = cascade_relationship(
-                        "ActivityResultIndicatorPeriod")
-    result = sa.orm.relationship("ActivityResult")
+        "ActivityResultIndicatorPeriod",
+        backref="result_indicator")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -805,7 +828,26 @@ class ActivityResultIndicatorPeriod(db.Model):
     target_comment = sa.Column(sa.UnicodeText)
     actual_value = sa.Column(sa.UnicodeText)
     actual_comment = sa.Column(sa.UnicodeText)
-    result_indicator = sa.orm.relationship("ActivityResultIndicator")
+
+    @hybrid_property
+    def percent_complete(self):
+        try:
+            return int(round((float(self.actual_value) / float(self.target_value))*100.0))
+        except ZeroDivisionError:
+            return None
+        except ValueError:
+            return None
+
+    @hybrid_property
+    def percent_complete_category(self):
+        if self.percent_complete is not None:
+            if self.percent_complete >= 80:
+                return "success"
+            elif self.percent_complete >= 40:
+                return "warning"
+            else:
+                return "danger"
+        return None
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

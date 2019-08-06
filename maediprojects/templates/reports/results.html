@@ -1,0 +1,50 @@
+{% set active_page='results' %}{% extends "layout.html" %}
+{% block title %}{{ _('Results') }}{% endblock %}
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<h1>Results</h1>
+		<p class="lead">Showing {{ activities|length }} donor-funded activities with results data.</p>
+		<div class="alert alert-info">Note: this page is a pilot, with limited data currently included. The results data is sourced from international sources.</div>
+		<table class="table" id="milestones">
+			<thead>
+				<tr>
+					<th style="width:25%;">Title</th>
+					<th>Funded by</th>
+					<th>Implemented by</th>
+					<th>Results (average)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for activity in activities %}
+				<tr>
+					<td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}#results">{{ activity.title }}</a></td>
+					<td>{{ activity.reporting_org.name }}</td>
+					<td>{% for org in activity.implementing_organisations %}{{ org.name }}{% endfor %}</td>
+
+					<td>
+						{% if activity.results_average %}
+						<div class="progress">
+						  <div class="progress-bar progress-bar-{{ activity.results_average_status }}" role="progressbar" aria-valuenow="{{ activity.results_average }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ activity.results_average }}%;">
+						    {{ activity.results_average }}%
+						  </div>
+						</div>
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+<script type="text/javascript">
+
+  $("#milestones").tablesorter( {
+      sortList: [[4,1]],
+      theme : "bootstrap",
+      widthFixed: true,
+      headerTemplate : '{content} {icon}',
+      widgets : [ "uitheme"]
+  } );
+</script>
+{% endblock %}

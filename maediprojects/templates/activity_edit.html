@@ -1,5 +1,5 @@
 {% set active_page='activity' %}{% extends "layout.html" %}
-{% block title %}{% if activity.id %}{{ _('Edit activity') }}
+{% block title %}{% if activity.id %}{{ _('Edit activity') }}: {{ activity.title }}
 {% else %}{{ _('New activity') }}{% endif %}{% endblock %}
 {% block content %}
 <style>
@@ -7,7 +7,7 @@
     top: 0;
   }
 </style>
-<h1>{% if activity.id %}{{ _('Edit activity') }}
+<h1>{% if activity.id %}{{ _('Edit activity') }}: {{ activity.title }}
 {% else %}{{ _('New activity') }}{% endif %}</h1>
 {% if activity.id %}
 <a class="btn btn-success btn-large pull-right" href="{{ url_for('activities.activity', activity_id=activity.id) }}">
@@ -29,6 +29,9 @@
     <li role="presentation"><a href="#conditions" aria-controls="conditions" role="tab" data-toggle="tab" id="conditionsTab">{{ _('Conditions') }}</a></li>
     {% if activity.documents %}
     <li role="presentation"><a href="#documents" aria-controls="documents" role="tab" data-toggle="tab" id="documentsTab">{{ _('Documents') }}</a></li>
+    {% endif %}
+    {% if activity.results %}
+    <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab" id="resultsTab">{{ _('Results') }}</a></li>
     {% endif %}
     {% endif %}
    <!-- <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">Results</a></li>-->
@@ -619,7 +622,7 @@
     <div role="tabpanel" class="tab-pane" id="documents">
       <h2>{{ _('Documents') }}</h2>
       <div class="alert alert-info">
-        These documents were automatically captured from this donor's IATI data.
+        These documents were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
       </div>
       <table class="table">
         <thead>
@@ -637,6 +640,45 @@
               {% endfor %}
             </td>
             <td>{{ document.document_date or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if activity.results %}
+    <div role="tabpanel" class="tab-pane" id="results">
+      <h2>{{ _('Results') }}</h2>
+      <div class="alert alert-info">
+        These results were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
+      </div>
+      <table class="table">
+        <thead>
+          <th>Title</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Target</th>
+          <th>Actual</th>
+          <th width="30%">%</th>
+        </thead>
+        <tbody>
+          {% for period in activity.result_indicator_periods %}
+          <tr>
+            <td>{{ period.result_indicator.indicator_title }}</a></td>
+            <td>{{ period.period_start }}</a></td>
+            <td>{{ period.period_end }}</a></td>
+            <td>{{ period.target_value }}</a></td>
+            <td>{{ period.actual_value }}</a></td>
+            <td>
+              {% if period.percent_complete != None %}
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ period.percent_complete_category }}" role="progressbar" aria-valuenow="{{ period.percent_complete }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ period.percent_complete }}%;">
+                  {{ period.percent_complete }}%
+                </div>
+              </div>
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>

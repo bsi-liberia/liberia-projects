@@ -95,7 +95,7 @@ def import_test_data(user_id):
 
 @pytest.fixture(scope='function')
 def admin(request, app, client):
-    user_dict = app.config["ADMIN_USER"]
+    user_dict = app.config["ADMIN_USER_2"]
     user = addUser(user_dict)
     # Confirm user created
     assert models.User.query.get(user.id)
