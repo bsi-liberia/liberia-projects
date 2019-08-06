@@ -49,6 +49,22 @@ def counterpart_funding():
     )
 
 
+@blueprint.route("/reports/results/")
+@login_required
+def results():
+    activities = models.Activity.query.filter_by(
+            domestic_external=u"external",
+        ).filter(
+            models.Activity.results.any()
+        ).all()
+
+    return render_template(
+        "reports/results.html",
+        activities = activities,
+        loggedinuser = current_user
+    )
+
+
 @blueprint.route("/reports/disbursements/aid/")
 @login_required
 def aid_disbursements():
