@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, request
+from flask import Flask, render_template, session, request, current_app
 from flask_login import current_user
 
 from maediprojects import commands, views, extensions
@@ -33,8 +33,19 @@ def register_commands(app):
     app.cli.add_command(commands.import_psip_transactions)
 
 
+def check_enforce_sqlite_fkey_constraints(app):
+    if app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
+        with app.app_context():
+            def _fk_pragma_on_connect(dbapi_con, con_record):
+                dbapi_con.execute('pragma foreign_keys=ON')
+
+            from sqlalchemy import event
+            event.listen(extensions.db.engine, 'connect', _fk_pragma_on_connect)
+
+
 def register_extensions(app):
     extensions.db.init_app(app)
+    check_enforce_sqlite_fkey_constraints(app)
     extensions.migrate.init_app(app, extensions.db)
     extensions.babel.init_app(app)
     extensions.mail.init_app(app)
@@ -50,12 +61,12 @@ def register_blueprints(app):
     app.register_blueprint(views.reports.blueprint)
     app.register_blueprint(views.exports.blueprint)
 
+
 def register_errorhandlers(app):
     def render_error(error):
         error_code = getattr(error, 'code', 500)
         return render_template('{0}.html'.format(error_code),
                                loggedinuser=current_user), error_code
-
     for errcode in [404, 500]:
         app.errorhandler(errcode)(render_error)
     return None
