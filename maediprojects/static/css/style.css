@@ -315,3 +315,7 @@ img.brand {
     padding-top: 70px;
     margin-top: -50px;
 }
+
+.progress .progress-bar {
+  max-width: 100%;
+}
