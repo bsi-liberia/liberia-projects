@@ -25,7 +25,7 @@ def milestones():
         ).all()
 
     return render_template(
-        "milestones.html",
+        "reports/milestones.html",
         activities=activities,
         milestones=milestones,
         loggedinuser=current_user
@@ -43,7 +43,7 @@ def counterpart_funding():
         activities)
 
     return render_template(
-        "counterpart_funding.html",
+        "reports/counterpart_funding.html",
         activities = activities,
         loggedinuser = current_user
     )
@@ -96,7 +96,7 @@ def aid_disbursements():
     days_since_fy_begin = ((datetime.datetime.utcnow()-start_of_fy).days)
     progress_time = round(days_since_fy_begin/365.0*100.0, 2)
     return render_template(
-        "aid_disbursements.html",
+        "reports/aid_disbursements.html",
         activities=out,
         progress_time=progress_time,
         days_since_fy_begin=days_since_fy_begin,
@@ -166,7 +166,7 @@ def psip_disbursements():
     progress_time = round(days_since_fy_begin/365.0*100.0, 2)
 
 
-    return render_template("psip_disbursements.html",
+    return render_template("reports/psip_disbursements.html",
                 activities = out,
                 progress_time = progress_time,
                 days_since_fy_begin = days_since_fy_begin,
