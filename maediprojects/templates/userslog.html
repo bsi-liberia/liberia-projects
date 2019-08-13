@@ -49,8 +49,9 @@
     :total-rows="rows"
     :per-page="perPage"
     aria-controls="usersLog"
+    :disabled="rows < perPage"
   ></b-pagination>
-  <b-modal id="activityLogDetail" scrollable ok-only>
+  <b-modal id="activityLogDetail" size="lg" scrollable ok-only>
     <template slot="modal-title">
       Activity: <a :href="activitylog_detail.activity.url">
         [[ activitylog_detail.activity.title ]]
