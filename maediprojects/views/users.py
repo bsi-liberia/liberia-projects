@@ -188,6 +188,18 @@ def user_permissions_edit(user_id):
         return "error, unknown action"
 
 
+@blueprint.route("/users/log/")
+@login_required
+@quser.administrator_required
+def users_log():
+    if not current_user.administrator:
+        flash(gettext(u"You must be an administrator to access that area."), "danger")
+    userslog = quser.activitylog()
+    return render_template("userslog.html",
+                           userslog=userslog,
+                           loggedinuser=current_user)
+
+
 @blueprint.route("/login/", methods=["GET", "POST"])
 def login():
     if request.method == "POST" and "username" in request.form:
