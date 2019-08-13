@@ -243,7 +243,8 @@ class Activity(db.Model):
             cascade="all, delete-orphan",
             backref="activity")
     locations = sa.orm.relationship("ActivityLocation",
-            cascade="all, delete-orphan")
+            cascade="all, delete-orphan",
+            backref="activity")
     finances = sa.orm.relationship("ActivityFinances",
             cascade="all, delete-orphan")
     forwardspends = sa.orm.relationship("ActivityForwardSpend",
@@ -251,13 +252,17 @@ class Activity(db.Model):
     classifications = sa.orm.relationship("ActivityCodelistCode",
             cascade="all, delete-orphan")
     milestones = sa.orm.relationship("ActivityMilestone",
-            cascade="all, delete-orphan")
+            cascade="all, delete-orphan",
+            backref="activity")
     counterpart_funding = sa.orm.relationship("ActivityCounterpartFunding",
             cascade="all, delete-orphan")
     domestic_external = sa.Column(sa.UnicodeText)
 
     documents = sa.orm.relationship("ActivityDocumentLink",
             cascade="all, delete-orphan")
+    activity_logs = cascade_relationship(
+        "ActivityLog",
+        backref="activity")
 
     @hybrid_property
     def permissions(self):
@@ -505,7 +510,8 @@ class ActivityFinances(db.Model):
     receiver_org = sa.orm.relationship("Organisation",
             foreign_keys=[receiver_org_id])
     classifications = sa.orm.relationship("ActivityFinancesCodelistCode",
-            cascade="all, delete-orphan")
+            cascade="all, delete-orphan",
+            backref="activityfinances")
 
     transaction_value_original = sa.Column(sa.Float(precision=2),
         default=0, nullable=False)
@@ -563,6 +569,9 @@ class ActivityFinances(db.Model):
         ret_data["mtef_sector"] = self.mtef_sector
         return ret_data
 
+    def as_simple_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 class ActivityForwardSpend(db.Model):
     __tablename__ = 'forwardspend' # 'activityforwardspend'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -587,6 +596,9 @@ class Country(db.Model):
     __tablename__ = 'country'
     code = sa.Column(sa.UnicodeText, primary_key=True)
     name = sa.Column(sa.UnicodeText)
+    locations = sa.orm.relationship("Location",
+            cascade="all, delete-orphan",
+            backref="country")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -599,7 +611,6 @@ class Location(db.Model):
             act_ForeignKey('country.code'),
             nullable=False,
             index=True)
-    country = sa.orm.relationship("Country")
     name = sa.Column(sa.UnicodeText)
     latitude = sa.Column(sa.UnicodeText)
     longitude = sa.Column(sa.UnicodeText)
@@ -607,6 +618,9 @@ class Location(db.Model):
     admin1_code = sa.Column(sa.UnicodeText)
     admin2_code = sa.Column(sa.UnicodeText)
     admin3_code = sa.Column(sa.UnicodeText)
+    activitylocations = sa.orm.relationship("ActivityLocation",
+            cascade="all, delete-orphan",
+            backref="locations")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -620,8 +634,6 @@ class ActivityLocation(db.Model):
     location_id = sa.Column(sa.Integer,
             sa.ForeignKey('location.id'),
             nullable=False)
-    locations = sa.orm.relationship("Location")
-    activity = sa.orm.relationship("Activity")
 
     def as_dict(self):
        ret_data = {}
@@ -638,6 +650,9 @@ class Organisation(db.Model):
     name = sa.Column(sa.UnicodeText)
     acronym = sa.Column(sa.UnicodeText)
     _type = sa.Column(sa.UnicodeText)
+    activityorganisations = sa.orm.relationship("ActivityOrganisation",
+            cascade="all, delete-orphan",
+            backref="organisation")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -651,7 +666,6 @@ class ActivityOrganisation(db.Model):
     organisation_id = sa.Column(sa.Integer,
             sa.ForeignKey('organisation.id'),
             nullable=False)
-    organisation = sa.orm.relationship("Organisation")
     role = sa.Column(sa.Integer,
             nullable=False)
     percentage = sa.Column(sa.Float,
@@ -725,7 +739,7 @@ class ActivityFinancesCodelistCode(db.Model):
     def as_dict(self):
        ret_data = {}
        ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
-       ret_data.update({key: getattr(self, key).as_dict() for key in self.__mapper__.relationships.keys()})
+       ret_data.update({key: getattr(self, key).as_dict() for key in ['codelist_code']})
        return ret_data
 
 class Milestone(db.Model):
@@ -734,6 +748,9 @@ class Milestone(db.Model):
     milestone_order = sa.Column(sa.Integer)
     name = sa.Column(sa.UnicodeText)
     domestic_external = sa.Column(sa.UnicodeText)
+    activitymilestones = sa.orm.relationship("ActivityMilestone",
+            cascade="all, delete-orphan",
+            backref="milestone")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -751,10 +768,6 @@ class ActivityMilestone(db.Model):
             index=True)
     achieved = sa.Column(sa.Boolean)
     notes = sa.Column(sa.UnicodeText)
-    activity = sa.orm.relationship(
-                        "Activity")
-    milestone = sa.orm.relationship(
-                        "Milestone")
 
     __table_args__ = (sa.UniqueConstraint('activity_id','milestone_id'),)
 
@@ -852,6 +865,49 @@ class ActivityResultIndicatorPeriod(db.Model):
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+
+class ActivityLog(db.Model):
+    __tablename__ = 'activitylog'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(
+            act_ForeignKey('activity.id'),
+            nullable=False,
+            index=True)
+    user_id = sa.Column(
+            act_ForeignKey('maediuser.id'),
+            nullable=False,
+            index=True)
+    mode = sa.Column(sa.UnicodeText)
+    @hybrid_property
+    def mode_text(self):
+        mode_texts = {
+            "add": "added",
+            "update": "updated",
+            "delete": "deleted"
+        }
+        return mode_texts.get(self.mode, self.mode)
+    target = sa.Column(sa.UnicodeText)
+    @hybrid_property
+    def target_text(self):
+        target_texts = {
+            "ActivityLocation": "location",
+            "ActivityForwardSpend": "forward spending data",
+            "ActivityFinances": "financial data",
+            "ActivityFinancesCodelistCode": "financial data classification",
+            "Activity": "activity"
+        }
+        return target_texts.get(self.target, self.target)
+    target_id = sa.Column(sa.Integer)
+    old_value = sa.Column(sa.UnicodeText)
+    value = sa.Column(sa.UnicodeText)
+    log_date = sa.Column(sa.DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
 class User(db.Model):
     __tablename__ = 'maediuser'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -875,6 +931,9 @@ class User(db.Model):
     organisations = db.relationship("UserOrganisation",
                     cascade="all, delete-orphan",
                     passive_deletes=True)
+    activity_logs = cascade_relationship(
+        "ActivityLog",
+        backref="user")
     __table_args__ = (sa.UniqueConstraint('username',),)
 
     def setup(self,
