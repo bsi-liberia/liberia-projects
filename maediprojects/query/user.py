@@ -76,6 +76,30 @@ def user(user_id=None):
         users = models.User.query.all()
         return users
 
+
+def user_id_username():
+    users = models.User.query.all()
+    return list(map(lambda u: {"id": u.id, "username": u.username}, users))
+
+
+def activitylog(offset=0, user_id=None):
+    activitylogs = models.ActivityLog.query
+    if user_id:
+        activitylogs = activitylogs.filter_by(
+            user_id=user_id)
+    activitylogs = activitylogs.order_by(
+        models.ActivityLog.id.desc()
+        ).offset(offset
+        ).limit(10
+        ).all()
+    return activitylogs
+
+def activitylog_detail(activitylog_id):
+    activitylog = models.ActivityLog.query.filter_by(
+        id=activitylog_id).first()
+    return activitylog
+
+
 def user_by_username(username=None):
     if username:
         user = models.User.query.filter_by(username=username
