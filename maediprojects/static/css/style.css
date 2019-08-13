@@ -249,7 +249,7 @@ td.number, th.number {
     position:inherit;
   }
 }
-.navbar-brand {
+.bootstrap3 .navbar-brand {
   height: 50px;
   color:#333333;
   max-height: 50px;
@@ -257,7 +257,7 @@ td.number, th.number {
   padding-top: 10px;
   padding-bottom: 0;
 }
-.navbar-default {
+.navbar-default, nav.navbar {
     background: #fefefe;
     background: -moz-linear-gradient(180deg,#ffffff 0%,#eeeeee 100%);
     background: -webkit-gradient(linear,left bottom,right top,color-stop(0%,#3e9336),color-stop(100%,#7c9ac4));
