@@ -12,6 +12,15 @@ from maediprojects.query import organisations as qorganisations
 from maediprojects import models
 from maediprojects.extensions import db
 
+import json
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if (isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date)):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
+
 
 def get_earliest_latest_dates():
     earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)).scalar()
@@ -94,14 +103,15 @@ def get_updates():
     updated = filter(filterout, updated)
     return created, updated
 
-def activity_add_log(activity_id, user_id, mode, target, old_value, value):
+def activity_add_log(activity_id, user_id, mode=None, target=None, target_id=None, old_value=None, value=None):
     activity_log = models.ActivityLog()
     activity_log.activity_id = activity_id
     activity_log.user_id = user_id
-    activity_log.mode = mode
-    activity_log.target = target
-    activity_log.old_value = old_value
-    activity_log.value = value
+    activity_log.mode = unicode(mode)
+    activity_log.target = unicode(target)
+    activity_log.target_id = target_id
+    activity_log.old_value = json.dumps(old_value, cls=JSONEncoder) if old_value != None else None
+    activity_log.value = json.dumps(value, cls=JSONEncoder) if value != None else None
     db.session.add(activity_log)
     db.session.commit()
     return activity_log
@@ -115,7 +125,8 @@ def activity_updated(activity_id, update_data=False):
     activity.updated_date = datetime.datetime.utcnow()
     db.session.add(activity)
     db.session.commit()
-    print update_data
+    if update_data:
+        activity_add_log(activity_id, **update_data)
     return True
 
 def create_activity_for_test(data, user_id):
@@ -178,6 +189,17 @@ def create_activity(data):
             data["end_date"])
     db.session.add(act)
     db.session.commit()
+
+    activity_updated(act.id,
+        {
+        "user_id": current_user.id,
+        "mode": "add",
+        "target": "Activity",
+        "target_id": act.id,
+        "old_value": None,
+        "value": act.as_dict()
+        }
+    )
     return act
 
 def delete_activity(activity_id):
@@ -190,6 +212,16 @@ def delete_activity(activity_id):
        db.session.delete(activity)
        db.session.commit()
        return True
+    activity_updated(activity.id,
+        {
+        "user_id": current_user.id,
+        "mode": "delete",
+        "target": "Activity",
+        "target_id": activity.id,
+        "old_value": activity.as_dict(),
+        "value": None
+        }
+    )
     return False
 
 def get_activity(activity_id):
@@ -319,10 +351,21 @@ def update_attr(data):
 
     if (data['attr'].startswith("total_") and data['value'] == ""):
         data['value'] = 0
+    old_value = getattr(activity, data['attr'])
     setattr(activity, data['attr'], data['value'])
     activity.updated_date = datetime.datetime.utcnow()
     db.session.add(activity)
     db.session.commit()
+    activity_updated(activity.id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "Activity",
+        "target_id": activity.id,
+        "old_value": {data['attr']: old_value},
+        "value": {data['attr']: data['value']}
+        }
+    )
     return True
 
 def update_result_attr(data):
