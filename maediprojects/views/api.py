@@ -23,7 +23,7 @@ from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
 from maediprojects.query import import_iati as qimport_iati
 from maediprojects.lib import util
-from maediprojects.lib.codelists import get_codelists_lookups
+from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
 from maediprojects.lib.util import MONTHS_QUARTERS
 from maediprojects import models
 from maediprojects.extensions import db
@@ -50,6 +50,34 @@ def api():
     return jsonify(
         activities = url_for('api.api_activities_country', _external=True)
     )
+
+
+@blueprint.route("/api/activities/filters.json")
+def api_activities_filters():
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    organisation_types = qorganisations.get_organisation_types()
+    cl = get_codelists()
+    _cl_domestic_external = [
+        {"id": "domestic",
+         "name": "Domestic (PSIP / PIU)"},
+        {"id": "external",
+         "name": "External (Aid / AMCU)"}
+    ]
+    filters_codelists = [
+        ("Reported by", "reporting_org_id", reporting_orgs),
+        ("Type of Implementer", "implementing_org_type", organisation_types),
+        ("Sector", "mtef-sector", cl["mtef-sector"]),
+        ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
+        ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
+        ("Activity Status", "activity_status", cl["ActivityStatus"]),
+        ("Aid Type", "aid_type", cl["AidType"]),
+        ("Domestic / External", "domestic_external", _cl_domestic_external),
+        ]
+    return jsonify(filters=list(map(lambda f: {
+        "label": f[0],
+        "name": f[1],
+        "codes": list(map(lambda fo: fo.as_dict() if type(fo) != dict else fo, f[2])),
+        }, filters_codelists)))
 
 
 @blueprint.route("/api/activities/")
