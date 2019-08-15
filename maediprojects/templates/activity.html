@@ -1,4 +1,4 @@
-{% set active_page='activity' %}{% extends "layout.html" %}
+{% set active_page='activity' %}{% extends "layout2.html" %}
 {% block title %}{{ activity.title }}{% endblock %}
 {% block content %}
 <style>
@@ -18,8 +18,9 @@
   </div>
   {% if activity.permissions.edit == True %}
   <div class="col-md-2">
-    <a class="btn btn-success btn-large pull-right" href="{{ url_for('activities.activity_edit', activity_id=activity.id) }}">
-      <i class="glyphicon glyphicon-pencil"></i>
+    <a class="btn btn-success btn-large pull-right edit-project-button"
+       href="{{ url_for('activities.activity_edit', activity_id=activity.id) }}">
+      <i class="fas fa-edit"></i>
       {{ _('Edit project') }}
     </a>
   </div>
@@ -28,7 +29,7 @@
 <div class="row">
   <div class="col-md-6">
     <h3>Basic data</h3>
-    <table class="table table-hover">
+    <table class="table table-hover table-sm">
       <tbody>
         <tr>
           <td><b>Project code</b></td>
@@ -37,7 +38,7 @@
         <tr>
           <td><b>Project status</b></td>
           <td>
-            <span class="label label-default">{{ codelist_lookups["ActivityStatus"][activity.activity_status] }}</span>
+            <span class="badge badge-secondary">{{ codelist_lookups["ActivityStatus"][activity.activity_status] }}</span>
           </td>
         </tr>
         <tr>
@@ -65,14 +66,14 @@
       </tbody>
     </table>
     <h3>Sectors</h3>
-    <table class="table table-hover">
+    <table class="table table-hover table-sm">
       <tbody>
       {% for classification in activity.classification_data.values() %}
         <tr>
           <td><b>{{ classification.name }}</b></td>
           <td>
             {% for entry in classification["entries"] %}
-            <span class="label label-default {{ classification.code }}-{{entry.codelist_code.code}}">{{ entry.codelist_code.name }}</span>
+            <span class="badge badge-secondary {{ classification.code }}-{{entry.codelist_code.code}}">{{ entry.codelist_code.name }}</span>
             {% endfor %}
           </td>
         </tr>
@@ -81,7 +82,7 @@
     </table>
     {% if activity.milestones_data %}
     <h3>Milestones</h3>
-    <table class="table table-hover">
+    <table class="table table-hover table-sm">
       <tbody>
       {% for milestone in activity.milestones_data %}
         <tr>
@@ -93,91 +94,68 @@
     </table>
     {% endif %}
   </div>
-  <div class="col-md-6" style="height: 430px;">
-    <h3>Locations</h3>
+  <div class="col-md-6" class="activity-profile-location-map-container">
+    <h3 id="locations">Locations</h3>
     <div id="locationMap"></div>
   </div>
 </div>
 <div class="row">
-  <div class="col-md-6">
-    <h3>{% if activity.domestic_external == "external" %}Commitments{% else %}Appropriations{% endif %}</h3>
-    <table class="table financial-table" id="commitments-table">
-      <thead>
-        <th>Period</th>
-        <th class="number">Value</th>
-      </thead>
-      <tbody>
-        {% for k, commitment in activity.FY_commitments_dict.items() %}
-        <tr>
-          <td>FY{{commitment.fiscal_year}} {{commitment.fiscal_quarter}}</td>
-          <td class="number">{{ "{:,.2f}".format(commitment.value) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="col">
+    <hr />
   </div>
-  <div class="col-md-6">
-    <h3>Disbursements</h3>
-    <table class="table financial-table" id="disbursements-table">
-      <thead>
-        <th>Period</th>
-        <th class="number">Value</th>
-      </thead>
-      <tbody>
-        {% for k, disbursement in activity.FY_disbursements_dict.items() %}
-        <tr>
-          <td>FY{{disbursement.fiscal_year}} {{disbursement.fiscal_quarter}}</td>
-          <td class="number">{{ "{:,.2f}".format(disbursement.value) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+</div>
+<div class="row" id="financialdata">
+  <div class="col-md-12">
+    <h2>Financial data</h3>
   </div>
 </div>
 <div class="row">
+  <div class="col-md">
+    <h3>{% if activity.domestic_external == "external" %}Commitments{% else %}Appropriations{% endif %}</h3>
+    <b-table class="table financial-table table-sm" id="commitments-table"
+      :fields="fiscal_fields" :items="commitment_items"
+      sort-by="period"
+      sort-desc="true">
+    </b-table>
+  </div>
+  <div class="col-md">
+    <h3>Disbursements</h3>
+    <b-table class="table financial-table table-sm" id="disbursements-table"
+      :fields="fiscal_fields" :items="disbursement_items"
+      sort-by="period"
+      sort-desc="true">
+    </b-table>
+  </div>
   {% if activity.FY_forward_spend_dict %}
-  <div class="col-md-6">
+  <div class="col-md">
     <h3>{% if activity.domestic_external == "external" %}MTEF Projections{% else %}Spending Plan{% endif %}</h3>
-    <table class="table financial-table" id="mtef-projections-table">
-      <thead>
-        <th>Period</th>
-        <th class="number">Value</th>
-      </thead>
-      <tbody>
-        {% for k, fs in activity.FY_forward_spend_dict.items() %}
-        <tr>
-          <td>FY{{fs.fiscal_year}} {{fs.fiscal_quarter}}</td>
-          <td class="number">{{ "{:,.2f}".format(fs.value) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <b-table class="table financial-table table-sm" id="mtef-projections-table"
+      :fields="fiscal_fields" :items="forwardspend_items"
+      sort-by="period"
+      sort-desc="true">
+    </b-table>
   </div>
   {% endif %}
   {% if activity.FY_allotments_dict %}
-  <div class="col-md-6">
+  <div class="col-md">
     <h3>Allotments</h3>
-    <table class="table financial-table" id="allotments-table">
-      <thead>
-        <th>Period</th>
-        <th class="number">Value</th>
-      </thead>
-      <tbody>
-        {% for k, allotment in activity.FY_allotments_dict.items() %}
-        <tr>
-          <td>FY{{allotment.fiscal_year}} {{allotment.fiscal_quarter}}</td>
-          <td class="number">{{ "{:,.2f}".format(allotment.value) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <b-table class="table financial-table table-sm" id="allotments-table"
+      :fields="fiscal_fields" :items="allotment_items"
+      sort-by="period"
+      sort-desc="true">
+    </b-table>
   </div>
   {% endif %}
 </div>
-{% if activity.results %}
 <div class="row">
+  <div class="col">
+    <hr />
+  </div>
+</div>
+{% if activity.results %}
+<div class="row" id="results">
   <div class="col-md-12">
-    <h2 id="results">{{ _('Results') }}</h2>
+    <h2>{{ _('Results') }}</h2>
     <div class="alert alert-info">
       These results were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
     </div>
@@ -200,11 +178,11 @@
           <td>{{ period.actual_value }}</a></td>
           <td>
             {% if period.percent_complete != None %}
-            <div class="progress">
-              <div class="progress-bar progress-bar-{{ period.percent_complete_category }}" role="progressbar" aria-valuenow="{{ period.percent_complete }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ period.percent_complete }}%;">
-                {{ period.percent_complete }}%
-              </div>
-            </div>
+            <b-progress
+              :value="{{ period.percent_complete }}" max="100"
+              variant="{{ period.percent_complete_category }}"
+              show-progress>
+            </b-progress>
             {% endif %}
           </td>
         </tr>
@@ -213,11 +191,16 @@
     </table>
   </div>
 </div>
+<div class="row">
+  <div class="col">
+    <hr />
+  </div>
+</div>
 {% endif %}
 {% if activity.documents %}
-<div class="row">
+<div class="row" id="documents">
   <div class="col-md-12">
-    <h2 id="documents">{{ _('Documents') }}</h2>
+    <h2>{{ _('Documents') }}</h2>
     <div class="alert alert-info">
       These documents were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
     </div>
@@ -233,7 +216,7 @@
           <td><a href="{{ document.url }}">{{ document.title }}</a></td>
           <td>
             {% for category_code in document.categories %}
-            <span class="label label-default">{{ codelist_lookups["DocumentCategory"][category_code.code] }}</span>
+            <span class="badge badge-secondary">{{ codelist_lookups["DocumentCategory"][category_code.code] }}</span>
             {% endfor %}
           </td>
           <td>{{ document.document_date or '' }}</td>
@@ -245,26 +228,27 @@
 </div>
 {% endif %}
 
-<script src="{{url_for('static', filename='vendor/moment-2.11.0/moment.min.js')}}" type="text/javascript"></script>
-<script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
-
 
 <script type="text/javascript">
 var api_locations_url = "{{ api_locations_url }}";
 var api_activity_locations_url = "{{ api_activity_locations_url }}";
 </script>
-<script type="text/javascript">
-  $(".financial-table").tablesorter( {
-      sortList: [[0,1]],
-      theme : "bootstrap",
-      widthFixed: true,
-      headerTemplate : '{content} {icon}',
-      widgets : [ "uitheme"]
-  } );
-</script>
 
-<link type="text/css" href="{{url_for('static', filename='vendor/leaflet/0.7.7/leaflet.css')}}" rel="stylesheet" />
-<script type="text/javascript" src="{{url_for('static', filename='vendor/leaflet/0.7.7/leaflet.js')}}"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+  crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+  integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+  crossorigin=""></script>
 <script src="{{url_for('static', filename='js/map.js')}}" type="text/javascript"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/vue-scrollto"></script>
+{% endblock %}
+{% block vuejs %}
+<script type="text/javascript">
+var disbursement_items = {{ activity.FY_disbursements_dict.values()|tojson }},
+commitment_items = {{ activity.FY_commitments_dict.values()|tojson }},
+allotment_items = {{ activity.FY_allotments_dict.values()|tojson }},
+forwardspend_items = {{ activity.FY_forward_spend_dict.values()|tojson }}
+</script>
+<script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
 {% endblock %}
