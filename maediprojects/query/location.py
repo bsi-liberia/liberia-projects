@@ -50,7 +50,7 @@ def add_location(activity_id, location_id):
             "user_id": current_user.id,
             "mode": "add",
             "target": "ActivityLocation",
-            "target_id": activity_id,
+            "target_id": aL.id,
             "old_value": None,
             "value": {'location_id': location_id}
             }
@@ -73,7 +73,7 @@ def delete_location(activity_id, location_id):
             "user_id": current_user.id,
             "mode": "delete",
             "target": "ActivityLocation",
-            "target_id": activity_id,
+            "target_id": checkL.id,
             "old_value": {'location_id': location_id},
             "value": None
             }

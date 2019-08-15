@@ -129,7 +129,7 @@ def update_attr(data):
         "old_value": {data['attr']: old_value},
         "value": {data['attr']: data['value']}
         }
-        )
+    )
 
     return finance
 
@@ -179,9 +179,20 @@ def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
     fs = models.ActivityForwardSpend.query.filter_by(activity_id=activity_id,
         period_start_date=start_date).first()
     if fs:
+        old_value = fs.value
         fs.value = value
         db.session.add(fs)
         db.session.commit()
+        qactivity.activity_updated(fs.activity_id,
+            {
+            "user_id": current_user.id,
+            "mode": "update",
+            "target": "ActivityForwardSpend",
+            "target_id": fs.id,
+            "old_value": {"value": old_value },
+            "value": {"value": value }
+            }
+        )
         return fs
     else:
         fs = models.ActivityForwardSpend()
@@ -193,6 +204,16 @@ def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
         fs.period_end_date = end_date
         db.session.add(fs)
         db.session.commit()
+        qactivity.activity_updated(fs.activity_id,
+            {
+            "user_id": current_user.id,
+            "mode": "add",
+            "target": "ActivityForwardSpend",
+            "target_id": fs.id,
+            "old_value": None,
+            "value": fs.as_dict()
+            }
+        )
         return fs
 
 def create_forward_spend(quarter, year, value, currency):
@@ -228,7 +249,19 @@ def update_fs_attr(data):
     fs = models.ActivityForwardSpend.query.filter_by(
         id = data['id']
     ).first()
+    old_value = fs.value
     fs.value = data['value']
     db.session.add(fs)
     db.session.commit()
+
+    qactivity.activity_updated(fs.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityForwardSpend",
+        "target_id": fs.id,
+        "old_value": {"value": old_value },
+        "value": {"value": data['value'] }
+        }
+    )
     return True

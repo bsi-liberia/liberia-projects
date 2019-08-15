@@ -2,6 +2,11 @@
 {% block title %}{{ _('Users') }}{% endblock %}
 {% block content %}
 <h1>{{ _('Users') }}</h1>
+<p class="well">View the
+  <a href="{{ url_for('users.users_log') }}">
+  {{ _('Activity log') }}
+  </a>
+</p>
 
 <a class="btn btn-success btn-large pull-right" href="{{ url_for('users.users_new') }}">
   <i class="glyphicon glyphicon-plus"></i>

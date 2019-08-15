@@ -1,0 +1,113 @@
+{% set active_page = active_page|default('index') -%}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>{% block title %}{% endblock %} | Liberia Project Dashboard</title>
+
+    <!-- Load required Bootstrap and BootstrapVue CSS -->
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+
+    <!-- Load polyfills to support older browsers -->
+    <script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver" crossorigin="anonymous"></script>
+
+    <!-- Load Vue followed by BootstrapVue -->
+    <script src="//unpkg.com/vue/dist/vue.min.js"></script>
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+
+    <script src="//unpkg.com/axios/dist/axios.min.js"></script>
+
+    <link href="{{url_for('static', filename='css/style.css')}}?v=20190222" media="all" rel="stylesheet" type="text/css" />
+    <style>
+    .flashmessage {
+        display:none;
+    }
+    body {
+      padding-top: 70px;
+      margin-top: 10px;
+    }
+    </style>
+</head>
+<body class="{% block body_classes %}{% endblock %}">
+  <div id="app">
+    <b-navbar toggleable="lg" type="light" variant="light" fixed="top">
+      <b-container>
+        <b-navbar-brand href="{{url_for('activities.dashboard')}}">
+          <img src="{{url_for('static', filename='img/flag-lr.png')}}" alt="Flag" />
+          {{ _('Liberia Project Dashboard') }}
+        </b-navbar-brand>
+        <b-navbar-toggle target="navbar-collapse"></b-navbar-toggle>
+        <b-collapse id="navbar-collapse" is-nav>
+          {% if loggedinuser.username %}
+          <b-navbar-nav>
+            <b-nav-item{% if active_page == "dashboard" %} active{% endif %} href="{{ url_for('activities.dashboard') }}">Home
+            </b-nav-item>
+            <b-nav-item{% if active_page == "activities" %} active{% endif %} href="{{ url_for('activities.activities') }}">Activities</b-nav-item>
+            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            <b-nav-item-dropdown text="Reports">
+              {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "both"] %}
+              <b-dropdown-item href="{{ url_for('reports.milestones') }}">{{ _('Milestones') }}</b-dropdown-item>
+              <b-dropdown-item href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</b-dropdown-item>
+              {% endif %}
+              {% if loggedinuser.permissions_dict["domestic_external"] in ["external", "both"] %}
+              <b-dropdown-item href="{{ url_for('reports.aid_disbursements') }}">{{ _('Aid Disbursements') }}</b-dropdown-item>
+              <b-dropdown-item href="{{ url_for('reports.results') }}">{{ _('Results') }}</b-dropdown-item>
+              {% endif %}
+              <b-dropdown-item href="{{ url_for('reports.counterpart_funding') }}">{{ _('Counterpart funding') }}</b-dropdown-item>
+            </<b-nav-item-dropdown>
+            {% endif %}
+          </b-navbar-nav>
+          <b-navbar-nav class="ml-auto">
+            <b-nav-item href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
+            <b-nav-item href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
+            <b-nav-item-dropdown text="{{ loggedinuser.username }}" right>
+                <b-dropdown-item href="{{ url_for('users.profile') }}">{{ _('Profile') }}</b-dropdown-item>
+                {% if loggedinuser.administrator %}
+                <b-dropdown-item href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</b-dropdown-item>
+                <b-dropdown-item href="{{ url_for('users.users') }}">{{ _('Users') }}</b-dropdown-item>
+                {% endif %}
+                <b-dropdown-item href="{{ url_for('users.logout')}} ">{{ _('Logout') }}</b-dropdown-item>
+            </b-nav-item-dropdown>
+          </b-navbar-nav>
+          {% else %}
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{{ url_for('users.login')}} ">{{ _('Login') }}</a></li>
+          </ul>
+          {% endif %}
+        </b-collapse><!--/.nav-collapse -->
+      </b-container>
+    </b-navbar>
+    <b-container>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <b-alert variant="{{ category }}" show dismissible fade>
+              <p>{{ message }}</p>
+            </b-alert>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}
+      {% endblock %}
+    </b-container>
+    <footer class="footer">
+      <hr />
+      <b-container>
+        <b-row>
+          <b-col>
+            <p><a href="https://github.com/bsi-liberia/liberia-projects">Source code on Github</a>, released under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">AGPL v3.0 License</a>.</p>
+          </b-col>
+          <b-col class="text-right">
+              <p><a href="http://twitter.com/mark_brough">@mark_brough</a></p>
+          </b-col>
+      </b-row>
+      </b-container>
+    </footer>
+  </div>
+  {% block vuejs %}
+  {% endblock %}
+</body>
+</html>
