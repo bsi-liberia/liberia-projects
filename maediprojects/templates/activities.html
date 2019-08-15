@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row">
   <div class="col-md-10">
-    <h1>{{ _('Activities') }}: <span id="activities_count" v-if="isBusy">loading...</span><span id="activities_count" v-else>[[ projects.length ]] found</span>
+    <h1>{{ _('Activities') }}: <span id="activities_loading" v-if="isBusy">loading...</span><span id="activities_count" v-else>[[ projects.length ]] found</span>
   </div>
   <div class="col-md-2">
     {% if loggedinuser.permissions_dict.domestic_external_edit != "none" %}
