@@ -258,6 +258,9 @@ def list_activities_by_country(recipient_country_code):
     ).all()
     return acts
 
+def getISODate(value):
+    return datetime.datetime.strptime(value, '%Y-%m-%d')
+
 def getJSONDate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
@@ -274,10 +277,10 @@ def list_activities_by_filters(filters):
         if filter_value == "all": continue
         if filter_name == "earliest_date":
             query = query.filter(
-                models.ActivityFinances.transaction_date > getJSONDate(filter_value))
+                models.ActivityFinances.transaction_date >= getISODate(filter_value))
         elif filter_name == "latest_date":
             query = query.filter(
-                models.ActivityFinances.transaction_date < getJSONDate(filter_value))
+                models.ActivityFinances.transaction_date <= getISODate(filter_value))
         elif filter_name in codelist_names:
             codelist_vals.append(int(filter_value))
         elif filter_name == 'implementing_org_type':
