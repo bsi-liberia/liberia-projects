@@ -41,7 +41,7 @@
     </template>
     <template slot="[details]" slot-scope="data">
       <a href="#" :data-id="data.item.id"
-      v-on:click="getDetails">Details</a>
+      v-on:click.prevent="getDetails">Details</a>
     </template>
   </b-table>
   <b-pagination
@@ -135,7 +135,6 @@ new Vue({
         });
     },
     getDetails: function(e) {
-      e.preventDefault();
       var activitylog_id = e.target.dataset.id;
       axios
         .get(`{{ url_for('api.api', _external=True)}}activitylog/${activitylog_id}.json`)
@@ -145,7 +144,6 @@ new Vue({
         });
     },
     prettyAreaData: function(data) {
-      console.log("data", data)
       if (data == undefined) { return "" }
       var json = JSON.stringify(data, null, 2)
       json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
