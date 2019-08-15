@@ -1,133 +1,236 @@
-// SET UP DATES
-var earliest_activity_date = new Date(activity_dates['earliest']);
-var latest_activity_date = new Date(activity_dates['latest']);
-$(".date-select .min-date").text(earliest_activity_date.getFullYear());
-$(".date-select .max-date").text(latest_activity_date.getFullYear());
-var dateSlider = $('#date-selector').slider({
-  id: 'slider2',
-  min: earliest_activity_date.getTime(),
-  max: latest_activity_date.getTime(),
-  value: [earliest_activity_date.getTime(), latest_activity_date.getTime()],
-  formatter: function(value) {
-    if (value.length == 2) {
-      date_from = new Date(value[0]).toLocaleDateString();
-      date_to = new Date(value[1]).toLocaleDateString();
-      return date_from + ' – ' + date_to;
+Vue.config.devtools = true
+new Vue({
+  el: "#app",
+  delimiters: ["[[", "]]"],
+  data() {
+    return {
+      slider: null,
+      transaction_dates: {
+        min_earliest_date: new Date(activity_dates['earliest']),
+        max_latest_date: new Date(activity_dates['latest'])
+      },
+      isBusy: true,
+      perPage: 20,
+      currentPage: 1,
+      totalRows: 1,
+      filters: [],
+      filterTitle: null,
+      filterIncludedFields: [],
+      defaultFilters: {
+        'earliest_date': new Date(activity_dates['earliest']).toISOString().split("T")[0],
+        'latest_date': new Date(activity_dates['latest']).toISOString().split("T")[0]
+      },
+      selectedFilters: {
+        'earliest_date': new Date(activity_dates['earliest']).toISOString().split("T")[0],
+        'latest_date': new Date(activity_dates['latest']).toISOString().split("T")[0]
+      },
+      projects: [],
+      fields: [
+        {
+          key: 'title',
+          sortable: true
+        },
+        {
+          key: 'reporting_org',
+          label: "Organisation",
+          sortable: true
+        },
+        {
+          key: 'total_commitments',
+          label: 'Commitments',
+          sortable: true,
+          class: "number",
+          formatter: value => {
+            return "$" + value.toLocaleString(undefined, {minimumFractionDigits: 2})
+          }
+        },
+        {
+          key: 'total_disbursements',
+          label: 'Disbursements',
+          sortable: true,
+          class: "number",
+          formatter: value => {
+            return "$" + value.toLocaleString(undefined, {minimumFractionDigits: 2})
+          }
+        },
+        {
+          key: 'updated_date',
+          label: "Last updated",
+          sortable: true
+        },
+        {
+          key: 'edit',
+          sortable: false
+        },
+        {
+          key: 'delete',
+          sortable: false
+        }]
     }
-    date = new Date(value);
-    return 'Current date: ' + date.toLocaleDateString();
-  }
-});
-
-// PROJECTS
-var updateProjects = function(projects) {
-  // Render projects template
-	var projects_template = $('#projects-template').html();
-	Mustache.parse(projects_template);
-	var rendered = Mustache.render(projects_template, projects);
-	$('#projects-data').html(rendered);
-  $("#activities_count").text(projects.activities.length+" found");
-  $.tablesorter.themes.bootstrap = {
-    caption      : 'caption',
-    header       : 'bootstrap-header',
-    iconSortNone : 'bootstrap-icon-unsorted',
-    iconSortAsc  : 'glyphicon glyphicon-chevron-up',
-    iconSortDesc : 'glyphicon glyphicon-chevron-down',
-  };
-  $("#projectsList").tablesorter( {
-      sortList: [[3,1],[1,0],[0,0]],
-      theme : "bootstrap",
-      widthFixed: true,
-      headerTemplate : '{content} {icon}',
-      widgets : [ "uitheme"]
-  } );
-}
-var projects_template;
-var projectData;
-var queryProjectsData = function() {
-  // Check dates
-  var values = $("#date-selector").slider("getValue");
-  var selected_earliest_activity_date = new Date(values[0]);
-  var selected_latest_activity_date = new Date(values[1]);
-  var data = {}
-  var query = ""
-  var fv_data = $.map($(".filter-select"),
-        function(d) {
-          return {"id": d.id, "value": d.value}
-       });
-
-  if (
-      (values.length==2) &&
-      ((earliest_activity_date.toString()!=selected_earliest_activity_date.toString()) ||
-       (latest_activity_date.toString()!=selected_latest_activity_date.toString()))
-    ) {
-      fv_data.push({
-        "id": "earliest_date", "value": selected_earliest_activity_date.toJSON()
-          })
-      fv_data.push({
-        "id": "latest_date", "value": selected_latest_activity_date.toJSON()
-      })
-  };
-
-  var filtersApplied = false;
-  $(fv_data).each(function(i, f) {
-    data[f["id"]] = f["value"]
-    if (i == 0) { query+= "?" 
-    } else { query+= "&" }
-    if (f["value"] != "all") { filtersApplied=true; }
-    query += f["id"] + "=" + f["value"];
-  });
-  makeFiltersApplied(filtersApplied);
-  $("#activities_count").text("loading...");
-  $("#projectsList").html('<p class="lead">Loading data, please wait... <span class="glyphicon glyphicon-refresh loader" aria-hidden="true"></span></p>');
-
-  $.get("/api/activities/", data, function(resultdata) {
-    updateProjects(resultdata);
-  });
-  $("#download_excel").attr("href", "/exports/activities_filtered.xlsx" + query);
-  window.location.hash = query;
-}
-$(document).on("change", ".filter-select", function(e) {
-  queryProjectsData();
-});
-$(document).on("slideStop", "#date-selector", function(e) {
-  queryProjectsData();
-  values = e.value;
-  var min_date = new Date(values[0]);
-  var max_date = new Date(values[1]);
-  $(".date-select .min-date").text(min_date.getFullYear());
-  $(".date-select .max-date").text(max_date.getFullYear());
-});
-
-function makeFiltersApplied(applied) {
-  if (applied == true) {
-    $("#filtersAppliedLabel").html('<span class="label label-danger"><a href="">Reset filters</a></span>'
-      ).delay("500").fadeTo("fast", 1).fadeTo("100", 0.2).fadeTo("fast", 1);
-  } else {
-    $("#filtersAppliedLabel").fadeOut("fast").next().html("");
-  }
-}
-$(document).on("click", "#filtersAppliedLabel a", function(e) {
-  e.preventDefault();
-  $(".filter-select").val("all");
-  makeFiltersApplied(false);
-  queryProjectsData();
-});
-// Make results persistent using URL hash
-var url = document.location.toString();
-if (url.match('#')) {
-    params = url.split("#?")[1].split("&");
-    console.log(params);
-    var filtersApplied=false;
-    params.forEach(function(param) {
-      var key = param.split("=")[0];
-      var value = param.split("=")[1];
-      $(".form-activity-filters #"+key).val(value);
-      if (value != "all") {
-        filtersApplied=true;
-      }
+  },
+  mounted: function() {
+    this.setupDates()
+    this.setupFilters()
+    // this.queryProjectsData()
+    this.$refs.slider.noUiSlider.on('update',(values, handle) => {
+      this.selectedFilters[handle ? 'latest_date' : 'earliest_date'] = values[handle];
     });
-    makeFiltersApplied(filtersApplied);
-    window.scrollTo(0, 0);
-}
-queryProjectsData()
+    window.addEventListener('hashchange', () => {
+      this.setupHashFilters()
+    }, false);
+  },
+  watch: {
+    selectedFilters: {
+      deep: true,
+      handler() {
+        window.location.hash = this.filtersHash
+        this.queryProjectsData()
+        this.updateSlider()
+      }
+    }
+  },
+  methods: {
+    confirmDelete: function(delete_url) {
+        this.$bvModal.msgBoxConfirm('Are you sure you want to delete this activity? This action cannot be undone!', {
+          title: 'Confirm delete',
+          okVariant: 'danger',
+          okTitle: 'Confirm delete',
+          hideHeaderClose: false,
+          centered: true
+        })
+          .then(value => {
+            window.location = delete_url;
+          })
+          .catch(err => {
+            alert("Sorry, there was an erorr, and that activity couldn't be deleted.")
+          })
+    },
+    updateSlider: function() {
+      if ((this.selectedFilters.earliest_date != null) && (this.selectedFilters.latest_date != null)) {
+        this.$refs.slider.noUiSlider.set([new Date(this.selectedFilters.earliest_date), new Date(this.selectedFilters.latest_date)])
+      }
+    },
+    resetFilters: function() {
+      Object.entries(this.selectedFilters).map(
+        item =>  {
+          if (item[0] != this.defaultFilters[item[0]]) {
+            Vue.set(this.selectedFilters, item[0], this.defaultFilters[item[0]])
+          }
+        })
+    },
+    formatDate: function ( date ) {
+      return date.toISOString().split("T")[0];
+    },
+    toFormat: function ( v ) {
+      return this.formatDate(new Date(v));
+    },
+    fromFormat: function( v ) {
+      var newdate = v.split("-")
+      return new Date(v).getTime()
+    },
+    onFiltered(filteredItems) {
+      // Trigger pagination to update the number of buttons/pages due to filtering
+      this.totalRows = filteredItems.length
+      this.currentPage = 1
+    },
+    setupDates: function() {
+      this.dateSlider = noUiSlider.create(this.$refs.slider, {
+        id: 'slider2',
+        connect: true,
+        animate: false,
+        range: {
+          min: this.transaction_dates.min_earliest_date.getTime(),
+          max: this.transaction_dates.max_latest_date.getTime()
+        },
+        start: [this.transaction_dates.min_earliest_date.getTime(),this.transaction_dates.max_latest_date.getTime()],
+        tooltips: true,
+        format: { to: this.toFormat, from: Number }
+      });
+    },
+    setupHashFilters() {
+      if (window.location.hash) {
+        params = window.location.hash.split("?")[1].split("&");
+        var hashFilters = params.reduce(
+            (obj, item) => {
+              var _item = item.split("=")
+              obj[_item[0]]= _item[1]
+              return obj
+            },
+            {})
+        Object.keys(hashFilters).forEach(key => {
+          if (hashFilters[key] != undefined) {
+            Vue.set(this.selectedFilters, key, hashFilters[key])
+          }
+        })
+        Object.keys(this.defaultFilters).forEach(key => {
+          if (!(key in hashFilters)) {
+            Vue.set(this.selectedFilters, key, this.defaultFilters[key])
+          }
+        })
+      } else {
+        this.selectedFilters = this.defaultFilters
+      }
+    },
+    setupFilters() {
+      this.setupHashFilters()
+      axios
+        .get(activities_filters_url)
+        .then(response => {
+          response.data.filters.reduce(
+            (obj, item) => {
+              Vue.set(this.defaultFilters, item.name, "all")
+              if (!(item.name in this.selectedFilters)) {
+                Vue.set(this.selectedFilters, item.name, "all")
+              }
+            },
+            {})
+          this.filters = response.data.filters
+        });
+      },
+    queryProjectsData:  _.debounce(function (e) {
+      axios
+        .get(activity_api_url, {
+          params: this.nonDefaultFilters
+        })
+        .then(response => {
+          this.projects = response.data.activities
+          this.isBusy = false
+          this.totalRows = this.projects.length
+        });
+    }, 500)
+  },
+  computed: {
+    nonDefaultFilters() {
+      return Object.entries(this.selectedFilters).reduce(
+        (obj, item, index) => {
+          if (item[1] != this.defaultFilters[item[0]]) {
+            obj[item[0]] = item[1]
+          }
+          return obj
+        },
+      {})
+    },
+    displayResetFilters() {
+      theset = new Set(Object.entries(this.selectedFilters).map(
+          item =>  {
+            if ((item[0] == "earliest_date") && (this.transaction_dates.min_earliest_date.toISOString().split("T")[0] == item[1])) {
+              return "all"
+            } else if ((item[0] == "latest_date") && (this.transaction_dates.max_latest_date.toISOString().split("T")[0] == item[1])) {
+              return "all"
+            } else {
+              return item[1]
+            }
+          }))
+      return (theset.size > 1)
+    },
+    filtersHash() {
+      return Object.entries(this.nonDefaultFilters).reduce(
+            (obj, item, index) => {
+              if (index > 0) { obj += "&"}
+              obj += `${item[0]}=${item[1]}`
+              return obj
+            },
+        "?")
+    }
+  }
+})
