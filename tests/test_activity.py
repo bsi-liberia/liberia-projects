@@ -28,6 +28,14 @@ class TestActivityLoads(LiveServerClass):
         )
         assert selenium.find_element(By.TAG_NAME, "h1").text == "Education project"
 
+    def test_activity_transactions_loads(self, app, selenium, selenium_login):
+        selenium.get(url_for('activities.activity', activity_id=1, _external=True))
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#disbursements-table tbody tr'))
+        )
+        assert selenium.find_element(By.CSS_SELECTOR, "#disbursements-table tbody tr td:nth-child(2)"
+            ).text == "100.00"
+
     def test_activity_editor_loads(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activity_edit', activity_id=2, _external=True))
         WebDriverWait(selenium, 10).until(
