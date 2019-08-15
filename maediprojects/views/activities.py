@@ -53,11 +53,13 @@ def activities():
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
         ]
-    activity_base_url = url_for("activities.activities")
+    activity_base_url = url_for("activities.activities", _external=True)
     earliest, latest = qactivity.get_earliest_latest_dates()
+    if (earliest == latest) and (earliest != None):
+        latest += datetime.timedelta(days=1)
     dates = {
-        "earliest": earliest.isoformat() if earliest else None,
-        "latest": latest.isoformat() if latest else None
+        "earliest": earliest.isoformat() if earliest else "{}-01-01".format(datetime.datetime.now().year),
+        "latest": latest.isoformat() if latest else "{}-12-31".format(datetime.datetime.now().year),
     }
     return render_template("activities.html",
                 reporting_orgs=reporting_orgs,
