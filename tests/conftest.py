@@ -83,14 +83,15 @@ def import_test_data(user_id):
         data = xlsx_to_csv.getDataFromFile("testdata.xlsx", _file.read(), 0, True)
         for row in data:
             qactivity.create_activity_for_test(row, user_id)
-    with open(filename, "rb") as _file:
-        _fakeUpload = FileStorage(
-            stream=_file,
-            filename="testdata.xlsx")
-        result = import_xls(
-            input_file=_fakeUpload,
-            column_name=u'2018 Q4 (D)'
-        )
+    for qtr in ['1', '2', '3', '4']:
+        with open(filename, "rb") as _file:
+            _fakeUpload = FileStorage(
+                stream=_file,
+                filename="testdata.xlsx")
+            result = import_xls(
+                input_file=_fakeUpload,
+                column_name=u'2018 Q{} (D)'.format(qtr)
+            )
 
 
 @pytest.fixture(scope='function')
