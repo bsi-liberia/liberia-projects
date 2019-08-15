@@ -1,10 +1,26 @@
-body {
+bootstrap3.body {
     margin-top:60px;
 }
 #locationMap {
     min-width:300px;
     width:100%;
     height:400px;
+}
+@media print
+{
+  body {
+    margin-top: 0px !important;
+  }
+  #results, #documents, #financialdata {
+    page-break-before: always !important;
+    break-before: always !important;
+  }
+  .edit-project-button {
+    display: none;
+  }
+  #locationMap .leaflet-control-container {
+    display: none;
+  }
 }
 .select-fg .form-control-feedback {
   right: 45px !important;
@@ -219,7 +235,7 @@ td.number, th.number {
     text-shadow: 1px 1px 2px #dddddd;
     /*font-family: "Trebuchet MS","Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;*/
 }
-#locationMap {
+.intro #locationMap {
   left: 0;
   position: absolute;
   right: 0;
@@ -245,7 +261,7 @@ td.number, th.number {
     padding: 10px 0px 10px 10px;
     color:#fff;
   }
-  #locationMap {
+  .intro #locationMap {
     position:inherit;
   }
 }
