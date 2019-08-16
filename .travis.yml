@@ -2,7 +2,6 @@ sudo: false
 language: python
 cache:
   - pip
-  - yarn: true
 python:
   - 2.7
 addons:
