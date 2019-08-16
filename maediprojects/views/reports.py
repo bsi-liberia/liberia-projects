@@ -12,6 +12,15 @@ from maediprojects.lib import util
 blueprint = Blueprint('reports', __name__, url_prefix='/', static_folder='../static')
 
 
+@blueprint.route("/reports/dataquality/")
+@login_required
+def dataquality():
+    return render_template(
+        "monitoring/dataquality.html",
+        loggedinuser=current_user
+    )
+
+
 @blueprint.route("/reports/milestones/")
 @login_required
 def milestones():

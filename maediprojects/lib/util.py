@@ -1,6 +1,6 @@
 import datetime
 import re
-
+import collections
 
 ALLOWED_YEARS = range(2013, datetime.datetime.utcnow().year+3)
 
@@ -127,6 +127,63 @@ def previous_fy_fq_numeric():
 def previous_fy_fq_date(start_end="end"):
     year, quarter = previous_fy_fq_numeric()
     return fq_fy_to_date(quarter, year, start_end)
+
+class Last4Quarters:
+    def start(self):
+        """The start of the quarter one year ago."""
+        year, quarter = date_to_fy_fq(self.FY.current_date - datetime.timedelta(days=365))
+        return fq_fy_to_date(quarter, year, start_end="start")
+
+    def end(self):
+        """End of the previous quarter from today: because we don't want to include
+        the current incomplete quarter"""
+        year, quarter = subtract_one_quarter(*date_to_fy_fq(self.FY.current_date))
+        return fq_fy_to_date(quarter, year, start_end="end")
+
+    def list_of_quarters(self):
+        start = self.start()
+        year, quarter = date_to_fy_fq(start)
+        out = collections.OrderedDict({})
+        for i in range(4):
+            out["Q{}".format(quarter)] = "FY{} Q{}".format(year, quarter)
+            year, quarter = add_one_quarter(year, quarter)
+        return out
+
+    def __init__(self):
+        self.FY = FY("current")
+
+class FY:
+    def fy_to_date(self, fy, start_end):
+        return fq_fy_to_date({"start": 1, "end": 4}[start_end], fy, start_end)
+
+    def fy_fy(self):
+        year, quarter = self.numeric()
+        year_q1 = self.fy_to_date(year, "start").year
+        year_q4 = self.fy_to_date(year, "end").year
+        return "FY{}/{}".format(year_q1, str(year_q4)[2:])
+
+    def fy(self):
+        year, quarter = date_to_fy_fq(datetime.datetime.utcnow())
+        return "{}".format(year)
+
+    def numeric(self):
+        year, quarter = date_to_fy_fq(self.current_date)
+        return year, quarter
+
+    def date(self, start_end="end"):
+        fy, fq = self.numeric()
+        return self.fy_to_date(fy, start_end)
+
+    def __init__(self, current_previous):
+        if current_previous == "current":
+            self.current_date = datetime.datetime.utcnow()
+        elif current_previous == "previous":
+            self.current_date = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+        elif current_previous == "next":
+            self.current_date = datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        else:
+            raise Exception
+
 
 def available_fy_fqs_as_dict():
     return [{'value': fyfqstring,

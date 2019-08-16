@@ -1,0 +1,168 @@
+{% set active_page='reporting_org_data_quality' %}{% extends "layout2.html" %}
+{% block title %}{{ _('Data quality') }}{% endblock %}
+{% block content %}
+<div id="reportingOrgDataQuality" style="margin-top:15px">
+  <b-row>
+    <b-col cols="9">
+      <h1>{{ _('Data quality') }}</h1>
+      <p class="lead">This page shows a simple summary of reporting by
+      organisation in the Liberia Project Dashboard. It shows:
+      <ul>
+        <li>MTEF projections for the current and previous fiscal year</li>
+        <li>Disbursements by quarter for the last four quarters</li>
+      </ul></p>
+    <p class="lead">
+      Data quality is marked by the following symbols:
+      <ul>
+        <li>
+          <i class="fas fa-check-circle text-success">
+              <span class="sr-only">Yes</span>
+            </i> denotes spending recorded (for any project) in the relevant period;
+        </li>
+        <li>
+          <i class="far fa-times-circle text-secondary">
+            <span class="sr-only">No</span>
+          </i> denotes no spending recorded (for any project) in the relevant period.
+        </li>
+      </ul>
+    </p>
+    </b-col>
+    <b-col cols="3">
+      <b-form-group class="text-right"
+      label="Display as:">
+        <b-form-radio-group
+          id="btn-radios-1"
+          v-model="selectedDisplayOption"
+          :options="displayOptions"
+          buttons
+          button-variant="outline-dark"
+        ></b-form-radio-group>
+      </b-form-group>
+    </b-col>
+  </b-row>
+  <b-table id="reportingOrgs" :fields="fields" :items="items" :busy="isBusy" sort-by="name" show-empty>
+    <div slot="table-busy" class="text-center">
+      <b-spinner class="align-middle" label="Loading..."></b-spinner>
+      <strong>Loading...</strong>
+    </div>
+    <template slot="thead-top" slot-scope="data">
+      <b-tr>
+        <b-th>&nbsp;</b-th>
+        <b-th variant="light" colspan="2" class="text-center">MTEF Projections</b-th>
+        <b-th colspan="4" class="text-center">Disbursements</b-th>
+      </b-tr>
+    </template>
+    <template slot="[name]" slot-scope="data">
+      <a :href="'/activities/#?reporting_org_id=' + data.item.id"
+        title="View this organisation's projects"
+        v-b-tooltip.hover>
+        [[ data.item.name ]]
+      </a>
+    </template>
+    <template :slot="['forwardspends_' + currentprevious + 'year']"
+      slot-scope="data" v-for="currentprevious in ['current', 'previous']">
+      <template v-if="selectedDisplayOption == 'check'">
+        <i class="fas fa-check-circle text-success"
+           v-if="data.item.forwardspends[currentprevious] > 0">
+          <span class="sr-only">Yes</span>
+        </i>
+        <i class="far fa-times-circle text-secondary" v-else>
+          <span class="sr-only">No</span>
+        </i>
+      </template>
+      <template v-else>
+        [[ numberFormatter(data.item.forwardspends[currentprevious]) ]]
+      </template>
+    </template>
+    <template :slot="[quarter]" slot-scope="data" v-for="quarter in quarters">
+      <template v-if="selectedDisplayOption == 'check'">
+        <i class="fas fa-check-circle text-success" v-if="data.item.disbursements[quarter] > 0">
+          <span class="sr-only">Yes</span>
+        </i>
+        <i class="far fa-times-circle text-secondary" v-else>
+          <span class="sr-only">No</span>
+        </i>
+      </template>
+      <template v-else>
+        [[ numberFormatter(data.item.disbursements[quarter]) ]]
+      </template>
+    </template>
+  </b-table>
+</div>
+{% endblock %}
+{% block vuejs %}
+<script>
+var api_base = "{{ url_for('api.api', _external=True)}}";
+Vue.config.devtools = true
+new Vue({
+  el: "#app",
+  delimiters: ["[[", "]]"],
+  data() {
+    return {
+      fields: [],
+      items: [],
+      quarters: [],
+      isBusy: true,
+      displayOptions: [
+        {
+          'text': 'Checklist',
+          'value': 'check'
+        },
+        {
+          'text': 'Value',
+          'value': 'value'
+        }
+      ],
+      selectedDisplayOption: "check"
+    }
+  },
+  mounted: function() {
+    this.getDataQualityData()
+  },
+  methods: {
+    numberFormatter(value) {
+      if (value == null) { return 0.00 }
+      return "$" + value.toLocaleString(undefined, {minimumFractionDigits: 0})
+    },
+    makeFields: function (data) {
+      var _fields = [{
+            key: 'name',
+            sortable: true
+          },
+          {
+            key: 'forwardspends_previousyear',
+            label: data.previous_year,
+            class: "number",
+            variant: "light"
+          },
+          {
+            key: 'forwardspends_currentyear',
+            label: data.current_year,
+            class: "number",
+            variant: "light"
+          }]
+      return Object.entries(data.list_of_quarters).reduce(
+            (obj, item) => {
+              obj.push({
+                key: item[0],
+                label: item[1],
+                class: "number"
+              })
+              this.quarters.push(item[0])
+              return obj
+            },
+            _fields)
+    },
+    getDataQualityData: function() {
+      axios
+        .get(`${api_base}reporting_orgs.json`)
+        .then((response) => {
+          this.fields = this.makeFields(response.data)
+          this.items = response.data.orgs;
+          this.isBusy = false
+        });
+    }
+  }
+})
+</script>
+{% endblock %}

@@ -221,7 +221,8 @@ class Activity(db.Model):
             nullable=False,
             index=True)
     reporting_org = sa.orm.relationship("Organisation",
-            foreign_keys=[reporting_org_id])
+            foreign_keys=[reporting_org_id],
+            backref="activities_as_reporting_org")
     implementing_org = sa.Column(sa.UnicodeText) # ADDED
     recipient_country_code = sa.Column(
             act_ForeignKey('country.code'),
@@ -295,12 +296,12 @@ class Activity(db.Model):
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                         ).filter(ActivityFinances.transaction_type==u"C",
-                         ActivityFinances.activity_id==self.id).first()[0]
+                         ActivityFinances.activity_id==self.id).scalar()
     @hybrid_property
     def total_disbursements(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                         ).filter(ActivityFinances.transaction_type==u"D",
-                         ActivityFinances.activity_id==self.id).first()[0]
+                         ActivityFinances.activity_id==self.id).scalar()
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
@@ -657,6 +658,17 @@ class Organisation(db.Model):
     activityorganisations = sa.orm.relationship("ActivityOrganisation",
             cascade="all, delete-orphan",
             backref="organisation")
+
+    @hybrid_property
+    def activities_count(self):
+        return len(self.activities_as_reporting_org) #.count()
+
+    @activities_count.expression
+    def activities_count(cls):
+        return (select([func.count(Activity.id)]).
+                where(Activity.reporting_org_id == cls.id).
+                label("activities_count")
+                )
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
