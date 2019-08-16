@@ -51,7 +51,7 @@
               </a>
               <ul class="dropdown-menu">
               {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "both"] %}
-              <li><a href="{{ url_for('reports.milestones') }}">{{ _('Milestones') }}</a></li>
+              <li><a href="{{ url_for('reports.milestones') }}">{{ _('PSIP Project Development and Appraisal Tracking') }}</a></li>
               <li><a href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</a></li>
               {% endif %}
               {% if loggedinuser.permissions_dict["domestic_external"] in ["external", "both"] %}

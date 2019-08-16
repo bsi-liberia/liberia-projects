@@ -48,7 +48,7 @@
             {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
             <b-nav-item-dropdown text="Reports">
               {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "both"] %}
-              <b-dropdown-item href="{{ url_for('reports.milestones') }}">{{ _('Milestones') }}</b-dropdown-item>
+              <b-dropdown-item href="{{ url_for('reports.milestones') }}">{{ _('PSIP Project Development and Appraisal Tracking') }}</b-dropdown-item>
               <b-dropdown-item href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</b-dropdown-item>
               {% endif %}
               {% if loggedinuser.permissions_dict["domestic_external"] in ["external", "both"] %}
