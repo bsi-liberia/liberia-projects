@@ -221,7 +221,8 @@ class Activity(db.Model):
             nullable=False,
             index=True)
     reporting_org = sa.orm.relationship("Organisation",
-            foreign_keys=[reporting_org_id])
+            foreign_keys=[reporting_org_id],
+            backref="activities_as_reporting_org")
     implementing_org = sa.Column(sa.UnicodeText) # ADDED
     recipient_country_code = sa.Column(
             act_ForeignKey('country.code'),
