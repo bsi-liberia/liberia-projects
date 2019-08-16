@@ -69,6 +69,7 @@ new Vue({
     }
   },
   mounted: function() {
+    console.log("Hello from logging!")
     this.setupDates()
     this.setupFilters()
     // this.queryProjectsData()
