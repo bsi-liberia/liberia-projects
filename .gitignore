@@ -7,3 +7,4 @@ static/vendor/jquery/1.7.1
 *.sqlite
 ~*.xlsx
 test_*.png
+maediprojects/static/packages/
