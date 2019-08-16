@@ -296,12 +296,12 @@ class Activity(db.Model):
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                         ).filter(ActivityFinances.transaction_type==u"C",
-                         ActivityFinances.activity_id==self.id).first()[0]
+                         ActivityFinances.activity_id==self.id).scalar()
     @hybrid_property
     def total_disbursements(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                         ).filter(ActivityFinances.transaction_type==u"D",
-                         ActivityFinances.activity_id==self.id).first()[0]
+                         ActivityFinances.activity_id==self.id).scalar()
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
