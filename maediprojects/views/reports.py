@@ -15,7 +15,6 @@ blueprint = Blueprint('reports', __name__, url_prefix='/', static_folder='../sta
 @blueprint.route("/reports/dataquality/")
 @login_required
 def dataquality():
-
     return render_template(
         "monitoring/dataquality.html",
         loggedinuser=current_user
