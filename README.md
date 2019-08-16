@@ -66,6 +66,15 @@ Some basic server setup stuff, if you don't have all of this already:
 apt-get install python2.7 python-pip python-dev libxml2-dev libxslt-dev build-essential libssl-dev zlib1g-dev git
 ```
 
+Install yarn:
+
+```
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+apt update
+apt install yarn
+```
+
 1. Clone the repository:
    ```
    git clone git@github.com:bsi-liberia/liberia-projects.git
@@ -84,6 +93,7 @@ apt-get install python2.7 python-pip python-dev libxml2-dev libxslt-dev build-es
 4. Install the requirements:
    ```
    pip install -r requirements.txt
+   yarn install
    ```
 
 5. Copy and edit the config.py.tmpl:

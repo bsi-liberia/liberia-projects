@@ -1,3 +1,4 @@
+*.sublime-*
 .DS_Store
 *.pyc
 pyenv
@@ -7,3 +8,4 @@ static/vendor/jquery/1.7.1
 *.sqlite
 ~*.xlsx
 test_*.png
+maediprojects/static/packages/

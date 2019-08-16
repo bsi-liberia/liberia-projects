@@ -4,8 +4,10 @@ import warnings
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 import time
 from conftest import LiveServerClass
+import json
 
 @pytest.mark.usefixtures('client_class')
 class TestActivities:
@@ -31,12 +33,32 @@ class TestActivities:
             assert res.status_code == status_code
 
 
+    def test_activities_api_works(self, admin, app):
+        res = self.client.get(url_for('api.api_activities_country'))
+        assert res.status_code == 200
+        assert len(json.loads(res.data)["activities"]) == 10
+
+
+    def test_filters_api_works(self, admin, app):
+        res = self.client.get(url_for('api.api_activities_filters'))
+        assert res.status_code == 200
+        assert len(json.loads(res.data)["filters"]) == 8
+
+
 @pytest.mark.usefixtures('client_class')
 class TestActivitiesLoad(LiveServerClass):
     def test_activities_load(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activities', _external=True))
-        WebDriverWait(selenium, 10).until(
-            EC.presence_of_element_located((By.ID, 'activities_count'))
-        )
+        try:
+            WebDriverWait(selenium, 10).until(
+                EC.presence_of_element_located((By.ID, 'activities_count'))
+            )
+        except TimeoutException as ex:
+            # print messages
+            print("----LOGS----")
+            for entry in selenium.get_log('browser'):
+                print(entry)
+            print("----LOGS----")
+            raise TimeoutException
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"
         assert len(selenium.find_elements(By.XPATH, "//table/tbody/tr")) == 10

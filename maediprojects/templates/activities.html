@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row">
   <div class="col-md-10">
-    <h1>{{ _('Activities') }}: <span id="activities_loading" v-if="isBusy">loading...</span><span id="activities_count" v-else>[[ projects.length ]] found</span>
+    <h1>{{ _('Activities') }}: <span id="activities_loading" v-if="isBusy">loading...</span><span id="activities_count" v-else>[[ projects.length ]] found</span></h1>
   </div>
   <div class="col-md-2">
     {% if loggedinuser.permissions_dict.domestic_external_edit != "none" %}
@@ -12,7 +12,7 @@
       <i class="fas fa-plus"></i>
       {{ _('New activity') }}
     </a>
-    {% endif %}</h1>
+    {% endif %}
   </div>
 </div>
 <hr />
@@ -44,7 +44,7 @@
                   <template slot="first">
                     <option value="all" selected>{{ _('Select all') }}</option>
                   </template>
-                </select>
+                </b-select>
               </b-form-group>
 
               <b-form-group
@@ -132,7 +132,7 @@
             label-cols-md="4"
             label-align-md="right"
             label-for="per-page">
-            <b-select v-model="perPage" :options="[20,50,100,500,1000]" id="per-page" />
+            <b-select v-model="perPage" :options="[20,50,100,500,1000]" id="per-page"></b-select>
           </b-form-group>
         </b-col>
       </b-row>
@@ -141,13 +141,13 @@
 </div>
 
 <script type="text/javascript">
-var activity_dates = {{ dates|tojson }};
-var activity_base_url = "{{ activity_base_url }}"
+var activity_dates = {{ activity_dates|tojson }};
+var activity_base_url = "{{ url_for('activities.activities', _external=True) }}"
 var activity_api_url = "{{ url_for('api.api_activities_country', _external=True) }}"
 var activities_filters_url = "{{ url_for('api.api_activities_filters', _external=True) }}"
 </script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/11.0.3/nouislider.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/11.0.3/nouislider.min.js"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='packages/nouislider/distribute/nouislider.min.css')}}">
+<script src="{{url_for('static', filename='packages/nouislider/distribute/nouislider.min.js')}}"></script>
 
 {% endblock %}
 

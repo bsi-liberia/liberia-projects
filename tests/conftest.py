@@ -13,7 +13,6 @@ from maediprojects.query.generate_xlsx import xlsx_to_csv, import_xls
 from maediprojects.query import activity as qactivity
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 import time
 import base64
 
@@ -71,6 +70,8 @@ def selenium_login(app, selenium):
 @pytest.fixture
 def chrome_options(request, chrome_options):
     chrome_options.add_argument('--headless')
+    chrome_options.add_experimental_option('w3c', False)
+    chrome_options.set_capability('goog:loggingPrefs', { 'browser':'ALL' })
     return chrome_options
 
 
