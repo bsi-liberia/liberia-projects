@@ -1,3 +1,4 @@
+*.sublime-*
 .DS_Store
 *.pyc
 pyenv
