@@ -8,22 +8,22 @@
     <title>{% block title %}{% endblock %} | Liberia Project Dashboard</title>
 
     <!-- Load required Bootstrap and BootstrapVue CSS -->
-    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='packages/bootstrap/dist/css/bootstrap.min.css')}}" />
+    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='packages/bootstrap-vue/dist/bootstrap-vue.min.css')}}" />
 
     <!-- Load polyfills to support older browsers -->
     <script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver" crossorigin="anonymous"></script>
 
     <!-- Load Vue followed by BootstrapVue -->
-    <script src="//unpkg.com/vue/dist/vue.min.js"></script>
-    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+    <script src="{{url_for('static', filename='packages/vue/dist/vue.min.js')}}"></script>
+    <script src="{{url_for('static', filename='packages/bootstrap-vue/dist/bootstrap-vue.min.js')}}"></script>
 
-    <script src="//unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="{{url_for('static', filename='packages/axios/dist/axios.min.js')}}"></script>
 
-    <script src="//unpkg.com/lodash@4.16.0/lodash.min.js"></script>
+    <script src="{{url_for('static', filename='packages/lodash/lodash.min.js')}}"></script>
 
     <link href="{{url_for('static', filename='css/style.css')}}?v=20190222" media="all" rel="stylesheet" type="text/css" />
-    <link href="{{url_for('static', filename='vendor/fontawesome-free-5.10.1-web/css/all.css')}}" media="all" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static', filename='packages/@fortawesome/fontawesome-free/css/all.css')}}" media="all" rel="stylesheet" type="text/css" />
     <style>
     .flashmessage {
         display:none;

@@ -146,8 +146,8 @@ var activity_base_url = "{{ activity_base_url }}"
 var activity_api_url = "{{ url_for('api.api_activities_country', _external=True) }}"
 var activities_filters_url = "{{ url_for('api.api_activities_filters', _external=True) }}"
 </script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/11.0.3/nouislider.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/11.0.3/nouislider.min.js"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='packages/noUiSlider/distribute/nouislider.min.css')}}">
+<script src="{{url_for('static', filename='packages/noUiSlider/distribute/nouislider.min.js')}}"></script>
 
 {% endblock %}
 
