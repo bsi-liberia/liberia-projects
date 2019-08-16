@@ -22,6 +22,7 @@ from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
 from maediprojects.query import import_iati as qimport_iati
+from maediprojects.query import monitoring as qmonitoring
 from maediprojects.lib import util
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
 from maediprojects.lib.util import MONTHS_QUARTERS
@@ -50,6 +51,36 @@ def api():
     return jsonify(
         activities = url_for('api.api_activities_country', _external=True)
     )
+
+
+@blueprint.route("/api/reporting_orgs.json")
+@login_required
+def api_get_reporting_orgs():
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    ros_fiscal_years = qmonitoring.forwardspends_ros("current")
+    ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
+    ros_disbursements = qmonitoring.fydata_ros("todate")
+    def annotate_ro(ro):
+        _ro = ro.as_dict()
+        _ro["activities_count"] = ro.activities_count
+        _ro["forwardspends"] = {
+            "current": ros_fiscal_years.get(ro.id, 0.00),
+            "previous": ros_fiscal_years_previous.get(ro.id, 0.00)
+        }
+        _ro["disbursements"] = {
+            "Q1": ros_disbursements.get((ro.id, u"Q1"), 0.00),
+            "Q2": ros_disbursements.get((ro.id, u"Q2"), 0.00),
+            "Q3": ros_disbursements.get((ro.id, u"Q3"), 0.00),
+            "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
+        }
+        return _ro
+
+    return jsonify(
+        orgs=list(map(lambda ro: annotate_ro(ro), reporting_orgs)),
+        current_year = util.FY("current").fy_fy(),
+        previous_year = util.FY("previous").fy_fy(),
+        list_of_quarters = util.Last4Quarters().list_of_quarters()
+        )
 
 
 @blueprint.route("/api/activities/filters.json")
