@@ -22,6 +22,12 @@ bootstrap3.body {
     display: none;
   }
 }
+#reportingOrgDataQuality .far.fa-times-circle.text-secondary {
+  opacity: 0.5;
+}
+#reportingOrgDataQuality th.table-light, #reportingOrgDataQuality td.table-light {
+  background-color: #f2f2f2
+}
 .select-fg .form-control-feedback {
   right: 45px !important;
 }
