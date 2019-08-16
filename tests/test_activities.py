@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import time
 from conftest import LiveServerClass
+import json
 
 @pytest.mark.usefixtures('client_class')
 class TestActivities:
@@ -29,6 +30,18 @@ class TestActivities:
         for route, status_code in routes:
             res = self.client.get(route)
             assert res.status_code == status_code
+
+
+    def test_activities_api_works(self, admin, app):
+        res = self.client.get(url_for('api.api_activities_country'))
+        assert res.status_code == 200
+        assert len(json.loads(res.data)["activities"]) == 10
+
+
+    def test_filters_api_works(self, admin, app):
+        res = self.client.get(url_for('api.api_activities_filters'))
+        assert res.status_code == 200
+        assert len(json.loads(res.data)["filters"]) == 8
 
 
 @pytest.mark.usefixtures('client_class')
