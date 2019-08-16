@@ -53,7 +53,6 @@ def activities():
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
         ]
-    activity_base_url = url_for("activities.activities", _external=True)
     earliest, latest = qactivity.get_earliest_latest_dates()
     if (earliest == latest) and (earliest != None):
         latest += datetime.timedelta(days=1)
@@ -65,7 +64,6 @@ def activities():
                 reporting_orgs=reporting_orgs,
                 codelists=filters_codelists,
                 loggedinuser=current_user,
-                activity_base_url = activity_base_url,
                 dates=dates
     )
 
