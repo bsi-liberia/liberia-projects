@@ -659,6 +659,17 @@ class Organisation(db.Model):
             cascade="all, delete-orphan",
             backref="organisation")
 
+    @hybrid_property
+    def activities_count(self):
+        return len(self.activities_as_reporting_org) #.count()
+
+    @activities_count.expression
+    def activities_count(cls):
+        return (select([func.count(Activity.id)]).
+                where(Activity.reporting_org_id == cls.id).
+                label("activities_count")
+                )
+
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
