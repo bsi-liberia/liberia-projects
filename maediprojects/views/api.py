@@ -55,7 +55,7 @@ def api():
 
 @blueprint.route("/api/reporting_orgs.json")
 @login_required
-def api_get_reporting_orgs():
+def reporting_orgs():
     reporting_orgs = qorganisations.get_reporting_orgs()
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
