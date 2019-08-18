@@ -1,7 +1,7 @@
 import datetime
 import functools
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 
 from maediprojects import models
@@ -10,6 +10,12 @@ from maediprojects.lib import util
 
 
 blueprint = Blueprint('reports', __name__, url_prefix='/', static_folder='../static')
+
+
+@blueprint.route("/reports/dataquality/")
+@login_required
+def dataquality_redir():
+    return redirect(url_for('management.management'))
 
 
 @blueprint.route("/reports/milestones/")
