@@ -146,8 +146,11 @@ def user(request, app, client):
 
 
 def pytest_selenium_capture_debug(item, report, extra):
-    for log_type in extra:
-        if log_type["name"] == "Screenshot":
-            content = base64.b64decode(log_type["content"].encode("utf-8"))
+    for log_entry in extra:
+        if log_entry["name"] == "Screenshot":
+            content = base64.b64decode(log_entry["content"].encode("utf-8"))
             with open(item.name + ".png", "wb") as f:
                 f.write(content)
+        else:
+            if log_entry["name"] == "Browser Log":
+                print("Console:", log_entry["content"].encode("utf-8"))
