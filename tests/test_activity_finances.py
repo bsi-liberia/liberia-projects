@@ -31,7 +31,17 @@ def add_activity_finances(self, app, selenium, selenium_login):
 
 @pytest.mark.usefixtures('client_class')
 class TestActivity:
-    def test_auth_routes_work(self, user):
+    def test_auth_routes_work_user(self, user):
+        routes = [
+            (url_for('api.api_activity_finances', activity_id=1), 302),
+            (url_for('api.api_activity_finances', activity_id=2), 302),
+        ]
+        for route, status_code in routes:
+            res = self.client.get(route)
+            assert res.status_code == status_code
+
+
+    def test_auth_routes_work_admin(self, admin):
         routes = [
             (url_for('api.api_activity_finances', activity_id=1), 200),
             (url_for('api.api_activity_finances', activity_id=2), 200),

@@ -22,7 +22,18 @@ class TestActivities:
             assert res.status_code == status_code
 
 
-    def test_auth_routes_work(self, user):
+    def test_auth_routes_work_user(self, user):
+        routes = [
+            (url_for('activities.dashboard'), 200),
+            (url_for('activities.activities'), 200),
+            (url_for('activities.activity_new'), 302),
+        ]
+        for route, status_code in routes:
+            res = self.client.get(route)
+            assert res.status_code == status_code
+
+
+    def test_auth_routes_work_admin(self, admin):
         routes = [
             (url_for('activities.dashboard'), 200),
             (url_for('activities.activities'), 200),
@@ -61,7 +72,8 @@ class TestActivitiesLoad(LiveServerClass):
             print("----LOGS----")
             raise TimeoutException
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"
-        assert len(selenium.find_elements(By.XPATH, "//table/tbody/tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr td a span.fas.fa-edit")) == 0
 
     def test_activities_load(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activities', _external=True))
@@ -77,4 +89,5 @@ class TestActivitiesLoad(LiveServerClass):
             print("----LOGS----")
             raise TimeoutException
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"
-        assert len(selenium.find_elements(By.XPATH, "//table/tbody/tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr td a span.fas.fa-edit")) == 10
