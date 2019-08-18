@@ -234,24 +234,6 @@ def list_activities():
     acts = models.Activity.query.all()
     return acts
 
-def get_stats(current_user):
-    activities = list_activities_user(current_user)
-    return {
-        "count": len(activities)
-    }
-
-def list_activities_user(current_user):
-    # FIXME Simplify this by removing this function -- all requests
-    # for activities should be passed through filter..._for_permissions
-    if(hasattr(current_user, "id") and (not current_user.administrator)):
-        query = models.Activity.query.filter_by(
-        user_id = current_user.id
-        )
-    else:
-        query = models.Activity.query
-    query = filter_activities_for_permissions(query)
-    return query.all()
-
 def list_activities_by_country(recipient_country_code):
     acts = models.Activity.query.filter_by(
         recipient_country_code=recipient_country_code

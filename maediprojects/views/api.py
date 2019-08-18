@@ -114,10 +114,7 @@ def api_activities_filters():
 @blueprint.route("/api/activities/")
 def api_activities_country():
     arguments = request.args.to_dict()
-    if arguments:
-        activities = qactivity.list_activities_by_filters(arguments)
-    else:
-        activities = qactivity.list_activities_user(current_user)
+    activities = qactivity.list_activities_by_filters(arguments)
     activity_commitments, activity_disbursements, activity_projected_disbursements = qactivity.activity_C_D_FSs()
     def round_or_zero(value):
         if not value: return 0
