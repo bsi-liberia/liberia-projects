@@ -58,14 +58,14 @@ class TestActivityLogLoads(LiveServerClass):
 class TestDataQualityLoads(LiveServerClass):
 
     def test_data_quality_loads(self, app, selenium, selenium_login):
-        selenium.get(url_for('reports.dataquality', _external=True))
+        selenium.get(url_for('management.dataquality', _external=True))
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#reportingOrgs tbody tr'))
         )
         assert len(selenium.find_elements(By.CSS_SELECTOR, '#reportingOrgs tbody tr')) == 1
 
     def test_data_quality_correct(self, app, selenium, selenium_login):
-        selenium.get(url_for('reports.dataquality', _external=True))
+        selenium.get(url_for('management.dataquality', _external=True))
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#reportingOrgs tbody tr'))
         )
