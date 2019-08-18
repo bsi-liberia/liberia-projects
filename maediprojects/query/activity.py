@@ -145,6 +145,7 @@ def create_activity_for_test(data, user_id):
     act.title = unicode(data.get(u"Activity Title"))
     act.description = u""
     act.recipient_country_code = u"LR"
+    act.domestic_external = u"external"
     act.user_id = user_id
     db.session.add(act)
     db.session.commit()
