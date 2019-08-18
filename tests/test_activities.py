@@ -4,7 +4,6 @@ import warnings
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
 import time
 from conftest import LiveServerClass
 import json
@@ -77,17 +76,9 @@ class TestActivitiesLoad(LiveServerClass):
 
     def test_activities_load(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activities', _external=True))
-        try:
-            WebDriverWait(selenium, 10).until(
-                EC.presence_of_element_located((By.ID, 'activities_count'))
-            )
-        except TimeoutException as ex:
-            # print messages
-            print("----LOGS----")
-            for entry in selenium.get_log('browser'):
-                print(entry)
-            print("----LOGS----")
-            raise TimeoutException
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.ID, 'activities_count'))
+        )
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"
         assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr")) == 10
         assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr td a span.fas.fa-edit")) == 10
