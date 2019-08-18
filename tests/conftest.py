@@ -29,9 +29,13 @@ def app():
         create_codes_codelists()
         import_countries(u"en")
 
+        user_user_dict = app.config["USER"]
+        user_user = addUser(user_user_dict)
+        assert models.User.query.get(user_user.id).username == user_user_dict["username"]
+
         user_dict = app.config["ADMIN_USER"]
         user = addUser(user_dict)
-        _db.session.commit()
+        assert models.User.query.get(user.id).username == user_dict["username"]
         # Confirm everything was set up properly
         assert models.User.query.get(user.id).username == user_dict["username"]
         assert len(models.User.query.get(user.id).permissions) == 2
@@ -39,6 +43,7 @@ def app():
         assert models.User.query.get(user.id).permissions[1].permission_name == "domestic_external_edit"
         assert len(models.User.query.get(user.id).permissions_dict) == 3
         assert models.User.query.get(user.id).permissions_dict["organisations"] == {}
+
         with app.test_client() as client:
             client.post(url_for('users.login'), data=user_dict)
             import_test_data(user.id)
@@ -54,17 +59,26 @@ class LiveServerClass:
     time.sleep(3)
     pass
 
-@pytest.fixture()
-def selenium_login(app, selenium):
+def _do_login(user_dict, selenium):
     time.sleep(1)
-    user_dict = app.config["ADMIN_USER"]
     selenium.get(url_for('users.login', _external=True))
+    assert models.User.query.filter_by(username=user_dict["username"]).first()
     selenium.find_element_by_name("username").send_keys(user_dict["username"])
     selenium.find_element_by_name("password").send_keys(user_dict["password"])
     selenium.find_element_by_id("submit").click()
     wait = WebDriverWait(selenium, 10)
     element = wait.until(EC.title_is("Dashboard | Liberia Project Dashboard"))
-    yield selenium
+    return selenium
+
+
+@pytest.fixture()
+def selenium_login(app, selenium):
+    yield _do_login(app.config["ADMIN_USER"], selenium)
+
+
+@pytest.fixture()
+def selenium_login_user(app, selenium):
+    yield _do_login(app.config["USER"], selenium)
 
 
 @pytest.fixture
@@ -115,7 +129,7 @@ def admin(request, app, client):
 
 @pytest.fixture(scope='function')
 def user(request, app, client):
-    user_dict = app.config["USER"]
+    user_dict = app.config["USER_2"]
     user = addUser(user_dict)
     # Confirm user created
     assert models.User.query.get(user.id)
