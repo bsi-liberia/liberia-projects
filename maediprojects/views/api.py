@@ -83,6 +83,49 @@ def reporting_orgs():
         )
 
 
+@blueprint.route("/api/reporting_orgs/summary.json")
+@login_required
+def reporting_orgs_summary():
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    ros_fiscal_years = qmonitoring.forwardspends_ros("current")
+    ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
+    ros_disbursements = qmonitoring.fydata_ros("todate")
+    def annotate_ro(ro):
+        _ro = ro.as_dict()
+        _ro["activities_count"] = ro.activities_count
+        _ro["forwardspends"] = {
+            "current": ros_fiscal_years.get(ro.id, 0.00),
+            "previous": ros_fiscal_years_previous.get(ro.id, 0.00)
+        }
+        _ro["disbursements"] = {
+            "Q1": ros_disbursements.get((ro.id, u"Q1"), 0.00),
+            "Q2": ros_disbursements.get((ro.id, u"Q2"), 0.00),
+            "Q3": ros_disbursements.get((ro.id, u"Q3"), 0.00),
+            "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
+        }
+        return _ro
+
+    orgs = list(map(lambda ro: annotate_ro(ro), reporting_orgs))
+
+    def generate_summary(list_of_quarters, orgs):
+        out = dict(map(lambda q: (q, { True: 0, False: 0, "Total": 0 }), list_of_quarters.keys()))
+        for ro in orgs:
+            for disb_q, disb_v in ro["disbursements"].items():
+                out[disb_q][disb_v>0] += 1
+                out[disb_q]["Total"] += 1
+        return out
+
+    list_of_quarters = util.Last4Quarters().list_of_quarters()
+    summary = generate_summary(list_of_quarters, orgs)
+
+    return jsonify(
+        summary=summary,
+        current_year = util.FY("current").fy_fy(),
+        previous_year = util.FY("previous").fy_fy(),
+        list_of_quarters = list_of_quarters
+        )
+
+
 @blueprint.route("/api/activities/filters.json")
 def api_activities_filters():
     reporting_orgs = qorganisations.get_reporting_orgs()
