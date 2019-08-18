@@ -25,7 +25,33 @@ new Vue({
         'latest_date': new Date(activity_dates['latest']).toISOString().split("T")[0]
       },
       projects: [],
-      fields: [
+      fields: []
+    }
+  },
+  mounted: function() {
+    this.setupDates()
+    this.setupFilters()
+    // this.queryProjectsData()
+    this.$refs.slider.noUiSlider.on('update',(values, handle) => {
+      this.selectedFilters[handle ? 'latest_date' : 'earliest_date'] = values[handle];
+    });
+    window.addEventListener('hashchange', () => {
+      this.setupHashFilters()
+    }, false);
+  },
+  watch: {
+    selectedFilters: {
+      deep: true,
+      handler() {
+        window.location.hash = this.filtersHash
+        this.queryProjectsData()
+        this.updateSlider()
+      }
+    }
+  },
+  methods: {
+    makeFields: function(projects) {
+      var _fields = [
         {
           key: 'title',
           sortable: true
@@ -57,40 +83,27 @@ new Vue({
           key: 'updated_date',
           label: "Last updated",
           sortable: true
-        },
-        {
-          key: 'edit',
-          sortable: false
-        },
-        {
-          key: 'delete',
-          sortable: false
         }]
-    }
-  },
-  mounted: function() {
-    console.log("Hello from logging!")
-    this.setupDates()
-    this.setupFilters()
-    // this.queryProjectsData()
-    this.$refs.slider.noUiSlider.on('update',(values, handle) => {
-      this.selectedFilters[handle ? 'latest_date' : 'earliest_date'] = values[handle];
-    });
-    window.addEventListener('hashchange', () => {
-      this.setupHashFilters()
-    }, false);
-  },
-  watch: {
-    selectedFilters: {
-      deep: true,
-      handler() {
-        window.location.hash = this.filtersHash
-        this.queryProjectsData()
-        this.updateSlider()
+
+      var edit_permissions = projects.map(
+          item =>  {
+            return item.permissions.edit
+          })
+
+      if (edit_permissions.includes(true)) {
+        _fields.push({
+            key: 'edit',
+            sortable: false
+          })
+        _fields.push({
+            key: 'delete',
+            sortable: false
+          })
       }
-    }
-  },
-  methods: {
+      return _fields
+
+
+    },
     confirmDelete: function(delete_url) {
         this.$bvModal.msgBoxConfirm('Are you sure you want to delete this activity? This action cannot be undone!', {
           title: 'Confirm delete',
@@ -194,6 +207,7 @@ new Vue({
           params: this.nonDefaultFilters
         })
         .then(response => {
+          this.fields = this.makeFields(response.data.activities)
           this.projects = response.data.activities
           this.isBusy = false
           this.totalRows = this.projects.length
