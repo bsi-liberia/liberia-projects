@@ -76,6 +76,7 @@
                 {% if loggedinuser.administrator %}
                 <li><a href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</a></li>
                 <li><a href="{{ url_for('users.users') }}">{{ _('Users') }}</a></li>
+                <li><a href="{{ url_for('management.management') }}" {% if active_page == "management" %}class="active"{% endif %}>{{ _('Management overview') }}</a></li>
                 {% endif %}
                 <li><a href="{{ url_for('users.logout')}} ">{{ _('Logout') }}</a></li>
               </ul>

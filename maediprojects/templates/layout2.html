@@ -67,6 +67,7 @@
                 {% if loggedinuser.administrator %}
                 <b-dropdown-item href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</b-dropdown-item>
                 <b-dropdown-item href="{{ url_for('users.users') }}">{{ _('Users') }}</b-dropdown-item>
+                <b-dropdown-item href="{{ url_for('management.management') }}" {% if active_page == "management" %}active{% endif %}>{{ _('Management overview') }}</b-dropdown-item>
                 {% endif %}
                 <b-dropdown-item href="{{ url_for('users.logout')}} ">{{ _('Logout') }}</b-dropdown-item>
             </b-nav-item-dropdown>
