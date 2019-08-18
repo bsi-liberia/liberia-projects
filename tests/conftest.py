@@ -11,11 +11,13 @@ from tests.config import SQLALCHEMY_DATABASE_URI as TEST_DATABASE_URI
 from werkzeug.datastructures import FileStorage
 from maediprojects.query.generate_xlsx import xlsx_to_csv, import_xls
 from maediprojects.query import activity as qactivity
+from maediprojects.query.location import import_locations_from_file
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import base64
 
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 @pytest.fixture(scope="session")
 def app():
@@ -28,6 +30,8 @@ def app():
         _db.create_all()
         create_codes_codelists()
         import_countries(u"en")
+        import_locations_from_file(os.path.join(basedir, "artefacts", "LR.zip"), "LR")
+        print os.path.abspath(os.path.join(basedir, "artefacts", "LR.zip"))
 
         user_user_dict = app.config["USER"]
         user_user = addUser(user_user_dict)
