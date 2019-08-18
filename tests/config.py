@@ -35,7 +35,8 @@ USER = {
     "organisation": u"YOUR_USER_ORG",
     "recipient_country_code": u"LR",
     "administrator": False,
-    "domestic_external": "external"
+    "domestic_external": "external",
+    "domestic_external_edit": "none"
 }
 USER_2 = {
     "username": u"user2",
@@ -45,7 +46,8 @@ USER_2 = {
     "organisation": u"YOUR_USER_ORG2",
     "recipient_country_code": u"LR",
     "administrator": False,
-    "domestic_external": "external"
+    "domestic_external": "external",
+    "domestic_external_edit": "none"
 }
 MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
