@@ -81,11 +81,8 @@ def delete_location(activity_id, location_id):
         return True
     return False
 
-# Called when setting up individual countries
-def import_locations(country_code):
-    """Downloads geolocations from Geonames."""
-    r = requests.get(GEONAMES_URL % country_code)
-    zipfile = ZipFile(StringIO(r.content))
+
+def _process_locations_import(zipfile, country_code):
     csv = unicodecsv.DictReader(zipfile.open("%s.txt" % country_code),
                                 fieldnames=GEONAMES_FIELDNAMES,
                                 dialect='excel-tab',
@@ -104,3 +101,20 @@ def import_locations(country_code):
             location.admin3_code = row["admin3_code"]
             db.session.add(location)
     db.session.commit()
+
+
+# Called when setting up individual countries
+def import_locations_from_file(file_path, country_code):
+    """Downloads geolocations from Geonames."""
+    #fn = open(file_path, "rb")
+    zipfile = ZipFile(file_path)
+    _process_locations_import(zipfile, country_code)
+
+
+# Called when setting up individual countries
+def import_locations(country_code):
+    """Downloads geolocations from Geonames."""
+    r = requests.get(GEONAMES_URL % country_code)
+    zipfile = ZipFile(StringIO(r.content))
+
+    _process_locations_import(zipfile, country_code)
