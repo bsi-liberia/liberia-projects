@@ -62,8 +62,7 @@ def _test_text_field(self, app, selenium, selenium_login, field_selector, field_
 
 
 @pytest.mark.usefixtures('client_class')
-class TestActivityLoads(LiveServerClass):
-
+class TestActivityEditor(LiveServerClass):
     def test_activity_editor_loads(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activity_edit', activity_id=2, _external=True))
         WebDriverWait(selenium, 10).until(
@@ -92,3 +91,33 @@ class TestActivityLoads(LiveServerClass):
 
     def test_activity_editor_implementing_org_edit(self, app, selenium, selenium_login):
         _test_select_field(self, app, selenium, selenium_login, By.CSS_SELECTOR, ".organisations div:nth-child(2) select", "1", "3")
+
+
+@pytest.mark.usefixtures('client_class')
+class TestActivityEditorLocations(LiveServerClass):
+    def test_activity_locations(self, app, selenium, selenium_login):
+        selenium.get(url_for('activities.activity_edit', activity_id=2, _external=True))
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.ID, 'locationTab'))
+        )
+        selenium.find_element(By.ID, "locationTab").click()
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#locationSelector a.list-group-item'))
+        )
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "#locationSelector a.list-group-item")) > 1
+
+    def test_add_activity_location(self, app, selenium, selenium_login):
+        selenium.get(url_for('activities.activity_edit', activity_id=2, _external=True))
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.ID, 'locationTab'))
+        )
+        selenium.find_element(By.ID, "locationTab").click()
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#locationSelector a.list-group-item'))
+        )
+        # Click on the first element in the location selector
+        selenium.find_element(By.CSS_SELECTOR, "#locationSelector a.list-group-item").click()
+        time.sleep(2)
+        # Check it was shown to be active, and that the location map has one marker now
+        assert "active" in selenium.find_element(By.CSS_SELECTOR, "#locationSelector a.list-group-item").get_attribute("class")
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "#locationMap .leaflet-marker-pane img")) == 1
