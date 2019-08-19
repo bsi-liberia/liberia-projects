@@ -9,6 +9,7 @@ from maediprojects.extensions import db
 import organisations as qorganisations
 import activity as qactivity
 import send_email as qsend_email
+from smtplib import SMTPRecipientsRefused
 
 import datetime
 import uuid
@@ -311,12 +312,17 @@ And copy/paste the following password reset key into the box:
 
 
 def make_password_reset_key(email_address):
-    user = user_by_email_address(request.form["email_address"])
-    if not user:
-        send_unknown_user_password_reset_email(email_address)
-    else:
-        user.reset_password_key = uuid.uuid4().hex
-        user.reset_password_expiry = datetime.datetime.now() + datetime.timedelta(days=1)
-        db.session.add(user)
-        db.session.commit()
-        send_user_password_reset_email(email_address, user)
+    try:
+        user = user_by_email_address(request.form["email_address"])
+        if not user:
+            send_unknown_user_password_reset_email(email_address)
+        else:
+            user.reset_password_key = uuid.uuid4().hex
+            user.reset_password_expiry = datetime.datetime.now() + datetime.timedelta(days=1)
+            db.session.add(user)
+            db.session.commit()
+            send_user_password_reset_email(email_address, user)
+        return True
+    except SMTPRecipientsRefused:
+        flash("Could not send an email to that address. Please confirm you provided a valid email address and try again. The email address you provided was: {}".format(email_address), "danger")
+        return False
