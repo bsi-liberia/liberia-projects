@@ -11,6 +11,7 @@ from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import import_psip_transactions as qimport_psip_transactions
+from maediprojects.query import user as quser
 from maediprojects.lib import util
 
 
@@ -24,11 +25,15 @@ def allowed_file(filename):
 
 # Legacy URL
 @blueprint.route("/export/")
+@login_required
+@quser.permissions_required("view")
 def export_redirect():
     return redirect(url_for("exports.export"))
 
 
 @blueprint.route("/exports/")
+@login_required
+@quser.permissions_required("view")
 def export():
     reporting_orgs = qorganisations.get_reporting_orgs()
     available_fys_fqs = util.available_fy_fqs_as_dict()
@@ -51,6 +56,7 @@ def export():
 
 @blueprint.route("/exports/import_psip/", methods=["POST", "GET"])
 @login_required
+@quser.permissions_required("edit")
 def import_psip_transactions():
     if request.method == "GET": return(redirect(url_for('activities.export')))
     if 'file' not in request.files:
@@ -72,6 +78,7 @@ def import_psip_transactions():
 
 @blueprint.route("/exports/import/", methods=["POST", "GET"])
 @login_required
+@quser.permissions_required("edit")
 def import_template():
     if request.method == "GET": return(redirect(url_for('activities.export')))
     if 'file' not in request.files:
@@ -109,30 +116,39 @@ def import_template():
     return redirect(url_for('exports.export'))
 
 @blueprint.route("/exports/activities.csv")
+@login_required
+@quser.permissions_required("view")
 def activities_csv():
     data = qgenerate_csv.generate_csv()
     data.seek(0)
     return Response(data, mimetype="text/csv")
 
 @blueprint.route("/exports/activities_external_transactions.xlsx")
+@login_required
+@quser.permissions_required("view")
 def activities_xlsx_transactions():
     data = qgenerate_xlsx.generate_xlsx_transactions(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @blueprint.route("/exports/activities_external.xlsx")
+@login_required
+@quser.permissions_required("view")
 def activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @blueprint.route("/exports/activities_all.xlsx")
+@login_required
+@quser.permissions_required("view")
 def all_activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx()
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @blueprint.route("/exports/activities_filtered.xlsx")
+@login_required
 def all_activities_xlsx_filtered():
     arguments = request.args.to_dict()
     data = qgenerate_xlsx.generate_xlsx_filtered(arguments)
@@ -141,6 +157,8 @@ def all_activities_xlsx_filtered():
 
 @blueprint.route("/exports/export_template.xlsx")
 @blueprint.route("/exports/export_template/<organisation_id>.xlsx")
+@login_required
+@quser.permissions_required("view")
 def export_donor_template(organisation_id=None, mtef=False, currency=u"USD"):
     if request.args.get('mtef'):
         fyfq_string = u"MTEF Forward Projections"
