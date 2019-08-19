@@ -116,7 +116,7 @@ new Vue({
             window.location = delete_url;
           })
           .catch(err => {
-            alert("Sorry, there was an erorr, and that activity couldn't be deleted.")
+            alert("Sorry, there was an error, and that activity couldn't be deleted.")
           })
     },
     updateSlider: function() {
@@ -162,28 +162,27 @@ new Vue({
       });
     },
     setupHashFilters() {
-      if (window.location.hash) {
-        params = window.location.hash.split("?")[1].split("&");
-        var hashFilters = params.reduce(
-            (obj, item) => {
-              var _item = item.split("=")
-              obj[_item[0]]= _item[1]
-              return obj
-            },
-            {})
-        Object.keys(hashFilters).forEach(key => {
-          if (hashFilters[key] != undefined) {
-            Vue.set(this.selectedFilters, key, hashFilters[key])
-          }
-        })
-        Object.keys(this.defaultFilters).forEach(key => {
-          if (!(key in hashFilters)) {
-            Vue.set(this.selectedFilters, key, this.defaultFilters[key])
-          }
-        })
-      } else {
-        this.selectedFilters = this.defaultFilters
+      if (!(window.location.hash)) {
+        window.location.hash="#?"
       }
+      params = window.location.hash.split("?")[1].split("&");
+      var hashFilters = params.reduce(
+          (obj, item) => {
+            var _item = item.split("=")
+            obj[_item[0]]= _item[1]
+            return obj
+          },
+          {})
+      Object.keys(hashFilters).forEach(key => {
+        if (hashFilters[key] != undefined) {
+          Vue.set(this.selectedFilters, key, hashFilters[key])
+        }
+      })
+      Object.keys(this.defaultFilters).forEach(key => {
+        if (!(key in hashFilters)) {
+          Vue.set(this.selectedFilters, key, this.defaultFilters[key])
+        }
+      })
     },
     setupFilters() {
       this.setupHashFilters()
