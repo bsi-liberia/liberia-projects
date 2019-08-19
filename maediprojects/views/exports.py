@@ -131,11 +131,11 @@ def activities_xlsx_transactions():
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@blueprint.route("/exports/activities_external.xlsx")
+@blueprint.route("/exports/activities_<domestic_external>.xlsx")
 @login_required
 @quser.permissions_required("view")
-def activities_xlsx():
-    data = qgenerate_xlsx.generate_xlsx(u"domestic_external", u"external")
+def activities_xlsx(domestic_external="external"):
+    data = qgenerate_xlsx.generate_xlsx_filtered({"domestic_external": domestic_external})
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
@@ -143,7 +143,7 @@ def activities_xlsx():
 @login_required
 @quser.permissions_required("view")
 def all_activities_xlsx():
-    data = qgenerate_xlsx.generate_xlsx()
+    data = qgenerate_xlsx.generate_xlsx_filtered()
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
