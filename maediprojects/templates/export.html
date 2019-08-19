@@ -3,13 +3,23 @@
 {% block content %}
 
 <h1>{{ _('Export data in Excel format') }}</h1>
+{% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
 <p class="lead">Download all data according to the AMCU Excel export format.</p>
-<p><a class="btn btn-sm btn-primary" href="{{url_for('exports.activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+<p><a class="btn btn-sm btn-primary" href="{{url_for('exports.activities_xlsx', domestic_external='external')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+{% endif %}
+{% if loggedinuser.permissions_dict["domestic_external"] in ('domestic', 'both') %}
+<p class="lead">Download all data according to the PIU Excel export format.</p>
+<p><a class="btn btn-sm btn-primary" href="{{url_for('exports.activities_xlsx', domestic_external='domestic')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+{% endif %}
+{% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
 <h2>Advanced download formats</h2>
 <p class="lead">Download detailed AMCU financial transactions data for analysis.</p>
 <p><a class="btn btn-sm btn-default" href="{{url_for('exports.activities_xlsx_transactions')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+{% endif %}
+{% if loggedinuser.permissions_dict["domestic_external"] in ('both') %}
 <p class="lead">Download integrated dataset of AMCU and PSIP projects.</p>
 <p><a class="btn btn-sm btn-default" href="{{url_for('exports.all_activities_xlsx')}}"><span class="glyphicon glyphicon-download-alt"></span> {{ _('Download Excel') }}</a></p>
+{% endif %}
 <hr />
 {% if loggedinuser.permissions_dict["domestic_external_edit"] in ('external', 'both') %}
 <h1>{{ _('Excel reporting templates') }}</h1>
