@@ -482,35 +482,15 @@ def import_xls(input_file, column_name=u"2018 Q1 (D)"):
     db.session.commit()
     return num_updated_activities
 
-def generate_xlsx(filter_key=None, filter_value=None):
-    disbFYs = generate_disb_fys()
-    _headers = headers + disbFYs
-    writer = xlsxDictWriter(_headers)
-    writer.writesheet("Data")
-    writer.writeheader()
-    cl_lookups = get_codelists_lookups()
-    if (filter_key and filter_value):
-        activities = qactivity.list_activities_by_filters(
-            {filter_key: filter_value})
-    else:
-        activities = qactivity.list_activities()
-    for activity in activities:
-        writer.writerow(activity_to_json(activity, cl_lookups))
-    writer.delete_first_sheet()
-    return writer.save()
-
-def generate_xlsx_filtered(arguments):
+def generate_xlsx_filtered(arguments={}):
     disbFYs = generate_disb_fys()
     _headers = headers + disbFYs
     writer = xlsxDictWriter(_headers)
     writer.writesheet(u"Data")
     writer.writeheader()
     cl_lookups = get_codelists_lookups()
-    if (arguments):
-        activities = qactivity.list_activities_by_filters(
-            arguments)
-    else:
-        activities = qactivity.list_activities()
+    activities = qactivity.list_activities_by_filters(
+        arguments)
     for activity in activities:
         writer.writerow(activity_to_json(activity, cl_lookups))
     writer.delete_first_sheet()
