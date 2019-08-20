@@ -61,8 +61,8 @@
           </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
             {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
-            <b-nav-item href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
-            <b-nav-item href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
+            <b-nav-item {% if active_page == "export" %} active{% endif %} href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
+            <b-nav-item {% if active_page == "help" %} active{% endif %} href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
             {% endif %}
             <b-nav-item-dropdown text="{{ loggedinuser.username }}" right>
                 <b-dropdown-item href="{{ url_for('users.profile') }}">{{ _('Profile') }}</b-dropdown-item>
