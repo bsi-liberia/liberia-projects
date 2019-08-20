@@ -23,8 +23,11 @@
     </template>
     <p class="text-muted">"Reported" is defined as any value reported within the relevant quarter. A total of 39 organisations are registered in the system to provide data.</p>
     <p>
-      <b-btn variant="primary"
-        href="{{ url_for('management.dataquality') }}">See detailed breakdown by organisation <i class="fa fa-arrow-right"></i></b-btn>
+      <b-btn variant="warning"
+        href="{{ url_for('management.dataquality') }}">
+        <i class="fa fa-clipboard-list"></i>
+          See detailed breakdown by organisation
+      </b-btn>
     </p>
   </b-col>
 </b-row>
