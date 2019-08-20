@@ -39,35 +39,25 @@ def export():
     available_fys_fqs = util.available_fy_fqs_as_dict()
     previous_fy_fq = util.column_data_to_string(util.previous_fy_fq())
     currencies = qexchangerates.get_currencies()
-    def make_expanded():
-        budget_preparation_month = 3
-        if datetime.datetime.utcnow().date().month == budget_preparation_month:
-            return {"mtef": " in", "disbursements": ""}
-        else:
-            return {"mtef": "", "disbursements": " in "}
-    expanded = make_expanded()
     return render_template("export.html",
-                loggedinuser = current_user,
-                funding_orgs=reporting_orgs,
-                previous_fy_fq = previous_fy_fq,
-                available_fys_fqs = available_fys_fqs,
-                currencies = currencies,
-                expanded = expanded)
+                loggedinuser = current_user)
 
 @blueprint.route("/exports/import_psip/", methods=["POST", "GET"])
 @login_required
 @quser.permissions_required("edit")
-def import_psip_transactions():
-    if request.method == "GET": return(redirect(url_for('activities.export')))
+def import_psip_transactions(fiscal_year=None):
+    if request.method == "GET": return(redirect(url_for('exports.export')))
     if 'file' not in request.files:
         flash('Please select a file.', "warning")
         return redirect(request.url)
+    if 'fiscal_year' in request.form and request.form['fiscal_year'] != '':
+        fiscal_year = request.form.get('fiscal_year')
     file = request.files['file']
     if file.filename == '':
         flash('Please select a file.', "warning")
         return redirect(request.url)
     if file and allowed_file(file.filename):
-        result = qimport_psip_transactions.import_transactions_from_upload(file)
+        result = qimport_psip_transactions.import_transactions_from_upload(file, fiscal_year)
         if result > 0: flash("{} activities successfully updated!".format(result), "success")
         else: flash("""No activities were updated. Ensure that projects have the correct
         IFMIS project code specified under the "project code" field.""", "warning")
@@ -80,7 +70,7 @@ def import_psip_transactions():
 @login_required
 @quser.permissions_required("edit")
 def import_template():
-    if request.method == "GET": return(redirect(url_for('activities.export')))
+    if request.method == "GET": return(redirect(url_for('exports.export')))
     if 'file' not in request.files:
         flash('Please select a file.', "warning")
         return redirect(request.url)
@@ -89,7 +79,7 @@ def import_template():
         flash('Please select a file.', "warning")
         return redirect(request.url)
     if file and allowed_file(file.filename):
-        if request.args.get('mtef'):
+        if request.form.get('template_type') == 'mtef':
             result = qgenerate_xlsx.import_xls_mtef(file)
             if result > 0: flash("{} activities successfully updated!".format(result), "success")
             else: flash("""No activities were updated. No updated MTEF projections
@@ -97,8 +87,8 @@ def import_template():
             contains update MTEF projections data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
             below.""", "warning")
-        elif request.args.get('mtef') == None:
-            fy_fq = request.form['fy_fq']
+        elif request.form.get('template_type') == 'disbursements':
+            fy_fq = util.previous_fy_fq() #FIXME request.form['fy_fq']
             # For each sheet: convert to dict
             # For each line in each sheet:
             # Process (financial data) import column
@@ -159,15 +149,18 @@ def all_activities_xlsx_filtered():
 @blueprint.route("/exports/export_template/<organisation_id>.xlsx")
 @login_required
 @quser.permissions_required("view")
-def export_donor_template(organisation_id=None, mtef=False, currency=u"USD"):
-    if request.args.get('mtef'):
+def export_donor_template(organisation_id=None, mtef=False, currency=u"USD", headers=None):
+    if request.args.get('template') == 'mtef':
         fyfq_string = u"MTEF Forward Projections"
         mtef = True
     else:
         fyfq_string = util.column_data_to_string(util.previous_fy_fq())
         mtef = False
-    currency = request.args.get("currency", u"USD")
-    if organisation_id:
+    currency = request.args.get("currency_code", u"USD")
+    organisation_id = request.args.get('reporting_organisation_id', None)
+    headers = request.args.get("headers", "")
+    headers = headers.split(",")
+    if organisation_id and organisation_id != "all":
         reporting_org_name = qorganisations.get_organisation_by_id(
             organisation_id).name
         filename = "AMCU {} Template {}.xlsx".format(fyfq_string, reporting_org_name)
@@ -182,7 +175,8 @@ def export_donor_template(organisation_id=None, mtef=False, currency=u"USD"):
         activities = defaultdict(list)
         for a in all_activities:
             activities[a.reporting_org.name].append(a)
-    data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef, currency)
+    data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef, currency, headers)
+    if not data: return redirect(url_for('exports.export'))
     data.seek(0)
     return send_file(data, as_attachment=True, attachment_filename=filename,
         cache_timeout=5)
