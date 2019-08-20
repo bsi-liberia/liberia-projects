@@ -13,7 +13,9 @@
     "leaflet": "^1.5.1",
     "lodash": "^4.17.15",
     "nouislider": "^14.0.2",
+    "sortablejs": "^1.10.0-rc3",
     "vue": "^2.6.10",
-    "vue-scrollto": "^2.15.0"
+    "vue-scrollto": "^2.15.0",
+    "vuedraggable": "^2.23.0"
   }
 }
