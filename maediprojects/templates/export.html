@@ -253,5 +253,7 @@
 {% endblock %}
 
 {% block vuejs %}
+<script src="{{url_for('static', filename='packages/sortablejs/Sortable.min.js')}}"></script>
+<script src="{{url_for('static', filename='packages/vuedraggable/dist/vuedraggable.umd.min.js')}}"></script>
 <script src="{{url_for('static', filename='js/export.js')}}" type="text/javascript"></script>
 {% endblock %}
