@@ -81,17 +81,45 @@ def activity_to_json(activity, cl_lookups):
     data.update(dict(map(lambda d: (d, 0.00), list(filter(lambda h: h not in data, generate_disb_fys())))))
     return data
 
-def generate_disb_fys():
-    #FIXME don't hard code start year
+
+def disb_fy_fqs(start=2013):
+    disbFYs_QTRs = [("{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
+             "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
+             ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
+    return [item for sublist in disbFYs_QTRs for item in sublist]
+
+
+def disb_fy_fqs_with_mtefs(start=2013):
     disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
                      "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy),
                      "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
                      "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
-                     ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
+             ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
+    return [item for sublist in disbFYs_QTRs for item in sublist]
+
+
+def mtef_fy_fqs(start=datetime.datetime.utcnow().year+1, end=False):
     MTEFFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
                      "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy)
-                     ) for fy in range(datetime.datetime.utcnow().year+1, datetime.datetime.utcnow().year+4)]
-    return [item for sublist in disbFYs_QTRs for item in sublist]+[item for sublist in MTEFFYs_QTRs for item in sublist]
+                     ) for fy in range(start, {False: start+3, True: end}[bool(end)])]
+    return [item for sublist in MTEFFYs_QTRs for item in sublist]
+
+
+def mtef_fys(start=datetime.datetime.utcnow().date().year,
+        end=datetime.datetime.utcnow().date().year+3):
+    return [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(start, end)]
+
+
+def counterpart_fys(start=datetime.datetime.utcnow().date().year,
+        end=datetime.datetime.utcnow().date().year+1):
+    return [u"FY{}/{} (GoL counterpart fund request)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(start, end)]
+
+
+def generate_disb_fys():
+    #FIXME don't hard code start year
+    disbFYs_QTRs = disb_fy_fqs_with_mtefs()
+    MTEFFYs_QTRs = mtef_fy_fqs()
+    return disbFYs_QTRs+MTEFFYs_QTRs
 
 def generate_csv():
     csv_file = StringIO.StringIO()
