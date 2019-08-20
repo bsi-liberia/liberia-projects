@@ -3,6 +3,11 @@
 {% block content %}
 <div id="reportingOrgDataQuality">
   <b-row>
+    <b-col>
+      <b-breadcrumb :items="breadcrumbItems"></b-breadcrumb>
+    </b-col>
+  </b-row>
+  <b-row>
     <b-col cols="9">
       <h1>{{ _('Data quality') }}</h1>
       <p class="lead">This page shows a simple summary of reporting by
@@ -103,6 +108,16 @@ new Vue({
       items: [],
       quarters: [],
       isBusy: true,
+      breadcrumbItems: [
+        {
+          text: 'Management',
+          href: '/management/'
+        },
+        {
+          text: 'Data Quality',
+          active: true
+        }
+      ],
       displayOptions: [
         {
           'text': 'Checklist',
