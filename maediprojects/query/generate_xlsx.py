@@ -5,7 +5,7 @@ from io import BytesIO
 import re
 import openpyxl
 from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
+from openpyxl.utils import get_column_letter, column_index_from_string
 from openpyxl.writer.excel import save_virtual_workbook
 from openpyxl.worksheet.datavalidation import DataValidation
 from flask import flash
@@ -19,7 +19,8 @@ from maediprojects.query import activity as qactivity
 from maediprojects.query import finances as qfinances
 from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.lib import xlsx_to_csv, util
+from maediprojects.query import generate_csv as qgenerate_csv
+from maediprojects.lib import xlsx_to_csv, util, spreadsheet_headers
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.codelist_helpers import codelists
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
@@ -496,22 +497,31 @@ def generate_xlsx_filtered(arguments={}):
     writer.delete_first_sheet()
     return writer.save()
 
-def generate_xlsx_export_template(data, mtef=False, currency=u"USD"):
-    if mtef:
+def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=None):
+    mtef_cols = filter(lambda col: re.match(r"(.*) \(MTEF\)", col), _headers)
+    disb_cols = filter(lambda col: re.match(r"(.*) Q(.*) \(D\)", col), _headers)
+    counterpart_funding_cols = filter(lambda col: re.match(r"(.*) \(GoL counterpart fund request\)", col), _headers)
+    if mtef and _headers is None:
         current_year = datetime.datetime.utcnow().date().year
-        mtef_cols = [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+3)]
-        counterpart_funding_cols = [u"FY{}/{} (GoL counterpart fund request)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(current_year, current_year+1)]
-        _headers = [u"ID", u"Project code", u"Activity Title"]
+        mtef_cols = qgenerate_csv.mtef_fys()
+        counterpart_funding_cols = qgenerate_csv.counterpart_fys()
+
+        _headers = spreadsheet_headers.headers_disb_template_1
         _headers += counterpart_funding_cols
         _headers += mtef_cols
-        _headers += [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
-    u"County"]
-    else:
+        _headers += spreadsheet_headers.headers_disb_template_2
+        disb_cols = []
+    elif _headers is None:
         mtef_cols = []
         counterpart_funding_cols = []
-        _headers = [u"ID", u"Project code", u"Activity Title", util.previous_fy_fq(),
-    u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
-    u"County",]
+        disb_cols = [util.previous_fy_fq()]
+        _headers = spreadsheet_headers.headers_mtef_template_1
+        _headers += disb_cols
+        _headers += spreadsheet_headers.headers_mtef_template_2
+    for required_field in [u"ID", u"Activity Status", u'Activity Dates (Start Date)', u'Activity Dates (End Date)']:
+        if required_field not in _headers:
+            flash("Error: the field `{}` is required in this export. Please adjust your selected fields and try again!".format(required_field), "danger")
+            return False
     writer = xlsxDictWriter(_headers,
         _type={True: "mtef", False: "disbursements"}[mtef],
         template_currency=currency,
@@ -526,20 +536,32 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD"):
     v_status.errorTitle = 'Activity Status'
     v_status.prompt = 'Please select from the list'
     v_status.promptTitle = 'Activity Status'
+    status_heads = list(map(lambda status_col: _headers.index(status_col)+1,
+        [u'Activity Status']))
 
     v_id = DataValidation(type="whole")
     v_id.errorTitle = "Invalid ID"
     v_id.error = "Please enter a valid ID"
     v_id.promptTitle = 'Liberia Project Dashboard ID'
     v_id.prompt = 'Please do not edit this ID. It is used by the Liberia Project Dashboard to uniquely identify activities.'
+    id_heads = list(map(lambda id_col: _headers.index(id_col)+1,
+        [u'ID']))
 
     v_date = DataValidation(type="date")
     v_date.errorTitle = "Invalid date"
     v_date.error = "Please enter a valid date"
+    date_heads = list(map(lambda date_col: _headers.index(date_col)+1,
+        [u'Activity Dates (Start Date)', u'Activity Dates (End Date)']))
 
     v_number = DataValidation(type="decimal")
     v_number.errorTitle = "Invalid number"
     v_number.error = "Please enter a valid number"
+    counterpart_heads = list(map(lambda number_col: _headers.index(number_col)+1,
+        counterpart_funding_cols))
+    mtef_heads = list(map(lambda number_col: _headers.index(number_col)+1,
+        mtef_cols))
+    disb_heads = list(map(lambda number_col: _headers.index(number_col)+1,
+        disb_cols))
 
     for org_code, activities in sorted(data.items()):
         writer.writesheet(org_code)
@@ -564,51 +586,41 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD"):
                         _date = datetime.datetime.utcnow().date(),
                         value = existing_activity[mtef_year])
             # Convert disbursement data to writer.template_currency
-            if writer.template_currency != u"USD":
-                existing_activity[util.previous_fy_fq()] = qexchangerates.convert_to_currency(
-                    currency = writer.template_currency,
-                    _date = util.previous_fy_fq_date(),
-                    value = existing_activity[util.previous_fy_fq()])
+            for disb_year in disb_cols:
+                if writer.template_currency != u"USD":
+                    existing_activity[disb_year] = qexchangerates.convert_to_currency(
+                        currency = writer.template_currency,
+                        _date = util.get_real_date_from_header(disb_year, "end"),
+                        value = existing_activity[disb_year])
             # Leave in USD always
             for counterpart_year in counterpart_funding_cols:
                 cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
                 existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
             writer.writerow(existing_activity)
-        if mtef == True:
-            for rownum in range(1+1, len(activities)+2):
-                writer.ws.cell(row=rownum,column=4).fill = orangeFill
-                writer.ws.cell(row=rownum,column=5).fill = yellowFill
-                writer.ws.cell(row=rownum,column=6).fill = yellowFill
-                writer.ws.cell(row=rownum,column=7).fill = yellowFill
-                writer.ws.cell(row=rownum,column=4).number_format = u'"USD "#,##0.00'
-                writer.ws.cell(row=rownum,column=5).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
-                writer.ws.cell(row=rownum,column=6).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
-                writer.ws.cell(row=rownum,column=7).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
-            writer.ws.column_dimensions[u"C"].width = 50
-            writer.ws.column_dimensions[u"D"].width = 35
-            writer.ws.column_dimensions[u"E"].width = 18
-            writer.ws.column_dimensions[u"F"].width = 18
-            writer.ws.column_dimensions[u"G"].width = 18
-            writer.ws.column_dimensions[u"H"].width = 18
-            writer.ws.column_dimensions[u"I"].width = 20
-            writer.ws.column_dimensions[u"J"].width = 20
-            v_id.add('A2:A{}'.format(len(activities)+2))
-            v_number.add('D2:G{}'.format(len(activities)+2))
-            v_status.add('H2:H{}'.format(len(activities)+2))
-            v_date.add('I2:J{}'.format(len(activities)+2))
-        elif mtef == False:
-            for rownum in range(1+1, len(activities)+2):
-                writer.ws.cell(row=rownum,column=4).fill = yellowFill
-                writer.ws.cell(row=rownum,column=4).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
-            writer.ws.column_dimensions[u"C"].width = 70
-            writer.ws.column_dimensions[u"D"].width = 18
-            writer.ws.column_dimensions[u"E"].width = 18
-            writer.ws.column_dimensions[u"F"].width = 20
-            writer.ws.column_dimensions[u"G"].width = 20
-            v_id.add('A2:A{}'.format(len(activities)+2))
-            v_number.add('D2:D{}'.format(len(activities)+2))
-            v_status.add('E2:E{}'.format(len(activities)+2))
-            v_date.add('F2:G{}'.format(len(activities)+2))
+        # Formatting
+        writer.ws.column_dimensions[u"C"].width = 50
+        #writer.ws.column_dimensions[u"D"].width = 35
+        for rownum in range(1+1, len(activities)+2):
+            for col in counterpart_heads:
+                writer.ws.cell(row=rownum,column=col).fill = orangeFill
+                writer.ws.cell(row=rownum,column=col).number_format = u'"USD "#,##0.00'
+            for col in mtef_heads + disb_heads:
+                writer.ws.cell(row=rownum,column=col).fill = yellowFill
+                writer.ws.cell(row=rownum,column=col).number_format = u'"{} "#,##0.00'.format(writer.template_currency)
+        for col in mtef_heads + counterpart_heads + disb_heads:
+            writer.ws.column_dimensions[get_column_letter(col)].width = 18
+            v_number.add('{}2:{}{}'.format(get_column_letter(col),
+                get_column_letter(col), len(activities)+2))
+        for col in date_heads:
+            v_date.add('{}2:{}{}'.format(get_column_letter(col),
+                get_column_letter(col), len(activities)+2))
+            writer.ws.column_dimensions[get_column_letter(col)].width = 20
+        for col in id_heads:
+            v_id.add('{}2:{}{}'.format(get_column_letter(col),
+                get_column_letter(col), len(activities)+2))
+        for col in status_heads:
+            v_status.add('{}2:{}{}'.format(get_column_letter(col),
+                get_column_letter(col), len(activities)+2))
     writer.delete_first_sheet()
     return writer.save()
 
