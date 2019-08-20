@@ -285,10 +285,10 @@ def reset_password_with_key():
 def reset_password():
     if request.method == "POST":
         if request.form.get("email_address", "") != "":
-            quser.make_password_reset_key(request.form["email_address"])
-            flash(gettext(u"Sent an email to {} - please check your email for further instructions on how to reset your password.".format(request.form['email_address'])), "success")
-            return redirect(url_for('users.reset_password_with_key',
-                email_address=request.form["email_address"]))
+            if quser.make_password_reset_key(request.form["email_address"]):
+                flash(gettext(u"Sent an email to {} - please check your email for further instructions on how to reset your password.".format(request.form['email_address'])), "success")
+                return redirect(url_for('users.reset_password_with_key',
+                    email_address=request.form["email_address"]))
         else:
             flash(gettext(u"Please enter an email address."), "danger")
     return render_template("reset_password.html",

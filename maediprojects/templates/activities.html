@@ -105,13 +105,14 @@
         </template>
 
         <template slot="[edit]" slot-scope="data">
-          <a :href="activity_base_url + data.item.id + '/edit/'">
+          <a :href="activity_base_url + data.item.id + '/edit/'" v-if="data.item.permissions.edit">
             <span class="fas fa-edit"></span></a>
         </template>
 
         <template slot="[delete]" slot-scope="data">
           <a href="#" class="text-danger"
-            @click.prevent="confirmDelete(activity_base_url + data.item.id + '/delete/')">
+            @click.prevent="confirmDelete(activity_base_url + data.item.id + '/delete/')"
+            v-if="data.item.permissions.edit">
             <span class="fa fa-trash-alt"></span>
           </a>
         </template>

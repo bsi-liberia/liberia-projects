@@ -25,7 +25,33 @@ new Vue({
         'latest_date': new Date(activity_dates['latest']).toISOString().split("T")[0]
       },
       projects: [],
-      fields: [
+      fields: []
+    }
+  },
+  mounted: function() {
+    this.setupDates()
+    this.setupFilters()
+    // this.queryProjectsData()
+    this.$refs.slider.noUiSlider.on('update',(values, handle) => {
+      this.selectedFilters[handle ? 'latest_date' : 'earliest_date'] = values[handle];
+    });
+    window.addEventListener('hashchange', () => {
+      this.setupHashFilters()
+    }, false);
+  },
+  watch: {
+    selectedFilters: {
+      deep: true,
+      handler() {
+        window.location.hash = this.filtersHash
+        this.queryProjectsData()
+        this.updateSlider()
+      }
+    }
+  },
+  methods: {
+    makeFields: function(projects) {
+      var _fields = [
         {
           key: 'title',
           sortable: true
@@ -57,40 +83,27 @@ new Vue({
           key: 'updated_date',
           label: "Last updated",
           sortable: true
-        },
-        {
-          key: 'edit',
-          sortable: false
-        },
-        {
-          key: 'delete',
-          sortable: false
         }]
-    }
-  },
-  mounted: function() {
-    console.log("Hello from logging!")
-    this.setupDates()
-    this.setupFilters()
-    // this.queryProjectsData()
-    this.$refs.slider.noUiSlider.on('update',(values, handle) => {
-      this.selectedFilters[handle ? 'latest_date' : 'earliest_date'] = values[handle];
-    });
-    window.addEventListener('hashchange', () => {
-      this.setupHashFilters()
-    }, false);
-  },
-  watch: {
-    selectedFilters: {
-      deep: true,
-      handler() {
-        window.location.hash = this.filtersHash
-        this.queryProjectsData()
-        this.updateSlider()
+
+      var edit_permissions = projects.map(
+          item =>  {
+            return item.permissions.edit
+          })
+
+      if (edit_permissions.includes(true)) {
+        _fields.push({
+            key: 'edit',
+            sortable: false
+          })
+        _fields.push({
+            key: 'delete',
+            sortable: false
+          })
       }
-    }
-  },
-  methods: {
+      return _fields
+
+
+    },
     confirmDelete: function(delete_url) {
         this.$bvModal.msgBoxConfirm('Are you sure you want to delete this activity? This action cannot be undone!', {
           title: 'Confirm delete',
@@ -103,7 +116,7 @@ new Vue({
             window.location = delete_url;
           })
           .catch(err => {
-            alert("Sorry, there was an erorr, and that activity couldn't be deleted.")
+            alert("Sorry, there was an error, and that activity couldn't be deleted.")
           })
     },
     updateSlider: function() {
@@ -149,28 +162,27 @@ new Vue({
       });
     },
     setupHashFilters() {
-      if (window.location.hash) {
-        params = window.location.hash.split("?")[1].split("&");
-        var hashFilters = params.reduce(
-            (obj, item) => {
-              var _item = item.split("=")
-              obj[_item[0]]= _item[1]
-              return obj
-            },
-            {})
-        Object.keys(hashFilters).forEach(key => {
-          if (hashFilters[key] != undefined) {
-            Vue.set(this.selectedFilters, key, hashFilters[key])
-          }
-        })
-        Object.keys(this.defaultFilters).forEach(key => {
-          if (!(key in hashFilters)) {
-            Vue.set(this.selectedFilters, key, this.defaultFilters[key])
-          }
-        })
-      } else {
-        this.selectedFilters = this.defaultFilters
+      if (!(window.location.hash)) {
+        window.location.hash="#?"
       }
+      params = window.location.hash.split("?")[1].split("&");
+      var hashFilters = params.reduce(
+          (obj, item) => {
+            var _item = item.split("=")
+            obj[_item[0]]= _item[1]
+            return obj
+          },
+          {})
+      Object.keys(hashFilters).forEach(key => {
+        if (hashFilters[key] != undefined) {
+          Vue.set(this.selectedFilters, key, hashFilters[key])
+        }
+      })
+      Object.keys(this.defaultFilters).forEach(key => {
+        if (!(key in hashFilters)) {
+          Vue.set(this.selectedFilters, key, this.defaultFilters[key])
+        }
+      })
     },
     setupFilters() {
       this.setupHashFilters()
@@ -194,6 +206,7 @@ new Vue({
           params: this.nonDefaultFilters
         })
         .then(response => {
+          this.fields = this.makeFields(response.data.activities)
           this.projects = response.data.activities
           this.isBusy = false
           this.totalRows = this.projects.length

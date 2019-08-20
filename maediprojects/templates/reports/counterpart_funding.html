@@ -23,7 +23,7 @@
 				<tr>
 					<td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
 					<td>{{ activity.reporting_org.name }}</td>
-					<td>{% for ministry in activity.classification_data['aligned-ministry-agency']['entries'] %}
+					<td>{% for ministry in activity.classification_data.get('aligned-ministry-agency', {}).get('entries', []) %}
 						{{ ministry.codelist_code.name }}
 					{% endfor %}</td>
 					<td class="number">{{ "{:,.2f}".format(activity._fy_counterpart_funding) }}</td>

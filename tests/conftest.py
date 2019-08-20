@@ -11,11 +11,13 @@ from tests.config import SQLALCHEMY_DATABASE_URI as TEST_DATABASE_URI
 from werkzeug.datastructures import FileStorage
 from maediprojects.query.generate_xlsx import xlsx_to_csv, import_xls
 from maediprojects.query import activity as qactivity
+from maediprojects.query.location import import_locations_from_file
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import base64
 
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 @pytest.fixture(scope="session")
 def app():
@@ -28,10 +30,16 @@ def app():
         _db.create_all()
         create_codes_codelists()
         import_countries(u"en")
+        import_locations_from_file(os.path.join(basedir, "artefacts", "LR.zip"), "LR")
+        print os.path.abspath(os.path.join(basedir, "artefacts", "LR.zip"))
+
+        user_user_dict = app.config["USER"]
+        user_user = addUser(user_user_dict)
+        assert models.User.query.get(user_user.id).username == user_user_dict["username"]
 
         user_dict = app.config["ADMIN_USER"]
         user = addUser(user_dict)
-        _db.session.commit()
+        assert models.User.query.get(user.id).username == user_dict["username"]
         # Confirm everything was set up properly
         assert models.User.query.get(user.id).username == user_dict["username"]
         assert len(models.User.query.get(user.id).permissions) == 2
@@ -39,6 +47,7 @@ def app():
         assert models.User.query.get(user.id).permissions[1].permission_name == "domestic_external_edit"
         assert len(models.User.query.get(user.id).permissions_dict) == 3
         assert models.User.query.get(user.id).permissions_dict["organisations"] == {}
+
         with app.test_client() as client:
             client.post(url_for('users.login'), data=user_dict)
             import_test_data(user.id)
@@ -54,17 +63,26 @@ class LiveServerClass:
     time.sleep(3)
     pass
 
-@pytest.fixture()
-def selenium_login(app, selenium):
+def _do_login(user_dict, selenium):
     time.sleep(1)
-    user_dict = app.config["ADMIN_USER"]
     selenium.get(url_for('users.login', _external=True))
+    assert models.User.query.filter_by(username=user_dict["username"]).first()
     selenium.find_element_by_name("username").send_keys(user_dict["username"])
     selenium.find_element_by_name("password").send_keys(user_dict["password"])
     selenium.find_element_by_id("submit").click()
     wait = WebDriverWait(selenium, 10)
     element = wait.until(EC.title_is("Dashboard | Liberia Project Dashboard"))
-    yield selenium
+    return selenium
+
+
+@pytest.fixture()
+def selenium_login(app, selenium):
+    yield _do_login(app.config["ADMIN_USER"], selenium)
+
+
+@pytest.fixture()
+def selenium_login_user(app, selenium):
+    yield _do_login(app.config["USER"], selenium)
 
 
 @pytest.fixture
@@ -115,7 +133,7 @@ def admin(request, app, client):
 
 @pytest.fixture(scope='function')
 def user(request, app, client):
-    user_dict = app.config["USER"]
+    user_dict = app.config["USER_2"]
     user = addUser(user_dict)
     # Confirm user created
     assert models.User.query.get(user.id)
@@ -132,8 +150,11 @@ def user(request, app, client):
 
 
 def pytest_selenium_capture_debug(item, report, extra):
-    for log_type in extra:
-        if log_type["name"] == "Screenshot":
-            content = base64.b64decode(log_type["content"].encode("utf-8"))
+    for log_entry in extra:
+        if log_entry["name"] == "Screenshot":
+            content = base64.b64decode(log_entry["content"].encode("utf-8"))
             with open(item.name + ".png", "wb") as f:
                 f.write(content)
+        else:
+            if log_entry["name"] == "Browser Log":
+                print("Console:", log_entry["content"].encode("utf-8"))

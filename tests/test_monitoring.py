@@ -12,7 +12,17 @@ import test_activity_finances
 
 @pytest.mark.usefixtures('client_class')
 class TestActivityLog:
-    def test_auth_routes_work(self, user):
+    def test_auth_routes_work_user(self, user):
+        routes = [
+            (url_for('api.activity_log'), 302),
+            (url_for('api.reporting_orgs'), 200)
+        ]
+        for route, status_code in routes:
+            res = self.client.get(route)
+            assert res.status_code == status_code
+
+
+    def test_auth_routes_work_admin(self, admin):
         routes = [
             (url_for('api.activity_log'), 200),
             (url_for('api.reporting_orgs'), 200)
@@ -48,14 +58,14 @@ class TestActivityLogLoads(LiveServerClass):
 class TestDataQualityLoads(LiveServerClass):
 
     def test_data_quality_loads(self, app, selenium, selenium_login):
-        selenium.get(url_for('reports.dataquality', _external=True))
+        selenium.get(url_for('management.dataquality', _external=True))
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#reportingOrgs tbody tr'))
         )
         assert len(selenium.find_elements(By.CSS_SELECTOR, '#reportingOrgs tbody tr')) == 1
 
     def test_data_quality_correct(self, app, selenium, selenium_login):
-        selenium.get(url_for('reports.dataquality', _external=True))
+        selenium.get(url_for('management.dataquality', _external=True))
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#reportingOrgs tbody tr'))
         )

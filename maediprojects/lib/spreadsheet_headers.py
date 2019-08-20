@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 headers = ['Reported by', u'ID', u'Project code',
 u'Domestic/External',
 u'Activity Title', u'Activity Description', u'Activity Status',
@@ -25,6 +24,14 @@ u'Finance Type (Type of Assistance)', u'Aid Type (Aid Modality)',
 u'Last updated date',
 u"Fiscal Year", u"Fiscal Quarter",
 u"Transaction Date", u"Transaction Value", u"Transaction Type"]
+
+
+headers_disb_template_1 = [u"ID", u"Project code", u"Activity Title"]
+headers_disb_template_2 = [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
+    u"County"]
+headers_mtef_template_1 = [u"ID", u"Project code", u"Activity Title"]
+headers_mtef_template_2 = [u'Activity Status', u'Activity Dates (Start Date)', u'Activity Dates (End Date)',
+    u"County",]
 
 fr_headers = ["Société", u"Id. Projet",
 u"Nom du projet pour les instances", u"Non applicable",

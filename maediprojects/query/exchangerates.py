@@ -24,7 +24,7 @@ def convert_to_currency(currency, _date, value):
 def get_currencies():
     c = models.Currency()
     c.code = U"USD"
-    c.name = u"USD"
+    c.name = u"U.S. Dollars"
     currencies = [c]
     currencies+=models.Currency.query.order_by(models.Currency.code.asc()).all()
     return currencies

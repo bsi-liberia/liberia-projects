@@ -4,7 +4,6 @@ import warnings
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
 import time
 from conftest import LiveServerClass
 import json
@@ -22,7 +21,18 @@ class TestActivities:
             assert res.status_code == status_code
 
 
-    def test_auth_routes_work(self, user):
+    def test_auth_routes_work_user(self, user):
+        routes = [
+            (url_for('activities.dashboard'), 200),
+            (url_for('activities.activities'), 200),
+            (url_for('activities.activity_new'), 302),
+        ]
+        for route, status_code in routes:
+            res = self.client.get(route)
+            assert res.status_code == status_code
+
+
+    def test_auth_routes_work_admin(self, admin):
         routes = [
             (url_for('activities.dashboard'), 200),
             (url_for('activities.activities'), 200),
@@ -47,7 +57,7 @@ class TestActivities:
 
 @pytest.mark.usefixtures('client_class')
 class TestActivitiesLoad(LiveServerClass):
-    def test_activities_load(self, app, selenium, selenium_login):
+    def test_activities_load_user(self, app, selenium, selenium_login_user):
         selenium.get(url_for('activities.activities', _external=True))
         try:
             WebDriverWait(selenium, 10).until(
@@ -61,4 +71,14 @@ class TestActivitiesLoad(LiveServerClass):
             print("----LOGS----")
             raise TimeoutException
         assert selenium.find_element(By.ID, "activities_count").text == "10 found"
-        assert len(selenium.find_elements(By.XPATH, "//table/tbody/tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr td a span.fas.fa-edit")) == 0
+
+    def test_activities_load(self, app, selenium, selenium_login):
+        selenium.get(url_for('activities.activities', _external=True))
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.ID, 'activities_count'))
+        )
+        assert selenium.find_element(By.ID, "activities_count").text == "10 found"
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr")) == 10
+        assert len(selenium.find_elements(By.CSS_SELECTOR, "table tbody tr td a span.fas.fa-edit")) == 10

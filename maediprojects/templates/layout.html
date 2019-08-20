@@ -64,8 +64,10 @@
             {% endif %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
+            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
             <li><a href="{{ url_for('exports.export') }}">{{ _('Export data') }}</a></li>
             <li><a href="{{ url_for('documentation.help') }}">{{ _('Help') }}</a></li>
+            {% endif %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               {{ loggedinuser.username }}
@@ -76,6 +78,7 @@
                 {% if loggedinuser.administrator %}
                 <li><a href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</a></li>
                 <li><a href="{{ url_for('users.users') }}">{{ _('Users') }}</a></li>
+                <li><a href="{{ url_for('management.management') }}" {% if active_page == "management" %}class="active"{% endif %}>{{ _('Management overview') }}</a></li>
                 {% endif %}
                 <li><a href="{{ url_for('users.logout')}} ">{{ _('Logout') }}</a></li>
               </ul>

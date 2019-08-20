@@ -5,7 +5,7 @@ import collections
 ALLOWED_YEARS = range(2013, datetime.datetime.utcnow().year+3)
 
 MONTHS_QUARTERS = {
-    1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2, 7: 3, 8: 3, 9: 3, 10: 4, 
+    1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2, 7: 3, 8: 3, 9: 3, 10: 4,
     11: 4, 12: 4
 }
 
@@ -17,7 +17,7 @@ QUARTERS_MONTH_DAY = {
 }
 
 LR_MONTHS_QUARTERS = {
-    1: 3, 2: 3, 3: 3, 4: 4, 5: 4, 6: 4, 7: 1, 8: 1, 9: 1, 10: 2, 
+    1: 3, 2: 3, 3: 3, 4: 4, 5: 4, 6: 4, 7: 1, 8: 1, 9: 1, 10: 2,
     11: 2, 12: 2
 }
 
@@ -108,6 +108,9 @@ def add_one_quarter(from_year, from_quarter):
     else:
         return from_year+1, 1
 
+def available_fys():
+    return ["FY{}/{}".format(str(year), str(year+1)[2:]) for year in ALLOWED_YEARS]
+
 def available_fy_fqs():
     return ["{} Q{} (D)".format(year, quarter) for year in ALLOWED_YEARS for quarter in (1,2,3,4)]
 
@@ -188,8 +191,7 @@ class FY:
 def available_fy_fqs_as_dict():
     return [{'value': fyfqstring,
              'text': column_data_to_string(fyfqstring),
-             'selected': {True: ' selected', 
-                          False: ''}[previous_fy_fq() == fyfqstring]
+             'selected': previous_fy_fq() == fyfqstring
               } for fyfqstring in available_fy_fqs()]
 
 def get_data_from_header(column_name):
@@ -201,10 +203,24 @@ def fy_to_fyfy(fy):
     """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819"""
     return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
 
+def fy_fy_to_fy(fy_fy):
+    """Converts a fiscal year FY2019/20 to e.g. 2019"""
+    result = re.match(r"FY(\d*)/.*", fy_fy).group(1)
+    return int(result)
+
+def fy_fy_to_fyfy_ifmis(fy_fy):
+    """Converts a fiscal year FY2019/20 to IFMIS-style 20192020"""
+    result = re.match(r"FY(\d*)/.*", fy_fy).group(1)
+    return "{}{}".format(int(result), int(result)+1)
+
 def column_data_to_string(column_name):
     fq, fy = get_data_from_header(column_name)
     fyfy = fy_to_fyfy(fy)
     return u"FY{} Q{} Disbursements".format(fyfy, fq)
+
+def get_real_date_from_header(column_name, start_end="start"):
+    fy, fq = get_data_from_header(column_name)
+    return (fq_fy_to_date(int(fy), int(fq), start_end=start_end))
 
 def make_quarters_text(list):
     return [{"quarter_name": "Q{}".format(k),

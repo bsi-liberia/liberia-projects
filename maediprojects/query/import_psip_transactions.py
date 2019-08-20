@@ -15,7 +15,7 @@ def first_or_only(list_or_dict):
     return list_or_dict
 
 
-def make_transactions(activity, project_data):
+def make_transactions(activity, project_data, fiscal_year=None):
     flash("""Updated {} (Project ID: {})""".format(activity.title, activity.id), "success")
     for row in project_data:
         data = {
@@ -34,6 +34,8 @@ def make_transactions(activity, project_data):
                     first_or_only(activity.classification_data["mtef-sector"]["entries"]).codelist_code_id)
             }
         }
+        if (fiscal_year and (fiscal_year != row["fy"])):
+            continue
         if float(row["ORIGINAL_APPROPRIATION"]) != 0:
             data["classifications"] = {
                     "mtef-sector": str(
@@ -73,22 +75,28 @@ def make_transactions(activity, project_data):
 
 
 
-def import_transactions_from_upload(uploaded_file):
+def import_transactions_from_upload(uploaded_file, fiscal_year=None):
     data = xlsx_to_csv.getDataFromFile(
         uploaded_file.filename,
         uploaded_file.read(), 0, True)
-    return import_transactions(data)
+    return import_transactions(data, fiscal_year)
 
 
-def import_transactions_from_file():
+def import_transactions_from_file(fiscal_year=None):
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
         "..", "lib", "import_files", "psip-transactions.xlsx")
     data = xlsx_to_csv.getDataFromFile(
         file_path, open(file_path, "rb").read(), 0, True)
-    return import_transactions(data)
+    return import_transactions(data, fiscal_year)
 
 
-def import_transactions(data):
+def import_transactions(data, fiscal_year):
+    if fiscal_year:
+        fy_start_date = util.fq_fy_to_date(1, util.fy_fy_to_fy(fiscal_year), "start").date()
+        fy_end_date = util.fq_fy_to_date(4, util.fy_fy_to_fy(fiscal_year), "end").date()
+        ifmis_fiscal_year = util.fy_fy_to_fyfy_ifmis(fiscal_year)
+    else:
+        fy_start_date, fy_end_date, ifmis_fiscal_year = None, None, None
     grouped_by_code=defaultdict(list)
     relevant_activities = list(map(lambda a: (a.code[0:4], a), models.Activity.query.filter(
         models.Activity.domestic_external==u'domestic',
@@ -107,13 +115,19 @@ def import_transactions(data):
         if project_code in grouped_by_code:
             print "Importing project code {}".format(project_code)
             if len(grouped_by_code[project_code])>1:
-                print("MORE THAN ONE PROJECT MAPPED TO {}; SKIPPING".format(project_code))
+                flash("Project {} was not imported, as more than one project is mapped to it.".format(project_code), "danger")
             else:
                 existing_activity = grouped_by_code[project_code][0]
                 existing_transactions = existing_activity.finances
                 for transaction in existing_transactions:
-                    db.session.delete(transaction)
+                    if not fiscal_year:
+                        db.session.delete(transaction)
+                    elif (fiscal_year and
+                        (transaction.transaction_date >= fy_start_date) and
+                        (transaction.transaction_date <= fy_end_date)):
+                        db.session.delete(transaction)
                 db.session.commit()
-                make_transactions(existing_activity, project_data)
+                make_transactions(existing_activity, project_data,
+                    ifmis_fiscal_year)
                 updated_projects += 1
     return updated_projects

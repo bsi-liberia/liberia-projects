@@ -27,8 +27,7 @@ def dashboard():
                 reporting_orgs=reporting_orgs,
                 mtef_sectors=sorted(mtef_sectors.items()),
                 aligned_ministry_agencies=sorted(aligned_ministry_agencies.items()),
-                loggedinuser=current_user,
-                stats = qactivity.get_stats(current_user)
+                loggedinuser=current_user
                           )
 
 @blueprint.route("/activities/")

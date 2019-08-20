@@ -9,10 +9,18 @@ from conftest import LiveServerClass
 
 @pytest.mark.usefixtures('client_class')
 class TestActivity:
-    def test_auth_routes_work(self, user):
+    def test_auth_routes_work_user(self, user):
         routes = [
             (url_for('activities.activity', activity_id=1), 200),
-            (url_for('activities.activity_edit', activity_id=1), 200)
+        ]
+        for route, status_code in routes:
+            res = self.client.get(route)
+            assert res.status_code == status_code
+
+
+    def test_auth_routes_work_admin(self, user):
+        routes = [
+            (url_for('activities.activity', activity_id=1), 200),
         ]
         for route, status_code in routes:
             res = self.client.get(route)
@@ -35,10 +43,3 @@ class TestActivityLoads(LiveServerClass):
         )
         assert selenium.find_element(By.CSS_SELECTOR, "#disbursements-table tbody tr td:nth-child(2)"
             ).text == "100.00"
-
-    def test_activity_editor_loads(self, app, selenium, selenium_login):
-        selenium.get(url_for('activities.activity_edit', activity_id=2, _external=True))
-        WebDriverWait(selenium, 10).until(
-            EC.presence_of_element_located((By.ID, 'financesTab'))
-        )
-        assert selenium.find_element(By.TAG_NAME, "h1").text.startswith("Edit activity")

@@ -60,13 +60,16 @@
             {% endif %}
           </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
-            <b-nav-item href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
-            <b-nav-item href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
+            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            <b-nav-item {% if active_page == "export" %} active{% endif %} href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
+            <b-nav-item {% if active_page == "help" %} active{% endif %} href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
+            {% endif %}
             <b-nav-item-dropdown text="{{ loggedinuser.username }}" right>
                 <b-dropdown-item href="{{ url_for('users.profile') }}">{{ _('Profile') }}</b-dropdown-item>
                 {% if loggedinuser.administrator %}
                 <b-dropdown-item href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</b-dropdown-item>
                 <b-dropdown-item href="{{ url_for('users.users') }}">{{ _('Users') }}</b-dropdown-item>
+                <b-dropdown-item href="{{ url_for('management.management') }}" {% if active_page == "management" %}active{% endif %}>{{ _('Management overview') }}</b-dropdown-item>
                 {% endif %}
                 <b-dropdown-item href="{{ url_for('users.logout')}} ">{{ _('Logout') }}</b-dropdown-item>
             </b-nav-item-dropdown>

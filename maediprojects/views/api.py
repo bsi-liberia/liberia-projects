@@ -23,7 +23,7 @@ from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
 from maediprojects.query import import_iati as qimport_iati
 from maediprojects.query import monitoring as qmonitoring
-from maediprojects.lib import util
+from maediprojects.lib import util, spreadsheet_headers
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
 from maediprojects.lib.util import MONTHS_QUARTERS
 from maediprojects import models
@@ -51,6 +51,56 @@ def api():
     return jsonify(
         activities = url_for('api.api_activities_country', _external=True)
     )
+
+@blueprint.route("/api/spreadsheet_headers.json")
+def spreadsheet_field_names():
+    headers = spreadsheet_headers.headers
+    selected_mtef_headers = qgenerate_csv.mtef_fys()
+    mtef_headers = qgenerate_csv.mtef_fys(start=2013, end=2025)
+    selected_disb_headers = [util.previous_fy_fq()]
+    disb_headers = qgenerate_csv.disb_fy_fqs()
+    selected_counterpart_headers = qgenerate_csv.counterpart_fys()
+    counterpart_headers = qgenerate_csv.counterpart_fys(start=2013, end=2025)
+    return jsonify(headers=headers,
+        mtef_headers=mtef_headers,
+        disbursement_headers=disb_headers,
+        counterpart_funding_headers=counterpart_headers,
+        selected={
+            "disbursements": spreadsheet_headers.headers_disb_template_1 + selected_disb_headers + spreadsheet_headers.headers_disb_template_2,
+            "mtef": spreadsheet_headers.headers_mtef_template_1 + selected_counterpart_headers + selected_mtef_headers + spreadsheet_headers.headers_mtef_template_2
+        })
+
+
+@blueprint.route("/api/filters/currency.json")
+def filters_currency():
+    def annotate(currency):
+        _currency = currency.as_dict()
+        _currency["display_name"] = "{} - {}".format(currency.code, currency.name)
+        return _currency
+    return jsonify(currencies=list(map(lambda c: annotate(c), qexchangerates.get_currencies())))
+
+
+@blueprint.route("/api/filters/available_fys_fqs.json")
+def available_fys_fqs():
+    def mtef_or_disbursements():
+        """Set reporting functionality to highlight MTEF or disbursement
+        data import by default, depending on where we are in the year"""
+        budget_preparation_month = 2
+        if datetime.datetime.utcnow().date().month == budget_preparation_month:
+            return "mtef"
+        else:
+            return "disbursements"
+    return jsonify(
+        fys=util.available_fys(),
+        fys_fqs=util.available_fy_fqs_as_dict(),
+        current_fy=util.FY("current").fy_fy(),
+        previous_fy_fq=util.previous_fy_fq(),
+        mtef_or_disbursements=mtef_or_disbursements())
+
+
+@blueprint.route("/api/filters/reporting_organisation.json")
+def filters_reporting_organisation():
+    return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
 
 
 @blueprint.route("/api/reporting_orgs.json")
@@ -80,6 +130,49 @@ def reporting_orgs():
         current_year = util.FY("current").fy_fy(),
         previous_year = util.FY("previous").fy_fy(),
         list_of_quarters = util.Last4Quarters().list_of_quarters()
+        )
+
+
+@blueprint.route("/api/reporting_orgs/summary.json")
+@login_required
+def reporting_orgs_summary():
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    ros_fiscal_years = qmonitoring.forwardspends_ros("current")
+    ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
+    ros_disbursements = qmonitoring.fydata_ros("todate")
+    def annotate_ro(ro):
+        _ro = ro.as_dict()
+        _ro["activities_count"] = ro.activities_count
+        _ro["forwardspends"] = {
+            "current": ros_fiscal_years.get(ro.id, 0.00),
+            "previous": ros_fiscal_years_previous.get(ro.id, 0.00)
+        }
+        _ro["disbursements"] = {
+            "Q1": ros_disbursements.get((ro.id, u"Q1"), 0.00),
+            "Q2": ros_disbursements.get((ro.id, u"Q2"), 0.00),
+            "Q3": ros_disbursements.get((ro.id, u"Q3"), 0.00),
+            "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
+        }
+        return _ro
+
+    orgs = list(map(lambda ro: annotate_ro(ro), reporting_orgs))
+
+    def generate_summary(list_of_quarters, orgs):
+        out = dict(map(lambda q: (q, { True: 0, False: 0, "Total": 0 }), list_of_quarters.keys()))
+        for ro in orgs:
+            for disb_q, disb_v in ro["disbursements"].items():
+                out[disb_q][disb_v>0] += 1
+                out[disb_q]["Total"] += 1
+        return out
+
+    list_of_quarters = util.Last4Quarters().list_of_quarters()
+    summary = generate_summary(list_of_quarters, orgs)
+
+    return jsonify(
+        summary=summary,
+        current_year = util.FY("current").fy_fy(),
+        previous_year = util.FY("previous").fy_fy(),
+        list_of_quarters = list_of_quarters
         )
 
 
@@ -114,10 +207,7 @@ def api_activities_filters():
 @blueprint.route("/api/activities/")
 def api_activities_country():
     arguments = request.args.to_dict()
-    if arguments:
-        activities = qactivity.list_activities_by_filters(arguments)
-    else:
-        activities = qactivity.list_activities_user(current_user)
+    activities = qactivity.list_activities_by_filters(arguments)
     activity_commitments, activity_disbursements, activity_projected_disbursements = qactivity.activity_C_D_FSs()
     def round_or_zero(value):
         if not value: return 0

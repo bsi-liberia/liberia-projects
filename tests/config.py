@@ -31,10 +31,23 @@ USER = {
     "username": u"user",
     "password": u"user",
     "name": u"YOUR_NAME",
-    "email_address": u"YOUR_EMAIL",
-    "organisation": u"YOUR_ORG",
+    "email_address": u"YOUR_USER_EMAIL",
+    "organisation": u"YOUR_USER_ORG",
     "recipient_country_code": u"LR",
-    "administrator": False
+    "administrator": False,
+    "domestic_external": "external",
+    "domestic_external_edit": "none"
+}
+USER_2 = {
+    "username": u"user2",
+    "password": u"user2",
+    "name": u"YOUR_NAME",
+    "email_address": u"YOUR_USER_EMAIL2",
+    "organisation": u"YOUR_USER_ORG2",
+    "recipient_country_code": u"LR",
+    "administrator": False,
+    "domestic_external": "external",
+    "domestic_external_edit": "none"
 }
 MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
