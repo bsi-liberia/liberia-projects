@@ -23,7 +23,7 @@ from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
 from maediprojects.query import import_iati as qimport_iati
 from maediprojects.query import monitoring as qmonitoring
-from maediprojects.lib import util
+from maediprojects.lib import util, spreadsheet_headers
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
 from maediprojects.lib.util import MONTHS_QUARTERS
 from maediprojects import models
@@ -51,6 +51,56 @@ def api():
     return jsonify(
         activities = url_for('api.api_activities_country', _external=True)
     )
+
+@blueprint.route("/api/spreadsheet_headers.json")
+def spreadsheet_field_names():
+    headers = spreadsheet_headers.headers
+    selected_mtef_headers = qgenerate_csv.mtef_fys()
+    mtef_headers = qgenerate_csv.mtef_fys(start=2013, end=2025)
+    selected_disb_headers = [util.previous_fy_fq()]
+    disb_headers = qgenerate_csv.disb_fy_fqs()
+    selected_counterpart_headers = qgenerate_csv.counterpart_fys()
+    counterpart_headers = qgenerate_csv.counterpart_fys(start=2013, end=2025)
+    return jsonify(headers=headers,
+        mtef_headers=mtef_headers,
+        disbursement_headers=disb_headers,
+        counterpart_funding_headers=counterpart_headers,
+        selected={
+            "disbursements": spreadsheet_headers.headers_disb_template_1 + selected_disb_headers + spreadsheet_headers.headers_disb_template_2,
+            "mtef": spreadsheet_headers.headers_mtef_template_1 + selected_counterpart_headers + selected_mtef_headers + spreadsheet_headers.headers_mtef_template_2
+        })
+
+
+@blueprint.route("/api/filters/currency.json")
+def filters_currency():
+    def annotate(currency):
+        _currency = currency.as_dict()
+        _currency["display_name"] = "{} - {}".format(currency.code, currency.name)
+        return _currency
+    return jsonify(currencies=list(map(lambda c: annotate(c), qexchangerates.get_currencies())))
+
+
+@blueprint.route("/api/filters/available_fys_fqs.json")
+def available_fys_fqs():
+    def mtef_or_disbursements():
+        """Set reporting functionality to highlight MTEF or disbursement
+        data import by default, depending on where we are in the year"""
+        budget_preparation_month = 2
+        if datetime.datetime.utcnow().date().month == budget_preparation_month:
+            return "mtef"
+        else:
+            return "disbursements"
+    return jsonify(
+        fys=util.available_fys(),
+        fys_fqs=util.available_fy_fqs_as_dict(),
+        current_fy=util.FY("current").fy_fy(),
+        previous_fy_fq=util.previous_fy_fq(),
+        mtef_or_disbursements=mtef_or_disbursements())
+
+
+@blueprint.route("/api/filters/reporting_organisation.json")
+def filters_reporting_organisation():
+    return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
 
 
 @blueprint.route("/api/reporting_orgs.json")
