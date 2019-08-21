@@ -47,7 +47,9 @@ var MAEDImap = function(elID, options={}) {
     map = new L.Map(elID, {
         center: new L.LatLng(8,1),
         zoom: 5,
-        maxZoom: 15
+        maxZoom: 15,
+        dragging: false,
+        tap: false
     });
     layer_MapBox.addTo(map);
     map.scrollWheelZoom.disable();
