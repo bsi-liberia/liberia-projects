@@ -1,39 +1,118 @@
-{% set active_page='milestones' %}{% extends "layout.html" %}
+{% set active_page='milestones' %}{% extends "layout2.html" %}
 {% block title %}{{ _('Milestones') }}{% endblock %}
 {% block content %}
-<div class="row">
-	<div class="col-md-12">
-		<h1>Project Development and Appraisal Tracking</h1>
-		<table class="table" id="milestones">
-			<thead>
-				<th>Title</th>
-				<th>Implementer</th>
-				{% for milestone in milestones %}
-				<th>{{ milestone.name }}</th>
-				{% endfor %}
-			</thead>
-			<tbody>
-				{% for activity in activities %}
-				<tr>
-					<td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
-					<td>{% for organisation in activity.implementing_organisations %}{{ organisation.name }} {% endfor %}</td>
-					{% for milestone in activity.milestones_data %}
-					<td><span class="label label-{{ milestone.achieved.colour }}"><span class="glyphicon {{ milestone.achieved.icon }}"></span></span><span class="sr-only">{{ milestone.achieved.status }}</span></td>
-					{% endfor %}
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</div>
-</div>
-<script type="text/javascript">
-
-  $("#milestones").tablesorter( {
-      sortList: [[2,1],[3,1],[4,1],[5,1],[6,1],[1,0],[0,0]],
-      theme : "bootstrap",
-      widthFixed: true,
-      headerTemplate : '{content} {icon}',
-      widgets : [ "uitheme"]
-  } );
+<b-row>
+  <b-col md="9">
+    <h1>Project Development and Appraisal Tracking</h1>
+    <p class="lead">The indicators show progress through the project development and appraisal process for [[ activities.length ]] PSIP activities. Appropriations, allotment and actual disbursement columns are restricted to amounts in [[ fy_text ]] only.</p>
+  </b-col>
+  <b-col md="3">
+    <b-form-group label="Select fiscal year"
+      label-class="font-weight-bold">
+      <b-form-select :options="fiscalYears"
+      v-model="fiscalYear">
+      </b-form-select>
+    </b-form-group>
+  </b-col>
+</b-row>
+<b-table class="table" id="milestones" sort-by="Final Proposal"
+    :items="activities" :fields="fields" responsive>
+  <div slot="table-busy" class="text-center">
+    <b-spinner class="align-middle" label="Loading..."></b-spinner>
+    <strong>Loading...</strong>
+  </div>
+  <template slot="[title]" slot-scope="data">
+    <a :href="data.item.url">[[ data.item.title ]]</a>
+  </template>
+  <template :slot="[milestone]" slot-scope="data" v-for="(milestone, milestone_data) in milestones">
+    <i :class="'fas ' + data.item[milestone].icon + ' text-' + data.item[milestone].colour">
+        <span class="sr-only">[[ data.item[milestone].status ]]</span>
+    </i>
+  </template>
+  <template slot="[Appropriation Made]" slot-scope="data">
+    <i class="fas fa-check-circle text-success" v-if="data.item.sum_appropriations > 0">
+        <span class="sr-only">True</span>
+    </i>
+    <i class="fas fa-times-circle text-warning" v-else>
+        <span class="sr-only">False</span>
+    </i>
+  </template>
+  <template slot="[Allotment Made]" slot-scope="data">
+    <i class="fas fa-check-circle text-success" v-if="data.item.sum_allotments > 0">
+        <span class="sr-only">True</span>
+    </i>
+    <i class="fas fa-times-circle text-warning" v-else>
+        <span class="sr-only">False</span>
+    </i>
+  </template>
+  <template slot="[Disbursement Made]" slot-scope="data">
+    <i class="fas fa-check-circle text-success" v-if="data.item.sum_disbursements > 0">
+        <span class="sr-only">True</span>
+    </i>
+    <i class="fas fa-times-circle text-warning" v-else>
+        <span class="sr-only">False</span>
+    </i>
+  </template>
+</v-table>
+{% endblock %}
+{% block vuejs %}
+<script>
+var api_base = "{{ url_for('api.api', _external=True)}}";
+Vue.config.devtools = true
+new Vue({
+  el: "#app",
+  delimiters: ["[[", "]]"],
+  data() {
+    return {
+      fields: [],
+      activities: [],
+      isBusy: true,
+      fiscalYear: '2018',
+      fiscalYears: [],
+      milestones: []
+    }
+  },
+  mounted: function() {
+    this.getReportData()
+  },
+  watch: {
+    fiscalYear: function() {
+      this.getReportData()
+    }
+  },
+  computed: {
+    fy_text() {
+      return `FY${this.fiscalYear.slice(-2)}`
+    }
+  },
+  methods: {
+    numberFormatter(value) {
+      if (value == null) { return "" }
+      return "$" + value.toLocaleString(undefined, {maximumFractionDigits: 0})
+    },
+    getReportData: function() {
+      axios
+        .get(`${api_base}reports/project-development-tracking/`, {
+          params: { fiscal_year: this.fiscalYear }
+        })
+        .then((response) => {
+          this.activities = response.data.activities
+          this.milestones = response.data.milestones
+          this.fields = [ "title", "implementer", "First Draft", "Revised Draft Submitted",
+            "Final Proposal", "Appropriation Made", "Allotment Made",
+            "Disbursement Made" ].map(item=>
+            {
+              return {
+                key: item,
+                sortable: true
+              }
+            })
+          // this.fields = ['title'].concat(response.data.milestones)
+          this.fiscalYears = response.data.fiscalYears
+          this.isBusy = false
+        });
+    }
+  }
+})
 </script>
 {% endblock %}
