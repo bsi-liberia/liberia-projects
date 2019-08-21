@@ -260,6 +260,9 @@ td.number, th.number {
   .navbar-brand {
     font-size: 1rem;
   }
+  .bootstrap3 .navbar-brand {
+    font-size: 1.7rem
+  }
   .intro {
     padding-right: 0px;
     padding-bottom: 0px;

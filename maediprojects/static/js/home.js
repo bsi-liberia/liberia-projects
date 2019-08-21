@@ -4,7 +4,7 @@
     pieOptions["cuts"]["fy"] = year;
     thisPieChart.setData(pieOptions);
   });
-  
+
   var makeTitle = function(str) {
     return str.charAt(0).toUpperCase() + str.substr(1);
   }
@@ -32,8 +32,8 @@
       'data': d3.nest()
         .key(function(d) { return d.name; })
         .rollup(function(v) { return {
-          "Commitments": d3.sum(v, function(d) { return d.Commitments; }), 
-          "Disbursements": d3.sum(v, function(d) { return d.Disbursements; }), 
+          "Commitments": d3.sum(v, function(d) { return d.Commitments; }),
+          "Disbursements": d3.sum(v, function(d) { return d.Disbursements; }),
           "Disbursement Projection": d3.sum(v, function(d) { return d["Disbursement Projection"]; })
         }; })
         .entries(data.sectors)
@@ -77,7 +77,7 @@
       .on("change", function() { changeChart(this)} )
 
     function changeChart(obj) {
-      _entries = function() { 
+      _entries = function() {
         if (obj.value.length == 4) {
           return data.sectors.filter(function(d) {
             return (d.fy == obj.value);
@@ -85,12 +85,12 @@
         } else {
           return data.sectors;
         }
-      } 
+      }
       optionsCDC['data'] = d3.nest()
         .key(function(d) { return d.name; })
         .rollup(function(v) { return {
-          Commitments: d3.sum(v, function(d) { return d.Commitments; }), 
-          Disbursements: d3.sum(v, function(d) { return d.Disbursements; }), 
+          Commitments: d3.sum(v, function(d) { return d.Commitments; }),
+          Disbursements: d3.sum(v, function(d) { return d.Disbursements; }),
           "Disbursement Projection": d3.sum(v, function(d) { return d["Disbursement Projection"]; })
         }; })
         .entries(_entries())
@@ -123,7 +123,7 @@
           .key(function(d) { return d.name; })
           .key(function(d) { return d.domestic_external; })
           .rollup(function(v) { return {
-            Commitments: d3.sum(v, function(d) { return Math.max(d.Commitments, 0); }), 
+            Commitments: d3.sum(v, function(d) { return Math.max(d.Commitments, 0); }),
             Disbursements: d3.sum(v, function(d) { return Math.max(d.Disbursements, 0); })
           }; })
           .entries(data.sectors)
@@ -169,6 +169,7 @@
       }
       cdDomesticBarChart = new barChart("#commitments-disbursements-domestic-chart", options);
 
+      /*
       var pieOptions;
       d3.json("/api/sectors.json", function(error, data) {
         pieOptions = {
@@ -180,9 +181,10 @@
         }
         thisPieChart = new pieChart("#sectors-pie", pieOptions);
       });
+      */
     }
   });
-  
+
   // LOCATIONS
   var locationsMap;
 
