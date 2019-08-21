@@ -99,7 +99,7 @@ new Vue({
       activities: [],
       isBusy: true,
       fiscalYear: '2018',
-      fiscalYears: ['2015', '2016', '2017', '2018', '2019', '2020']
+      fiscalYears: []
     }
   },
   mounted: function() {
@@ -137,6 +137,7 @@ new Vue({
           }
           this.activities = response.data.activities
           this.activities.push(timeActivity)
+          this.fiscalYears = response.data.fiscalYears
           this.isBusy = false
         });
     }
