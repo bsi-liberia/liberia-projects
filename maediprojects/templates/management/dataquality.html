@@ -45,7 +45,8 @@
       </b-form-group>
     </b-col>
   </b-row>
-  <b-table id="reportingOrgs" :fields="fields" :items="items" :busy="isBusy" sort-by="name" show-empty>
+  <b-table id="reportingOrgs" :fields="fields" :items="items"
+    :busy="isBusy" sort-by="name" show-empty responsive>
     <div slot="table-busy" class="text-center">
       <b-spinner class="align-middle" label="Loading..."></b-spinner>
       <strong>Loading...</strong>

@@ -29,7 +29,7 @@
 <div class="row">
   <div class="col-md-6">
     <h3>Basic data</h3>
-    <table class="table table-hover table-sm">
+    <table class="table table-hover table-sm" responsive>
       <tbody>
         <tr>
           <td><b>Project code</b></td>
@@ -66,7 +66,7 @@
       </tbody>
     </table>
     <h3>Sectors</h3>
-    <table class="table table-hover table-sm">
+    <table class="table table-hover table-sm" responsive>
       <tbody>
       {% for classification in activity.classification_data.values() %}
         <tr>
@@ -82,7 +82,7 @@
     </table>
     {% if activity.milestones_data %}
     <h3>Milestones</h3>
-    <table class="table table-hover table-sm">
+    <table class="table table-hover table-sm" responsive>
       <tbody>
       {% for milestone in activity.milestones_data %}
         <tr>
@@ -115,7 +115,8 @@
     <b-table class="table financial-table table-sm" id="commitments-table"
       :fields="fiscal_fields" :items="commitment_items"
       sort-by="period"
-      sort-desc="true">
+      sort-desc="true"
+      responsive>
     </b-table>
   </div>
   {% if activity.FY_allotments_dict %}
@@ -124,7 +125,8 @@
     <b-table class="table financial-table table-sm" id="allotments-table"
       :fields="fiscal_fields" :items="allotment_items"
       sort-by="period"
-      sort-desc="true">
+      sort-desc="true"
+      responsive>
     </b-table>
   </div>
   {% endif %}
@@ -133,7 +135,8 @@
     <b-table class="table financial-table table-sm" id="disbursements-table"
       :fields="fiscal_fields" :items="disbursement_items"
       sort-by="period"
-      sort-desc="true">
+      sort-desc="true"
+      responsive>
     </b-table>
   </div>
   {% if activity.FY_forward_spend_dict %}
@@ -142,7 +145,8 @@
     <b-table class="table financial-table table-sm" id="mtef-projections-table"
       :fields="fiscal_fields" :items="forwardspend_items"
       sort-by="period"
-      sort-desc="true">
+      sort-desc="true"
+      responsive>
     </b-table>
   </div>
   {% endif %}
@@ -159,7 +163,7 @@
     <div class="alert alert-info">
       These results were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
     </div>
-    <table class="table">
+    <table class="table table-responsive">
       <thead>
         <th>Title</th>
         <th>From</th>
@@ -204,7 +208,7 @@
     <div class="alert alert-info">
       These documents were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
     </div>
-    <table class="table">
+    <table class="table table-responsive">
       <thead>
         <th width="50%">Title</th>
         <th>Type</th>

@@ -5,10 +5,10 @@
   <div class="col-md-10">
     <h1>{{ _('Activities') }}: <span id="activities_loading" v-if="isBusy">loading...</span><span id="activities_count" v-else>[[ projects.length ]] found</span></h1>
   </div>
-  <div class="col-md-2">
+  <div class="col-md-2 text-center">
     {% if loggedinuser.permissions_dict.domestic_external_edit != "none" %}
     <br />
-    <a class="btn btn-success btn-large pull-right" href="{{url_for('activities.activity_new')}}">
+    <a class="btn btn-success btn-large float-md-right" href="{{url_for('activities.activity_new')}}">
       <i class="fas fa-plus"></i>
       {{ _('New activity') }}
     </a>
@@ -71,8 +71,10 @@
       </b-card>
     </div>
   </div>
-  <div class="col-md-3">
-    <a class="btn btn-primary pull-right" id="download_excel" :href="'{{ url_for('exports.all_activities_xlsx_filtered')}}' + filtersHash"><span class="fas fa-download"></span> Export selection to Excel</a>
+  <div class="col-md-3 text-center">
+    <a class="btn btn-primary float-md-right" id="download_excel" :href="'{{ url_for('exports.all_activities_xlsx_filtered')}}' + filtersHash" style="margin-top:4px;">
+      <span class="fas fa-download"></span> Export selection to Excel
+    </a>
   </div>
 </div>
 <div class="row" style="margin-top:10px;">
@@ -91,7 +93,8 @@
         :filterIncludedFields="filterIncludedFields"
         sort-by="updated_date"
         sort-desc="true"
-        @filtered="onFiltered">
+        @filtered="onFiltered"
+        responsive>
 
         <div slot="table-busy" class="text-center my-2">
           <b-spinner class="align-middle" label="Loading..."></b-spinner>
