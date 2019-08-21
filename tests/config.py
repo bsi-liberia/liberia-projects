@@ -1,6 +1,6 @@
 """Settings module for test app."""
 import os
-
+import datetime
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -49,6 +49,9 @@ USER_2 = {
     "domestic_external": "external",
     "domestic_external_edit": "none"
 }
+# The earliest date shown in many interfaces.
+# Used to filter out partial data from a long / messy dataset.
+EARLIEST_DATE = datetime.date(2013,07,01)
 MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
 LIVESERVER_PORT=8943
