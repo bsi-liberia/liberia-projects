@@ -199,6 +199,14 @@ def get_data_from_header(column_name):
     result = re.match(pattern, column_name).groups()
     return (result[1], result[0])
 
+
+def fys_in_date_range(start_date, end_date):
+    """Returns all the fiscal years between the start and end dates"""
+    start_year, _ = date_to_fy_fq(start_date)
+    end_year, _ = date_to_fy_fq(end_date)
+    return range(start_year, end_year+1)
+
+
 def fy_to_fyfy(fy):
     """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819"""
     return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
