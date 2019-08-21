@@ -1,11 +1,12 @@
 import datetime
 import functools
 
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
 
 from maediprojects import models
 from maediprojects.query import counterpart_funding as qcounterpart_funding
+from maediprojects.query import reports as qreports
 from maediprojects.lib import util
 
 
@@ -71,58 +72,25 @@ def results():
     )
 
 
+@blueprint.route("/api/disbursements/aid/")
+@login_required
+def aid_disbursements_api():
+    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
+    days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
+    progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
+
+    return jsonify(activities=qreports.make_forwardspends_disbursements_data(fiscal_year),
+        progress_time=progress_time,
+        days_since_fy_began=days_since_fy_began,
+        fy_start_day=datetime.datetime.strftime(start_of_fy, "%d.%m.%Y"))
+
+
 @blueprint.route("/reports/disbursements/aid/")
 @login_required
 def aid_disbursements():
-    def filter_relevant(finances, transaction_type=u'D'):
-        year_end = datetime.date(2019, 6, 30)
-        year_start = datetime.date(2018, 7, 1)
-        if hasattr(finances, 'transaction_date'):
-            return bool(
-                (finances.transaction_date <= year_end) and
-                (finances.transaction_date >= year_start) and
-                (finances.transaction_type == transaction_type))
-        elif hasattr(finances, 'period_end_date'):
-            return bool(
-                (finances.period_end_date <= year_end) and
-                (finances.period_end_date >= year_start))
-
-    def make_pct(value1, value2):
-        try:
-            return round((float(value1)/float(value2))*100.0, 2)
-        except Exception:
-            return False
-
-    # Show actual disbursement as % of total
-    # Show time as % of total
-    # Show in-year disbursement as % of mtef projections
-    activities = models.Activity.query.filter_by(
-        domestic_external=u"external").all()
-
-    out = []
-
-    for activity in activities:
-        sum_disbursements = sum(map(lambda l: l.transaction_value, filter(functools.partial(filter_relevant, transaction_type=u"D"), activity.disbursements)))
-        #sum_forwardspends = sum(map(lambda l: l.transaction_value, filter(functools.partial(filter_relevant, transaction_type=u"C"), activity.finances)))
-        sum_forwardspends = sum(map(lambda l: l.value, filter(functools.partial(filter_relevant, transaction_type=u"D"), activity.forwardspends)))
-
-        pct = make_pct(sum_disbursements, sum_forwardspends)
-        if (pct > 0) and (sum_forwardspends > 1000000):
-            act = activity.as_jsonable_dict()
-            act['sum_disbursements'] = "{:,.2f}".format(sum_disbursements),
-            act['sum_forwardspends'] = "{:,.2f}".format(sum_forwardspends),
-            act['disb_forwardspends'] = pct
-            out.append(act)
-    current_year, current_quarter = util.date_to_fy_fq(datetime.datetime.utcnow())
-    start_of_fy = util.fq_fy_to_date(1, current_year, start_end='start')
-    days_since_fy_begin = ((datetime.datetime.utcnow()-start_of_fy).days)
-    progress_time = round(days_since_fy_begin/365.0*100.0, 2)
     return render_template(
         "reports/aid_disbursements.html",
-        activities=out,
-        progress_time=progress_time,
-        days_since_fy_begin=days_since_fy_begin,
-        fy_start_day=datetime.datetime.strftime(start_of_fy, "%d.%m.%Y"),
         loggedinuser=current_user
     )
 
