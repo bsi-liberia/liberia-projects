@@ -12,6 +12,9 @@ bootstrap3.body {
 .draggable-item {
   cursor: pointer;
 }
+.width-25pct {
+  width: 25%;
+}
 @media print
 {
   body {
