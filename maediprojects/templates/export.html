@@ -3,7 +3,7 @@
 {% block content %}
 
 <b-row>
-  <b-col>
+  <b-col md="6">
     <h1>{{ _('Export data in Excel format') }}</h1>
     {% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
     <p class="lead">Download all data according to the AMCU Excel export format.</p>
@@ -25,7 +25,7 @@
     {% endif %}
   </b-col>
   {% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
-  <b-col>
+  <b-col md="6">
     <b-alert show variant="light">
       <h3>Advanced download formats</h3>
       <p class="lead">Download detailed AMCU financial transactions data for analysis.</p>
@@ -174,7 +174,7 @@
 <p></p>
 <b-modal id="customise-fields" title="Customise columns" size="xl" scrollable ok-only>
   <b-row>
-    <b-col cols="8">
+    <b-col md="8">
       <b-card-group columns>
         <b-card>
           <b-form-group label="Basic columns" label-class="font-weight-bold">
@@ -223,7 +223,7 @@
         </b-card>
       </b-card-group>
     </b-col>
-    <b-col cols="4">
+    <b-col md="4">
       <b-card bg-variant="secondary" text-variant="white" header="Selected columns">
         <p>Select columns on the left. Drag below to reorder.</p>
         <draggable v-model="selectedHeaders[selectedTemplateOption]"
