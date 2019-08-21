@@ -2,60 +2,56 @@
 {% block title %}{{ _('PSIP disbursement tracking') }}{% endblock %}
 {% block content %}
 <b-row>
-  <b-col>
-    <b-row>
-      <b-col cols="9">
-        <h1>PSIP disbursement tracking</h1>
-        <p class="lead">Showing [[ activities.length ]] PSIP activities with appropriations over
-        USD 0 million. Appropriations and actual disbursements are restricted to amounts in [[ fy_text ]] only.</p>
-      </b-col>
-      <b-col cols="3">
-        <b-form-group label="Select fiscal year"
-          label-class="font-weight-bold">
-          <b-form-select :options="fiscalYears"
-          v-model="fiscalYear">
-          </b-form-select>
-        </b-form-group>
-      </b-col>
-    </b-row>
-    <b-table class="table" :busy="isBusy" :fields="fields" :items="activities" sort-by="pct" sort-desc="true" :tbody-tr-class="rowClass" responsive>
-      <div slot="table-busy" class="text-center">
-        <b-spinner class="align-middle" label="Loading..."></b-spinner>
-        <strong>Loading...</strong>
-      </div>
-      <template slot="thead-top" slot-scope="data">
-        <b-tr>
-          <b-th colspan="5" class="text-center">Financial reporting for [[ fy_text ]] only</b-th>
-        </b-tr>
-      </template>
-      <template slot="[title]" slot-scope="data">
-        <a :href="data.item.url">[[ data.item.title ]]</a>
-      </template>
-      <template slot="[sum_appropriations]" slot-scope="data">
-        [[ numberFormatter(data.item.sum_appropriations) ]]
-      </template>
-      <template slot="[sum_disbursements]" slot-scope="data">
-        [[ numberFormatter(data.item.sum_disbursements) ]]
-      </template>
-      <template slot="[pct]" slot-scope="data">
-        <template v-if="data.item.isTime">
-          <b-progress :max="100" show-value variant="warning">
-            <b-progress-bar :value="data.item.pct">
-              [[ data.item.pct ]]%
-            </b-progress-bar>
-          </b-progress>
-        </template>
-        <template v-else>
-          <b-progress :max="100" show-value v-if="data.item.pct">
-            <b-progress-bar :value="data.item.pct">
-              [[ data.item.pct ]]%
-            </b-progress-bar>
-          </b-progress>
-        </template>
-      </template>
-    </b-table>
+  <b-col md="9">
+    <h1>PSIP disbursement tracking</h1>
+    <p class="lead">Showing [[ activities.length ]] PSIP activities with appropriations over
+    USD 0 million. Appropriations and actual disbursements are restricted to amounts in [[ fy_text ]] only.</p>
+  </b-col>
+  <b-col md="3">
+    <b-form-group label="Select fiscal year"
+      label-class="font-weight-bold">
+      <b-form-select :options="fiscalYears"
+      v-model="fiscalYear">
+      </b-form-select>
+    </b-form-group>
   </b-col>
 </b-row>
+<b-table class="table" :busy="isBusy" :fields="fields" :items="activities" sort-by="pct" sort-desc="true" :tbody-tr-class="rowClass" responsive>
+  <div slot="table-busy" class="text-center">
+    <b-spinner class="align-middle" label="Loading..."></b-spinner>
+    <strong>Loading...</strong>
+  </div>
+  <template slot="thead-top" slot-scope="data">
+    <b-tr>
+      <b-th colspan="5" class="text-center">Financial reporting for [[ fy_text ]] only</b-th>
+    </b-tr>
+  </template>
+  <template slot="[title]" slot-scope="data">
+    <a :href="data.item.url">[[ data.item.title ]]</a>
+  </template>
+  <template slot="[sum_appropriations]" slot-scope="data">
+    [[ numberFormatter(data.item.sum_appropriations) ]]
+  </template>
+  <template slot="[sum_disbursements]" slot-scope="data">
+    [[ numberFormatter(data.item.sum_disbursements) ]]
+  </template>
+  <template slot="[pct]" slot-scope="data">
+    <template v-if="data.item.isTime">
+      <b-progress :max="100" show-value variant="warning">
+        <b-progress-bar :value="data.item.pct">
+          [[ data.item.pct ]]%
+        </b-progress-bar>
+      </b-progress>
+    </template>
+    <template v-else>
+      <b-progress :max="100" show-value v-if="data.item.pct">
+        <b-progress-bar :value="data.item.pct">
+          [[ data.item.pct ]]%
+        </b-progress-bar>
+      </b-progress>
+    </template>
+  </template>
+</b-table>
 {% endblock %}
 {% block vuejs %}
 <script>
