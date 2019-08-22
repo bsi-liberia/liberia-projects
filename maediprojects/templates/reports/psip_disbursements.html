@@ -2,12 +2,12 @@
 {% block title %}{{ _('PSIP disbursement tracking') }}{% endblock %}
 {% block content %}
 <b-row>
-  <b-col md="9">
+  <b-col lg="9">
     <h1>PSIP disbursement tracking</h1>
     <p class="lead">Showing [[ activities.length ]] PSIP activities with appropriations over
     USD 0 million. Appropriations and actual disbursements are restricted to amounts in [[ fy_text ]] only.</p>
   </b-col>
-  <b-col md="3">
+  <b-col lg="3">
     <b-form-group label="Select fiscal year"
       label-class="font-weight-bold">
       <b-form-select :options="fiscalYears"
