@@ -1,10 +1,11 @@
 {% set active_page='milestones' %}{% extends "layout2.html" %}
-{% block title %}{{ _('Milestones') }}{% endblock %}
+{% block title %}{{ _('Project Development and Appraisal Tracking') }}{% endblock %}
 {% block content %}
 <b-row>
   <b-col md="9">
     <h1>Project Development and Appraisal Tracking</h1>
-    <p class="lead">The indicators show progress through the project development and appraisal process for [[ activities.length ]] PSIP activities. Appropriations, allotment and actual disbursement columns are restricted to amounts in [[ fy_text ]] only.</p>
+    <p class="lead">The indicators show progress through the project development and appraisal process for [[ activities.length ]] PSIP activities.</p>
+    <p class="lead">Appropriations, allotment and actual disbursement columns are restricted to amounts in [[ fy_text ]] only, and are generated automatically based on the latest available financial data.</p>
   </b-col>
   <b-col md="3">
     <b-form-group label="Select fiscal year"
@@ -98,15 +99,17 @@ new Vue({
         .then((response) => {
           this.activities = response.data.activities
           this.milestones = response.data.milestones
-          this.fields = [ "title", "implementer", "First Draft", "Revised Draft Submitted",
-            "Final Proposal", "Appropriation Made", "Allotment Made",
-            "Disbursement Made" ].map(item=>
-            {
-              return {
-                key: item,
-                sortable: true
-              }
-            })
+          this.fields = [ "title", "implementer"].map(item=>
+            { return { key: item, sortable: true }
+            }).concat(
+                ["First Draft", "Revised Draft Submitted",
+            "Final Proposal"].map(item=>
+            { return { key: item, sortable: true, variant: "light", class: "text-center" }
+            })).concat(
+                ["Appropriation Made", "Allotment Made",
+            "Disbursement Made"].map(item=>
+            { return { key: item, sortable: true, class: "text-center" }
+            }))
           // this.fields = ['title'].concat(response.data.milestones)
           this.fiscalYears = response.data.fiscalYears
           this.isBusy = false
