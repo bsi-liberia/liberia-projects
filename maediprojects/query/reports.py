@@ -125,6 +125,11 @@ def make_appropriations_disbursements_data(fiscal_year,
     appropriations = sum_transactions_detail(fiscal_year, appropriations_over,
         domestic_external, 'sum_appropriations', 'C')
     label = 'sum_disbursements'
+    allotments = sum_transactions(fiscal_year, 0, domestic_external, 'sum_allotments', '99-A')
     disbursements = sum_transactions(fiscal_year, 0, domestic_external, label, 'D')
-    return _make_activity_data(appropriations, disbursements,
+    made_data = _make_activity_data(appropriations, disbursements,
         'sum_appropriations', label)
+    def annotate_activity(activity, allotments):
+        activity['sum_allotments'] = allotments.get(activity['id'], 0.00)
+        return activity
+    return [annotate_activity(activity, allotments) for activity in made_data]
