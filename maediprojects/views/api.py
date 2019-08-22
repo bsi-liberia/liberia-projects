@@ -23,6 +23,7 @@ from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
 from maediprojects.query import import_iati as qimport_iati
 from maediprojects.query import monitoring as qmonitoring
+from maediprojects.query import reports as qreports
 from maediprojects.lib import util, spreadsheet_headers
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
 from maediprojects.lib.util import MONTHS_QUARTERS
@@ -51,6 +52,86 @@ def api():
     return jsonify(
         activities = url_for('api.api_activities_country', _external=True)
     )
+
+
+@blueprint.route("/api/disbursements/psip/")
+@login_required
+def psip_disbursements_api():
+    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
+    days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
+    progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
+    start_date, end_date = qactivity.get_earliest_latest_dates_filter(
+        {'key': 'domestic_external', 'val': 'domestic'})
+    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    return jsonify(activities=qreports.make_appropriations_disbursements_data(fiscal_year),
+        progress_time=progress_time,
+        days_since_fy_began=days_since_fy_began,
+        fy_start_day=datetime.datetime.strftime(start_of_fy, "%d.%m.%Y"),
+        fiscalYears=fys)
+
+
+@blueprint.route("/api/disbursements/aid/")
+@login_required
+def aid_disbursements_api():
+    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
+    days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
+    progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
+    start_date, end_date = qactivity.get_earliest_latest_dates_filter(
+        {'key': 'domestic_external', 'val': 'external'})
+    start_date = max(start_date, current_app.config['EARLIEST_DATE'])
+    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+
+    return jsonify(activities=qreports.make_forwardspends_disbursements_data(fiscal_year),
+        progress_time=progress_time,
+        days_since_fy_began=days_since_fy_began,
+        fy_start_day=datetime.datetime.strftime(start_of_fy, "%d.%m.%Y"),
+        fiscalYears=fys)
+
+@blueprint.route("/api/reports/project-development-tracking/")
+@login_required
+def project_development_tracking():
+    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    activities = models.Activity.query.filter_by(
+            domestic_external=u"domestic"
+        ).all()
+    milestones = models.Milestone.query.filter_by(
+            domestic_external=u"domestic"
+        ).order_by(
+            models.Milestone.milestone_order
+        ).all()
+
+    sum_appropriations = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_appropriations', 'C')
+    sum_allotments = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_allotments', '99-A')
+    sum_disbursements = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_disbursements', 'D')
+
+    def annotate_activity(activity):
+        out = {}
+        out = OrderedDict({
+            'id': activity.id,
+            'title': activity.title,
+            'implementer': ", ".join(list(map(lambda io: io.name, activity.implementing_organisations))),
+            'url': url_for('activities.activity',
+                activity_id=activity.id),
+            'sum_appropriations': sum_appropriations.get(activity.id, 0.00),
+            'sum_allotments': sum_allotments.get(activity.id, 0.00),
+            'sum_disbursements': sum_disbursements.get(activity.id, 0.00)
+        })
+        [out.update({ms['name']: ms['achieved']}) for ms in activity.milestones_data]
+        return out
+
+    milestone_data = list(map(lambda a: annotate_activity(a), activities))
+
+    start_date, end_date = qactivity.get_earliest_latest_dates_filter(
+        {'key': 'domestic_external', 'val': 'domestic'})
+    start_date = max(start_date, datetime.date(2018,07,01))
+    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+
+    return jsonify(activities=milestone_data,
+        milestones = list(map(lambda m: m.name, milestones)),
+        fiscalYears = fys)
+
 
 @blueprint.route("/api/spreadsheet_headers.json")
 def spreadsheet_field_names():

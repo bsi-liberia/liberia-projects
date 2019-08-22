@@ -22,10 +22,34 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def get_earliest_latest_dates():
+def force_earliest_latest(earliest, latest):
+    if (earliest == latest) and (earliest != None):
+        latest += datetime.timedelta(days=1)
+        return earliest, latest
+    return datetime.datetime.now().date().isoformat(), (datetime.datetime.now().date() + datetime.timedelta(days=1)).isoformat()
+
+
+def get_earliest_latest_dates(force=False):
     earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)).scalar()
     latest = db.session.query(func.max(models.ActivityFinances.transaction_date)).scalar()
-    return earliest, latest
+    if (not force) or ((earliest != latest) and (earliest != None)):
+        return earliest, latest
+    return force_earliest_latest(earliest, latest)
+
+
+def get_earliest_latest_dates_filter(filter, force=False):
+    earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)
+        ).filter(getattr(models.Activity, filter['key']) == filter['val']
+        ).join(models.Activity, models.ActivityFinances.activity
+        ).scalar()
+    latest = db.session.query(func.max(models.ActivityFinances.transaction_date)
+        ).filter(getattr(models.Activity, filter['key']) == filter['val']
+        ).join(models.Activity, models.ActivityFinances.activity
+        ).scalar()
+    if not force:
+        return earliest, latest
+    return force_earliest_latest(earliest, latest)
+
 
 def activity_C_D_FSs():
     commitments_query = db.session.query(
