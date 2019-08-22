@@ -103,7 +103,7 @@ def project_development_tracking():
         ).all()
 
     sum_appropriations = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_appropriations', 'C')
-    sum_allotments = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_allotments', 'A')
+    sum_allotments = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_allotments', '99-A')
     sum_disbursements = qreports.sum_transactions(fiscal_year, 0, 'domestic', 'sum_disbursements', 'D')
 
     def annotate_activity(activity):
