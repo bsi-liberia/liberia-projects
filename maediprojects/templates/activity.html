@@ -87,7 +87,9 @@
       {% for milestone in activity.milestones_data %}
         <tr>
           <td><b>{{milestone.name }}</b></td>
-          <td><span class="glyphicon {{milestone.achieved.icon}}"></span> {{ milestone.achieved.name }}</td>
+          <td><span class="badge badge-{{milestone.achieved.colour}}">
+            <i class="fa {{milestone.achieved.icon}}"></i> {{ milestone.achieved.name }}
+          </span></td>
         </tr>
       {% endfor %}
       </tbody>
