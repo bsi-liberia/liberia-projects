@@ -23,7 +23,7 @@
   </div>
   <template slot="thead-top" slot-scope="data">
     <b-tr>
-      <b-th colspan="5" class="text-center">Financial reporting for [[ fy_text ]] only</b-th>
+      <b-th colspan="6" class="text-center">Financial reporting for [[ fy_text ]] only</b-th>
     </b-tr>
   </template>
   <template slot="[title]" slot-scope="data">
@@ -80,8 +80,14 @@ new Vue({
           sortable: true
         },
         {
+          key: 'sum_allotments',
+          label: 'Allotments',
+          class: 'number',
+          sortable: true
+        },
+        {
           key: 'sum_disbursements',
-          label: 'Actual disbursements',
+          label: 'Actual Disbursements',
           class: 'number',
           sortable: true
         },
