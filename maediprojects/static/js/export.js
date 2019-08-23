@@ -145,6 +145,10 @@ new Vue({
         }
     },
     mounted: function() {
-        this.setupForm()
-    }
+      if (window.location.hash && window.location.hash.split("#").length>0) {
+        console.log("scrollto", window.location.hash.split("#")[1])
+        VueScrollTo.scrollTo(document.getElementById(window.location.hash.split("#")[1]), 500, {offset:-60})
+      }
+      this.setupForm()
+    },
 })
