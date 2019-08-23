@@ -78,6 +78,65 @@ def user(user_id=None):
         return users
 
 
+def role(role_slug = None):
+    if role_slug:
+        role = models.Role.query.filter_by(
+            slug=role_slug).first()
+        return role
+    else:
+        roles = models.Role.query.all()
+        return roles
+
+
+def role_by_slug(role_slug):
+    role = models.Role.query.filter_by(slug=role_slug
+        ).first()
+    return role
+
+
+def users_with_role(role_slug):
+    users = db.session.query(models.User
+        ).join(models.UserRole
+        ).join(models.Role
+        ).filter(models.Role.slug==role_slug
+        ).all()
+    return users
+
+
+def add_user_role(username, role_slug):
+    user = user_by_username(username)
+    role = role_by_slug(role_slug)
+    if (user and role):
+        ur = models.UserRole()
+        ur.user_id = user.id
+        ur.role_id = role.id
+        db.session.add(ur)
+        db.session.commit()
+        return True
+    return False
+
+
+def list_user_role_by_username(username):
+    user = user_by_username(username)
+    if not user: return False
+    print user.roles_list
+    return user.roles_list
+
+
+def delete_user_role(username, role_slug):
+    user = user_by_username(username)
+    role = role_by_slug(role_slug)
+    if (user and role):
+        ur = models.UserRole.query.filter_by(
+            user_id=user.id,
+            role_id=role.id).first()
+        if not ur: return False
+        db.session.delete(ur)
+        db.session.commit()
+        return True
+    return False
+
+
 def user_id_username():
     users = models.User.query.all()
     return list(map(lambda u: {"id": u.id, "username": u.username}, users))
