@@ -79,9 +79,11 @@
             </b-nav-item-dropdown>
           </b-navbar-nav>
           {% else %}
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="{{ url_for('users.login')}} ">{{ _('Login') }}</a></li>
-          </ul>
+          <b-navbar-nav class="ml-auto">
+            <b-nav-item href="{{ url_for('users.login')}} ">
+              {{ _('Login') }}
+            </b-nav-item>
+          </b-navbar-nav>
           {% endif %}
         </b-collapse><!--/.nav-collapse -->
       </b-container>
