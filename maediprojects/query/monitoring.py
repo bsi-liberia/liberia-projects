@@ -4,6 +4,29 @@ from maediprojects.lib import util
 import sqlalchemy as sa
 from sqlalchemy import func, case
 
+
+def response_statuses():
+    return models.Response.query.all()
+
+
+def update_organisation_response(data):
+    orgresp = models.OrganisationResponse.query.filter_by(
+        organisation_id = data['organisation_id'],
+        fyfq = data['fyfq']).first()
+    if orgresp and (data["response_id"] == None):
+        db.session.delete(orgresp)
+        db.session.commit()
+        return True
+    if not orgresp:
+        orgresp = models.OrganisationResponse()
+    orgresp.fyfq = data['fyfq']
+    orgresp.organisation_id = data['organisation_id']
+    orgresp.response_id = data['response_id']
+    db.session.add(orgresp)
+    db.session.commit()
+    return True
+
+
 def fwddata_query(current_previous="current"):
     return db.session.query(
             func.sum(models.ActivityForwardSpend.value).label("value"),
