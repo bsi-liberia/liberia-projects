@@ -658,6 +658,13 @@ class Organisation(db.Model):
     activityorganisations = sa.orm.relationship("ActivityOrganisation",
             cascade="all, delete-orphan",
             backref="organisation")
+    organisationresponses = sa.orm.relationship("OrganisationResponse",
+            cascade="all, delete-orphan",
+            backref="organisation")
+
+    @hybrid_property
+    def responses_fys(self):
+        return dict(map(lambda o: (o.fyfq, o.response_id), self.organisationresponses))
 
     @hybrid_property
     def activities_count(self):
@@ -947,6 +954,14 @@ class User(db.Model):
     organisations = db.relationship("UserOrganisation",
                     cascade="all, delete-orphan",
                     passive_deletes=True)
+    userroles = db.relationship("UserRole",
+                    cascade="all, delete-orphan",
+                    passive_deletes=True,
+                    backref="user")
+    @hybrid_property
+    def roles_list(self):
+        return list(map(lambda r: r.role.slug, self.userroles))
+
     activity_logs = cascade_relationship(
         "ActivityLog",
         backref="user")
@@ -1013,6 +1028,88 @@ class UserPermission(db.Model):
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class Role(db.Model):
+    __tablename__ = 'role'
+    id = sa.Column(sa.Integer, primary_key=True)
+    slug = sa.Column(sa.UnicodeText, nullable=False,
+        unique=True)
+    name = sa.Column(sa.UnicodeText, nullable=False)
+    userroles = db.relationship("UserRole",
+                    cascade="all, delete-orphan",
+                    passive_deletes=True,
+                    backref="role")
+
+    def setup(self,
+             name,
+             id=None):
+        self.name = name
+        if id is not None:
+            self.id = id
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class UserRole(db.Model):
+    __tablename__ = 'userrole'
+    id = sa.Column(sa.Integer, primary_key=True)
+    user_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('maediuser.id',
+                        ondelete='CASCADE'), nullable=False)
+    role_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('role.id',
+                        ondelete='CASCADE'), nullable=False)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'role_id', name='user_id_role_id'),
+    )
+
+
+class OrganisationResponse(db.Model):
+    __tablename__ = 'organisationresponse'
+    id = sa.Column(sa.Integer, primary_key=True)
+    response_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('response.id',
+                        ondelete='CASCADE'), nullable=False)
+    organisation_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('organisation.id',
+                        ondelete='CASCADE'), nullable=False)
+    modified = sa.Column(sa.DateTime,
+        default=datetime.datetime.utcnow, nullable=False)
+    fyfq = sa.Column(sa.UnicodeText, nullable=False)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    __table_args__ = (
+        db.UniqueConstraint('organisation_id', 'fyfq', name='unique_fyfq_organisation_id'),
+    )
+
+
+class Response(db.Model):
+    __tablename__ = 'response'
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.UnicodeText, nullable=False)
+    icon = sa.Column(sa.UnicodeText, nullable=False)
+    organisationresponse = sa.orm.relationship("OrganisationResponse",
+            cascade="all, delete-orphan",
+            backref="response")
+
+    def setup(self,
+             name,
+             id=None):
+        self.name = name
+        if id is not None:
+            self.id = id
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 class UserOrganisation(db.Model):
     __tablename__ = 'userorganisation'

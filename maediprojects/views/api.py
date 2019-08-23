@@ -184,15 +184,13 @@ def filters_reporting_organisation():
     return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
 
 
-@blueprint.route("/api/reporting_orgs.json")
-@login_required
-def reporting_orgs():
-    reporting_orgs = qorganisations.get_reporting_orgs()
+def generate_reporting_organisation_checklist(reporting_orgs):
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
     ros_disbursements = qmonitoring.fydata_ros("todate")
     def annotate_ro(ro):
         _ro = ro.as_dict()
+        _ro["responses_fys"] = ro.responses_fys
         _ro["activities_count"] = ro.activities_count
         _ro["forwardspends"] = {
             "current": ros_fiscal_years.get(ro.id, 0.00),
@@ -205,9 +203,53 @@ def reporting_orgs():
             "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
         }
         return _ro
+    return list(map(lambda ro: annotate_ro(ro), reporting_orgs))
+
+
+@blueprint.route("/api/reporting_orgs_user.json", methods=["GET", "POST"])
+@login_required
+def reporting_orgs_user():
+    if request.method == "POST":
+        if ("organisation_id" in request.json) and ("response_id" in request.json):
+            qmonitoring.update_organisation_response(
+                request.json)
+        return jsonify(result=True)
+    if ("user_id" in request.args) or (current_user.administrator != True): # Change to Roles
+        reporting_orgs = qorganisations.get_reporting_orgs(user_id=request.args.get('user_id', current_user.id))
+        user = models.User.query.get(request.args.get('user_id', current_user.id))
+        user_name = user.name
+        user_id = user.id
+    else:
+        reporting_orgs = qorganisations.get_reporting_orgs()
+        user_name = None
+        user_id = None
+    if current_user.administrator:
+        users = list(map(lambda u: {'value': u.id, 'text': u.name},
+            quser.users_with_role('desk-officer')))
+    else:
+        users = []
+
+    orgs = generate_reporting_organisation_checklist(reporting_orgs)
 
     return jsonify(
-        orgs=list(map(lambda ro: annotate_ro(ro), reporting_orgs)),
+        orgs=orgs,
+        current_year = util.FY("current").fy_fy(),
+        previous_year = util.FY("previous").fy_fy(),
+        list_of_quarters = util.Last4Quarters().list_of_quarters(),
+        users=users,
+        user_name=user_name,
+        user_id=user_id,
+        statuses=list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+        )
+
+
+@blueprint.route("/api/reporting_orgs.json")
+@login_required
+def reporting_orgs():
+    reporting_orgs = qorganisations.get_reporting_orgs()
+    orgs = generate_reporting_organisation_checklist(reporting_orgs)
+    return jsonify(
+        orgs=orgs,
         current_year = util.FY("current").fy_fy(),
         previous_year = util.FY("previous").fy_fy(),
         list_of_quarters = util.Last4Quarters().list_of_quarters()

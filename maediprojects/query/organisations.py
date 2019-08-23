@@ -35,7 +35,11 @@ def get_organisation_types():
         ('donor', 'Donor'), ('ngo', 'NGO')]
     return list(map(lambda t: {"id": t[0], "name": t[1]}, types))
 
-def get_reporting_orgs():
+def get_reporting_orgs(user_id=None):
+    if user_id:
+        user = models.User.query.get(user_id)
+        if user:
+            return list(map(lambda uo: uo.organisation, user.organisations))
     return db.session.query(models.Organisation
         ).join(models.Activity, models.Activity.reporting_org_id==models.Organisation.id
         ).order_by(

@@ -48,7 +48,7 @@
 </b-row>
 <hr />
 {% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
-<h1>{{ _('Excel reporting templates') }}</h1>
+<h1 id="excel-reporting-templates">{{ _('Excel reporting templates') }}</h1>
 <p class="lead">You can import data that donors have entered on
   AMCU reporting templates. This means you do not have to go through
   each project and manually update it: the templates are automatically
@@ -255,5 +255,6 @@
 {% block vuejs %}
 <script src="{{url_for('static', filename='packages/sortablejs/Sortable.min.js')}}"></script>
 <script src="{{url_for('static', filename='packages/vuedraggable/dist/vuedraggable.umd.min.js')}}"></script>
+<script src="{{url_for('static', filename='packages/vue-scrollto/vue-scrollto.js')}}"></script>
 <script src="{{url_for('static', filename='js/export.js')}}" type="text/javascript"></script>
 {% endblock %}

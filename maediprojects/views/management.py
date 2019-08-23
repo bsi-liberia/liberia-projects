@@ -27,3 +27,12 @@ def dataquality():
         "management/dataquality.html",
         loggedinuser=current_user
     )
+
+
+@blueprint.route("/desk-officer/")
+@login_required
+def user_dashboard():
+    return render_template(
+        "management/user_dashboard.html",
+        loggedinuser=current_user
+    )

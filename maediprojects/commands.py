@@ -98,3 +98,71 @@ def import_psip_transactions():
     """ Import currency data"""
     from query import import_psip_transactions as qimportpsip
     qimportpsip.import_transactions()
+
+
+@click.command()
+@click.argument('username')
+@click.argument('role_slug')
+@with_appcontext
+def add_user_role(username, role_slug):
+    """ Add user roles """
+    from query import user as quser
+    assert username and role_slug
+    if quser.add_user_role(username, role_slug):
+        print("User role created successfully.")
+    else:
+        print("Sorry, user role could not be created. Perhaps it already exists?")
+
+
+@click.command()
+@click.argument('username')
+@click.argument('role_slug')
+@with_appcontext
+def delete_user_role(username, role_slug):
+    """ Delete user roles """
+    from query import user as quser
+    assert username and role_slug
+    if quser.delete_user_role(username, role_slug):
+        print("User role deleted successfully.")
+    else:
+        print("Sorry, user role could not be deleted. Perhaps it does not exist?")
+
+
+@click.command()
+@click.argument('username')
+@with_appcontext
+def list_user_roles(username):
+    """ List user roles """
+    from query import user as quser
+    assert username
+    roles = quser.list_user_role_by_username(username)
+    if roles:
+        print("User {} has the following roles: {}".format(username, ", ".join(roles)))
+    else:
+        print("Sorry, could not find roles for that user.")
+
+
+@click.command()
+@with_appcontext
+def list_users():
+    """ List user roles """
+    from query import user as quser
+    users = list(map(lambda u: u.username, quser.user()))
+    if users:
+        print("There are the following users:")
+        for user in users: print user
+    else:
+        print("Sorry, could not find any users.")
+
+
+@click.command()
+@with_appcontext
+def list_roles():
+    """ List user roles """
+    from query import user as quser
+    roles = list(map(lambda r: r.slug, quser.role()))
+    if roles:
+        print("There are the following roles:")
+        for role in roles: print role
+    else:
+        print("Sorry, could not find any roles.")

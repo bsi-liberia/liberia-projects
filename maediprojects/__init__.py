@@ -31,6 +31,11 @@ def register_commands(app):
     app.cli.add_command(commands.test_closest_date)
     app.cli.add_command(commands.import_iati)
     app.cli.add_command(commands.import_psip_transactions)
+    app.cli.add_command(commands.add_user_role)
+    app.cli.add_command(commands.delete_user_role)
+    app.cli.add_command(commands.list_user_roles)
+    app.cli.add_command(commands.list_users)
+    app.cli.add_command(commands.list_roles)
 
 
 def check_enforce_sqlite_fkey_constraints(app):

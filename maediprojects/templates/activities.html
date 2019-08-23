@@ -6,7 +6,7 @@
     <h1>{{ _('Activities') }}: <span id="activities_loading" v-if="isBusy">loading...</span><span id="activities_count" v-else>[[ projects.length ]] found</span></h1>
   </div>
   <div class="col-md-2 text-center">
-    {% if loggedinuser.permissions_dict.domestic_external_edit != "none" %}
+    {% if (loggedinuser.permissions_dict.domestic_external_edit != "none") or ("desk-officer" in loggedinuser.roles_list) %}
     <br />
     <a class="btn btn-success btn-large float-md-right" href="{{url_for('activities.activity_new')}}">
       <i class="fas fa-plus"></i>

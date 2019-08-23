@@ -60,7 +60,11 @@
             {% endif %}
           </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
+            {% if "desk-officer" in loggedinuser.roles_list %}
+            <b-nav-item href="{{ url_for('management.user_dashboard') }}" {% if active_page == "management" %}active{% endif %}>{{ _('Management') }}</b-nav-item>
+            {% else %}
             <b-nav-item href="{{ url_for('management.management') }}" {% if active_page == "management" %}active{% endif %}>{{ _('Management') }}</b-nav-item>
+            {% endif %}
             {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
             <b-nav-item {% if active_page == "export" %} active{% endif %} href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
             <b-nav-item {% if active_page == "help" %} active{% endif %} href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
@@ -75,9 +79,11 @@
             </b-nav-item-dropdown>
           </b-navbar-nav>
           {% else %}
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="{{ url_for('users.login')}} ">{{ _('Login') }}</a></li>
-          </ul>
+          <b-navbar-nav class="ml-auto">
+            <b-nav-item href="{{ url_for('users.login')}} ">
+              {{ _('Login') }}
+            </b-nav-item>
+          </b-navbar-nav>
           {% endif %}
         </b-collapse><!--/.nav-collapse -->
       </b-container>
