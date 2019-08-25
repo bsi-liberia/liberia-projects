@@ -43,6 +43,8 @@ def process_results(iati_results, activity_results, activity_xml):
             if activity_xml.find("reporting-org").get("ref") == "46002":
                 i = models.ActivityResultIndicator()
                 i.indicator_title = unicode(result.find("title/narrative").text)
+                i.measurement_type = {"1": u"Number", "2": u"Number"}.get(indicator.get("measure"))
+                i.measurement_unit_type = unicode(indicator.find("title/narrative").text)
                 p = models.ActivityResultIndicatorPeriod()
                 p.period_start = datetime.datetime.strptime(min(indicator.xpath("period/period-start/@iso-date")), "%Y-%m-%d")
                 p.period_end = datetime.datetime.strptime(max(indicator.xpath("period/period-end/@iso-date")), "%Y-%m-%d")
@@ -54,6 +56,11 @@ def process_results(iati_results, activity_results, activity_xml):
                 i.indicator_title = unicode(indicator.find("title/narrative").text)
                 i.baseline_year = datetime.date(year=int(indicator.find("baseline").get("year")), month=1, day=1)
                 i.baseline_value = unicode(indicator.find("baseline").get("value"))
+                i.measurement_type = {
+                    "1": u"Number",
+                    "2": u"Percentage",
+                    "5": u"Yes/No"
+                    }.get(indicator.get("measure"))
                 for period in indicator.findall("period"):
                     p = models.ActivityResultIndicatorPeriod()
                     p.period_start = datetime.datetime.strptime(period.find("period-start").get("iso-date"), "%Y-%m-%d")
