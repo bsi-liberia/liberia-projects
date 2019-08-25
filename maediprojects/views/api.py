@@ -328,6 +328,7 @@ def api_activities_filters():
 
 
 @blueprint.route("/api/activities/")
+@login_required
 def api_activities_country():
     arguments = request.args.to_dict()
     activities = qactivity.list_activities_by_filters(arguments)
@@ -354,12 +355,57 @@ def api_activities_country():
     } for activity in activities])
 
 @blueprint.route("/api/activities/<activity_id>.json")
+@login_required
 def api_activities_by_id(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id)
     data = qgenerate_csv.activity_to_json(activity, cl_lookups)
 
     return jsonify(data)
+
+def jsonify_results_design(results):
+    out = []
+    for result in results:
+        _result = result.as_dict()
+        _result["result_type"] = {
+            1: "Output", 2: "Outcome", 3: "Impact"
+            }.get(result.result_type)
+        if result.indicators:
+            _result["indicator_id"] = result.indicators[0].id
+            _result["indicator_title"] = result.indicators[0].indicator_title
+            _result["measurement_unit_type"] = result.indicators[0].measurement_unit_type
+            _result["measurement_type"] = result.indicators[0].measurement_type
+            _result["baseline_value"] = result.indicators[0].baseline_value
+            if result.indicators[0].baseline_year:
+                _result["baseline_year"] = result.indicators[0].baseline_year.year
+            _result["periods"] = list(map(lambda p: p.as_dict(), result.indicators[0].periods))
+        else:
+            _result["periods"] = []
+        out.append(_result)
+    return out
+
+
+@blueprint.route("/api/activities/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
+@login_required
+#@quser.permissions_required("view")
+def api_activities_results_data_entry(activity_id):
+    if request.method == "POST":
+        result = qactivity.save_results_data_entry(activity_id,
+            request.json.get("results"), request.json.get("saveType"))
+        if not result: return jsonify(error="Error, could not save data."), 500
+    results = models.Activity.query.get(activity_id).results
+    return jsonify(results=jsonify_results_design(results))
+
+
+@blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
+@login_required
+#@quser.permissions_required("view")
+def api_activities_results_design(activity_id):
+    if request.method == "POST":
+        result = qactivity.save_results_data(activity_id, request.json.get("results"))
+        if not result: return jsonify(error="Error, could not save data."), 500
+    results = models.Activity.query.get(activity_id).results
+    return jsonify(results=jsonify_results_design(results))
 
 @blueprint.route("/api/activities/complete/<activity_id>.json")
 def api_activities_by_id_complete(activity_id):
