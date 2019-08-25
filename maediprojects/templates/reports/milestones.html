@@ -17,7 +17,7 @@
   </b-col>
 </b-row>
 <b-table class="table" id="milestones" sort-by="Final Proposal"
-    :items="activities" :fields="fields" responsive>
+    :items="activities" :fields="fields" :busy="isBusy" responsive>
   <div slot="table-busy" class="text-center">
     <b-spinner class="align-middle" label="Loading..."></b-spinner>
     <strong>Loading...</strong>
