@@ -177,7 +177,10 @@
       <tbody>
         {% for period in activity.result_indicator_periods %}
         <tr>
-          <td>{{ period.result_indicator.indicator_title }}</a></td>
+          <td>{{ period.result_indicator.indicator_title }}</a>
+          {% if period.result_indicator.measurement_unit_type %}
+          ({{ period.result_indicator.measurement_unit_type}})
+          {% endif %}</td>
           <td>{{ period.period_start }}</a></td>
           <td>{{ period.period_end }}</a></td>
           <td>{{ period.target_value }}</a></td>
