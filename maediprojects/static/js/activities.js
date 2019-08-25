@@ -113,7 +113,9 @@ new Vue({
           centered: true
         })
           .then(value => {
-            window.location = delete_url;
+            if (value) {
+              window.location = delete_url;
+            }
           })
           .catch(err => {
             alert("Sorry, there was an error, and that activity couldn't be deleted.")
