@@ -15,6 +15,25 @@ from maediprojects.lib import codelists
 
 blueprint = Blueprint('activities', __name__, url_prefix='/', static_folder='../static')
 
+
+@blueprint.route("/activities/<activity_id>/results/design/")
+@login_required
+def results_data_design(activity_id):
+    return render_template("results_data_design.html",
+        activity_id=activity_id,
+        loggedinuser=current_user
+    )
+
+
+@blueprint.route("/activities/<activity_id>/results/data-entry/")
+@login_required
+def results_data_entry(activity_id):
+    return render_template("results_data_entry.html",
+        activity_id=activity_id,
+        loggedinuser=current_user
+    )
+
+
 @blueprint.route("/")
 @login_required
 def dashboard():
