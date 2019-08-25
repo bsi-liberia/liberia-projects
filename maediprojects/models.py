@@ -326,6 +326,7 @@ class Activity(db.Model):
     @hybrid_property
     def results_average(self):
         numerical_periods = filter(lambda ip: ip.percent_complete != None, self.result_indicator_periods)
+        if not numerical_periods: return None
         return sum(list(map(lambda ip: ip.percent_complete, numerical_periods)))/len(numerical_periods)
 
     @hybrid_property
@@ -658,6 +659,9 @@ class Organisation(db.Model):
     activityorganisations = sa.orm.relationship("ActivityOrganisation",
             cascade="all, delete-orphan",
             backref="organisation")
+    userorganisations = sa.orm.relationship("UserOrganisation",
+            cascade="all, delete-orphan",
+            backref="organisation")
     organisationresponses = sa.orm.relationship("OrganisationResponse",
             cascade="all, delete-orphan",
             backref="organisation")
@@ -825,9 +829,17 @@ class ActivityResult(db.Model):
     result_title = sa.Column(sa.UnicodeText)
     result_description = sa.Column(sa.UnicodeText)
     result_type = sa.Column(sa.Integer)
+    source = sa.Column(sa.Integer)
     indicators = cascade_relationship(
         "ActivityResultIndicator",
         backref="result")
+
+    indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
+        secondary="join(ActivityResultIndicator, ActivityResultIndicatorPeriod, ActivityResultIndicator.id == ActivityResultIndicatorPeriod.indicator_id)",
+        primaryjoin="ActivityResult.id == ActivityResultIndicator.result_id",
+        secondaryjoin="ActivityResultIndicator.id == ActivityResultIndicatorPeriod.indicator_id",
+        viewonly = True
+        )
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -843,6 +855,8 @@ class ActivityResultIndicator(db.Model):
     indicator_description = sa.Column(sa.UnicodeText)
     baseline_year = sa.Column(sa.Date)
     baseline_value = sa.Column(sa.UnicodeText)
+    measurement_type = sa.Column(sa.UnicodeText)
+    measurement_unit_type = sa.Column(sa.UnicodeText)
     baseline_comment = sa.Column(sa.UnicodeText)
     periods = cascade_relationship(
         "ActivityResultIndicatorPeriod",
@@ -864,9 +878,12 @@ class ActivityResultIndicatorPeriod(db.Model):
     target_comment = sa.Column(sa.UnicodeText)
     actual_value = sa.Column(sa.UnicodeText)
     actual_comment = sa.Column(sa.UnicodeText)
+    status = sa.Column(sa.Integer, nullable=False)
 
     @hybrid_property
     def percent_complete(self):
+        if self.actual_value == None:
+            return None
         try:
             return int(round((float(self.actual_value) / float(self.target_value))*100.0))
         except ZeroDivisionError:
@@ -1122,7 +1139,6 @@ class UserOrganisation(db.Model):
     organisation_id = sa.Column(sa.Integer,
             sa.ForeignKey('organisation.id'),
             nullable=False)
-    organisation = sa.orm.relationship("Organisation")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
