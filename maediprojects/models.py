@@ -878,7 +878,7 @@ class ActivityResultIndicatorPeriod(db.Model):
     target_comment = sa.Column(sa.UnicodeText)
     actual_value = sa.Column(sa.UnicodeText)
     actual_comment = sa.Column(sa.UnicodeText)
-    status = sa.Column(sa.Integer, nullable=False)
+    status = sa.Column(sa.Integer, nullable=False, default=3)
 
     @hybrid_property
     def percent_complete(self):
