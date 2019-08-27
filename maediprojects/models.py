@@ -293,6 +293,34 @@ class Activity(db.Model):
         )
 
     @hybrid_property
+    def disb_finance_types(self):
+        query = db.session.query(
+            sa.func.sum(ActivityFinances.transaction_value).label("sum_value"),
+            ActivityFinances.finance_type
+            ).join(FundSource, ActivityFinances.fund_source_id == FundSource.id
+            ).group_by(ActivityFinances.finance_type
+            ).filter(ActivityFinances.transaction_type==u"D"
+            ).all()
+        data = dict(map(lambda ft: (ft.finance_type, ft.sum_value), query))
+        total = sum(map(lambda ft: ft.sum_value, query))
+        return {
+            "Grant": int(round((data[u"110"] / total)*100)),
+            "Loan": int(round((data[u"410"] / total)*100)),
+        }
+
+    @hybrid_property
+    def disb_fund_sources(self):
+        query = db.session.query(
+            sa.func.sum(ActivityFinances.transaction_value).label("sum_value"),
+                FundSource.name
+            ).join(FundSource, ActivityFinances.fund_source_id == FundSource.id
+            ).group_by(FundSource.name
+            ).filter(ActivityFinances.transaction_type==u"D"
+            ).all()
+        total = sum(map(lambda ft: ft.sum_value, query))
+        return dict(map(lambda ft: (ft.name, int(round((ft.sum_value / total)*100))), query))
+
+    @hybrid_property
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                         ).filter(ActivityFinances.transaction_type==u"C",
@@ -518,7 +546,9 @@ class ActivityFinances(db.Model):
     classifications = sa.orm.relationship("ActivityFinancesCodelistCode",
             cascade="all, delete-orphan",
             backref="activityfinances")
-
+    fund_source_id = sa.Column(sa.Integer,
+            sa.ForeignKey('fund_source.id'),
+            nullable=True)
     transaction_value_original = sa.Column(sa.Float(precision=2),
         default=0, nullable=False)
     currency_automatic = sa.Column(sa.Boolean,
@@ -590,10 +620,21 @@ class ActivityForwardSpend(db.Model):
     period_start_date = sa.Column(sa.Date)
     period_end_date = sa.Column(sa.Date)
 
-
     __table_args__ = (
         sa.UniqueConstraint('activity_id','period_start_date', name='forward_spend_constraint'),
     )
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class FundSource(db.Model):
+    __tablename__ = 'fund_source'
+    id = sa.Column(sa.Integer, primary_key=True)
+    code = sa.Column(sa.UnicodeText, index=True, unique=True)
+    name = sa.Column(sa.UnicodeText)
+    finance_type = sa.Column(sa.UnicodeText)
+    activityfinances = sa.orm.relationship("ActivityFinances",
+            backref="fund_source")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
