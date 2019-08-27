@@ -393,8 +393,13 @@ def api_activities_results_data_entry(activity_id):
         result = qactivity.save_results_data_entry(activity_id,
             request.json.get("results"), request.json.get("saveType"))
         if not result: return jsonify(error="Error, could not save data."), 500
-    results = models.Activity.query.get(activity_id).results
-    return jsonify(results=jsonify_results_design(results))
+    activity = models.Activity.query.get(activity_id)
+    results = activity.results
+    return jsonify(
+            activity_id = activity.id,
+            activity_title = activity.title,
+            results = jsonify_results_design(results)
+        )
 
 
 @blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
@@ -404,8 +409,13 @@ def api_activities_results_design(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data(activity_id, request.json.get("results"))
         if not result: return jsonify(error="Error, could not save data."), 500
-    results = models.Activity.query.get(activity_id).results
-    return jsonify(results=jsonify_results_design(results))
+    activity = models.Activity.query.get(activity_id)
+    results = activity.results
+    return jsonify(
+            activity_id = activity.id,
+            activity_title = activity.title,
+            results=jsonify_results_design(results)
+        )
 
 @blueprint.route("/api/activities/complete/<activity_id>.json")
 def api_activities_by_id_complete(activity_id):
