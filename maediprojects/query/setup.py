@@ -18,7 +18,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 def import_responses():
     responses = [{
-        'name': 'Data requested',
+        'name': 'Data requested, but donor has not yet responded',
         'icon': 'fa fa-check-circle text-muted'
     },
     {
