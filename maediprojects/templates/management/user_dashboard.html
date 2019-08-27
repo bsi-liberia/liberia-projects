@@ -312,19 +312,19 @@ new Vue({
             console.log(response)
           })
     },
+    makeDonorStatus: function (item) {
+      if (this.selectedQuarter in item.responses_fys) {
+        return item.responses_fys[this.selectedQuarter]
+      } else if (item.disbursements['Q4'] > 0) {
+        return 3 // ugly quick hack
+      } else {
+        return null
+      }
+    },
     getDataQualityData: function() {
       if (this.user_id != null) {
         var user_id_string = `?user_id=${this.user_id}`
       } else { var user_id_string = '' }
-      function makeDonorStatus(item) {
-        if (item.responses_fys[this.selectedQuarter]) {
-          return item.responses_fys[this.selectedQuarter]
-        } else if (item.disbursements['Q4'] > 0) {
-          return 3 // ugly quick hack
-        } else {
-          return null
-        }
-      }
       axios
         .get(`${api_base}reporting_orgs_user.json${user_id_string}`)
         .then((response) => {
@@ -336,7 +336,7 @@ new Vue({
             response.data.list_of_quarters).slice(-1).pop()
           this.selectedStatus = response.data.orgs.reduce(
             (obj, item) => {
-              obj[item.id] = makeDonorStatus(item)
+              obj[item.id] = this.makeDonorStatus(item)
               return obj
             },
             {})
