@@ -462,6 +462,7 @@ def save_results_data(activity_id, results_data):
     for result in results_data:
         if not "id" in result:
             result_to_add = result
+            result_to_add['result_type'] = {'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
             result_to_add["indicators"] = [result] # They use different names so this is OK
             new_result = add_result(result_to_add, activity_id)
         else:
