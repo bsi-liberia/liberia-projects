@@ -1,7 +1,7 @@
 {% set active_page='results' %}{% extends "layout2.html" %}
 {% block title %}{{ _('Results') }}{% endblock %}
 {% block content %}
-<h1>Results</h1>
+<h1>Results<template v-if="activity_title"> for [[ activity_title ]]</template></h1>
 <b-form @submit.stop.prevent="saveResults" style="margin-bottom: 10px">
   <b-row lg="10">
     <b-col>
@@ -261,7 +261,9 @@ var v = new Vue({
         'frequency': 'Annually'
       },
       isBusy: true,
-      saveDisabled: true
+      saveDisabled: true,
+      activity_id: null,
+      activity_title: null
     }
   },
   mounted: function() {
@@ -275,6 +277,8 @@ var v = new Vue({
             this.results = response.data.results
             this.isBusy = false
             this.saveDisabled = false
+            this.activity_id = response.data.activity_id
+            this.activity_title = response.data.activity_title
           }).catch(error => {
             if (error.response) {
               var msg = "Sorry, something went wrong with the server, and your results data could not be loaded. Try reloading the page."
