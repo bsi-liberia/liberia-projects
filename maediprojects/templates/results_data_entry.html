@@ -1,7 +1,7 @@
 {% set active_page='results' %}{% extends "layout2.html" %}
 {% block title %}{{ _('Results') }}{% endblock %}
 {% block content %}
-<h1>Results</h1>
+<h1>Results<template v-if="activity_title"> for [[ activity_title ]]</template></h1>
 <b-form @submit.stop.prevent="saveResultsSubmitCheck" style="margin-bottom: 10px">
   <b-row lg="9">
     <b-col>
@@ -126,7 +126,7 @@
               </template>
               <template slot="[actual_value]" slot-scope="data">
                 <template v-if="data.item.status==4">
-                  [[ data.item.target_value ]]
+                  [[ data.item.actual_value ]]
                   <template v-if="result.measurement_type=='Percentage'">
                     %
                   </template>
@@ -237,7 +237,9 @@ var v = new Vue({
       },
       isBusy: true,
       saveDisabled: true,
-      submitResults: false
+      submitResults: false,
+      activity_title: null,
+      activity_id: null
     }
   },
   mounted: function() {
@@ -255,6 +257,8 @@ var v = new Vue({
         .get(`${api_base}activities/${activity_id}/results/design.json`
           ).then(response => {
             this.results = this.resultsStatus(response.data.results)
+            this.activity_id = response.data.activity_id
+            this.activity_title = response.data.activity_title
             this.isBusy = false
             this.saveDisabled = false
           }).catch(error => {
