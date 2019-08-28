@@ -36,16 +36,47 @@ new Vue({
           formatter: value => {
             return value.toLocaleString(undefined, {minimumFractionDigits: 2})
           }}],
-      disbursement_items: disbursement_items,
-      commitment_items: commitment_items,
-      allotment_items: allotment_items,
-      forwardspend_items: forwardspend_items
+      isBusy: true,
+      finances: {},
+      financesFundSources: {},
+      showFundSource: false,
+      fundSources: [],
+      showFundSourceOptions: [{
+          'value': false,
+          'text': 'Summary'
+        },
+        {
+          'value': true,
+          'text': 'By Fund Source'
+        },
+      ]
     }
   },
   mounted: function() {
+    this.getFinances()
+    this.getFinancesFundSources()
     if (window.location.hash && window.location.hash.split("#").length>0) {
       console.log("scrollto", window.location.hash.split("#")[1])
       VueScrollTo.scrollTo(document.getElementById(window.location.hash.split("#")[1]), 500, {offset:-60})
     }
   },
+  methods: {
+    getFinances: function() {
+      axios
+        .get(api_finances_url)
+        .then((response) => {
+          this.finances = response.data.finances
+          this.isBusy = false
+        });
+    },
+    getFinancesFundSources: function() {
+      axios
+        .get(api_finances_fund_sources_url)
+        .then((response) => {
+          this.financesFundSources = response.data.finances
+          this.fundSources = response.data.fund_sources
+          this.isBusy = false
+        });
+    }
+  }
 })
