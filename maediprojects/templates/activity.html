@@ -16,18 +16,20 @@
   <div class="col-md-10">
     <p class="lead">{{ activity.description }}</p>
   </div>
-  {% if activity.permissions.edit == True %}
   <div class="col-md-2">
+  {% if activity.permissions.edit == True %}
     <a class="btn btn-success btn-large pull-right edit-project-button"
        href="{{ url_for('activities.activity_edit', activity_id=activity.id) }}">
       <i class="fas fa-edit"></i>
       {{ _('Edit project') }}
     </a>
-  </div>
   {% endif %}
+  </div>
 </div>
 <div class="row">
   <div class="col-md-6">
+    <a class="btn btn-primary" href="{{url_for('activities.results_data_design', activity_id=activity.id)}}">Results design</a>
+    <a class="btn btn-primary" href="{{url_for('activities.results_data_entry', activity_id=activity.id)}}">Results data entry</a>
     <h3>Basic data</h3>
     <table class="table table-hover table-sm" responsive>
       <tbody>
