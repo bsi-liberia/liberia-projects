@@ -11,6 +11,7 @@ from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import generate_xlsx as qgenerate_xlsx
 from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import import_psip_transactions as qimport_psip_transactions
+from maediprojects.query import import_client_connection as qimport_client_connection
 from maediprojects.query import user as quser
 from maediprojects.lib import util
 
@@ -22,6 +23,11 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+@blueprint.route("/client-connection/")
+@login_required
+def wb_client_connection():
+    return qimport_client_connection.import_transactions_from_file()
 
 # Legacy URL
 @blueprint.route("/export/")
