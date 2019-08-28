@@ -360,8 +360,70 @@ def api_activities_by_id(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id)
     data = qgenerate_csv.activity_to_json(activity, cl_lookups)
-
     return jsonify(data)
+
+@blueprint.route("/api/activities/<activity_id>/finances.json")
+@login_required
+def api_activities_finances_by_id(activity_id):
+    activity = qactivity.get_activity(activity_id)
+
+    commitments = activity.FY_commitments_dict
+    allotments = activity.FY_allotments_dict
+    disbursements = activity.FY_disbursements_dict
+    forward_spends = activity.FY_forward_spend_dict
+
+    finances = list()
+    if commitments: finances.append(('commitments', {
+        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+        "data": commitments.values()
+        }))
+    if allotments: finances.append(('allotment', {
+        "title": 'Allotments',
+        "data": allotments.values()
+        }))
+    if disbursements: finances.append(('disbursement', {
+        "title": 'Disbursements',
+        "data": disbursements.values()
+        }))
+    if forward_spends: finances.append(('forwardspend', {
+        "title": 'MTEF Projections',
+        "data": forward_spends.values()
+        }))
+    return jsonify(
+        finances=OrderedDict(finances)
+        )
+
+@blueprint.route("/api/activities/<activity_id>/finances/fund_sources.json")
+@login_required
+def api_activities_finances_fund_sources_by_id(activity_id):
+    activity = qactivity.get_activity(activity_id)
+
+    commitments = activity.FY_commitments_dict_fund_sources
+    allotments = activity.FY_allotments_dict_fund_sources
+    disbursements = activity.FY_disbursements_dict_fund_sources
+    forwardspends = activity.FY_forward_spend_dict_fund_sources
+
+    finances = list()
+    if commitments: finances.append(('commitments', {
+        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+        "data": commitments
+        }))
+    if allotments: finances.append(('allotment', {
+        "title": 'Allotments',
+        "data": allotments
+        }))
+    if disbursements: finances.append(('disbursement', {
+        "title": 'Disbursements',
+        "data": disbursements
+        }))
+    if forwardspends: finances.append(('forwardspend', {
+        "title": 'MTEF Projections',
+        "data": forwardspends
+        }))
+    return jsonify(
+        finances=OrderedDict(finances),
+        fund_sources=activity.disb_fund_sources
+    )
 
 def jsonify_results_design(results):
     out = []
