@@ -493,7 +493,19 @@ def generate_xlsx_filtered(arguments={}):
     activities = qactivity.list_activities_by_filters(
         arguments)
     for activity in activities:
-        writer.writerow(activity_to_json(activity, cl_lookups))
+        for fundsource, fundsource_data in activity.disb_fund_sources.items():
+            activity_data = activity_to_json(activity, cl_lookups)
+            activity_data.update(dict(map(lambda d: (d, 0.00), list(generate_disb_fys()))))
+            activity_data["Fund Source"] = fundsource
+            # Add Disbursements data
+            activity_data[u'Fund Source'] = fundsource
+            if fundsource is not None and fundsource_data.get('finance_type'):
+                activity_data[u'Finance Type (Type of Assistance)'] = fundsource_data.get('finance_type')
+            if fundsource in activity.FY_disbursements_dict_fund_sources:
+                activity_data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_disbursements_dict_fund_sources[fundsource].items())))
+            if fundsource in activity.FY_forward_spend_dict_fund_sources:
+                activity_data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_forward_spend_dict_fund_sources[fundsource].items())))
+            writer.writerow(activity_data)
     writer.delete_first_sheet()
     return writer.save()
 
