@@ -530,6 +530,7 @@ def add_indicator(data, result_id, commit=True):
     i.indicator_description = data.get('indicator_description')
     if data.get("baseline_year"):
         i.baseline_year = isostring_year(data.get('baseline_year'))
+    i.baseline_value = data.get('baseline_value')
     i.baseline_description = data.get('baseline_description')
     i.measurement_type = data.get('measurement_type')
     i.measurement_unit_type = data.get('measurement_unit_type')
