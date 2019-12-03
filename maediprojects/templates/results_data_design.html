@@ -29,20 +29,22 @@
   <template v-else>
     <template v-for="result, result_index in results">
       <b-card v-bind="result" style="margin-bottom: 10px;">
-        <h3 slot="header">
-          <template v-if="result.result_title">
-            [[ result.result_title ]]
-          <b-badge>[[ result.result_type ]]</b-badge>
-          </template>
-          <template v-else>
-            New result
-          </template>
-          <b-btn variant="danger" class="float-right"
-            size="sm"
-            @click.prevent="deleteResult(result_index)">
-            <span class="fa fa-trash"></span> Delete result
-          </b-btn>
-        </h3>
+        <template v-slot:header>
+          <h3>
+            <template v-if="result.result_title">
+              [[ result.result_title ]]
+            <b-badge>[[ result.result_type ]]</b-badge>
+            </template>
+            <template v-else>
+              New result
+            </template>
+            <b-btn variant="danger" class="float-right"
+              size="sm"
+              @click.prevent="deleteResult(result_index)">
+              <span class="fa fa-trash"></span> Delete result
+            </b-btn>
+          </h3>
+        </template>
         <b-row>
           <b-col>
             <b-form-group label="Result title" for="result_title"
@@ -153,17 +155,17 @@
             <h5>Reporting periods</h5>
             <b-table :fields="['period_start', 'period_end', 'target_value', 'delete']"
               :items="result.periods">
-              <template slot="[period_start]" slot-scope="data">
+              <template v-slot:cell(period_start)="data">
                 <b-form-input type="date" class="form-control" required
                   placeholder="YYYY-MM-DD" name="period_start" v-model="data.item.period_start">
                 </b-form-input>
               </template>
-              <template slot="[period_end]" slot-scope="data">
+              <template v-slot:cell(period_end)="data">
                 <b-form-input type="date" class="form-control" required
                   placeholder="YYYY-MM-DD" name="period_end" v-model="data.item.period_end">
                 </b-form-input>
               </template>
-              <template slot="[target_value]" slot-scope="data">
+              <template v-slot:cell(target_value)="data">
                 <b-input-group v-if="result.measurement_type == 'Number'" :append="result.measurement_unit_type">
                   <b-form-input type="number" class="form-control" required
                     step="0.000001"
@@ -190,7 +192,7 @@
                   </b-form-select>
                 </b-input-group>
               </template>
-              <template slot="[delete]" slot-scope="data">
+              <template v-slot:cell(delete)="data">
                 <b-btn variant="link"
                   @click.prevent="deletePeriod(result_index, data.index)">
                   <span class="fa fa-trash text-danger"></span>
