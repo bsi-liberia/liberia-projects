@@ -56,7 +56,9 @@
 <b-row>
   <b-col>
     <b-card>
-      <h4 slot="header"><i class="fa fa-download"></i> Download template</h4>
+      <template v-slot:header>
+        <h4><i class="fa fa-download"></i> Download template</h4>
+      </template>
       <p>Download a template. Then, send it to the donor, as an email attachment.</p>
       <b-form-group label="Select template type"
         :description="'Selected template: ' + selectedTemplateOptionDescription"
@@ -79,7 +81,7 @@
         value-field="id"
         text-field="name"
         v-model="selectedReportingOrganisation">
-          <template slot="first">
+          <template v-slot:first>
             <option value="all">All donors</option>
           </template>
         </b-form-select>
@@ -103,7 +105,9 @@
   </b-col>
   <b-col>
     <b-card>
-      <h4 slot="header"><i class="fa fa-upload"></i> Import template</h4>
+      <template v-slot:header>
+        <h4><i class="fa fa-upload"></i> Import template</h4>
+      </template>
       <p>Import data you have received back from a donor according to the AMCU import format.</p>
       <b-form method="post" enctype="multipart/form-data" action="{{ url_for('exports.import_template')}}">
         <b-form-group label="Select template type"
@@ -130,7 +134,9 @@
 {% endif %}
 {% if loggedinuser.permissions_dict["domestic_external_edit"] in ('domestic', 'both') %}
 <b-card>
-  <h3 slot="header"><i class="fa fa-upload"></i> Upload data for PSIP projects from IFMIS</h3>
+  <template v-slot:header>
+    <h3><i class="fa fa-upload"></i> Upload data for PSIP projects from IFMIS</h3>
+  </template>
   <p class="lead">Upload an Excel file containing data on PSIP projects exported from IFMIS.</p>
   <b-form
     method="post"
@@ -147,7 +153,7 @@
       label-class="font-weight-bold">
       <b-form-select :options="fys"
       v-model="selectedFY" name="fiscal_year">
-        <template slot="first">
+        <template v-slot:first>
           <option value="">All Fiscal Years</option>
         </template>
       </b-form-select>
