@@ -153,7 +153,7 @@ Vue.component('finances-select', {
       :label-cols-sm="labelColsSm"
       :label-for="name">
       <b-select :options="options" v-model="value"
-      value-field="id" text-field="name"
+      :name="name" value-field="id" text-field="name"
       :state="validation">
       </b-select>
     </b-form-group>
@@ -283,6 +283,7 @@ Vue.component('finances-subsection', {
                 <template v-slot:cell(transaction_value)="data">
                   <b-form-group>
                     <b-input type="text" plaintext
+                      name="transaction_value_original"
                       :value="(data.item.transaction_value_original * data.item.currency_rate).toLocaleString(undefined, {maximumFractionDigits:2, minimumFractionDigits: 2})"></b-input>
                   </b-form-group>
                 </template>
@@ -364,7 +365,8 @@ Vue.component('finances-subsection', {
           </div>
           <div class="row">
             <div class="col-sm-12 text-center">
-              <b-btn variant="primary" @click="addFinances(transactionType)">
+              <b-btn variant="primary" @click="addFinances(transactionType)"
+              class="addFinancial">
                 <i class="fa fa-plus"></i>
                 [[ addLabel ]]
               </b-btn>
