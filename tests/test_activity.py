@@ -39,7 +39,7 @@ class TestActivityLoads(LiveServerClass):
     def test_activity_transactions_loads(self, app, selenium, selenium_login):
         selenium.get(url_for('activities.activity', activity_id=1, _external=True))
         WebDriverWait(selenium, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#disbursements-table tbody tr'))
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#disbursement-table tbody tr'))
         )
-        assert selenium.find_element(By.CSS_SELECTOR, "#disbursements-table tbody tr td:nth-child(2)"
+        assert selenium.find_element(By.CSS_SELECTOR, "#disbursement-table tbody tr td:nth-child(2)"
             ).text == "100.00"
