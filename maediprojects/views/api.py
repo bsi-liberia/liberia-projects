@@ -613,18 +613,23 @@ def api_activities_results_design(activity_id):
 @login_required
 @quser.permissions_required("view")
 def api_activity_milestones(activity_id):
-    milestone_id = request.form["milestone_id"]
-    attribute = request.form["attribute"]
-    value = request.form["value"]
-    if attribute == "achieved": value={"true": True, "false": False}[value]
-    update_status = qmilestone.add_or_update_activity_milestone({
-                "activity_id": activity_id,
-                "milestone_id": milestone_id,
-                "attribute": attribute,
-                "value": value})
-    if update_status == True:
-        return "success"
-    return "error"
+    if request.method == "POST":
+        request_data = request.get_json()
+        milestone_id = request_data["milestone_id"]
+        attribute = request_data["attr"]
+        value = request_data["value"]
+        update_status = qmilestone.add_or_update_activity_milestone({
+                    "activity_id": activity_id,
+                    "milestone_id": milestone_id,
+                    "attribute": attribute,
+                    "value": value})
+        if update_status == True:
+            return "success"
+        return "error"
+    else:
+        activity = qactivity.get_activity(activity_id)
+        return jsonify(milestones=activity.milestones_data)
+
 
 @blueprint.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
