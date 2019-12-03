@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, flash, request, redirect, url_for
+from flask import Blueprint, render_template, flash, request, redirect, url_for, abort
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_babel import gettext
 
@@ -66,10 +66,10 @@ def users_delete():
     if not current_user.administrator:
         flash(gettext(u"You must be an administrator to create new users."), "danger")
         return redirect(url_for("activities.dashboard"))
-    if current_user.username == request.form.get("username"):
+    if current_user.username == request.get_json().get("username"):
         flash(gettext(u"You cannot delete your own user."), "danger")
         return redirect(url_for("activities.dashboard"))
-    if quser.deleteUser(request.form.get('username')):
+    if quser.deleteUser(request.get_json().get('username')):
         flash(gettext(u"Successfully deleted user."), "success")
     else:
         flash(gettext(u"Sorry, there was an error and that user could not be deleted."), "danger")
@@ -113,6 +113,8 @@ def users_edit(user_id):
         return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = quser.user(user_id)
+        if not user:
+            return abort(404)
         return render_template("user.html",
                  user=user,
                  loggedinuser=current_user,
@@ -132,59 +134,40 @@ def users_edit(user_id):
 @login_required
 @quser.administrator_required
 def user_permissions_edit(user_id):
-    def _append_organisation(uo, organisations):
-        uo["organisations"] = dict(map(lambda o: (o.id, o.as_dict()), organisations))
-        if uo["organisations"].get(uo["organisation_id"]):
-            uo["organisations"].get(uo["organisation_id"])["selected"] = " selected"
-        uo["organisations"] = list(uo["organisations"].values())
-        select_options = {True: " selected", False: ""}
-        uo["permission_values"] = [
-            {"name": "View projects", "value": "view", "selected": select_options[bool(uo["permission_value"] == "view")]},
-            {"name": "Edit projects", "value": "edit", "selected": select_options[bool(uo["permission_value"] == "edit")]}
-        ]
-        return uo
-
     if not current_user.administrator:
         flash("You must be an administrator to edit users.", "danger")
         return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = quser.user(user_id)
-        user_organisations = list(map(lambda uo:
-            (_append_organisation(uo.as_dict(), qorganisations.get_organisations())),
-            user.organisations))
-        return jsonify(permissions=user_organisations)
+        user_organisations = list(map(lambda uo: uo.as_dict(), user.organisations))
+        organisations = list(map(lambda o: o.as_dict(), qorganisations.get_organisations()))
+        permission_values = [
+            {"name": "View projects", "value": "view"},
+            {"name": "Edit projects", "value": "edit"}
+        ]
+        return jsonify(permissions=user_organisations,
+            organisations=organisations,
+            permission_values=permission_values)
     elif request.method == "POST":
-        data = request.form.to_dict()
+        data = request.get_json()
         data["user_id"] = user_id
         if data["action"] == "add":
             op = quser.addOrganisationPermission(data)
             if not op: return "False"
             return jsonify({
-                "id": op.id,
-                "organisations": list(map(lambda o: o.as_dict(),
-                    qorganisations.get_organisations())),
-              "permission_values": [
-                {
-                  "selected": " selected",
-                  "name": "View projects",
-                  "value": "view"
-                },
-                {
-                  "selected": "",
-                  "name": "Edit projects",
-                  "value": "edit"
-                }
-              ],
+                "organisation_id": op.organisation_id,
+                "permission_value": op.permission_value,
+                "id": op.id
                 })
         elif data["action"] == "delete":
             op = quser.deleteOrganisationPermission(data)
             if not op:
-                return False
+                return "error"
             return "ok"
         elif data["action"] == "edit":
             op = quser.updateOrganisationPermission(data)
             if not op:
-                return False
+                return "error"
             return "ok"
         return "error, unknown action"
 
