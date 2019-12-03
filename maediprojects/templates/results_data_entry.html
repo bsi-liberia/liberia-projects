@@ -32,16 +32,18 @@
   <template v-else>
     <template v-for="result, result_index in results">
       <b-card v-bind="result" style="margin-bottom: 10px;">
-        <h3 slot="header">
-          <template>
-            [[ result.result_title ]]
-          <b-badge>[[ result.result_type ]]</b-badge>
-          </template>
-        </h3>
+        <template v-slot:header>
+          <h3>
+            <template>
+              [[ result.result_title ]]
+            <b-badge>[[ result.result_type ]]</b-badge>
+            </template>
+          </h3>
+        </template>
         <b-row>
-          <b-col lg="6">
+          <b-col>
             <b-row>
-              <b-col cols="4">
+              <b-col cols="2">
                 <b>Indicator title</b>
               </b-col>
               <b-col cols="8">
@@ -49,7 +51,6 @@
               </b-col>
             </b-row>
           </b-col>
-          <b-col lg="6"></b-col>
         </b-row>
         <b-row>
           <b-col lg="6">
@@ -109,13 +110,13 @@
             <h5>Reporting periods</h5>
             <b-table :fields="['period_start', 'period_end', 'target_value', 'actual_value', 'selectToSubmit']"
               :items="result.periods" responsive>
-              <template slot="[period_start]" slot-scope="data">
+              <template v-slot:cell(period_start)="data">
                   [[ data.item.period_start ]]
               </template>
-              <template slot="[period_end]" slot-scope="data">
+              <template v-slot:cell(period_end)="data">
                   [[ data.item.period_end ]]
               </template>
-              <template slot="[target_value]" slot-scope="data">
+              <template v-slot:cell(target_value)="data">
                 [[ data.item.target_value ]]
                 <template v-if="result.measurement_type=='Percentage'">
                   %
@@ -124,7 +125,7 @@
                   [[ result.measurement_unit_type ]]
                 </template>
               </template>
-              <template slot="[actual_value]" slot-scope="data">
+              <template v-slot:cell(actual_value)="data">
                 <template v-if="data.item.status==4">
                   [[ data.item.actual_value ]]
                   <template v-if="result.measurement_type=='Percentage'">
@@ -166,7 +167,7 @@
                   </b-input-group>
                 </template>
               </template>
-              <template slot="[selectToSubmit]" slot-scope="data">
+              <template v-slot:cell(selectToSubmit)="data">
                 <template v-if="data.item.status==4">
                   <b-btn size="sm" variant="outline-success" disabled>
                     <i class="fa fa-lock"></i> Submitted
@@ -205,7 +206,7 @@
 <b-modal id="confirm-submit-modal" title="Confirm submit">
   <p>Would you like to submit all your results, or only
     those you have selected for submission?</p>
-  <template slot="modal-footer" slot-scope="{ ok, cancel }">
+  <template v-slot:modal-footer="{ ok, cancel }">
     <!-- Emulate built in modal footer ok and cancel button actions -->
     <b-button variant="outline-success" @click="confirmSubmitAllResults">
       Submit all

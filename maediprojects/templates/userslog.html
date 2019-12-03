@@ -17,29 +17,31 @@
       value-field="id"
       text-field="username"
       >
-      <template slot="first">
+      <template v-slot:first>
         <option :value="null">Filter by user</option>
       </template>
     </b-form-select>
   </b-form-group>
   <b-table id="usersLog" :fields="fields" :items="items" :busy="isBusy" show-empty responsive>
-    <div slot="table-busy" class="text-center">
-      <b-spinner class="align-middle" label="Loading..."></b-spinner>
-      <strong>Loading...</strong>
-    </div>
-    <template slot="[user]" slot-scope="data">
+    <template v-slot:table-busy>
+      <div class="text-center">
+        <b-spinner class="align-middle" label="Loading..."></b-spinner>
+        <strong>Loading...</strong>
+      </div>
+    </template>
+    <template v-slot:cell(user)="data">
       <a :href="data.item.user.url">
         [[ data.item.user.username ]]</a>
     </template>
-    <template slot="[action]" slot-scope="data">
+    <template v-slot:cell(action)="data">
         [[ data.item.mode.text ]] [[ data.item.target.text ]]
     </template>
-    <template slot="[activity]" slot-scope="data">
+    <template v-slot:cell(activity)="data">
       <a :href="data.item.activity.url">
         [[ data.item.activity.title ]]
       </a>
     </template>
-    <template slot="[details]" slot-scope="data">
+    <template v-slot:cell(details)="data">
       <a href="#" :data-id="data.item.id"
       v-on:click.prevent="getDetails">Details</a>
     </template>
@@ -52,7 +54,7 @@
     :disabled="rows < perPage"
   ></b-pagination>
   <b-modal id="activityLogDetail" size="lg" scrollable ok-only>
-    <template slot="modal-title">
+    <template v-slot:modal-title>
       Activity: <a :href="activitylog_detail.activity.url">
         [[ activitylog_detail.activity.title ]]
       </a>

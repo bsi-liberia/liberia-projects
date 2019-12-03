@@ -36,7 +36,7 @@ def add_entry(activity_id, data):
             "value": CF.as_dict()
         }
     )
-    return CF.id
+    return CF
 
 
 def delete_entry(activity_id, counterpartfunding_id):
@@ -92,7 +92,7 @@ def update_entry(data):
         }
     )
 
-    return True
+    return cf
 
 
 def create_or_update_counterpart_funding(activity_id, required_date, value):

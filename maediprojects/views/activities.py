@@ -88,67 +88,11 @@ def activities():
 @quser.permissions_required("edit")
 def activity_new():
     if request.method == "GET":
-        today = datetime.datetime.now().date().isoformat()
         return render_template("activity_edit.html",
-            # Specify some defaults
-            activity = {
-                "flow_type": "10",
-                "aid_type": "C01",
-                "collaboration_type": "1",
-                "finance_type": "110",
-                "activity_status": "2",
-                "tied_status": "5",
-                "start_date": today,
-                "end_date": today,
-                "recipient_country_code": current_user.recipient_country_code,
-                "domestic_external": current_user.permissions_dict.get("domestic_external_edit"),
-                "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
-                    {"role": 1, "id": 1, "organisation": { "id": ""}},
-                    {"role": 4, "id": 4, "organisation": { "id": ""}}
-                ],
-                "classification_data": {
-                    "mtef-sector": {
-                        "name": "MTEF Sector",
-                        "code": "mtef-sector",
-                        "id": "mtef-sector",
-                        "entries": [
-                            {""}
-                        ]
-                    },
-                    "aft-pillar": {
-                        "name": "AfT Pillar",
-                        "code": "aft-pillar",
-                        "id": "aft-pillar",
-                        "entries": [
-                            {""}
-                        ]
-                    },
-                    "aligned-ministry-agency": {
-                        "name": "Aligned Ministry/Agency",
-                        "code": "aligned-ministry-agency",
-                        "id": "aligned-ministry-agency",
-                        "entries": [
-                            {""}
-                        ]
-                    },
-                    "sdg-goals": {
-                        "name": "SDG Goals",
-                        "code": "sdg-goals",
-                        "id": "sdg-goals",
-                        "entries": [
-                            {""}
-                        ]
-                    },
-                    "papd-pillar": {
-                        "name": "PAPD Pillar",
-                        "code": "papd-pillar",
-                        "id": "papd-pillar",
-                        "entries": [
-                            {""}
-                        ]
-                    }
-                },
-            },
+            activity_editor_mode="new",
+            api_activity_url=url_for("api.api_new_activity"),
+            api_codelists_url=url_for("api.api_codelists"),
+            api_activity_update_url=url_for("api.api_new_activity"),
             loggedinuser=current_user,
             organisations = qorganisations.get_organisations(),
             codelists = codelists.get_codelists(),
@@ -220,6 +164,10 @@ def activity_edit(activity_id):
         organisations=qorganisations.get_organisations(),
         locations=locations,
         currencies = qexchangerates.get_currencies(),
+        activity_editor_mode="edit",
+        api_activity_url=url_for("api.api_activities_by_id", activity_id=activity_id),
+        api_activity_update_url=url_for("activities.activity_edit_attr", activity_id=activity_id),
+        api_codelists_url=url_for("api.api_codelists"),
         api_locations_url=url_for("api.api_locations", country_code=activity.recipient_country_code),
         api_activity_locations_url=url_for("api.api_activity_locations", activity_id=activity_id),
         api_activity_finances_url=url_for("api.api_activity_finances", activity_id=activity_id),
@@ -309,28 +257,23 @@ def activity_add_results_data(activity_id):
 @login_required
 @quser.permissions_required("edit")
 def activity_edit_attr(activity_id):
-    #FIXME this is a bit hacky
-    if request.form['attr'].startswith("classification_"):
-        if request.form['attr'].startswith("classification_id"):
-            activitycodelist_id = request.form['attr'].split("classification_id_")[1]
-            attr = "codelist_code_id"
-        if request.form['attr'].startswith("classification_percentage"):
-            activitycodelist_id = request.form['attr'].split("classification_percentage_")[1]
-            attr = "percentage"
-        update_status = qcodelists.update_activity_codelist(
-            activitycodelist_id, {"attr": attr, "value": request.form['value']}
+    request_data = request.get_json()
+    if request_data['type'] == 'classification':
+        activitycodelist_id = request_data['activitycodelist_id']
+        update_status = qactivity.update_activity_codelist(
+            activitycodelist_id, {"attr": request_data['attr'], "value": request_data['value']}
             )
         if update_status: return "success"
         else: return "error"
-    if request.form['attr'].startswith("org"):
+    elif request_data['type'] == 'organisation':
         update_status = qorganisations.update_activity_organisation(
-            request.form['attr'].split("_")[1],
-            request.form['value'])
+            request_data['activityorganisation_id'],
+            request_data['value'])
         if update_status: return "success"
         else: return "error"
     data = {
-        'attr': request.form['attr'],
-        'value': request.form['value'],
+        'attr': request_data['attr'],
+        'value': request_data['value'],
         'id': activity_id,
     }
     update_status = qactivity.update_attr(data)

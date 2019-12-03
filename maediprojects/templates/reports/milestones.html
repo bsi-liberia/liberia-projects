@@ -18,19 +18,21 @@
 </b-row>
 <b-table class="table" id="milestones" sort-by="Final Proposal"
     :items="activities" :fields="fields" :busy="isBusy" responsive>
-  <div slot="table-busy" class="text-center">
-    <b-spinner class="align-middle" label="Loading..."></b-spinner>
-    <strong>Loading...</strong>
-  </div>
-  <template slot="[title]" slot-scope="data">
+  <template v-slot:table-busy>
+    <div class="text-center">
+      <b-spinner class="align-middle" label="Loading..."></b-spinner>
+      <strong>Loading...</strong>
+    </div>
+  </template>
+  <template v-slot:cell(title)="data">
     <a :href="data.item.url">[[ data.item.title ]]</a>
   </template>
-  <template :slot="[milestone]" slot-scope="data" v-for="(milestone, milestone_data) in milestones">
+  <template v-slot:['cell('+milestone+')']="data" v-for="(milestone, milestone_data) in milestones">
     <i :class="'fas ' + data.item[milestone].icon + ' text-' + data.item[milestone].colour">
         <span class="sr-only">[[ data.item[milestone].status ]]</span>
     </i>
   </template>
-  <template slot="[Appropriation Made]" slot-scope="data">
+  <template v-slot:cell(appropriation)="data">
     <i class="fas fa-check-circle text-success" v-if="data.item.sum_appropriations > 0">
         <span class="sr-only">True</span>
     </i>
@@ -38,7 +40,7 @@
         <span class="sr-only">False</span>
     </i>
   </template>
-  <template slot="[Allotment Made]" slot-scope="data">
+  <template v-slot:cell(allotment)="data">
     <i class="fas fa-check-circle text-success" v-if="data.item.sum_allotments > 0">
         <span class="sr-only">True</span>
     </i>
@@ -46,7 +48,7 @@
         <span class="sr-only">False</span>
     </i>
   </template>
-  <template slot="[Disbursement Made]" slot-scope="data">
+  <template v-slot:cell(disbursement)="data">
     <i class="fas fa-check-circle text-success" v-if="data.item.sum_disbursements > 0">
         <span class="sr-only">True</span>
     </i>
@@ -106,10 +108,17 @@ new Vue({
             "Final Proposal"].map(item=>
             { return { key: item, sortable: true, variant: "light", class: "text-center" }
             })).concat(
-                ["Appropriation Made", "Allotment Made",
-            "Disbursement Made"].map(item=>
-            { return { key: item, sortable: true, class: "text-center" }
-            }))
+                [{
+                  'key': 'appropriation', 'label': 'Appropriation Made',
+                  sortable: true, class: 'text-center'
+                },
+                {
+                  'key': 'allotment', 'label': 'Allotment Made',
+                  sortable: true, class: 'text-center'},
+                {
+                  'key': 'disbursement', 'label': 'Disbursement Made',
+                  sortable: true, class: 'text-center'
+                }])
           // this.fields = ['title'].concat(response.data.milestones)
           this.fiscalYears = response.data.fiscalYears
           this.isBusy = false

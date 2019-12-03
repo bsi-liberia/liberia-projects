@@ -139,7 +139,12 @@ def delete_user_role(username, role_slug):
 
 def user_id_username():
     users = models.User.query.all()
-    return list(map(lambda u: {"id": u.id, "username": u.username}, users))
+    return list(map(lambda u: {
+        "id": u.id,
+        "username": u.username,
+        "name": u.name,
+        "organisation": u.organisation,
+        "editable": True}, users))
 
 
 def activitylog(offset=0, user_id=None):

@@ -4,7 +4,7 @@ import re
 from collections import OrderedDict
 
 from flask import Blueprint, request, \
-    url_for, Response, current_app
+    url_for, Response, current_app, abort
 from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
@@ -184,24 +184,41 @@ def filters_reporting_organisation():
     return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
 
 
-def generate_reporting_organisation_checklist(reporting_orgs):
+def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses):
+    response_statuses = dict(map(lambda r: (r["id"], r), _response_statuses))
+    response_statuses[0] = {
+        'name': 'Donor did not respond',
+        'icon': 'far fa-times-circle text-secondary'}
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
     ros_disbursements = qmonitoring.fydata_ros("todate")
+    def make_status(ro, qtr, disb_value):
+        if disb_value:
+            return response_statuses.get(3) #FIXME this is the database ID for donor responded with data
+        quarters = util.Last4Quarters().list_of_quarters()
+        if ro.responses_fys.get(quarters.get(qtr)):
+            return response_statuses.get(ro.responses_fys.get(quarters.get(qtr)))
+        return response_statuses.get(0)
+
     def annotate_ro(ro):
         _ro = ro.as_dict()
         _ro["responses_fys"] = ro.responses_fys
         _ro["activities_count"] = ro.activities_count
         _ro["forwardspends"] = {
-            "current": ros_fiscal_years.get(ro.id, 0.00),
-            "previous": ros_fiscal_years_previous.get(ro.id, 0.00)
+            "current": {
+                'value': ros_fiscal_years.get(ro.id, 0.00),
+                'status': make_status(ro, None, ros_fiscal_years.get(ro.id)),
+            },
+            "previous": {
+                'value': ros_fiscal_years_previous.get(ro.id, 0.00),
+                'status': make_status(ro, None, ros_fiscal_years_previous.get(ro.id)),
+            }
         }
-        _ro["disbursements"] = {
-            "Q1": ros_disbursements.get((ro.id, u"Q1"), 0.00),
-            "Q2": ros_disbursements.get((ro.id, u"Q2"), 0.00),
-            "Q3": ros_disbursements.get((ro.id, u"Q3"), 0.00),
-            "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
-        }
+        _ro["disbursements"] = dict([
+            (qtr, {
+                'value': ros_disbursements.get((ro.id, qtr), 0.00),
+                'status': make_status(ro, qtr, ros_disbursements.get((ro.id, qtr)))
+            }) for qtr in [u"Q1", u"Q2", u"Q3", u"Q4"]])
         return _ro
     return list(map(lambda ro: annotate_ro(ro), reporting_orgs))
 
@@ -228,8 +245,10 @@ def reporting_orgs_user():
             quser.users_with_role('desk-officer')))
     else:
         users = []
+    response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
 
-    orgs = generate_reporting_organisation_checklist(reporting_orgs)
+    data_collection_calendar = qmonitoring.generate_data_collection_calendar()
 
     return jsonify(
         orgs=orgs,
@@ -239,7 +258,8 @@ def reporting_orgs_user():
         users=users,
         user_name=user_name,
         user_id=user_id,
-        statuses=list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+        statuses=response_statuses,
+        data_collection_calendar=data_collection_calendar
         )
 
 
@@ -247,7 +267,8 @@ def reporting_orgs_user():
 @login_required
 def reporting_orgs():
     reporting_orgs = qorganisations.get_reporting_orgs()
-    orgs = generate_reporting_organisation_checklist(reporting_orgs)
+    response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
     return jsonify(
         orgs=orgs,
         current_year = util.FY("current").fy_fy(),
@@ -316,6 +337,7 @@ def api_activities_filters():
         ("Sector", "mtef-sector", cl["mtef-sector"]),
         ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
         ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
+        ("SDG Goals", "sdg-goals", cl["sdg-goals"]),
         ("Activity Status", "activity_status", cl["ActivityStatus"]),
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
@@ -354,14 +376,183 @@ def api_activities_country():
         "permissions": activity.permissions
     } for activity in activities])
 
+
 @blueprint.route("/api/activities/<activity_id>.json")
 @login_required
 def api_activities_by_id(activity_id):
-    cl_lookups = get_codelists_lookups()
-    activity = qactivity.get_activity(activity_id)
-    data = qgenerate_csv.activity_to_json(activity, cl_lookups)
+    activity = qactivity.get_activity(activity_id).as_jsonable_dict()
+    return jsonify(activity=activity)
 
-    return jsonify(data)
+
+@blueprint.route("/api/activities/new.json", methods=['GET', 'POST'])
+@login_required
+def api_new_activity():
+    if request.method=="GET":
+        today = datetime.datetime.now().date()
+        activity = {
+            "flow_type": "10",
+            "aid_type": "C01",
+            "collaboration_type": "1",
+            "finance_type": "110",
+            "activity_status": "2",
+            "tied_status": "5",
+            "start_date": today,
+            "end_date": today,
+            "recipient_country_code": current_user.recipient_country_code,
+            "domestic_external": current_user.permissions_dict.get("domestic_external_edit"),
+            "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
+                {
+                "role": 1,
+                "name": "Funding",
+                "entries": [{
+                    'percentage': 100,
+                    'role': 1,
+                    'id': qorganisations.get_organisation_by_name("").id
+                    }]
+                },
+                {
+                "role": 4,
+                "name": "Implementing",
+                "entries": [{
+                    'percentage': 100,
+                    'role': 4,
+                    'id': qorganisations.get_organisation_by_name("").id
+                    }]
+                }
+            ],
+            "classifications": {
+                "mtef-sector": {
+                    "name": "MTEF Sector",
+                    "codelist": "mtef-sector",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("mtef-sector", "").id,
+                        'percentage': 100,
+                        'codelist': 'mtef-sector',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "aft-pillar": {
+                    "name": "AfT Pillar",
+                    "codelist": "aft-pillar",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("aft-pillar", "").id,
+                        'percentage': 100,
+                        'codelist': 'aft-pillar',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "aligned-ministry-agency": {
+                    "name": "Aligned Ministry/Agency",
+                    "codelist": "aligned-ministry-agency",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("aligned-ministry-agency", "").id,
+                        'percentage': 100,
+                        'codelist': 'aligned-ministry-agency',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "sdg-goals": {
+                    "name": "SDG Goals",
+                    "codelist": "sdg-goals",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("sdg-goals", "").id,
+                        'percentage': 100,
+                        'codelist': 'sdg-goals',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "papd-pillar": {
+                    "name": "PAPD Pillar",
+                    "codelist": "papd-pillar",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("papd-pillar", "").id,
+                        'percentage': 100,
+                        'codelist': 'papd-pillar',
+                        'activitycodelist_id': None
+                    }]
+                }
+            },
+        }
+        return jsonify(activity=activity)
+    elif request.method=="POST":
+        data = request.get_json()
+        for codelist, codelist_data in data["classifications"].items():
+            data["classification_id_{}".format(codelist)] = codelist_data["entries"][0]["code"]
+            data["classification_percentage_{}".format(codelist)] = codelist_data["entries"][0]["percentage"]
+        data.pop("classifications")
+        for org_role in data["organisations"]:
+            data["org_{}".format(org_role["role"])] = org_role["entries"][0]["id"]
+        data.pop("organisations")
+        data["user_id"] = current_user.id
+        a = qactivity.create_activity(data)
+        if a:
+            return jsonify(a.as_jsonable_dict())
+        else:
+            return abort(500)
+
+
+@blueprint.route("/api/activities/<activity_id>/finances.json")
+@login_required
+def api_activities_finances_by_id(activity_id):
+    activity = qactivity.get_activity(activity_id)
+
+    commitments = activity.FY_commitments_dict
+    allotments = activity.FY_allotments_dict
+    disbursements = activity.FY_disbursements_dict
+    forward_spends = activity.FY_forward_spend_dict
+
+    finances = list()
+    if commitments: finances.append(('commitments', {
+        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+        "data": commitments.values()
+        }))
+    if allotments: finances.append(('allotment', {
+        "title": 'Allotments',
+        "data": allotments.values()
+        }))
+    if disbursements: finances.append(('disbursement', {
+        "title": 'Disbursements',
+        "data": disbursements.values()
+        }))
+    if forward_spends: finances.append(('forwardspend', {
+        "title": 'MTEF Projections',
+        "data": forward_spends.values()
+        }))
+    return jsonify(
+        finances=OrderedDict(finances)
+        )
+
+@blueprint.route("/api/activities/<activity_id>/finances/fund_sources.json")
+@login_required
+def api_activities_finances_fund_sources_by_id(activity_id):
+    activity = qactivity.get_activity(activity_id)
+
+    commitments = activity.FY_commitments_dict_fund_sources
+    allotments = activity.FY_allotments_dict_fund_sources
+    disbursements = activity.FY_disbursements_dict_fund_sources
+    forwardspends = activity.FY_forward_spend_dict_fund_sources
+
+    finances = list()
+    if commitments: finances.append(('commitments', {
+        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+        "data": commitments
+        }))
+    if allotments: finances.append(('allotment', {
+        "title": 'Allotments',
+        "data": allotments
+        }))
+    if disbursements: finances.append(('disbursement', {
+        "title": 'Disbursements',
+        "data": disbursements
+        }))
+    if forwardspends: finances.append(('forwardspend', {
+        "title": 'MTEF Projections',
+        "data": forwardspends
+        }))
+    return jsonify(
+        finances=OrderedDict(finances),
+        fund_sources=activity.disb_fund_sources
+    )
 
 def jsonify_results_design(results):
     out = []
@@ -404,7 +595,7 @@ def api_activities_results_data_entry(activity_id):
 
 @blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
 @login_required
-#@quser.permissions_required("view")
+@quser.permissions_required("view")
 def api_activities_results_design(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data(activity_id, request.json.get("results"))
@@ -417,29 +608,45 @@ def api_activities_results_design(activity_id):
             results=jsonify_results_design(results)
         )
 
-@blueprint.route("/api/activities/complete/<activity_id>.json")
-def api_activities_by_id_complete(activity_id):
-    cl_lookups = get_codelists_lookups()
-    activity = qactivity.get_activity(activity_id).as_jsonable_dict()
 
-    return jsonify(activity)
-
-@blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
+@blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["GET", "POST"])
 @login_required
 @quser.permissions_required("view")
 def api_activity_milestones(activity_id):
-    milestone_id = request.form["milestone_id"]
-    attribute = request.form["attribute"]
-    value = request.form["value"]
-    if attribute == "achieved": value={"true": True, "false": False}[value]
-    update_status = qmilestone.add_or_update_activity_milestone({
-                "activity_id": activity_id,
-                "milestone_id": milestone_id,
-                "attribute": attribute,
-                "value": value})
-    if update_status == True:
-        return "success"
-    return "error"
+    if request.method == "POST":
+        request_data = request.get_json()
+        milestone_id = request_data["milestone_id"]
+        attribute = request_data["attr"]
+        value = request_data["value"]
+        update_status = qmilestone.add_or_update_activity_milestone({
+                    "activity_id": activity_id,
+                    "milestone_id": milestone_id,
+                    "attribute": attribute,
+                    "value": value})
+        if update_status == True:
+            return "success"
+        return "error"
+    else:
+        activity = qactivity.get_activity(activity_id)
+        return jsonify(milestones=activity.milestones_data)
+
+
+@blueprint.route("/api/codelists.json", methods=["GET", "POST"])
+@login_required
+@quser.permissions_required("edit")
+def api_codelists():
+    if (request.method == "GET"):
+        return jsonify(
+                codelists = get_codelists(),
+                organisations = list(map(lambda o: o.as_dict(), qorganisations.get_organisations())))
+    elif (request.method == "POST"):
+        method = request.json["method"]
+        codelist = request.json["codelist"]
+        if ((method == "add") and (codelist == "fund-source")):
+            new_fund_source = qfinances.add_fund_source(request.json)
+            return jsonify(id = new_fund_source.id)
+        return abort(500)
+
 
 @blueprint.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
@@ -447,45 +654,64 @@ def api_activity_milestones(activity_id):
 def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id.
     POST also accepts financial data to be added or deleted."""
+    activity = qactivity.get_activity(activity_id)
     if request.method == "POST":
-        if request.form["action"] == "add":
+        request_data = request.get_json()
+        if request_data["action"] == "add":
+            # Fallbak to activity data
             data = {
-                "transaction_type": request.form["transaction_type"],
-                "transaction_date": request.form["transaction_date"],
-                "transaction_value": request.form["transaction_value"],
-                "aid_type": request.form["aid_type"],
-                "finance_type": request.form["finance_type"],
-                "provider_org_id": request.form["provider_org_id"],
-                "receiver_org_id": request.form["receiver_org_id"],
-                "currency": request.form.get("currency", u"USD"),
+                "transaction_type": request_data["transaction_type"],
+                "transaction_date": request_data["transaction_date"],
+                "transaction_value": request_data["transaction_value"],
+                "aid_type": request_data.get("aid_type", activity.aid_type),
+                "finance_type": request_data.get("finance_type", activity.finance_type),
+                "provider_org_id": request_data.get("provider_org_id", activity.funding_organisations[0].id),
+                "receiver_org_id": request_data.get("receiver_org_id", activity.implementing_organisations[0].id),
+                "fund_source_id": request_data.get("fund_source_id", None),
+                "currency": request_data.get("currency", u"USD"),
                 "classifications": {
-                    "mtef-sector": request.form["mtef_sector"]
+                    "mtef-sector": request_data.get("mtef_sector",
+                        activity.classification_data['mtef-sector']['entries'][0].codelist_code_id)
                 }
             }
-            result = jsonify(qfinances.add_finances(activity_id, data).as_dict())
-        elif request.form["action"] == "delete":
-            result = str(qfinances.delete_finances(activity_id, request.form["transaction_id"]))
-        return result
+            result = qfinances.add_finances(activity_id, data).as_simple_dict()
+        elif request_data["action"] == "delete":
+            result = qfinances.delete_finances(activity_id, request.get_json()["transaction_id"])
+        if result:
+            return jsonify(result)
+        else: return abort(500)
     elif request.method == "GET":
-        finances = list(map(lambda transaction: transaction.as_dict(),
-                         qactivity.get_activity(activity_id).finances))
-        return jsonify(finances = finances)
+        finances = {
+            'commitments': list(map(lambda t: t.as_dict(), activity.commitments)),
+            'allotments': list(map(lambda t: t.as_dict(), activity.allotments)),
+            'disbursements': list(map(lambda t: t.as_dict(), activity.disbursements))
+        }
+        fund_sources = list(map(lambda fs: {
+            "id": fs.id, "name": fs.name
+            }, models.FundSource.query.all()))
+        return jsonify(
+            finances = finances,
+            fund_sources = fund_sources
+        )
 
 @blueprint.route("/api/activity_finances/<activity_id>/update_finances/", methods=['POST'])
 @login_required
 @quser.permissions_required("edit")
 def finances_edit_attr(activity_id):
+    request_data = request.get_json()
     data = {
         'activity_id': activity_id,
-        'attr': request.form['attr'],
-        'value': request.form['value'],
-        'finances_id': request.form['finances_id'],
+        'attr': request_data['attr'],
+        'value': request_data['value'],
+        'finances_id': request_data['finances_id'],
     }
 
     #Run currency conversion if:
     # we now set to automatic
     # we change the currency and have set to automatic
-    if (data.get("attr") == "currency_automatic") and (data.get("value") == "1"):
+    if (data.get("attr") == "transaction_date") and (data.get("value") == ""):
+        return abort(500)
+    if (data.get("attr") == "currency_automatic") and (data.get("value") == True):
         # Handle update, and then return required data
         update_status = qexchangerates.automatic_currency_conversion(
             finances_id = data["finances_id"],
@@ -496,15 +722,15 @@ def finances_edit_attr(activity_id):
         update_status = qexchangerates.automatic_currency_conversion(
             finances_id = data["finances_id"],
             force_update = False)
-        return jsonify(update_status.as_dict())
+        return jsonify(update_status.as_simple_dict())
     elif data["attr"] == "mtef_sector":
         data["attr"] = 'mtef-sector' #FIXME make consistent
         update_status = qfinances.update_finances_classification(data)
     else:
         update_status = qfinances.update_attr(data)
     if update_status:
-        return jsonify(update_status.as_dict())
-    return "error"
+        return jsonify(update_status.as_simple_dict())
+    return abort(500)
 
 @blueprint.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
 @login_required
@@ -513,22 +739,28 @@ def api_activity_counterpart_funding(activity_id):
     """GET returns a list of all counterpart funding for a given activity_id.
     POST also accepts counterpart funding data to be added, deleted, updated."""
     if request.method == "POST":
-        if request.form["action"] == "add":
+        request_data = request.get_json()
+        if request_data["action"] == "add":
             required_date = util.fq_fy_to_date(1,
-                int(request.form["required_fy"])).date().isoformat()
+                int(request_data["required_fy"])).date().isoformat()
             data = {
-                "required_value": request.form["required_value"],
+                "required_value": request_data["required_value"],
                 "required_date": required_date,
                 "budgeted": False,
                 "allotted": False,
                 "disbursed": False,
             }
             result = qcounterpart_funding.add_entry(activity_id, data)
-        elif request.form["action"] == "delete":
-            result = qcounterpart_funding.delete_entry(activity_id, request.form["id"])
-        elif request.form["action"] == "update":
-            attr = request.form['attr']
-            value = request.form['value']
+            cf = result.as_dict()
+            cf["required_fy"], fq = util.date_to_fy_fq(cf["required_date"])
+            return jsonify(counterpart_funding=cf)
+        elif request_data["action"] == "delete":
+            result = qcounterpart_funding.delete_entry(activity_id, request_data["id"])
+            if result: return jsonify(result=True)
+            return abort(500)
+        elif request_data["action"] == "update":
+            attr = request_data['attr']
+            value = request_data['value']
             if value == "true":
                 value = True
             elif value == "false":
@@ -541,12 +773,12 @@ def api_activity_counterpart_funding(activity_id):
                 'activity_id': activity_id,
                 'attr': attr,
                 'value': value,
-                'id': request.form['id'],
+                'id': request_data['id'],
             }
             update_status = qcounterpart_funding.update_entry(data)
-            if update_status == True:
-                return "success"
-            return "error"
+            if update_status:
+                return jsonify(result=True)
+            return abort(500)
         return str(result)
     elif request.method == "GET":
         def to_fy(counterpart_funding):
@@ -605,12 +837,13 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             return jsonify(forwardspends=out, quarters=quarters)
 
     elif request.method == "POST":
-        if request.form["value"] in (None, " ", ""):
+        request_data = request.get_json()
+        if request_data["value"] in (None, " ", ""):
             value = 0
         else:
-            value = request.form["value"]
+            value = request_data["value"]
         data = {
-            "id": request.form["id"],
+            "id": request_data["id"],
             "value": value
         }
         update_status = qfinances.update_fs_attr(data)
@@ -654,10 +887,11 @@ def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
     if request.method == "POST":
-        if request.form["action"] == "add":
-            result = qlocation.add_location(activity_id, request.form["location_id"])
-        elif request.form["action"] == "delete":
-            result = qlocation.delete_location(activity_id, request.form["location_id"])
+        request_data = request.get_json()
+        if request_data["action"] == "add":
+            result = qlocation.add_location(activity_id, request_data["location_id"])
+        elif request_data["action"] == "delete":
+            result = qlocation.delete_location(activity_id, request_data["location_id"])
         return str(result)
     elif request.method == "GET":
         locations = list(map(lambda x: x.as_dict(),

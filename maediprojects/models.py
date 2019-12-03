@@ -1,5 +1,6 @@
 import datetime
 import functools as ft
+import collections
 
 import sqlalchemy as sa
 from sqlalchemy import func, union_all
@@ -8,6 +9,8 @@ from sqlalchemy.sql.expression import case
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
+from maediprojects.lib import util, codelist_helpers
+from flask import url_for
 
 from maediprojects.extensions import db
 
@@ -66,28 +69,29 @@ def get_closest_date(the_date, the_currency):
         ).first()
 
 def fwddata_query(_self, fiscalyear_modifier):
+    QUERY_COLS = (func.sum(ActivityForwardSpend.value).label("value"),
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityForwardSpend.period_start_date,
+                        'start of month', '-{} month'.format(fiscalyear_modifier))
+                    ).label("fiscal_year"),
+                case(
+                    [
+                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                          'start of month', '-{} month'.format(fiscalyear_modifier))
+                            ).in_(('01','02','03')), 'Q1'),
+                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                          'start of month', '-{} month'.format(fiscalyear_modifier))
+                            ).in_(('04','05','06')), 'Q2'),
+                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                          'start of month', '-{} month'.format(fiscalyear_modifier))
+                            ).in_(('07','08','09')), 'Q3'),
+                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
+                          'start of month', '-{} month'.format(fiscalyear_modifier))
+                            ).in_(('10','11','12')), 'Q4'),
+                    ]
+                ).label("fiscal_quarter"))
     return db.session.query(
-            func.sum(ActivityForwardSpend.value).label("value"),
-            func.STRFTIME('%Y',
-                func.DATE(ActivityForwardSpend.period_start_date,
-                    'start of month', '-{} month'.format(fiscalyear_modifier))
-                ).label("fiscal_year"),
-            case(
-                [
-                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('01','02','03')), 'Q1'),
-                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('04','05','06')), 'Q2'),
-                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('07','08','09')), 'Q3'),
-                    (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('10','11','12')), 'Q4'),
-                ]
-            ).label("fiscal_quarter")
+            *QUERY_COLS
         ).filter(
             ActivityForwardSpend.activity_id == _self.id,
             ActivityForwardSpend.value != 0
@@ -96,9 +100,8 @@ def fwddata_query(_self, fiscalyear_modifier):
         ).all()
 
 
-def fydata_query(_self, fiscalyear_modifier, _transaction_types):
-    return db.session.query(
-            func.sum(ActivityFinances.transaction_value).label("value"),
+def fydata_query(_self, fiscalyear_modifier, _transaction_types, fund_sources=False):
+    QUERY_COLS = (func.sum(ActivityFinances.transaction_value).label("value"),
             func.STRFTIME('%Y',
                 func.DATE(ActivityFinances.transaction_date,
                     'start of month', '-{} month'.format(fiscalyear_modifier))
@@ -118,12 +121,23 @@ def fydata_query(_self, fiscalyear_modifier, _transaction_types):
                       'start of month', '-{} month'.format(fiscalyear_modifier))
                         ).in_(('10','11','12')), 'Q4'),
                 ]
-            ).label("fiscal_quarter")
-        ).filter(
+            ).label("fiscal_quarter"))
+    GROUP_BYS = ("fiscal_quarter", "fiscal_year")
+    if fund_sources:
+        QUERY_COLS += (FundSource.name.label("fund_source_name"),)
+        GROUP_BYS += ("fund_source_name",)
+
+    query = db.session.query(
+            *QUERY_COLS
+        )
+    if fund_sources:
+        query = query.outerjoin(FundSource, ActivityFinances.fund_source_id==FundSource.id
+        )
+    return query.filter(
             ActivityFinances.activity_id == _self.id,
             ActivityFinances.transaction_value != 0,
             ActivityFinances.transaction_type.in_(_transaction_types)
-        ).group_by("fiscal_quarter", "fiscal_year"
+        ).group_by(*GROUP_BYS
         ).order_by(ActivityFinances.transaction_date.desc()
         ).all()
 
@@ -293,6 +307,45 @@ class Activity(db.Model):
         )
 
     @hybrid_property
+    def disb_finance_types(self):
+        query = db.session.query(
+            sa.func.sum(ActivityFinances.transaction_value).label("sum_value"),
+            ActivityFinances.finance_type
+            ).outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
+            ).group_by(ActivityFinances.finance_type
+            ).filter(ActivityFinances.transaction_type==u"D"
+            ).filter(ActivityFinances.activity_id==self.id
+            ).all()
+        data = dict(map(lambda ft: (ft.finance_type, ft.sum_value), query))
+        total = sum(map(lambda ft: ft.sum_value, query))
+        if total == 0: return { "Grant": 0.0, "Loan": 0.0 }
+        return {
+            "Grant": int(round((data.get(u"110", 0) / total)*100)),
+            "Loan": int(round((data.get("410", 0) / total)*100)),
+        }
+
+    @hybrid_property
+    def disb_fund_sources(self):
+        query = db.session.query(
+            sa.func.sum(ActivityFinances.transaction_value).label("sum_value"),
+                FundSource.name,
+                ActivityFinances.finance_type
+            ).outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
+            ).group_by(FundSource.name, FundSource.finance_type
+            ).filter(ActivityFinances.transaction_type==u"D"
+            ).filter(ActivityFinances.activity_id==self.id
+            ).all()
+        total = sum(map(lambda ft: ft.sum_value, query))
+        if total == 0: return { "": { "value": 0.0}}
+        return dict(map(lambda ft: (ft.name, {
+                "value": int(round((ft.sum_value / total)*100)),
+                "finance_type": {
+                    "110": "Grant",
+                    "410": "Loan",
+                }.get(ft.finance_type)
+            }), query))
+
+    @hybrid_property
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                         ).filter(ActivityFinances.transaction_type==u"C",
@@ -305,15 +358,12 @@ class Activity(db.Model):
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'C')""")
     allotments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'99-A')""")
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'D')""")
 
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
@@ -391,6 +441,7 @@ class Activity(db.Model):
 
         return {
                     "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -398,6 +449,24 @@ class Activity(db.Model):
                     }
                     for fyval in fydata
                 }
+
+    @hybrid_property
+    def FY_disbursements_dict_fund_sources(self):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        fydata = fydata_query(self, fiscalyear_modifier, [u'D', u'E'], True)
+
+        out = collections.defaultdict(dict)
+        for fyval in fydata:
+            out[fyval.fund_source_name].update({
+                "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+                    "value": round(fyval.value, 4)
+                }}
+            )
+        return out
 
     @hybrid_property
     def FY_allotments_dict(self):
@@ -406,6 +475,7 @@ class Activity(db.Model):
 
         return {
                     "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -415,11 +485,30 @@ class Activity(db.Model):
                 }
 
     @hybrid_property
+    def FY_allotments_dict_fund_sources(self):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        fydata = fydata_query(self, fiscalyear_modifier, [u'99-A'], True)
+
+        out = collections.defaultdict(dict)
+        for fyval in fydata:
+            out[fyval.fund_source_name].update({
+                "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+                    "value": round(fyval.value, 4)
+                }}
+            )
+        return out
+
+    @hybrid_property
     def FY_commitments_dict(self):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
         fydata = fydata_query(self, fiscalyear_modifier, [u'C'])
         return {
                     "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -427,6 +516,40 @@ class Activity(db.Model):
                     }
                     for fyval in fydata
                 }
+
+    @hybrid_property
+    def FY_commitments_dict_fund_sources(self):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        fydata = fydata_query(self, fiscalyear_modifier, [u'C'], True)
+
+        out = collections.defaultdict(dict)
+        for fyval in fydata:
+            out[fyval.fund_source_name].update({
+                "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+                    "value": round(fyval.value, 4)
+                }}
+            )
+        return out
+
+    @hybrid_property
+    def FY_forward_spend_dict_fund_sources(self):
+        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+        fydata = fwddata_query(self, fiscalyear_modifier)
+        return {
+            None: {
+                "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+                    "value": round(fyval.value, 4)
+                }
+                for fyval in fydata
+            }
+        }
 
     @hybrid_property
     def FY_forward_spend_dict(self):
@@ -482,11 +605,44 @@ class Activity(db.Model):
         return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
     def as_jsonable_dict(self):
-        ret_data = {}
+        role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").iteritems())
+        ret_data = {
+            'classifications': collections.defaultdict(dict),
+            'organisations': collections.defaultdict(dict),
+            'url': url_for("activities.activity", activity_id=self.id),
+            'url_edit': url_for("activities.activity_edit", activity_id=self.id),
+            'results': len(self.results),
+            'documents': len(self.documents),
+            'milestones': len(self.milestones)
+        }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
-        #'user', 'organisations', 'reporting_org', 'recipient_country', 'results', 'locations', 'finances', 'forwardspends', 'classifications'
-        ret_data.update({key: getattr(self, key).as_dict() for key in ['reporting_org']})
-        [ret_data.update({key: [c.as_dict() for c in getattr(self, key)]}) for key in ['finances', 'locations', 'classifications', 'organisations', 'implementing_organisations']]
+        for cc in self.classifications:
+            if cc.codelist_code.codelist_code not in ret_data['classifications']:
+                ret_data['classifications'][cc.codelist_code.codelist_code] = {
+                    'codelist':cc.codelist_code.codelist_code,
+                    'name': cc.codelist_code.codelist.name,
+                    'entries': []
+                }
+            ret_data['classifications'][cc.codelist_code.codelist_code]['entries'].append(
+                {
+                'codelist': cc.codelist_code.codelist_code,
+                'code': cc.codelist_code.id,
+                'percentage': cc.percentage,
+                'activitycodelist_id': cc.id
+                })
+        for org in self.organisations:
+            if org.role not in ret_data['organisations']:
+                ret_data['organisations'][org.role] = {
+                    'role': org.role,
+                    'name': role_names[str(org.role)],
+                    'entries': []
+                }
+            ret_data['organisations'][org.role]['entries'].append(
+                {
+                'role': org.role,
+                'id': org.organisation_id,
+                'percentage': org.percentage,
+                'activityorganisation_id': org.id})
         return ret_data
 
 class ActivityFinances(db.Model):
@@ -518,7 +674,9 @@ class ActivityFinances(db.Model):
     classifications = sa.orm.relationship("ActivityFinancesCodelistCode",
             cascade="all, delete-orphan",
             backref="activityfinances")
-
+    fund_source_id = sa.Column(sa.Integer,
+            sa.ForeignKey('fund_source.id'),
+            nullable=True)
     transaction_value_original = sa.Column(sa.Float(precision=2),
         default=0, nullable=False)
     currency_automatic = sa.Column(sa.Boolean,
@@ -576,7 +734,9 @@ class ActivityFinances(db.Model):
         return ret_data
 
     def as_simple_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret_data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret_data["mtef_sector"] = self.mtef_sector
+        return ret_data
 
 class ActivityForwardSpend(db.Model):
     __tablename__ = 'forwardspend' # 'activityforwardspend'
@@ -590,10 +750,21 @@ class ActivityForwardSpend(db.Model):
     period_start_date = sa.Column(sa.Date)
     period_end_date = sa.Column(sa.Date)
 
-
     __table_args__ = (
         sa.UniqueConstraint('activity_id','period_start_date', name='forward_spend_constraint'),
     )
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class FundSource(db.Model):
+    __tablename__ = 'fund_source'
+    id = sa.Column(sa.Integer, primary_key=True)
+    code = sa.Column(sa.UnicodeText, index=True, unique=True)
+    name = sa.Column(sa.UnicodeText)
+    finance_type = sa.Column(sa.UnicodeText)
+    activityfinances = sa.orm.relationship("ActivityFinances",
+            backref="fund_source")
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -1020,9 +1191,14 @@ class User(db.Model):
 
     @hybrid_property
     def permissions_dict(self):
+        if not self.permissions:
+            return {'organisations': {}}
         permissions = dict(map(lambda p: (p.permission_name, p.permission_value), self.permissions))
         permissions["organisations"] = dict(map(lambda op: (op.organisation_id, op.as_dict()), self.organisations))
         return permissions
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class UserPermission(db.Model):
     __tablename__ = 'userpermission'
