@@ -116,9 +116,10 @@ class TestActivityEditorLocations(LiveServerClass):
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#locationSelector div.btn-group-toggle label"))
         )
+        time.sleep(2)
         # Click on the first element in the location selector
         selenium.find_element(By.CSS_SELECTOR, "#locationSelector div.btn-group-toggle label").click()
-        time.sleep(2)
+        time.sleep(1)
         # Check it was shown to be active, and that the location map has one marker now
         assert "active" in selenium.find_element(By.CSS_SELECTOR, "#locationSelector div.btn-group-toggle label").get_attribute("class")
         assert len(selenium.find_elements(By.CSS_SELECTOR, "#location-container .leaflet-marker-pane img")) == 1
