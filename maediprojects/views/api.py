@@ -654,29 +654,45 @@ def api_codelists():
 def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id.
     POST also accepts financial data to be added or deleted."""
+    activity = qactivity.get_activity(activity_id)
     if request.method == "POST":
-        if request.form["action"] == "add":
+        request_data = request.get_json()
+        if request_data["action"] == "add":
+            # Fallbak to activity data
             data = {
-                "transaction_type": request.form["transaction_type"],
-                "transaction_date": request.form["transaction_date"],
-                "transaction_value": request.form["transaction_value"],
-                "aid_type": request.form["aid_type"],
-                "finance_type": request.form["finance_type"],
-                "provider_org_id": request.form["provider_org_id"],
-                "receiver_org_id": request.form["receiver_org_id"],
-                "currency": request.form.get("currency", u"USD"),
+                "transaction_type": request_data["transaction_type"],
+                "transaction_date": request_data["transaction_date"],
+                "transaction_value": request_data["transaction_value"],
+                "aid_type": request_data.get("aid_type", activity.aid_type),
+                "finance_type": request_data.get("finance_type", activity.finance_type),
+                "provider_org_id": request_data.get("provider_org_id", activity.funding_organisations[0].id),
+                "receiver_org_id": request_data.get("receiver_org_id", activity.implementing_organisations[0].id),
+                "fund_source_id": request_data.get("fund_source_id", None),
+                "currency": request_data.get("currency", u"USD"),
                 "classifications": {
-                    "mtef-sector": request.form["mtef_sector"]
+                    "mtef-sector": request_data.get("mtef_sector",
+                        activity.classification_data['mtef-sector']['entries'][0].codelist_code_id)
                 }
             }
-            result = jsonify(qfinances.add_finances(activity_id, data).as_dict())
-        elif request.form["action"] == "delete":
-            result = str(qfinances.delete_finances(activity_id, request.form["transaction_id"]))
-        return result
+            result = qfinances.add_finances(activity_id, data).as_simple_dict()
+        elif request_data["action"] == "delete":
+            result = qfinances.delete_finances(activity_id, request.get_json()["transaction_id"])
+        if result:
+            return jsonify(result)
+        else: return abort(500)
     elif request.method == "GET":
-        finances = list(map(lambda transaction: transaction.as_dict(),
-                         qactivity.get_activity(activity_id).finances))
-        return jsonify(finances = finances)
+        finances = {
+            'commitments': list(map(lambda t: t.as_dict(), activity.commitments)),
+            'allotments': list(map(lambda t: t.as_dict(), activity.allotments)),
+            'disbursements': list(map(lambda t: t.as_dict(), activity.disbursements))
+        }
+        fund_sources = list(map(lambda fs: {
+            "id": fs.id, "name": fs.name
+            }, models.FundSource.query.all()))
+        return jsonify(
+            finances = finances,
+            fund_sources = fund_sources
+        )
 
 @blueprint.route("/api/activity_finances/<activity_id>/update_finances/", methods=['POST'])
 @login_required
