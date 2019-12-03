@@ -76,7 +76,7 @@ def import_exchange_rates_from_url(full_download=True, since_date=None):
         print("Downloading new exchange rate data since {}...".format(since_date))
         f = requests.get(EXCHANGE_RATES_API_SUBSET.format(MORPHIO_API_KEY, since_date), stream=True)
     _ercsv = unicodecsv.DictReader(f.iter_lines())
-    assert(_ercsv.fieldnames == [u'Date', u'Rate', u'Currency', u'Frequency', u'Source', u'RateFirstSeen'])
+    assert _ercsv.fieldnames == [u'Date', u'Rate', u'Currency', u'Frequency', u'Source', u'RateFirstSeen']
     print("Download begun, beginning import...")
     import_exchange_rates_file(_ercsv)
 
