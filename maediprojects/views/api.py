@@ -837,12 +837,13 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
             return jsonify(forwardspends=out, quarters=quarters)
 
     elif request.method == "POST":
-        if request.form["value"] in (None, " ", ""):
+        request_data = request.get_json()
+        if request_data["value"] in (None, " ", ""):
             value = 0
         else:
-            value = request.form["value"]
+            value = request_data["value"]
         data = {
-            "id": request.form["id"],
+            "id": request_data["id"],
             "value": value
         }
         update_status = qfinances.update_fs_attr(data)
