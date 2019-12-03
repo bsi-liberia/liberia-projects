@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, flash, request, redirect, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_babel import gettext
 
+from maediprojects import models
 from maediprojects.query import user as quser
 from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import codelists
@@ -14,7 +15,7 @@ blueprint = Blueprint('users', __name__, url_prefix='/', static_folder='../stati
 
 @login_manager.user_loader
 def load_user(id):
-    return quser.user(id)
+    return models.User.query.get(id)
 
 
 @blueprint.route("/profile/", methods=["GET", "POST"])
