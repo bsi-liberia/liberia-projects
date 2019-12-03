@@ -1,1020 +1,277 @@
-{% set active_page='activity' %}{% extends "layout.html" %}
-{% block title %}{% if activity.id %}{{ _('Edit activity') }}: {{ activity.title }}
-{% else %}{{ _('New activity') }}{% endif %}{% endblock %}
+{% set active_page='activity' %}{% extends "layout2.html" %}
+{% block title %}Edit Activity{% endblock %}
 {% block content %}
 <style>
   .table span.form-control-feedback {
     top: 0;
   }
 </style>
-<h1>{% if activity.id %}{{ _('Edit activity') }}: {{ activity.title }}
-{% else %}{{ _('New activity') }}{% endif %}</h1>
-{% if activity.id %}
-<a class="btn btn-success btn-large pull-right" href="{{ url_for('activities.activity', activity_id=activity.id) }}">
-  <i class="glyphicon glyphicon-floppy-disk"></i>
-  {{ _('Save and exit project') }}
-</a>
-{% endif %}
+<b-row v-if="activity">
+  <b-col sm="10">
+    <h1 v-if="mode=='new'">New Activity<span v-if="activity">: [[ activity.title ]]</span></h1>
+    <h1 v-else >Edit activity<span v-if="activity">: [[ activity.title ]]</span></h1>
+  </b-col>
+  <b-col sm="2">
+    <b-btn variant="success" :href="activity.url" v-if="mode=='edit'">
+      <i class="fa fa-save"></i>
+      Save and exit project
+    </b-btn>
+  </b-col>
+</b-row>
 
-<div role="tabpanel">
-  <ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active"><a href="#basic" aria-controls="basic" role="tab" data-toggle="tab">{{ _('Basic') }}</a></li>
-    <li role="presentation"><a href="#sectors" aria-controls="sectors" role="tab" data-toggle="tab">{{ _('Sectors') }}</a></li>
-    {% if activity.id %}
-    <li role="presentation"><a href="#location" aria-controls="location" role="tab" data-toggle="tab" id="locationTab">{{ _('Locations') }}</a></li>
-    <li role="presentation"><a href="#finances" aria-controls="finances" role="tab" data-toggle="tab" id="financesTab">{{ _('Financials') }}</a></li>
-    {% if activity.milestones_data %}
-    <li role="presentation"><a href="#milestones" aria-controls="milestones" role="tab" data-toggle="tab" id="milestonesTab">{{ _('Milestones') }}</a></li>
-    {% endif %}
-    <li role="presentation"><a href="#conditions" aria-controls="conditions" role="tab" data-toggle="tab" id="conditionsTab">{{ _('Conditions') }}</a></li>
-    {% if activity.documents %}
-    <li role="presentation"><a href="#documents" aria-controls="documents" role="tab" data-toggle="tab" id="documentsTab">{{ _('Documents') }}</a></li>
-    {% endif %}
-    {% if activity.results %}
-    <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab" id="resultsTab">{{ _('Results') }}</a></li>
-    {% endif %}
-    {% endif %}
-   <!-- <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">Results</a></li>-->
-  </ul>
-
-{% if not activity.id %}
-<!-- This submits the new activity form -->
-<form id="activity-form" method="POST">
-{% endif %}
-
-  <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active activity-form-save form-horizontal" id="basic">
-      <h2>{{ _('Basic data') }}</h2>
-        <div class="form-group">
-          <label for="code" class="col-sm-2 control-label">{{ _('Project code') }}</label>
-          <div class="col-sm-10">
-            <input type="text" name="code" id="code"
-            value="{{ activity.code }}" class="form-control" placeholder="If known">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="updated_date" class="col-sm-2 control-label">{{ _('Last updated') }}</label>
-          <div class="col-sm-10">
-            <label name="updated_date" id="updated_date" class="form-control" disabled>{{ activity.updated_date }}</label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="title" class="col-sm-2 control-label">{{ _('Title') }}</label>
-          <div class="col-sm-10">
-            <div class="input-group">
-              <input type="text" name="title" id="title"
-              value="{{ activity.title }}" class="form-control">
-              <div class="input-group-addon">
-                <a href="" id="search_iati" title="Search IATI for this project">
-                  <span class="glyphicon glyphicon-globe"></span>
-                </a>
+<b-row>
+  <b-col class="text-center" v-if="isBusy" style="margin-bottom: 20px;">
+    <b-spinner class="align-middle" label="Loading..."></b-spinner>
+    <strong>Loading...</strong>
+  </b-col>
+</b-row>
+<div v-if="activity">
+  <b-card no-body>
+    <b-card-header>
+      <b-nav tabs class="card-header-tabs">
+        <b-nav-item to="/" :active="$route.path === '/'">
+          Basic
+        </b-nav-item>
+        <b-nav-item to="sectors" :active="$route.path === '/sectors'">
+          Sectors
+        </b-nav-item>
+        <b-nav-item to="locations" :active="$route.path === '/locations'" v-if="mode=='edit'">
+          Locations
+        </b-nav-item>
+        <b-nav-item to="finances" :active="$route.path === '/finances'" v-if="mode=='edit'">
+          Finances
+        </b-nav-item>
+        <b-nav-item to="conditions" :active="$route.path === '/conditions'" v-if="mode=='edit'">
+          Conditions
+        </b-nav-item>
+        <b-nav-item to="milestones" :active="$route.path === '/milestones'" v-if="activity.milestones">
+          Milestones
+        </b-nav-item>
+        <b-nav-item to="results" :active="$route.path === '/results'" v-if="activity.results">
+          Results
+        </b-nav-item>
+        <b-nav-item to="documents" :active="$route.path === '/documents'" v-if="activity.documents">
+          Documents
+        </b-nav-item>
+      </b-nav>
+    </b-card-header>
+    <div>
+      <transition name="fade">
+        <b-card-body v-show="$route.path === '/'">
+          <b-card-text class="activity-form-save form-horizontal">
+            <activity-basic-section
+              :codelists="codelists"
+              :activity="activity"></activity-basic-section>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      <transition name="fade">
+        <b-card-body v-show="$route.path === '/sectors'">
+          <b-card-text class="activity-form-save form-horizontal" id="sectors">
+            <sectors-section
+              :codelists="codelists"
+              :activity="activity"></sectors-section>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      <transition name="fade">
+        <!-- Location data -->
+        <b-card-body v-show="$route.path === '/locations'" @click="showLocations+=1" v-if="mode=='edit'">
+          <b-card-text id="location">
+            <h2>Location data</h2>
+              <locations-section
+              :show-locations="showLocations"></locations-section>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      <transition name="fade">
+        <!-- Financial data -->
+        <b-card-body v-show="$route.path === '/finances'" v-if="mode=='edit'">
+          <b-card-text id="finances">
+            <finances-section
+              :codelists="codelists"
+              :activity="activity"></finances-section>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      <transition name="fade">
+        <!-- Milestones data -->
+        <b-card-body v-show="$route.path === '/milestones'" v-if="activity.milestones">
+          <b-card-text id="milestones">
+            <h2>Milestones</h2>
+            <div class="row">
+              <div class="col-md-12">
+                <milestones-section></milestones-section>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="description" class="col-sm-2 control-label">{{ _('Description') }}</label>
-          <div class="col-sm-10">
-            <textarea name="description" id="description"
-            class="form-control" rows="2">{{ activity.description }}</textarea>
-          </div>
-        </div>
-        <div class="form-group input-fg">
-          <label for="start_date" class="col-sm-2 control-label">{{ _('Start date') }}</label>
-          <div class="col-sm-10">
-            <div class='input-group date' id='datetimepicker_start'>
-                <input type="text" name="start_date" id="start_date"
-                value="{{ activity.start_date }}" class="form-control"
-                placeholder="{{ _('yyyy-mm-dd') }}">
-                <span class="input-group-addon">
-                    <span class="glyphicon glyphicon-calendar"></span>
-                </span>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      {% if activity %}
+      <transition name="fade">
+        <!-- Conditions data -->
+        <b-card-body v-show="$route.path === '/conditions'" v-if="mode=='edit'">
+            <b-card-text id="conditions">
+            <h2>Conditions</h2>
+            <div class="alert alert-info">Enter each condition attached to this project &ndash;
+            for example, effectiveness conditions that are required before the project can begin.</div>
+            <div class="row">
+              <div class="col-md-12">
+                <table class="table table-hover table-conditions">
+                  <thead>
+                    <th>Condition</th>
+                    <th>Responsibility</th>
+                    <th>Due date</th>
+                    <th>Achieved</th>
+                    <th>Notes</th>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="form-group">
+                          <input type="text" class="form-control" name="condition_name"
+                          placeholder="e.g. Ratification" />
+                        </div>
+                      </td>
+                      <td>
+                        <div class="form-group">
+                          <input type="text" class="form-control" name="condition_responsibility"
+                          placeholder="e.g. AMCU" />
+                        </div>
+                      </td>
+                      <td>
+                        <div class="form-group">
+                          <input type="text" class="form-control" name="condition_due_date" />
+                        </div>
+                      </td>
+                      <td>
+                        <div class="checkbox">
+                          <label for="milestone-achieved-" class="control-label">
+                          <input type="checkbox" name="milestone-achieved-"
+                          id="milestone-achieved-" data-milestone-id=""
+                          data-milestone-attribute="achieved"/> Achieved</label>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="form-group">
+                            <textarea class="form-control col-m3-10" name="milestone-notes-"
+                            data-milestone-id="" data-milestone-attribute="notes"
+                            rows="1"></textarea>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="form-group input-fg">
-          <label for="end_date" class="col-sm-2 control-label">{{ _('End date') }}</label>
-          <div class="col-sm-10">
-            <div class='input-group date' id='datetimepicker_end'>
-                <input type="text" name="end_date" id="end_date"
-                value="{{ activity.end_date }}" class="form-control"
-                placeholder="{{ _('yyyy-mm-dd') }}">
-                <span class="input-group-addon">
-                    <span class="glyphicon glyphicon-calendar"></span>
-                </span>
+            <hr />
+            <h3>Counterpart funding</h3>
+            <div class="alert alert-info">Enter how much counterpart funding is required for each year.
+            Enter a new row for each fiscal year that counterpart funding is required for.</div>
+            <div class="row">
+              <div class="col-md-12">
+                <counterpart-funding-section></counterpart-funding-section>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="form-group select-fg">
-          <label for="activity_status" class="col-sm-2
-          control-label">{{ _('Activity Status') }}</label>
-          <div class="col-sm-10">
-            <select name="activity_status" id="activity_status" class="form-control">
-              {% for ds in codelists.ActivityStatus %}
-              <option value="{{ ds.code }}"{% if ds.code == activity.activity_status %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="form-group select-fg">
-          <label for="aid_type" class="col-sm-2 control-label">{{ _('Aid Type') }}</label>
-          <div class="col-sm-10">
-            <select name="aid_type" id="aid_type" class="form-control">
-              {% for at in codelists.AidType %}
-              <option value="{{ at.code }}"{% if at.code == activity.aid_type %} selected{% endif %} data-name="{{ at.name }}">{{ at.code }} &ndash; {{ at.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="form-group select-fg">
-          <label for="finance_type" class="col-sm-2 control-label">{{ _('Finance Type') }}</label>
-          <div class="col-sm-10">
-            <select name="finance_type" id="finance_type" class="form-control">
-              {% for ft in codelists.FinanceType %}
-              <option value="{{ ft.code }}"{% if ft.code == activity.finance_type %} selected{% endif %} data-name="{{ ft.name }}">{{ ft.code }} &ndash; {{ ft.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <hr />
-        <h3>Organisations</h3>
-        <div class="form-group select-fg">
-          <label for="reporting_org_id" class="col-sm-2 control-label">{{ _('Reported by') }}</label>
-          <div class="col-sm-10">
-            <select name="reporting_org_id" id="reporting_org_id" class="form-control">
-              {% for ds in organisations %}
-              <option value="{{ ds.id }}"{% if ds.id == activity.reporting_org_id %} selected{% endif %}
-                data-name="{{ ds.name }}"
-                data-organisation-code="{{ ds.code }}">{{ ds.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="organisations">
-          {% for organisation in activity.organisations %}
-          <div class="form-group">
-            <label for="organiations_{{ organisation.id }}" class="col-sm-2 control-label">{% if organisation.role == 1%}Funded by{% else %}Implemented by{% endif %}</label>
-            <div class="col-sm-10">
-              <select name="org_{{ organisation.id }}" id="funding_org_{{ organisation.id }}" class="form-control organisations_select_{{ organisation.role }}">
-                {% for ds in organisations %}
-                <option value="{{ ds.id }}"{% if ds.id == organisation.organisation.id %} selected{% endif %} data-name="{{ ds.name }}">{{ ds.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        <hr />
-        <div class="panel-group">
-          <div class="panel panel-default">
-            <div class="panel-heading" id="headingDetailed">
-              <h4 class="panel-title">
-                <a role="button" data-toggle="collapse"
-                data-target="#detailed"
-                href="#detailed" aria-expanded="false"
-                aria-controls="detailed">
-                  {{ _('Adjust default settings') }}
-                </a>
-              </h4>
-            </div>
-            <div id="detailed" class="panel-collapse collapse" aria-labelledby="#headingDetailed">
-              <div class="panel-body">
+            <!--
+            <div class="row">
+              <div class="col-md-12">
+                <div class="alert alert-info">Select the counterpart (government/PSIP) project that should provide
+                the counterpart funding. If you cannot find the PSIP project, please speak
+                to the PIU to request that they add the counterpart project to the system.</div>
                 <div class="form-group select-fg">
-                  <label for="collaboration_type" class="col-sm-2 control-label">{{ _('Collaboration Type') }}</label>
-                  <div class="col-sm-10">
-                    <select name="collaboration_type" id="collaboration_type" class="form-control">
-                      {% for ct in codelists.CollaborationType %}
-                      <option value="{{ ct.code }}"{% if ct.code == activity.collaboration_type %} selected{% endif %}>{{ ct.code }} &ndash; {{ ct.name }}</option>
+                  <label for="related_project" class="col-sm-4
+                  control-label">{{ _('Counterpart (government/PSIP) project') }}</label>
+                  <div class="col-sm-8">
+                    <select name="related_project" id="related_project" class="form-control">
+                      {% for ds in codelists.ActivityStatus %}
+                      <option value="{{ ds.code }}"{% if ds.code == activity.activity_status %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
                       {% endfor %}
                     </select>
                   </div>
                 </div>
-                <!--
-                <div class="form-group select-fg">
-                  <label for="flow_type" class="col-sm-2 control-label">{{ _('Flow type') }}</label>
-                  <div class="col-sm-10">
-                    <select name="flow_type" id="flow_type" class="form-control">
-                      {% for ft in codelists.FlowType %}
-                      <option value="{{ ft.code }}"{% if ft.code == activity.flow_type %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group select-fg">
-                  <label for="tied_status" class="col-sm-2 control-label">{{ _('Tied Status') }}</label>
-                  <div class="col-sm-10">
-                    <select name="tied_status" id="tied_status" class="form-control">
-                      {% for ft in codelists.TiedStatus %}
-                      <option value="{{ ft.code }}"{% if ft.code == activity.tied_status %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                -->
-                <div class="form-group select-fg">
-                  <label for="recipient_country_code" class="col-sm-2
-                  control-label">{{ _('Recipient Country') }}</label>
-                  <div class="col-sm-10">
-                    <select name="recipient_country_code" id="recipient_country_code" class="form-control">
-                      {% for ft in codelists.Country %}
-                      <option value="{{ ft.code }}"{% if ft.code == activity.recipient_country_code %} selected{% endif %}>{{ ft.code }} &ndash; {{ ft.name }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group select-fg">
-                  <label for="domestic_external" class="col-sm-2
-                  control-label">{{ _('External or Domestic Finance') }}</label>
-                  <div class="col-sm-10">
-                    <select name="domestic_external" id="domestic_external" class="form-control">
-                      <option value="external"{% if activity.domestic_external == "external" %} selected{% endif %}>External / Aid (AMCU)</option>
-                      <option value="domestic"{% if activity.domestic_external == "domestic" %} selected{% endif %}>Domestic / PSIP (PIU)</option>
-                    </select>
-                  </div>
-                </div>
-                {% if loggedinuser.administrator %}
-                <div class="form-group select-fg">
-                  <label for="user_id" class="col-sm-2
-                  control-label">{{ _('User') }}</label>
-                  <div class="col-sm-10">
-                    <select name="user_id" id="user_id" class="form-control">
-                      {% for u in users %}
-                      <option value="{{ u.id }}"{% if (u.id == loggedinuser.id and not u.id) or (u.id == activity.id) %} selected{% endif %}>{{ u.id }} &ndash; {{ u.username }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                {% endif %}
               </div>
             </div>
-          </div>
-        </div>
-    </div>
-    <div role="tabpanel" class="tab-pane activity-form-save form-horizontal" id="sectors">
-      <h2>{{ _('Sectors') }}</h2>
-        <!--
-        <div class="form-group select-fg">
-          <label for="dac_sector" class="col-sm-2 control-label">{{ _('DAC Sector') }}</label>
-          <div class="col-sm-10">
-            <select name="dac_sector" id="dac_sector" class="form-control">
-              {% for ds in codelists.Sector %}
-              <option value="{{ ds.code }}"{% if ds.code == activity.dac_sector %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        -->
-        {% for classification in activity.classification_data.values() %}
-          {% for item in classification["entries"] %}
-          <div class="form-group select-fg">
-            <label for="{{ classification.code }}" class="col-sm-3 control-label">{{ classification.name }}</label>
-            <div class="col-sm-6">
-              <select name="classification_id_{{ classification.id }}"
-                id="classification_{{ classification.id }}"
-                class="form-control classification_{{classification.code}}">
-                {% for ds in codelists[classification.code] %}
-                <option value="{{ ds.id }}"{% if ds.id == item.codelist_code_id %} selected{% endif %}
-                 data-name="{{ ds.name }}">{{ ds.code }} &ndash; {{ ds.name }}</option>
-                {% endfor %}
-              </select>
+          -->
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      <transition name="fade">
+        <b-card-body v-show="$route.path === '/documents'" v-if="activity.documents">
+          <b-card-text id="documents">
+            <h2>Documents</h2>
+            <div class="alert alert-info">
+              These documents were automatically captured from <a :href="`http://d-portal.org/q.html?aid=${activity.code}`">this donor's IATI data</a>.
             </div>
-            <!-- for now we don't allow editing percentages, as we are not allowing add/delete sectors -->
-            <div class="col-sm-2" style="display:none;">
-              <div class="input-group">
-                <input type="text" name="classification_percentage_{{ classification.id }}"
-                id="classification_percentage_{{ classification.id }}"
-                value="{{ item.percentage }}" class="form-control" placeholder="If known">
-                <span class="input-group-addon">
-                    %
-                </span>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-          <!--
-          <div class="form-group">
-            <div class="col-md-9 col-md-offset-3">
-              <a class="btn btn-default btn-sm"><span class="glyphicon glyphicon-plus"></span> Add {{ classification.name }}</a>
-            </div>
-          </div>
-            -->
-        {% endfor %}
-    </div>
-
-<script src="{{url_for('static', filename='vendor/moment-2.11.0/moment.min.js')}}" type="text/javascript"></script>
-<script src="{{url_for('static', filename='vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js')}}" type="text/javascript"></script>
-<link type="text/css" media="screen" href="{{url_for('static', filename='vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css')}}" rel="stylesheet" />
-<script src="{{url_for('static', filename='js/activity_new.js')}}" type="text/javascript"></script>
-
-{% if activity.id %}
-    <!-- Location data -->
-    <div role="tabpanel" class="tab-pane" id="location">
-      <h2>{{ _('Location data') }}</h2>
-      <div class="row">
-        <div class="col-sm-4">
-          <div id="locations-selector"></div>
-          <div id="location-data"></div>
-        </div>
-        <div class="col-sm-8">
-          <div id="locationMap"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Financial data -->
-    <div role="tabpanel" class="tab-pane" id="finances">
-      <h2>{{ _('Financial data') }}</h2>
-
-      <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">Show/hide columns <span class="glyphicon glyphicon-cog"></span> <span class="caret"></span></button>
-        <ul class="dropdown-menu set-column-visibility">
-          <li class="dropdown-header">Display the following columns</li>
-          <li>
-            <div class="form-group">
-              <div class="col-sm-12">
-                <div class="checkbox">
-                  <label><input type="checkbox" data-target="table-visibility-provider-org" /> Funder</label>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="form-group">
-              <div class="col-sm-12">
-                <div class="checkbox">
-                  <label><input type="checkbox" data-target="table-visibility-receiver-org" /> Implementer</label>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="form-group">
-              <div class="col-sm-12">
-                <div class="checkbox">
-                  <label><input type="checkbox" data-target="table-visibility-aid-type" /> Aid Type</label>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="form-group">
-              <div class="col-sm-12">
-                <div class="checkbox">
-                  <label><input type="checkbox" data-target="table-visibility-finance-type" /> Finance Type</label>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="form-group">
-              <div class="col-sm-12">
-                <div class="checkbox">
-                  <label><input type="checkbox" data-target="table-visibility-mtef-sector" /> MTEF Sector</label>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-        <div class="panel panel-default">
-          <div class="panel-heading" role="tab" id="headingCommitments">
-            <h4 class="panel-title">
-              <a role="button" data-toggle="collapse" href="#collapseCommitments" aria-expanded="true" aria-controls="collapseCommitments">
-                {% if activity.domestic_external =='domestic'%}{{ _('Appropriations') }}{% else %}{{ _('Commitments') }}{% endif %}
-              </a>
-            </h4>
-          </div>
-          <div id="collapseCommitments" class="panel-collapse collapse in finances-data" role="tabpanel" aria-labelledby="headingCommitments">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-sm-12">
-                  <div id="financial-data-C"></div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-sm-12">
-                  <a class="btn btn-primary addFinancial"
-                  data-transaction-type="C">
-                    <i class="glyphicon glyphicon-plus"></i>
-                    {% if activity.domestic_external=='domestic'%}{{ _('Add appropriation') }}{% else %}{{ _('Add commitment') }}{% endif %}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% if activity.domestic_external=='domestic' %}
-        <div class="panel panel-default">
-          <div class="panel-heading" role="tab" id="headingAllotments">
-            <h4 class="panel-title">
-              <a class="collapsed" role="button" data-toggle="collapse" href="#collapseAllotments" aria-expanded="false" aria-controls="collapseAllotments">
-                {{ _('Allotments') }}
-              </a>
-            </h4>
-          </div>
-          <div id="collapseAllotments" class="panel-collapse collapse in finances-data" role="tabpanel" aria-labelledby="headingAllotments">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-sm-12">
-                  <div id="financial-data-99-A"></div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-sm-12">
-                  <a class="btn btn-primary addFinancial"
-                  data-transaction-type="99-A">
-                    <i class="glyphicon glyphicon-plus"></i>
-                    {{ _('Add allotment') }}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-        <div class="panel panel-default">
-          <div class="panel-heading" role="tab" id="headingDisbursements">
-            <h4 class="panel-title">
-              <a class="collapsed" role="button" data-toggle="collapse" href="#collapseDisbursements" aria-expanded="false" aria-controls="collapseDisbursements">
-                {{ _('Disbursements') }}
-              </a>
-            </h4>
-          </div>
-          <div id="collapseDisbursements" class="panel-collapse collapse in finances-data" role="tabpanel" aria-labelledby="headingDisbursements">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-sm-12">
-                  <div id="financial-data-D"></div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-sm-12">
-                  <a class="btn btn-primary addFinancial"
-                  data-transaction-type="D">
-                    <i class="glyphicon glyphicon-plus"></i>
-                    {{ _('Add disbursement') }}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel panel-default">
-          <div class="panel-heading" role="tab" id="headingForwardSpends">
-            <h4 class="panel-title">
-              <a class="collapsed" role="button" data-toggle="collapse" href="#collapseForwardSpends" aria-expanded="false" aria-controls="collapseForwardSpends">
-                {{ _('Forward spending plans') }}
-              </a>
-            </h4>
-          </div>
-          <div id="collapseForwardSpends" class="panel-collapse collapse in forwardspends-data" role="tabpanel" aria-labelledby="headingForwardSpends">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-sm-12">
-                  <div id="financial-data-FS">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {% if activity.milestones_data %}
-    <!-- Milestones data -->
-    <div role="tabpanel" class="tab-pane" id="milestones">
-      <h2>{{ _('Milestones') }}</h2>
-      <div class="row">
-        <div class="col-md-12">
-            <table class="table table-hover">
+            <table class="table">
               <thead>
-                <th>Name</th>
-                <th>Achieved</th>
-                <th>Notes</th>
+                <th width="50%">Title</th>
+                <th>Type</th>
+                <th>Date</th>
               </thead>
               <tbody>
-              {% for milestone in activity.milestones_data %}
+                {% for document in activity.documents %}
                 <tr>
-                  <td><b>{{milestone.name }}</b></td>
+                  <td><a href="{{ document.url }}">{{ document.title }}</a></td>
                   <td>
-                    <div class="checkbox">
-                      <label for="milestone-achieved-{{ milestone.id }}" class="control-label">
-                      <input type="checkbox" name="milestone-achieved-{{ milestone.id }}"
-                      id="milestone-achieved-{{ milestone.id }}" data-milestone-id="{{ milestone.id }}"
-                      data-milestone-attribute="achieved"
-                       {% if milestone.achieved.status %} checked{%endif%}/> Achieved</label>
-                    </div>
+                    {% for category_code in document.categories %}
+                    <span class="label label-default">{{ codelist_lookups["DocumentCategory"][category_code.code] }}</span>
+                    {% endfor %}
                   </td>
-                  <td>
-                    <div class="form-group">
-                        <textarea class="form-control col-m3-10" name="milestone-notes-{{ milestone.id }}"
-                        data-milestone-id="{{ milestone.id }}" data-milestone-attribute="notes"
-                        rows="1">{{ milestone.notes }}</textarea>
-                    </div>
-                  </td>
+                  <td>{{ document.document_date or '' }}</td>
                 </tr>
-              {% endfor %}
+                {% endfor %}
               </tbody>
             </table>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-    <!-- Conditions data -->
-    <div role="tabpanel" class="tab-pane" id="conditions">
-      <!--
-      <h2>{{ _('Conditions') }}</h2>
-      <div class="alert alert-info">Enter each condition attached to this project &ndash;
-      for example, effectiveness conditions that are required before the project can begin.</div>
-      <div class="row">
-        <div class="col-md-12">
-          <table class="table table-hover table-conditions">
-            <thead>
-              <th>Condition</th>
-              <th>Responsibility</th>
-              <th>Due date</th>
-              <th>Achieved</th>
-              <th>Notes</th>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div class="form-group">
-                    <input type="text" class="form-control" name="condition_name"
-                    placeholder="e.g. Ratification" />
-                  </div>
-                </td>
-                <td>
-                  <div class="form-group">
-                    <input type="text" class="form-control" name="condition_responsibility"
-                    placeholder="e.g. AMCU" />
-                  </div>
-                </td>
-                <td>
-                  <div class="form-group">
-                    <input type="text" class="form-control" name="condition_due_date" />
-                  </div>
-                </td>
-                <td>
-                  <div class="checkbox">
-                    <label for="milestone-achieved-" class="control-label">
-                    <input type="checkbox" name="milestone-achieved-"
-                    id="milestone-achieved-" data-milestone-id=""
-                    data-milestone-attribute="achieved"/> Achieved</label>
-                  </div>
-                </td>
-                <td>
-                  <div class="form-group">
-                      <textarea class="form-control col-m3-10" name="milestone-notes-"
-                      data-milestone-id="" data-milestone-attribute="notes"
-                      rows="1"></textarea>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <hr />
-      -->
-      <h3>{{ _('Counterpart funding') }}</h3>
-      <div class="alert alert-info">Enter how much counterpart funding is required for each year.
-      Enter a new row for each fiscal year that counterpart funding is required for.</div>
-      <div class="row">
-        <div class="col-md-12">
-          <div id="counterpart-funding-data"></div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <a class="btn btn-primary addCounterpartFunding">
-            <i class="glyphicon glyphicon-plus"></i>
-            {{ _('Add counterpart funding') }}
-          </a><br />&nbsp;
-        </div>
-      </div>
-      <!--
-      <div class="row">
-        <div class="col-md-12">
-          <div class="alert alert-info">Select the counterpart (government/PSIP) project that should provide
-          the counterpart funding. If you cannot find the PSIP project, please speak
-          to the PIU to request that they add the counterpart project to the system.</div>
-          <div class="form-group select-fg">
-            <label for="related_project" class="col-sm-4
-            control-label">{{ _('Counterpart (government/PSIP) project') }}</label>
-            <div class="col-sm-8">
-              <select name="related_project" id="related_project" class="form-control">
-                {% for ds in codelists.ActivityStatus %}
-                <option value="{{ ds.code }}"{% if ds.code == activity.activity_status %} selected{% endif %}>{{ ds.code }} &ndash; {{ ds.name }}</option>
-                {% endfor %}
-              </select>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      <transition name="fade">
+        <b-card-body v-show="$route.path === '/results'" v-if="activity.results">
+          <b-card-text id="results">
+            <h2>{{ _('Results') }}</h2>
+            <div class="alert alert-info">
+              These results were automatically captured from <a :href="`http://d-portal.org/q.html?aid=${activity.code}`">this donor's IATI data</a>.
             </div>
-          </div>
-        </div>
-      </div>
-    -->
+            <table class="table">
+              <thead>
+                <th>Title</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Target</th>
+                <th>Actual</th>
+                <th width="30%">%</th>
+              </thead>
+              <tbody>
+                {% for period in activity.result_indicator_periods %}
+                <tr>
+                  <td>{{ period.result_indicator.indicator_title }}</a></td>
+                  <td>{{ period.period_start }}</a></td>
+                  <td>{{ period.period_end }}</a></td>
+                  <td>{{ period.target_value }}</a></td>
+                  <td>{{ period.actual_value }}</a></td>
+                  <td>
+                    {% if period.percent_complete != None %}
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-{{ period.percent_complete_category }}" role="progressbar" aria-valuenow="{{ period.percent_complete }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ period.percent_complete }}%;">
+                        {{ period.percent_complete }}%
+                      </div>
+                    </div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </b-card-text>
+        </b-card-body>
+      </transition>
+      {% endif %}
     </div>
-
-    {% if activity.documents %}
-    <div role="tabpanel" class="tab-pane" id="documents">
-      <h2>{{ _('Documents') }}</h2>
-      <div class="alert alert-info">
-        These documents were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
-      </div>
-      <table class="table">
-        <thead>
-          <th width="50%">Title</th>
-          <th>Type</th>
-          <th>Date</th>
-        </thead>
-        <tbody>
-          {% for document in activity.documents %}
-          <tr>
-            <td><a href="{{ document.url }}">{{ document.title }}</a></td>
-            <td>
-              {% for category_code in document.categories %}
-              <span class="label label-default">{{ codelist_lookups["DocumentCategory"][category_code.code] }}</span>
-              {% endfor %}
-            </td>
-            <td>{{ document.document_date or '' }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% endif %}
-
-    {% if activity.results %}
-    <div role="tabpanel" class="tab-pane" id="results">
-      <h2>{{ _('Results') }}</h2>
-      <div class="alert alert-info">
-        These results were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
-      </div>
-      <table class="table">
-        <thead>
-          <th>Title</th>
-          <th>From</th>
-          <th>To</th>
-          <th>Target</th>
-          <th>Actual</th>
-          <th width="30%">%</th>
-        </thead>
-        <tbody>
-          {% for period in activity.result_indicator_periods %}
-          <tr>
-            <td>{{ period.result_indicator.indicator_title }}</a></td>
-            <td>{{ period.period_start }}</a></td>
-            <td>{{ period.period_end }}</a></td>
-            <td>{{ period.target_value }}</a></td>
-            <td>{{ period.actual_value }}</a></td>
-            <td>
-              {% if period.percent_complete != None %}
-              <div class="progress">
-                <div class="progress-bar progress-bar-{{ period.percent_complete_category }}" role="progressbar" aria-valuenow="{{ period.percent_complete }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ period.percent_complete }}%;">
-                  {{ period.percent_complete }}%
-                </div>
-              </div>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% endif %}
-  </div>
+  </b-card>
 </div>
 
-<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog"
-     aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">{{ _('Confirm delete') }}</h4>
-      </div>
-      <div class="modal-body">
-        <p>{{ _('Are you sure you want to delete this data?') }}</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
-        <button type="button" class="btn btn-primary btn-ok">{{ _('Confirm') }}</button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
 {% raw %}
-<script id="locations-selector-template" type="x-tmpl-mustache">
-  <div class="form-horizontal">
-    <div class="form-group">
-      <label for="selectLocationType"
-      class="col-sm-3 control-label">{% endraw %}{{ _('Display:') }}{% raw %}</label>
-      <div class="col-sm-9">
-        <select class="form-control" name="selectLocationType"
-        id="selectLocationType">
-          <option value="all">{% endraw %}{{ _('All locations') }}{% raw %}</option>
-          <option value="regions" selected>{% endraw %}{{ _('Regions') }}{% raw %}</option>
-          {{# locations }}
-            <option value="{{ admin1_code }}">
-            &nbsp; {{ name }}</option>
-          {{/ locations }}
-        </select>
-      </div>
-    </div>
-  </div>
-</script>
-
-<script id="locations-template" type="x-tmpl-mustache">
-  <div class="list-group" id="locationSelector">
-    {{# locations }}
-      <a href="#" class="list-group-item {{ active }}" data-id="{{ id }}"
-      data-latitude="{{ latitude }}"
-      data-longitude="{{ longitude }}">{{ name }}</a>
-    {{/ locations }}
-    {{^ locations }}
-      <a href="#" class="list-group-item"><b><i class="glyphicon
-    glyphicon-exclamation-sign"></i>{% endraw %}{{ _('No available locations found! You can try the following:') }}{% raw %}</b>
-    <ul>
-      <li>{% endraw %}{{ _('check you specified the correct country for this project (on the "Basic" tab, under "Adjust default settings" at the bottom of the page)') }}{% raw %}</li>
-      <li>{% endraw %}{{ _('reload the page') }}{% raw %}</li>
-      <li>{% endraw %}{{ _('ask MAEDI to confirm locations have been set up for your country.') }}{% raw %}</li>
-    </ul></a>
-    {{/ locations }}
-  </div>
-</script>
-
-<script id="template-financial" type="x-tmpl-mustache">
-  <table class="table">
-    <thead>
-      <th>{% endraw %}{{ _('Date') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Value') }}{% raw %}</th>
-      <th class="number text-muted">{% endraw %}{{ _('Value (USD)') }}{% raw %}</th>
-      <th>{% endraw %}{{ _('Description') }}{% raw %}</th>
-      <th class="table-visibility-provider-org">{% endraw %}{{ _('Funder') }}{% raw %}</th>
-      <th class="table-visibility-receiver-org">{% endraw %}{{ _('Implementer') }}{% raw %}</th>
-      <th class="table-visibility-aid-type">{% endraw %}{{ _('Aid Type') }}{% raw %}</th>
-      <th class="table-visibility-finance-type">{% endraw %}{{ _('Finance Type') }}{% raw %}</th>
-      <th class="table-visibility-mtef-sector">{% endraw %}{{ _('MTEF Sector') }}{% raw %}</th>
-      <th></th>
-    </thead>
-    <tbody id="financial-rows-{{ transaction_type }}">
-    {{# finances }}
-      {{> template-financial-row}}
-    {{/ finances }}
-    </tbody>
-  </table>
-</script>
-
-<script id="template-financial-row" type="x-tmpl-mustache">
-  <tr id="financial-{{ id }}" data-financial-id="{{ id }}">
-    <td>
-      <div class="date form-group">
-        <input type="text" class="form-control transaction-date"
-        name="transaction_date" placeholder="{% endraw %}{{ _('yyyy-mm-dd') }}{% raw %}"
-        value="{{ transaction_date }}" size="30">
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <div class="input-group">
-          <div class="input-group-addon currency-label">
-            <a title="Adjust currency and conversion rate" href="#"
-              data-toggle="modal" data-target="#adjustCurrency">
-            {{ currency }}
-          </a>
-          </div>
-          <input type="text" class="form-control" name="transaction_value_original" value="{{ transaction_value_original }}">
-          <div class="input-group-addon">
-            <a title="Adjust currency and conversion rate" href="#"
-              data-toggle="modal" data-target="#adjustCurrency">
-              <span class="glyphicon glyphicon-cog"></span>
-            </a></div>
-        </div>
-      </div
-    </td>
-    <td class="number currency-conversion">
-      <div class="form-group">
-        <p class="form-control-static transaction_value text-muted">{{ transaction_value }}</p>
-        <input type="hidden" name="transaction_value" value="{{ transaction_value }}" />
-        <input type="hidden" name="currency" value="{{ currency }}" />
-        <input type="hidden" name="currency_automatic" value="{{ currency_automatic }}" />
-        <input type="hidden" name="currency_source" value="{{ currency_source }}" />
-        <input type="hidden" name="currency_rate" value="{{ currency_rate }}" />
-        <input type="hidden" name="currency_value_date" value="{{ currency_value_date }}" />
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <input type="text" class="form-control" name="transaction_description"
-        placeholder="optional" value="{{ transaction_description }}" size="30">
-      </div>
-    </td>
-    <td class="table-visibility-provider-org">
-      <div class="form-group">
-        <select name="provider_org_id" id="provider_org_id" class="form-control">
-          {{# codelist_provider_orgs }}
-            {{> column-codelist-template}}
-          {{/ codelist_provider_orgs }}
-        </select>
-      </div>
-    </td>
-    <td class="table-visibility-receiver-org">
-      <div class="form-group">
-        <select name="receiver_org_id" id="receiver_org_id" class="form-control">
-          {{# codelist_receiver_orgs }}
-            {{> column-codelist-template}}
-          {{/ codelist_receiver_orgs }}
-        </select>
-      </div>
-    </td>
-    <td class="table-visibility-aid-type">
-      <div class="form-group">
-        <select name="aid_type" id="aid_type" class="form-control">
-          {{# codelist_aid_types }}
-            {{> column-codelist-template}}
-          {{/ codelist_aid_types }}
-        </select>
-      </div>
-    </td>
-    <td class="table-visibility-finance-type">
-      <div class="form-group">
-        <select name="finance_type" id="finance_type" class="form-control">
-          {{# codelist_finance_types }}
-            {{> column-codelist-template}}
-          {{/ codelist_finance_types }}
-        </select>
-      </div>
-    </td>
-    <td class="table-visibility-mtef-sector">
-      <div class="form-group">
-        <select name="mtef_sector" id="mtef_sector" class="form-control">
-          {{# codelist_mtef_sectors }}
-            {{> column-codelist-template}}
-          {{/ codelist_mtef_sectors }}
-        </select>
-      </div>
-    </td>
-    <td>
-      <a class="btn btn-sm btn-default deleteFinancial"
-       data-toggle="modal" data-target="#confirm-delete"
-       title="Delete this row">
-        <span class="glyphicon glyphicon-trash"></span>
-      </a>
-    </td>
-  </tr>
-</script>
-
-<script id="column-codelist-template" type="x-tmpl-mustache">
-    <option value="{{ code }}"{{selected}}>{{ name }}</option>
-</script>
-
-<script id="template-forward-spend" type="x-tmpl-mustache">
-  <p class="lead">This project starts on <em>{% endraw %}{{activity.start_date}}{%raw%} </em>
-  and ends on <em>{% endraw %}{{activity.end_date}}{%raw%}</em>. Please provide
-  forward spend projections by quarter for the lifetime of this project.</p>
-  <p class="lead">To provide forward spend projections for earlier or later dates,
-  adjust the project start and end dates and new rows will automatically be created below.</p>
-  <p class="lead">Currency: <b>USD</b></p>
-  <div class="form-group">
-  </div>
-  <table class="table">
-    <thead>
-      <th>{% endraw %}{{ _('Year') }}{% raw %}</th>
-      {{# quarters }}
-      <th>{{ quarter_name }} ({{ quarter_months }})</th>
-      {{/ quarters }}
-      <!--<th>{% endraw %}{{ _('Total') }}{% raw %}</th>-->
-    </thead>
-    <tbody id="forward-spend-rows">
-      {{# forwardspends }}
-        {{> template-forward-spend-row}}
-      {{/ forwardspends }}
-  </table>
-</script>
-
-<script id="template-forward-spend-row" type="x-tmpl-mustache">
-  <tr>
-    <td>
-      <div class="form-group">
-        <label>{{ year }}</label>
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <input type="text" class="form-control{{# Q1 }} fs-quarter{{/ Q1 }}" name="forwardspend-{{ Q1.id }}"
-          value="{{ Q1.value }}" data-forwardspend-id="{{ Q1.id }}" {{^ Q1 }}disabled{{/ Q1 }}>
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <input type="text" class="form-control{{# Q2 }} fs-quarter{{/ Q2 }}" name="forwardspend-{{ Q2.id }}"
-          value="{{ Q2.value }}" data-forwardspend-id="{{ Q2.id }}" {{^ Q2 }}disabled{{/ Q2 }}>
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <input type="text" class="form-control{{# Q3 }} fs-quarter{{/ Q3 }}" name="forwardspend-{{ Q3.id }}"
-          value="{{ Q3.value }}" data-forwardspend-id="{{ Q3.id }}" {{^ Q3 }}disabled{{/ Q3 }}>
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <input type="text" class="form-control{{# Q4 }} fs-quarter{{/ Q4 }}" name="forwardspend-{{ Q4.id }}"
-          value="{{ Q4.value }}" data-forwardspend-id="{{ Q4.id }}" {{^ Q4 }}disabled{{/ Q4 }}>
-      </div>
-    </td>
-    <!--
-    <td>
-      <div class="form-group">
-        <input type="text" class="form-control fs-total" name="total_transaction_value"
-          placeholder="0.00" value="{{ total_value }}">
-      </div>
-    </td>
-    -->
-  </tr>
-</script>
-
-
-<!-- Counterpart funding template -->
-<script id="template-counterpart-funding" type="x-tmpl-mustache">
-  <table class="table table-hover table-counterpart-funding">
-    <thead>
-      <th>Amount</th>
-      <th>For FY</th>
-      <th>Budgeted</th>
-      <th>Allotted</th>
-      <th>Disbursed</th>
-      <th></th>
-    </thead>
-    <tbody id="counterpart-funding-rows">
-      {{# counterpart_funding }}
-      {{> template-counterpart-funding-row }}
-      {{/ counterpart_funding}}
-    </tbody>
-  </table>
-</script>
-<script id="template-counterpart-funding-row" type="x-tmpl-mustache">
-  <tr id="counterpart-funding-{{ id }}" data-counterpart-funding-id="{{ id }}">
-    <td>
-      <div class="form-group">
-        <div class="input-group">
-          <span class="input-group-addon">USD</span>
-          <input type="text" class="form-control" name="required_value"
-            placeholder="e.g. 1,000,000" value="{{ required_value }}" />
-        </div>
-      </div>
-    </td>
-    <td>
-      <div class="form-group">
-        <select name="required_fy" class="select form-control">
-          {{# fiscal_years }}
-          <option value="{{ value }}"{{selected}}>{{ text }}</option>
-          {{/ fiscal_years }}
-        </select>
-      </div>
-    </td>
-    <td>
-      <div class="checkbox">
-        <label for="budgeted-{{ id }}" class="control-label">
-        <input type="checkbox" name="budgeted"
-        id="budgeted-{{ id }}"
-        {{# budgeted }}checked{{/ budgeted }}/> Budgeted</label>
-      </div>
-    </td>
-    <td>
-      <div class="checkbox">
-        <label for="allotted-{{ id }}" class="control-label">
-        <input type="checkbox" name="allotted"
-        id="allotted-{{ id }}"
-        {{# allotted }}checked{{/ allotted }}/> Allotted</label>
-      </div>
-    </td>
-    <td>
-      <div class="checkbox">
-        <label for="disbursed-{{ id }}" class="control-label">
-        <input type="checkbox" name="disbursed"
-        id="disbursed-{{ id }}"
-        {{# disbursed }}checked{{/ disbursed }}/> Disbursed</label>
-      </div>
-    </td>
-    <td>
-      <a class="btn btn-sm btn-default deleteCounterpartFunding"
-       data-toggle="modal" data-target="#confirm-delete">
-        <i class="glyphicon glyphicon-trash"></i>
-      </a>
-    </td>
-  </tr>
-</script>
-
-
-<!-- end counterpart funding -->
-
-
-
 
 <script id="iati-search-results-template" type="x-tmpl-mustache">
   <p>The following results were found in <i>{{ reporting_org }}</i>'s IATI data for <i>{{ title }}</i>.</p>
@@ -1028,7 +285,7 @@
             value="{{ title }}">
             <div class="input-group-addon">
               <a href="#" id="search_modal_button" title="Search">
-                <span class="glyphicon glyphicon-search"></span>
+                <span class="fa fa-search"></span>
               </a>
             </div>
           </div>
@@ -1051,7 +308,7 @@
         <td class="description">{{# descriptions }}{{# narratives }}<p>{{ text }}</p>{{/ narratives }}{{/ descriptions }}</td>
         <td class="import">
           <a class="btn btn-xs btn-success">
-            <span class="glyphicon glyphicon-ok"></span>
+            <span class="fa fa-check"></span>
           </a>
         </td>
       </tr>
@@ -1065,77 +322,6 @@
   </table>
 </script>
 {% endraw %}
-
-
-<div class="modal fade" id="adjustCurrency" tabindex="-1" role="dialog" aria-labelledby="adjustCurrencyLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="adjustCurrencyLabel">Currency conversion settings</h4>
-      </div>
-      <div class="modal-body">
-        <form class="form-horizontal">
-          <div class="form-group">
-            <label for="currency" class="col-sm-4 control-label">Currency</label>
-            <div class="col-sm-8">
-              <select class="form-control" name="currency" id="adjustCurrency_currency">
-                {% for currency in currencies %}
-                <option value="{{ currency.code }}">{{ currency.code }} - {{ currency.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-sm-4 control-label">Set conversion rate</label>
-            <div class="col-sm-8">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="currency_automatic" id="automatic" value="1">
-                  Automatically (recommended)
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="currency_automatic" id="manual" value="0">
-                  Manually
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="adjustCurrency_currency_source" class="col-sm-4 control-label">Source</label>
-            <div class="col-sm-8">
-              <input type="text" class="form-control" name="currency_source"
-              id="adjustCurrency_currency_source" placeholder="e.g. OECD"
-              value="OECD (rate for 2019-01-01)" disabled>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="adjustCurrency_currency_rate" class="col-sm-4 control-label">Rate to USD</label>
-            <div class="col-sm-8">
-              <input type="text" class="form-control" name="currency_rate"
-              id="adjustCurrency_currency_rate" placeholder="e.g. 1"
-              value="1" disabled>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="adjustCurrency_currency_value_date" class="col-sm-4 control-label">Value date</label>
-            <div class="col-sm-8">
-              <input type="text" class="form-control" name="currency_value_date"
-              id="adjustCurrency_currency_value_date" placeholder="e.g. 2019-01-01"
-              value="2019-01-01" disabled>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary btn-ok">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div class="modal fade" id="iati-search-results-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
@@ -1158,29 +344,34 @@
 </div><!-- /.modal -->
 
 <script type="text/javascript">
-var api_locations_url = "{{ api_locations_url }}";
-var api_activity_locations_url = "{{ api_activity_locations_url }}";
-var api_activity_finances_url = "{{ api_activity_finances_url }}";
-var api_activity_forwardspends_url = "{{ api_activity_forwardspends_url }}";
-var api_update_activity_finances_url = "{{ api_update_activity_finances_url }}";
-var api_activity_milestones_url =  "{{ api_activity_milestones_url }}";
-var api_activity_counterpart_funding_url =  "{{ api_activity_counterpart_funding_url }}";
-var api_iati_search_url = "{{ api_iati_search_url }}";
-var api_iati_fetch_data_url = "{{ api_iati_fetch_data_url }}";
+var api_routes = {
+  activity: "{{ api_activity_url }}",
+  activity_update: "{{ api_activity_update_url }}",
+  codelists: "{{ api_codelists_url }}",
+  milestones: "{{ api_activity_milestones_url }}",
+  country_locations: "{{ api_locations_url }}",
+  locations: "{{ api_activity_locations_url }}",
+  finances: "{{ api_activity_finances_url }}",
+  finances_update: "{{ api_update_activity_finances_url }}",
+  forwardspends: "{{ api_activity_forwardspends_url }}",
+  counterpart_funding: "{{ api_activity_counterpart_funding_url }}",
+  iati_search: "{{ api_iati_search_url }}",
+  iati_fetch_data: "{{ api_iati_fetch_data_url }}"
+}
+var activityEditorMode = "{{ activity_editor_mode }}"
 </script>
 
-<link type="text/css" media="screen" href="{{url_for('static', filename='vendor/leaflet/0.7.7/leaflet.css')}}" rel="stylesheet" />
-<script type="text/javascript" src="{{url_for('static', filename='vendor/leaflet/0.7.7/leaflet.js')}}"></script>
-<script src="{{url_for('static', filename='vendor/mustache/2.2.1/mustache.js')}}" type="text/javascript"></script>
-<script src="{{url_for('static', filename='js/map.js')}}" type="text/javascript"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='packages/leaflet/dist/leaflet.css')}}">
+<script src="{{url_for('static', filename='packages/leaflet/dist/leaflet.js')}}"></script>
+<script src="{{url_for('static', filename='packages/vue2-leaflet/dist/vue2-leaflet.min.js')}}"></script>
+<script src="{{url_for('static', filename='packages/vue-router/dist/vue-router.min.js')}}"></script>
+
+<script src="{{url_for('static', filename='vendor/moment-2.11.0/moment.min.js')}}" type="text/javascript"></script><!-- This submits the new activity form -->
+<button type="submit" class="btn btn-success" id="add-activity-btn" v-if="mode=='new'" @click="saveNewActivity">
+  {{ _('Add activity; add detailed data &raquo;') }}
+</button>
+{% endblock %}
+
+{% block vuejs %}
 <script src="{{url_for('static', filename='js/activity_edit.js')}}" type="text/javascript"></script>
-
-{% endif %}
-{% if not activity.id %}
-<!-- This submits the new activity form -->
-<button type="submit" class="btn btn-success" id="add-activity-btn">
-  {{ _('Add activity; add detailed data &raquo;') }}</button>
-</form>
-{% endif %}
-
 {% endblock %}
