@@ -595,7 +595,7 @@ def api_activities_results_data_entry(activity_id):
 
 @blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
 @login_required
-#@quser.permissions_required("view")
+@quser.permissions_required("view")
 def api_activities_results_design(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data(activity_id, request.json.get("results"))
@@ -608,11 +608,11 @@ def api_activities_results_design(activity_id):
             results=jsonify_results_design(results)
         )
 
+"""
 @blueprint.route("/api/activities/complete/<activity_id>.json")
 def api_activities_by_id_complete(activity_id):
     cl_lookups = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id).as_jsonable_dict()
-
     return jsonify(activity)
 
 @blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
