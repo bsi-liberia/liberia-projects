@@ -608,12 +608,6 @@ def api_activities_results_design(activity_id):
             results=jsonify_results_design(results)
         )
 
-"""
-@blueprint.route("/api/activities/complete/<activity_id>.json")
-def api_activities_by_id_complete(activity_id):
-    cl_lookups = get_codelists_lookups()
-    activity = qactivity.get_activity(activity_id).as_jsonable_dict()
-    return jsonify(activity)
 
 @blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
 @login_required
