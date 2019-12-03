@@ -384,6 +384,113 @@ def api_activities_by_id(activity_id):
     return jsonify(activity=activity)
 
 
+@blueprint.route("/api/activities/new.json", methods=['GET', 'POST'])
+@login_required
+def api_new_activity():
+    if request.method=="GET":
+        today = datetime.datetime.now().date()
+        activity = {
+            "flow_type": "10",
+            "aid_type": "C01",
+            "collaboration_type": "1",
+            "finance_type": "110",
+            "activity_status": "2",
+            "tied_status": "5",
+            "start_date": today,
+            "end_date": today,
+            "recipient_country_code": current_user.recipient_country_code,
+            "domestic_external": current_user.permissions_dict.get("domestic_external_edit"),
+            "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
+                {
+                "role": 1,
+                "name": "Funding",
+                "entries": [{
+                    'percentage': 100,
+                    'role': 1,
+                    'id': qorganisations.get_organisation_by_name("").id
+                    }]
+                },
+                {
+                "role": 4,
+                "name": "Implementing",
+                "entries": [{
+                    'percentage': 100,
+                    'role': 4,
+                    'id': qorganisations.get_organisation_by_name("").id
+                    }]
+                }
+            ],
+            "classifications": {
+                "mtef-sector": {
+                    "name": "MTEF Sector",
+                    "codelist": "mtef-sector",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("mtef-sector", "").id,
+                        'percentage': 100,
+                        'codelist': 'mtef-sector',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "aft-pillar": {
+                    "name": "AfT Pillar",
+                    "codelist": "aft-pillar",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("aft-pillar", "").id,
+                        'percentage': 100,
+                        'codelist': 'aft-pillar',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "aligned-ministry-agency": {
+                    "name": "Aligned Ministry/Agency",
+                    "codelist": "aligned-ministry-agency",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("aligned-ministry-agency", "").id,
+                        'percentage': 100,
+                        'codelist': 'aligned-ministry-agency',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "sdg-goals": {
+                    "name": "SDG Goals",
+                    "codelist": "sdg-goals",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("sdg-goals", "").id,
+                        'percentage': 100,
+                        'codelist': 'sdg-goals',
+                        'activitycodelist_id': None
+                    }]
+                },
+                "papd-pillar": {
+                    "name": "PAPD Pillar",
+                    "codelist": "papd-pillar",
+                    "entries": [{
+                        'code': qcodelists.get_code_by_name("papd-pillar", "").id,
+                        'percentage': 100,
+                        'codelist': 'papd-pillar',
+                        'activitycodelist_id': None
+                    }]
+                }
+            },
+        }
+        return jsonify(activity=activity)
+    elif request.method=="POST":
+        data = request.get_json()
+        for codelist, codelist_data in data["classifications"].items():
+            data["classification_id_{}".format(codelist)] = codelist_data["entries"][0]["code"]
+            data["classification_percentage_{}".format(codelist)] = codelist_data["entries"][0]["percentage"]
+        data.pop("classifications")
+        for org_role in data["organisations"]:
+            data["org_{}".format(org_role["role"])] = org_role["entries"][0]["id"]
+        data.pop("organisations")
+        data["user_id"] = current_user.id
+        a = qactivity.create_activity(data)
+        if a:
+            return jsonify(a.as_jsonable_dict())
+        else:
+            return abort(500)
+
+
 @blueprint.route("/api/activities/<activity_id>/finances.json")
 @login_required
 def api_activities_finances_by_id(activity_id):
