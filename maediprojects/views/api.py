@@ -698,17 +698,20 @@ def api_activity_finances(activity_id):
 @login_required
 @quser.permissions_required("edit")
 def finances_edit_attr(activity_id):
+    request_data = request.get_json()
     data = {
         'activity_id': activity_id,
-        'attr': request.form['attr'],
-        'value': request.form['value'],
-        'finances_id': request.form['finances_id'],
+        'attr': request_data['attr'],
+        'value': request_data['value'],
+        'finances_id': request_data['finances_id'],
     }
 
     #Run currency conversion if:
     # we now set to automatic
     # we change the currency and have set to automatic
-    if (data.get("attr") == "currency_automatic") and (data.get("value") == "1"):
+    if (data.get("attr") == "transaction_date") and (data.get("value") == ""):
+        return abort(500)
+    if (data.get("attr") == "currency_automatic") and (data.get("value") == True):
         # Handle update, and then return required data
         update_status = qexchangerates.automatic_currency_conversion(
             finances_id = data["finances_id"],
@@ -719,15 +722,15 @@ def finances_edit_attr(activity_id):
         update_status = qexchangerates.automatic_currency_conversion(
             finances_id = data["finances_id"],
             force_update = False)
-        return jsonify(update_status.as_dict())
+        return jsonify(update_status.as_simple_dict())
     elif data["attr"] == "mtef_sector":
         data["attr"] = 'mtef-sector' #FIXME make consistent
         update_status = qfinances.update_finances_classification(data)
     else:
         update_status = qfinances.update_attr(data)
     if update_status:
-        return jsonify(update_status.as_dict())
-    return "error"
+        return jsonify(update_status.as_simple_dict())
+    return abort(500)
 
 @blueprint.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
 @login_required
