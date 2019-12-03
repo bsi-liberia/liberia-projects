@@ -94,6 +94,7 @@ def chrome_options(request, chrome_options):
     chrome_options.add_argument('--headless')
     chrome_options.add_experimental_option('w3c', False)
     chrome_options.set_capability('goog:loggingPrefs', { 'browser':'ALL' })
+    chrome_options.add_argument('--window-size=1300,1000')
     return chrome_options
 
 
@@ -155,7 +156,7 @@ def pytest_selenium_capture_debug(item, report, extra):
     for log_entry in extra:
         if log_entry["name"] == "Screenshot":
             content = base64.b64decode(log_entry["content"].encode("utf-8"))
-            with open(item.name + ".png", "wb") as f:
+            with open(os.path.join("tests", "{}.png".format(item.name)), "wb") as f:
                 f.write(content)
         else:
             if log_entry["name"] == "Browser Log":
