@@ -609,7 +609,7 @@ def api_activities_results_design(activity_id):
         )
 
 
-@blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["POST"])
+@blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["GET", "POST"])
 @login_required
 @quser.permissions_required("view")
 def api_activity_milestones(activity_id):
