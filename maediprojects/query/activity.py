@@ -378,6 +378,30 @@ def update_attr(data):
     )
     return True
 
+
+
+def update_activity_codelist(activitycodelistcode_id, data):
+    activity_codelist = models.ActivityCodelistCode.query.filter_by(
+        id = activitycodelistcode_id
+    ).first()
+    if not activity_codelist: return False
+    old_value = getattr(activity_codelist, data['attr'])
+    setattr(activity_codelist, data['attr'], data['value'])
+    db.session.add(activity_codelist)
+    db.session.commit()
+    activity_updated(activity_codelist.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityCodelistCode",
+        "target_id": activity_codelist.id,
+        "old_value": {data['attr']: old_value},
+        "value": {data['attr']: data['value']}
+        }
+    )
+    return True
+
+
 def save_period_data(indicator_id, periods_data):
     existing_periods = models.ActivityResultIndicator.query.get(indicator_id).periods
     existing_period_ids = list(map(lambda p: p.id, existing_periods))
