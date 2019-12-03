@@ -41,7 +41,7 @@
                 <b-select class="form-control filter-select" name="filter.name"
                   id="filter.name" :options="filter.codes" value-field="id" text-field="name"
                   v-model="selectedFilters[filter.name]">
-                  <template slot="first">
+                  <template slot:first>
                     <option value="all" selected>{{ _('Select all') }}</option>
                   </template>
                 </b-select>
@@ -96,23 +96,25 @@
         @filtered="onFiltered"
         responsive>
 
-        <div slot="table-busy" class="text-center my-2">
-          <b-spinner class="align-middle" label="Loading..."></b-spinner>
-          <strong>Loading...</strong>
-        </div>
+        <template v-slot:table-busy>
+          <div class="text-center my-2">
+            <b-spinner class="align-middle" label="Loading..."></b-spinner>
+            <strong>Loading...</strong>
+          </div>
+        </template>
 
-        <template slot="[title]" slot-scope="data">
+        <template v-slot:cell(title)="data">
           <a :href="activity_base_url + data.item.id + '/'">
             [[ data.item.title ]]
           </a>
         </template>
 
-        <template slot="[edit]" slot-scope="data">
+        <template v-slot:cell(edit)="data">
           <a :href="activity_base_url + data.item.id + '/edit/'" v-if="data.item.permissions.edit">
             <span class="fas fa-edit"></span></a>
         </template>
 
-        <template slot="[delete]" slot-scope="data">
+        <template v-slot:cell(delete)="data">
           <a href="#" class="text-danger"
             @click.prevent="confirmDelete(activity_base_url + data.item.id + '/delete/')"
             v-if="data.item.permissions.edit">
