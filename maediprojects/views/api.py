@@ -337,6 +337,7 @@ def api_activities_filters():
         ("Sector", "mtef-sector", cl["mtef-sector"]),
         ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
         ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
+        ("SDG Goals", "sdg-goals", cl["sdg-goals"]),
         ("Activity Status", "activity_status", cl["ActivityStatus"]),
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
@@ -375,13 +376,13 @@ def api_activities_country():
         "permissions": activity.permissions
     } for activity in activities])
 
+
 @blueprint.route("/api/activities/<activity_id>.json")
 @login_required
 def api_activities_by_id(activity_id):
-    cl_lookups = get_codelists_lookups()
-    activity = qactivity.get_activity(activity_id)
-    data = qgenerate_csv.activity_to_json(activity, cl_lookups)
-    return jsonify(data)
+    activity = qactivity.get_activity(activity_id).as_jsonable_dict()
+    return jsonify(activity=activity)
+
 
 @blueprint.route("/api/activities/<activity_id>/finances.json")
 @login_required
