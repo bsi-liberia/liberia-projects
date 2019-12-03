@@ -4,7 +4,7 @@ import re
 from collections import OrderedDict
 
 from flask import Blueprint, request, \
-    url_for, Response, current_app
+    url_for, Response, current_app, abort
 from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
@@ -184,24 +184,41 @@ def filters_reporting_organisation():
     return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
 
 
-def generate_reporting_organisation_checklist(reporting_orgs):
+def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses):
+    response_statuses = dict(map(lambda r: (r["id"], r), _response_statuses))
+    response_statuses[0] = {
+        'name': 'Donor did not respond',
+        'icon': 'far fa-times-circle text-secondary'}
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
     ros_disbursements = qmonitoring.fydata_ros("todate")
+    def make_status(ro, qtr, disb_value):
+        if disb_value:
+            return response_statuses.get(3) #FIXME this is the database ID for donor responded with data
+        quarters = util.Last4Quarters().list_of_quarters()
+        if ro.responses_fys.get(quarters.get(qtr)):
+            return response_statuses.get(ro.responses_fys.get(quarters.get(qtr)))
+        return response_statuses.get(0)
+
     def annotate_ro(ro):
         _ro = ro.as_dict()
         _ro["responses_fys"] = ro.responses_fys
         _ro["activities_count"] = ro.activities_count
         _ro["forwardspends"] = {
-            "current": ros_fiscal_years.get(ro.id, 0.00),
-            "previous": ros_fiscal_years_previous.get(ro.id, 0.00)
+            "current": {
+                'value': ros_fiscal_years.get(ro.id, 0.00),
+                'status': make_status(ro, None, ros_fiscal_years.get(ro.id)),
+            },
+            "previous": {
+                'value': ros_fiscal_years_previous.get(ro.id, 0.00),
+                'status': make_status(ro, None, ros_fiscal_years_previous.get(ro.id)),
+            }
         }
-        _ro["disbursements"] = {
-            "Q1": ros_disbursements.get((ro.id, u"Q1"), 0.00),
-            "Q2": ros_disbursements.get((ro.id, u"Q2"), 0.00),
-            "Q3": ros_disbursements.get((ro.id, u"Q3"), 0.00),
-            "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
-        }
+        _ro["disbursements"] = dict([
+            (qtr, {
+                'value': ros_disbursements.get((ro.id, qtr), 0.00),
+                'status': make_status(ro, qtr, ros_disbursements.get((ro.id, qtr)))
+            }) for qtr in [u"Q1", u"Q2", u"Q3", u"Q4"]])
         return _ro
     return list(map(lambda ro: annotate_ro(ro), reporting_orgs))
 
@@ -228,8 +245,10 @@ def reporting_orgs_user():
             quser.users_with_role('desk-officer')))
     else:
         users = []
+    response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
 
-    orgs = generate_reporting_organisation_checklist(reporting_orgs)
+    data_collection_calendar = qmonitoring.generate_data_collection_calendar()
 
     return jsonify(
         orgs=orgs,
@@ -239,7 +258,8 @@ def reporting_orgs_user():
         users=users,
         user_name=user_name,
         user_id=user_id,
-        statuses=list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+        statuses=response_statuses,
+        data_collection_calendar=data_collection_calendar
         )
 
 
@@ -247,7 +267,8 @@ def reporting_orgs_user():
 @login_required
 def reporting_orgs():
     reporting_orgs = qorganisations.get_reporting_orgs()
-    orgs = generate_reporting_organisation_checklist(reporting_orgs)
+    response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
     return jsonify(
         orgs=orgs,
         current_year = util.FY("current").fy_fy(),
