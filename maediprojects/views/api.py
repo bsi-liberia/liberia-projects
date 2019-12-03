@@ -887,10 +887,11 @@ def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
     if request.method == "POST":
-        if request.form["action"] == "add":
-            result = qlocation.add_location(activity_id, request.form["location_id"])
-        elif request.form["action"] == "delete":
-            result = qlocation.delete_location(activity_id, request.form["location_id"])
+        request_data = request.get_json()
+        if request_data["action"] == "add":
+            result = qlocation.add_location(activity_id, request_data["location_id"])
+        elif request_data["action"] == "delete":
+            result = qlocation.delete_location(activity_id, request_data["location_id"])
         return str(result)
     elif request.method == "GET":
         locations = list(map(lambda x: x.as_dict(),
