@@ -1,8 +1,17 @@
-{% set active_page='help' %}{% extends "layout.html" %}
+{% set active_page='help' %}{% extends "layout2.html" %}
 
 {% block body_classes %}help-page{% endblock %}
 
 {% block title %}{{ _('Help') }}{% endblock %}
 {% block content %}
 {{ markdown_text }}
+{% endblock %}
+{% block vuejs %}
+<script>
+Vue.config.devtools = true
+new Vue({
+  el: "#app",
+  delimiters: ["[[", "]]"]
+})
+</script>
 {% endblock %}
