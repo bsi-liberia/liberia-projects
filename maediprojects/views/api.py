@@ -631,6 +631,23 @@ def api_activity_milestones(activity_id):
         return jsonify(milestones=activity.milestones_data)
 
 
+@blueprint.route("/api/codelists.json", methods=["GET", "POST"])
+@login_required
+@quser.permissions_required("edit")
+def api_codelists():
+    if (request.method == "GET"):
+        return jsonify(
+                codelists = get_codelists(),
+                organisations = list(map(lambda o: o.as_dict(), qorganisations.get_organisations())))
+    elif (request.method == "POST"):
+        method = request.json["method"]
+        codelist = request.json["codelist"]
+        if ((method == "add") and (codelist == "fund-source")):
+            new_fund_source = qfinances.add_fund_source(request.json)
+            return jsonify(id = new_fund_source.id)
+        return abort(500)
+
+
 @blueprint.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
 @login_required
 @quser.permissions_required("edit")
