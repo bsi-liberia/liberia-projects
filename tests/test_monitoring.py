@@ -41,7 +41,7 @@ class TestActivityLogLoads(LiveServerClass):
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#usersLog tbody tr'))
         )
-        assert len(selenium.find_elements(By.CSS_SELECTOR, '#usersLog tbody tr')) == 2
+        assert len(selenium.find_elements(By.CSS_SELECTOR, '#usersLog tbody tr')) > 1
 
     def test_activity_log_popup_loads(self, app, selenium, selenium_login):
         test_activity_finances.add_activity_finances(self, app, selenium, selenium_login)
@@ -69,5 +69,5 @@ class TestDataQualityLoads(LiveServerClass):
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#reportingOrgs tbody tr'))
         )
-        assert len(selenium.find_elements(By.CSS_SELECTOR, '#reportingOrgs tbody tr td i.fas.fa-check-circle.text-success')) == 1
+        assert len(selenium.find_elements(By.CSS_SELECTOR, '#reportingOrgs tbody tr td i.fa.fa-check-circle.text-success')) == 2
 
