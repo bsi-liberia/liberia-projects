@@ -739,22 +739,28 @@ def api_activity_counterpart_funding(activity_id):
     """GET returns a list of all counterpart funding for a given activity_id.
     POST also accepts counterpart funding data to be added, deleted, updated."""
     if request.method == "POST":
-        if request.form["action"] == "add":
+        request_data = request.get_json()
+        if request_data["action"] == "add":
             required_date = util.fq_fy_to_date(1,
-                int(request.form["required_fy"])).date().isoformat()
+                int(request_data["required_fy"])).date().isoformat()
             data = {
-                "required_value": request.form["required_value"],
+                "required_value": request_data["required_value"],
                 "required_date": required_date,
                 "budgeted": False,
                 "allotted": False,
                 "disbursed": False,
             }
             result = qcounterpart_funding.add_entry(activity_id, data)
-        elif request.form["action"] == "delete":
-            result = qcounterpart_funding.delete_entry(activity_id, request.form["id"])
-        elif request.form["action"] == "update":
-            attr = request.form['attr']
-            value = request.form['value']
+            cf = result.as_dict()
+            cf["required_fy"], fq = util.date_to_fy_fq(cf["required_date"])
+            return jsonify(counterpart_funding=cf)
+        elif request_data["action"] == "delete":
+            result = qcounterpart_funding.delete_entry(activity_id, request_data["id"])
+            if result: return jsonify(result=True)
+            return abort(500)
+        elif request_data["action"] == "update":
+            attr = request_data['attr']
+            value = request_data['value']
             if value == "true":
                 value = True
             elif value == "false":
@@ -767,12 +773,12 @@ def api_activity_counterpart_funding(activity_id):
                 'activity_id': activity_id,
                 'attr': attr,
                 'value': value,
-                'id': request.form['id'],
+                'id': request_data['id'],
             }
             update_status = qcounterpart_funding.update_entry(data)
-            if update_status == True:
-                return "success"
-            return "error"
+            if update_status:
+                return jsonify(result=True)
+            return abort(500)
         return str(result)
     elif request.method == "GET":
         def to_fy(counterpart_funding):
