@@ -9,6 +9,8 @@ from sqlalchemy.sql.expression import case
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
+from maediprojects.lib import util, codelist_helpers
+from flask import url_for
 
 from maediprojects.extensions import db
 
@@ -316,6 +318,7 @@ class Activity(db.Model):
             ).all()
         data = dict(map(lambda ft: (ft.finance_type, ft.sum_value), query))
         total = sum(map(lambda ft: ft.sum_value, query))
+        if total == 0: return { "Grant": 0.0, "Loan": 0.0 }
         return {
             "Grant": int(round((data.get(u"110", 0) / total)*100)),
             "Loan": int(round((data.get("410", 0) / total)*100)),
@@ -333,12 +336,13 @@ class Activity(db.Model):
             ).filter(ActivityFinances.activity_id==self.id
             ).all()
         total = sum(map(lambda ft: ft.sum_value, query))
+        if total == 0: return { "": { "value": 0.0}}
         return dict(map(lambda ft: (ft.name, {
                 "value": int(round((ft.sum_value / total)*100)),
                 "finance_type": {
                     "110": "Grant",
                     "410": "Loan",
-                }[ft.finance_type]
+                }.get(ft.finance_type)
             }), query))
 
     @hybrid_property
@@ -354,15 +358,12 @@ class Activity(db.Model):
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'C')""")
     allotments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'99-A')""")
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_value!=0,
         ActivityFinances.transaction_type==u'D')""")
 
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
@@ -440,6 +441,7 @@ class Activity(db.Model):
 
         return {
                     "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -457,6 +459,7 @@ class Activity(db.Model):
         for fyval in fydata:
             out[fyval.fund_source_name].update({
                 "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -472,6 +475,7 @@ class Activity(db.Model):
 
         return {
                     "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -489,6 +493,7 @@ class Activity(db.Model):
         for fyval in fydata:
             out[fyval.fund_source_name].update({
                 "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -503,6 +508,7 @@ class Activity(db.Model):
         fydata = fydata_query(self, fiscalyear_modifier, [u'C'])
         return {
                     "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -520,6 +526,7 @@ class Activity(db.Model):
         for fyval in fydata:
             out[fyval.fund_source_name].update({
                 "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -598,11 +605,44 @@ class Activity(db.Model):
         return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
     def as_jsonable_dict(self):
-        ret_data = {}
+        role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").iteritems())
+        ret_data = {
+            'classifications': collections.defaultdict(dict),
+            'organisations': collections.defaultdict(dict),
+            'url': url_for("activities.activity", activity_id=self.id),
+            'url_edit': url_for("activities.activity_edit", activity_id=self.id),
+            'results': len(self.results),
+            'documents': len(self.documents),
+            'milestones': len(self.milestones)
+        }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
-        #'user', 'organisations', 'reporting_org', 'recipient_country', 'results', 'locations', 'finances', 'forwardspends', 'classifications'
-        ret_data.update({key: getattr(self, key).as_dict() for key in ['reporting_org']})
-        [ret_data.update({key: [c.as_dict() for c in getattr(self, key)]}) for key in ['finances', 'locations', 'classifications', 'organisations', 'implementing_organisations']]
+        for cc in self.classifications:
+            if cc.codelist_code.codelist_code not in ret_data['classifications']:
+                ret_data['classifications'][cc.codelist_code.codelist_code] = {
+                    'codelist':cc.codelist_code.codelist_code,
+                    'name': cc.codelist_code.codelist.name,
+                    'entries': []
+                }
+            ret_data['classifications'][cc.codelist_code.codelist_code]['entries'].append(
+                {
+                'codelist': cc.codelist_code.codelist_code,
+                'code': cc.codelist_code.id,
+                'percentage': cc.percentage,
+                'activitycodelist_id': cc.id
+                })
+        for org in self.organisations:
+            if org.role not in ret_data['organisations']:
+                ret_data['organisations'][org.role] = {
+                    'role': org.role,
+                    'name': role_names[str(org.role)],
+                    'entries': []
+                }
+            ret_data['organisations'][org.role]['entries'].append(
+                {
+                'role': org.role,
+                'id': org.organisation_id,
+                'percentage': org.percentage,
+                'activityorganisation_id': org.id})
         return ret_data
 
 class ActivityFinances(db.Model):
@@ -694,7 +734,9 @@ class ActivityFinances(db.Model):
         return ret_data
 
     def as_simple_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret_data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret_data["mtef_sector"] = self.mtef_sector
+        return ret_data
 
 class ActivityForwardSpend(db.Model):
     __tablename__ = 'forwardspend' # 'activityforwardspend'
@@ -1149,9 +1191,14 @@ class User(db.Model):
 
     @hybrid_property
     def permissions_dict(self):
+        if not self.permissions:
+            return {'organisations': {}}
         permissions = dict(map(lambda p: (p.permission_name, p.permission_value), self.permissions))
         permissions["organisations"] = dict(map(lambda op: (op.organisation_id, op.as_dict()), self.organisations))
         return permissions
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class UserPermission(db.Model):
     __tablename__ = 'userpermission'
