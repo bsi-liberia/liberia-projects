@@ -82,6 +82,7 @@ def register_hooks(app):
     @app.before_request
     def setup_default_permissions():
         if current_user.is_authenticated:
+            assert models.User.query.get(current_user.id)
             session["permissions"] = current_user.permissions_dict
         else:
             session["permissions"] = {}
