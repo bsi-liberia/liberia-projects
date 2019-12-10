@@ -21,7 +21,7 @@ def load_user(id):
 @blueprint.route("/profile/", methods=["GET", "POST"])
 @login_required
 def profile():
-    if current_user.administrator:
+    if "admin" in current_user.roles_list:
         return redirect(url_for("users.users_edit", user_id=current_user.id))
 
     if request.method == "POST":
@@ -51,7 +51,7 @@ def profile():
 @login_required
 @quser.administrator_required
 def users():
-    if not current_user.administrator:
+    if "admin" not in current_user.roles_list:
         flash(gettext(u"You must be an administrator to access that area."), "danger")
     users = quser.user()
     return render_template("users.html",
@@ -63,7 +63,7 @@ def users():
 @login_required
 @quser.administrator_required
 def users_delete():
-    if not current_user.administrator:
+    if "admin" not in current_user.roles_list:
         flash(gettext(u"You must be an administrator to create new users."), "danger")
         return redirect(url_for("activities.dashboard"))
     if current_user.username == request.get_json().get("username"):
@@ -80,13 +80,10 @@ def users_delete():
 @login_required
 @quser.administrator_required
 def users_new():
-    #if not current_user.administrator:
-    #    flash("You must be an administrator to create new users.", "danger")
-    #    return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = {
             "permissions_dict": {
-                "domestic_external": current_user.permissions_dict["domestic_external"]
+                "view": current_user.permissions_dict["view"]
             },
             "recipient_country_code": "LR"
         }
@@ -108,11 +105,8 @@ def users_new():
 @login_required
 @quser.administrator_required
 def users_edit(user_id):
-    if not current_user.administrator:
-        flash("You must be an administrator to edit users.", "danger")
-        return redirect(url_for("activities.dashboard"))
+    user = quser.user(user_id)
     if request.method == "GET":
-        user = quser.user(user_id)
         if not user:
             return abort(404)
         return render_template("user.html",
@@ -134,31 +128,29 @@ def users_edit(user_id):
 @login_required
 @quser.administrator_required
 def user_permissions_edit(user_id):
-    if not current_user.administrator:
-        flash("You must be an administrator to edit users.", "danger")
-        return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = quser.user(user_id)
         user_organisations = list(map(lambda uo: uo.as_dict(), user.organisations))
+        user_roles = list(map(lambda uo: uo.as_dict(), user.userroles))
+        roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
         organisations = list(map(lambda o: o.as_dict(), qorganisations.get_organisations()))
         permission_values = [
             {"name": "View projects", "value": "view"},
-            {"name": "Edit projects", "value": "edit"}
+            {"name": "Edit projects", "value": "edit"},
+            {"name": "Results data entry", "value": "results-data-entry"}
         ]
         return jsonify(permissions=user_organisations,
             organisations=organisations,
-            permission_values=permission_values)
+            permission_values=permission_values,
+            user_roles=user_roles,
+            roles=roles)
     elif request.method == "POST":
         data = request.get_json()
         data["user_id"] = user_id
         if data["action"] == "add":
             op = quser.addOrganisationPermission(data)
             if not op: return "False"
-            return jsonify({
-                "organisation_id": op.organisation_id,
-                "permission_value": op.permission_value,
-                "id": op.id
-                })
+            return jsonify(op.as_dict())
         elif data["action"] == "delete":
             op = quser.deleteOrganisationPermission(data)
             if not op:
@@ -176,8 +168,6 @@ def user_permissions_edit(user_id):
 @login_required
 @quser.administrator_required
 def users_log():
-    if not current_user.administrator:
-        flash(gettext(u"You must be an administrator to access that area."), "danger")
     userslog = quser.activitylog()
     return render_template("userslog.html",
                            userslog=userslog,
