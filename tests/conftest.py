@@ -47,8 +47,8 @@ def app():
         # Confirm everything was set up properly
         assert models.User.query.get(user.id).username == user_dict["username"]
         assert len(models.User.query.get(user.id).permissions) == 2
-        assert models.User.query.get(user.id).permissions[0].permission_name == "domestic_external"
-        assert models.User.query.get(user.id).permissions[1].permission_name == "domestic_external_edit"
+        assert models.User.query.get(user.id).permissions[0].permission_name == "view"
+        assert models.User.query.get(user.id).permissions[1].permission_name == "edit"
         assert len(models.User.query.get(user.id).permissions_dict) == 3
         assert models.User.query.get(user.id).permissions_dict["organisations"] == {}
 

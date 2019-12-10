@@ -34,8 +34,8 @@ USER = {
     "organisation": u"YOUR_USER_ORG",
     "recipient_country_code": u"LR",
     "administrator": False,
-    "domestic_external": u"external",
-    "domestic_external_edit": u"none"
+    "view": u"external",
+    "edit": u"none"
 }
 USER_2 = {
     "username": u"user2",
@@ -45,8 +45,8 @@ USER_2 = {
     "organisation": u"YOUR_USER_ORG2",
     "recipient_country_code": u"LR",
     "administrator": False,
-    "domestic_external": u"external",
-    "domestic_external_edit": u"none"
+    "view": u"external",
+    "edit": u"none"
 }
 # The earliest date shown in many interfaces.
 # Used to filter out partial data from a long / messy dataset.
