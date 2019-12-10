@@ -1,6 +1,7 @@
 from flask import url_for
 import pytest
 import warnings
+import json
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -20,11 +21,19 @@ class TestActivity:
 
     def test_auth_routes_work_admin(self, user):
         routes = [
-            (url_for('activities.activity', activity_id=1), 200),
+            (url_for('activities.activity', activity_id=1), 200)
         ]
         for route, status_code in routes:
             res = self.client.get(route)
             assert res.status_code == status_code
+
+
+    def test_finance_auth_routes_work_admin(self, user):
+        route = url_for('api.api_activities_finances_by_id', activity_id=1)
+        res = self.client.get(route)
+        assert res.status_code == 200
+        data = json.loads(res.data)
+        assert len(data["finances"]) > 0
 
 
 @pytest.mark.usefixtures('client_class')
