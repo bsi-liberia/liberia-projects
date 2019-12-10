@@ -299,6 +299,10 @@ def list_activities_by_filters(filters, permission_name="view"):
                 models.Activity.implementing_organisations.any(
                     models.Organisation._type == filter_value)
             )
+        elif (filter_name == 'result_indicator_periods') and (filter_value == True):
+            query = query.filter(
+                models.Activity.result_indicator_periods != None
+            )
         else:
             query = query.filter(
                 getattr(models.Activity, filter_name)==filter_value
@@ -416,11 +420,11 @@ def save_period_data(indicator_id, periods_data):
     for period in periods_data:
         if not "id" in period:
             # Create a new period
-            print("Create new period")
             new_period = add_indicator_period(period, indicator_id)
         else:
             # Update period
             for k, v in period.items():
+                if k in ['open']: continue
                 update_indicator_period_attr({'id': period['id'], 'attr': k, 'value': v})
 
 def save_indicator_data(result_id, data):
@@ -431,14 +435,11 @@ def save_indicator_data(result_id, data):
                 delete_result_data({"result_type": "indicator", "id": existing_indicator.id})
         else:
             # Indicator is new
-            print("Adding indicator")
             add_indicator(data, result_id)
     elif (len(existing_indicators) == 1) and (data.get("indicator_id") == existing_indicators[0].id):
         # Indicator exists
         for k in ['indicator_title', 'baseline_year', 'baseline_value', 'measurement_unit_type', 'measurement_type']:
             indicator = update_indicator_attr({'id': result_id, 'attr': k, 'value': data.get(k)})
-        print("got here!")
-        print(data.get('periods'))
         save_period_data(indicator.id, data.get('periods', []))
 
 
@@ -455,14 +456,14 @@ def save_results_data_entry(activity_id, results_data, save_type):
         assert existing_period_ids == new_period_ids
         for period in result["periods"]:
             existing_period = models.ActivityResultIndicatorPeriod.query.get(period["id"])
-            if existing_period.status == 4: continue
+            if (existing_period.open == False) or (existing_period.status == 4): continue
             update_indicator_period_attr(
                 {'id': period['id'],
                 'attr': 'actual_value',
                 'value': period['actual_value']}
             )
             if ((save_type == "submitAll") or
-                ((save_type == "submitSelected") and (period['selectToSubmit'] == '4'))):
+                ((save_type == "submitSelected") and (period['status'] == '4'))):
                 update_indicator_period_attr(
                     {'id': period['id'],
                     'attr': 'status',
@@ -533,7 +534,8 @@ def update_indicator_period_attr(data):
     ).first()
     if data['attr'].startswith("period_"):
         data['value'] = isostring_date(data['value'])
-    setattr(period, data['attr'], data['value'])
+    if getattr(period, data['attr']):
+        setattr(period, data['attr'], data['value'])
     db.session.add(period)
     db.session.commit()
     return period
@@ -552,7 +554,6 @@ def add_indicator_period(data, indicator_id, commit=True):
     return p
 
 def add_indicator(data, result_id, commit=True):
-    print "indicator"
     i = models.ActivityResultIndicator()
     i.indicator_title = data.get('indicator_title')
     i.indicator_description = data.get('indicator_description')
@@ -601,7 +602,6 @@ def add_result_data(activity_id, data):
         if k.endswith('year'):
             v = isostring_year(v)
         setattr(r, k, v)
-    print "Adding"
     db.session.add(r)
     db.session.commit()
     return r
