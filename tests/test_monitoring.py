@@ -69,5 +69,5 @@ class TestDataQualityLoads(LiveServerClass):
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#reportingOrgs tbody tr'))
         )
-        assert len(selenium.find_elements(By.CSS_SELECTOR, '#reportingOrgs tbody tr td i.fa.fa-check-circle.text-success')) == 2
+        assert len(selenium.find_elements(By.CSS_SELECTOR, '#reportingOrgs tbody tr td i.fa.fa-check-circle.text-success')) > 0
 
