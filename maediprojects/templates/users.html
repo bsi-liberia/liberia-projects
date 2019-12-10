@@ -22,6 +22,11 @@
     <b-spinner class="align-middle" label="Loading..."></b-spinner>
     <strong>Loading...</strong>
   </div>
+  <template v-slot:cell(user_roles)="data">
+    <b-badge variant="secondary" v-for="role in data.item.user_roles">
+      [[ role.name ]]
+    </b-badge>
+  </template>
   <template v-slot:cell(edit)="data">
     <a :href="'{{url_for('users.users', _external=True)}}' + data.item.id"
       title="Edit user"
@@ -53,7 +58,7 @@ new Vue({
       axios
         .get(`${api_base}users.json`)
         .then((response) => {
-          this.fields = ['username', 'name', 'organisation', 'edit'].map(field => {
+          this.fields = ['username', 'name', 'organisation', 'user_roles', 'edit'].map(field => {
             return { 'key': field, 'sortable': true }
           })
           this.items = response.data.users
