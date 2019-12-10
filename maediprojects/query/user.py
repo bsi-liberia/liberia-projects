@@ -247,13 +247,16 @@ def addUser(data):
             name = data.get('name'),
             email_address = data.get('email_address'),
             organisation = data.get('organisation'),
-            recipient_country_code = data.get('recipient_country_code'),
-            administrator = bool(data.get('administrator'))
+            recipient_country_code = data.get('recipient_country_code')
             )
         db.session.add(newU)
         db.session.commit()
         setPermission(newU, u"view", data.get("view"))
         setPermission(newU, u"edit", data.get("edit"))
+
+        if data.get("administrator") == True:
+            add_user_role(data["username"], "admin")
+
         return newU
     return checkU
 
