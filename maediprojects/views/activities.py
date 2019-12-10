@@ -16,10 +16,18 @@ from maediprojects.lib import codelists
 blueprint = Blueprint('activities', __name__, url_prefix='/', static_folder='../static')
 
 
+@blueprint.route("/user-results/")
+@login_required
+def results_user_list():
+    return render_template("results/list_user_results.html",
+        loggedinuser=current_user
+    )
+
+
 @blueprint.route("/activities/<activity_id>/results/design/")
 @login_required
 def results_data_design(activity_id):
-    return render_template("results_data_design.html",
+    return render_template("results/results_data_design.html",
         activity_id=activity_id,
         loggedinuser=current_user
     )
@@ -28,7 +36,7 @@ def results_data_design(activity_id):
 @blueprint.route("/activities/<activity_id>/results/data-entry/")
 @login_required
 def results_data_entry(activity_id):
-    return render_template("results_data_entry.html",
+    return render_template("results/results_data_entry.html",
         activity_id=activity_id,
         loggedinuser=current_user
     )

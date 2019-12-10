@@ -108,7 +108,7 @@
         <b-row>
           <b-col>
             <h5>Reporting periods</h5>
-            <b-table :fields="['period_start', 'period_end', 'target_value', 'actual_value', 'selectToSubmit']"
+            <b-table :fields="periodFields"
               :items="result.periods" responsive>
               <template v-slot:cell(period_start)="data">
                   [[ data.item.period_start ]]
@@ -141,7 +141,7 @@
                       step="0.000001"
                       placeholder="Actual value" name="actual_value"
                       v-model="data.item.actual_value"
-                      :disabled="data.item.selectToSubmit=='4'">
+                      :disabled="data.item.open==false || data.item.status==4">
                     </b-form-input>
                   </b-input-group>
                   <b-input-group v-if="result.measurement_type == 'Percentage'" append="%">
@@ -149,35 +149,40 @@
                       step="0.000001"
                       placeholder="Actual value" name="actual_value"
                       v-model="data.item.actual_value"
-                      :disabled="data.item.selectToSubmit=='4'">
+                      :disabled="data.item.open==false || data.item.status==4">
                     </b-form-input>
                   </b-input-group>
                   <b-input-group v-if="result.measurement_type == 'Qualitative'">
                     <b-form-input type="text" class="form-control" required="submitResults"
                       placeholder="Actual value" name="actual_value"
                       v-model="data.item.actual_value"
-                      :disabled="data.item.selectToSubmit=='4'">
+                      :disabled="data.item.open==false || data.item.status==4">
                     </b-form-input>
                   </b-input-group>
                   <b-input-group v-if="result.measurement_type == 'Yes/No'">
                     <b-form-select :options="['Yes', 'No']" required="submitResults"
                       v-model="data.item.actual_value"
-                      :disabled="data.item.selectToSubmit=='4'">
+                      :disabled="data.item.open==false || data.item.status==4">
                     </b-form-select>
                   </b-input-group>
                 </template>
               </template>
-              <template v-slot:cell(selectToSubmit)="data">
-                <template v-if="data.item.status==4">
+              <template v-slot:cell(open)="data">
+                <template v-if="data.item.open==false && data.item.status==4">
                   <b-btn size="sm" variant="outline-success" disabled>
                     <i class="fa fa-lock"></i> Submitted
+                  </b-btn>
+                </template>
+                <template v-else-if="data.item.open==false">
+                  <b-btn size="sm" variant="outline-secondary" disabled>
+                    <i class="fa fa-lock"></i> Not yet open
                   </b-btn>
                 </template>
                 <template v-else>
                   <b-form-group>
                     <b-form-radio-group
                       id="btn-radios-2"
-                      v-model="data.item.selectToSubmit"
+                      v-model="data.item.status"
                       buttons
                       button-variant="outline-primary"
                       size="sm"
@@ -240,7 +245,8 @@ var v = new Vue({
       saveDisabled: true,
       submitResults: false,
       activity_title: null,
-      activity_id: null
+      activity_id: null,
+      periodFields: []
     }
   },
   mounted: function() {
@@ -255,11 +261,16 @@ var v = new Vue({
     },
     loadResults() {
       axios
-        .get(`${api_base}activities/${activity_id}/results/design.json`
+        .get(`${api_base}activities/${activity_id}/results/data-entry.json`
           ).then(response => {
-            this.results = this.resultsStatus(response.data.results)
+            this.results = response.data.results
             this.activity_id = response.data.activity_id
             this.activity_title = response.data.activity_title
+            this.periodFields = ['period_start', 'period_end', 'target_value', 'actual_value']
+            this.periodFields.push({
+              key: 'open',
+              label: 'Submission Status'
+            })
             this.isBusy = false
             this.saveDisabled = false
           }).catch(error => {
@@ -279,7 +290,8 @@ var v = new Vue({
     },
     checkRequiredField(result_id, period_id) {
       if (
-          (this.results[result_id].periods[period_id].selectToSubmit == '3') &&
+          (this.results[result_id].periods[period_id].open == true)
+          (this.results[result_id].periods[period_id].status == 4) &&
           (this.results[result_id].periods[period_id].actual_value==null)) {
         this.$bvModal.msgBoxOk('You have not entered a value for this field. Please enter a value.', {
             title: 'Warning',
@@ -303,25 +315,13 @@ var v = new Vue({
       this.saveResults('submitAll')
       this.$bvModal.hide('confirm-submit-modal')
     },
-    resultsStatus(results) {
-      console.log(results)
-      var newresults = results.map(result => {
-        result['periods'] = result.periods.map(period => {
-          period['selectToSubmit'] = period['status']
-          return period
-        })
-        return result
-      })
-      console.log(newresults)
-      return newresults
-    },
     saveResults(saveType) {
       axios
         .post(`${api_base}activities/${activity_id}/results/data-entry.json`, {
             results: this.results,
             saveType: saveType
           }).then(response => {
-            this.results = this.resultsStatus(response.data.results)
+            this.results = response.data.results
             this.$bvToast.toast(`Your results data has been saved.`, {
               title: "Successfully saved.",
               variant: "success"

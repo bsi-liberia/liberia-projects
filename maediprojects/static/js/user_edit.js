@@ -1,5 +1,7 @@
 
 var api_user_permissions = "permissions/"
+Vue.component('v-select', VueSelect.VueSelect)
+
 Vue.config.devtools = true
 Vue.component('permission-organisation', {
   data() {
@@ -8,7 +10,9 @@ Vue.component('permission-organisation', {
   props: ["permission_id", "organisation_id", "organisations", "updateChangedPermission"],
   template: `
           <b-form-group :state="validation">
-            <b-select name="organisation_id" id="organisation_id"
+            <b-select
+            :id="permission_id"
+            :name="permission_id"
             class="form-control" :options="organisations"
             text-field="name" value-field="id" v-model="organisation_id"
             :state="validation">
@@ -18,6 +22,7 @@ Vue.component('permission-organisation', {
     organisation_id: {
       handler: function(newValue) {
         this.updateChangedPermission(this, this.permission_id, 'organisation_id', newValue)
+        this.$emit('update:organisation_id', newValue)
       }
     }
   }
@@ -31,7 +36,7 @@ Vue.component('permission-value', {
   props: ["permission_id", "permission_value", "permissionValues", "updateChangedPermission"],
   template: `
           <b-form-group state="validation">
-            <b-select name="permission_value" id="permission_value"
+            <b-select
             class="form-control" :options="permissionValues"
             text-field="name" v-model="permission_value"
             :state="validation">
@@ -41,6 +46,7 @@ Vue.component('permission-value', {
     'permission_value': {
       handler: function(newValue) {
         this.updateChangedPermission(this, this.permission_id, 'permission_value', newValue)
+        this.$emit('update:permission_value', newValue)
       }
     }
   }
@@ -55,13 +61,19 @@ new Vue({
       changePassword: false,
       isBusy: true,
       permissionValues: [],
-      organisations: []
+      organisations: [],
+      alreadyPushed: false,
+      userRoles: [],
+      roles: []
     }
   },
   mounted: function() {
     this.getUserPermissions()
   },
   methods: {
+    getRoleLabel (role) {
+      return `${role.name}`
+    },
     getUserPermissions: function() {
       axios
         .get(`${api_user_permissions}`)
@@ -70,6 +82,10 @@ new Vue({
           this.isBusy = false
           this.organisations = response.data.organisations
           this.permissionValues = response.data.permission_values
+          this.userRoles = response.data.user_roles.map(role => {
+            return role.role_id
+          })
+          this.roles = response.data.roles
         });
     },
     confirmDeleteUser: function(delete_url, username) {

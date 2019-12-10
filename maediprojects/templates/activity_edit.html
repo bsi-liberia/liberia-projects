@@ -47,7 +47,7 @@
         <b-nav-item to="milestones" :active="$route.path === '/milestones'" v-if="activity.milestones">
           Milestones
         </b-nav-item>
-        <b-nav-item to="results" :active="$route.path === '/results'" v-if="activity.results">
+        <b-nav-item to="results" :active="$route.path === '/results'">
           Results
         </b-nav-item>
         <b-nav-item to="documents" :active="$route.path === '/documents'" v-if="activity.documents">
@@ -229,42 +229,48 @@
         </b-card-body>
       </transition>
       <transition name="fade">
-        <b-card-body v-show="$route.path === '/results'" v-if="activity.results">
+        <b-card-body v-show="$route.path === '/results'">
           <b-card-text id="results">
             <h2>{{ _('Results') }}</h2>
-            <div class="alert alert-info">
-              These results were automatically captured from <a :href="`http://d-portal.org/q.html?aid=${activity.code}`">this donor's IATI data</a>.
-            </div>
-            <table class="table">
-              <thead>
-                <th>Title</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Target</th>
-                <th>Actual</th>
-                <th width="30%">%</th>
-              </thead>
-              <tbody>
-                {% for period in activity.result_indicator_periods %}
-                <tr>
-                  <td>{{ period.result_indicator.indicator_title }}</a></td>
-                  <td>{{ period.period_start }}</a></td>
-                  <td>{{ period.period_end }}</a></td>
-                  <td>{{ period.target_value }}</a></td>
-                  <td>{{ period.actual_value }}</a></td>
-                  <td>
-                    {% if period.percent_complete != None %}
-                    <div class="progress">
-                      <div class="progress-bar progress-bar-{{ period.percent_complete_category }}" role="progressbar" aria-valuenow="{{ period.percent_complete }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ period.percent_complete }}%;">
-                        {{ period.percent_complete }}%
+            <b-btn variant="primary" href="{{ url_for('activities.results_data_design',
+              activity_id=activity.id) }}">
+              Results designer <span class="fa fa-magic"></span></b-btn>
+            <b-btn variant="primary" href="{{ url_for('activities.results_data_entry',
+              activity_id=activity.id) }}" v-if="activity.results">
+              Results data entry <span class="fa fa-clipboard-list"></span></b-btn>
+            <template v-if="activity.results">
+              <hr />
+              <table class="table">
+                <thead>
+                  <th>Title</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Target</th>
+                  <th>Actual</th>
+                  <th width="30%">%</th>
+                </thead>
+                <tbody>
+                  {% for period in activity.result_indicator_periods %}
+                  <tr>
+                    <td>{{ period.result_indicator.indicator_title }}</a></td>
+                    <td>{{ period.period_start }}</a></td>
+                    <td>{{ period.period_end }}</a></td>
+                    <td>{{ period.target_value }}</a></td>
+                    <td>{{ period.actual_value }}</a></td>
+                    <td>
+                      {% if period.percent_complete != None %}
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-{{ period.percent_complete_category }}" role="progressbar" aria-valuenow="{{ period.percent_complete }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:{{ period.percent_complete }}%;">
+                          {{ period.percent_complete }}%
+                        </div>
                       </div>
-                    </div>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </template>
           </b-card-text>
         </b-card-body>
       </transition>

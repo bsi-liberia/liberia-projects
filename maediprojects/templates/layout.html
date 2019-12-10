@@ -43,18 +43,18 @@
           <ul class="nav navbar-nav">
             <li {% if active_page == "dashboard" %}class="active"{% endif %}><a href="{{ url_for('activities.dashboard') }}">Home</a></li>
             <li {% if active_page == "activities" %}class="active"{% endif %}><a href="{{ url_for('activities.activities') }}">Activities</a></li>
-            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            {% if loggedinuser.permissions_dict["view"] in ["domestic", "external", "both"] %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               Reports
               <b class="caret"></b>
               </a>
               <ul class="dropdown-menu">
-              {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "both"] %}
+              {% if loggedinuser.permissions_dict["view"] in ["domestic", "both"] %}
               <li><a href="{{ url_for('reports.milestones') }}">{{ _('PSIP Project Development and Appraisal Tracking') }}</a></li>
               <li><a href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</a></li>
               {% endif %}
-              {% if loggedinuser.permissions_dict["domestic_external"] in ["external", "both"] %}
+              {% if loggedinuser.permissions_dict["view"] in ["external", "both"] %}
               <li><a href="{{ url_for('reports.aid_disbursements') }}">{{ _('Aid Disbursements') }}</a></li>
               <li><a href="{{ url_for('reports.results') }}">{{ _('Results') }}</a></li>
               {% endif %}
@@ -64,8 +64,16 @@
             {% endif %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            {% if "results-data-entry" in loggedinuser.roles_list %}
+            <li><a href="{{ url_for('activities.results_user_list') }}" {% if active_page == "results" %}class="active"{% endif %}>{{ _('Results') }}</a></li>
+            {% endif %}
+            {% if "desk-officer" in loggedinuser.roles_list %}
             <li><a href="{{ url_for('management.management') }}" {% if active_page == "management" %}class="active"{% endif %}>{{ _('Management') }}</a></li>
+            {% endif %}
+            {% if "management" in loggedinuser.roles_list or "admin" in loggedinuser.roles_list %}
+            <li><a href="{{ url_for('management.management') }}" {% if active_page == "management" %}class="active"{% endif %}>{{ _('Management') }}</a></li>
+            {% endif %}
+            {% if loggedinuser.permissions_dict["view"] in ["domestic", "external", "both"] %}
             <li><a href="{{ url_for('exports.export') }}">{{ _('Export data') }}</a></li>
             <li><a href="{{ url_for('documentation.help') }}">{{ _('Help') }}</a></li>
             {% endif %}
@@ -76,7 +84,7 @@
               </a>
               <ul class="dropdown-menu">
                 <li><a href="{{ url_for('users.profile') }}">{{ _('Profile') }}</a></li>
-                {% if loggedinuser.administrator %}
+                {% if "admin" in loggedinuser.roles_list %}
                 <li><a href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</a></li>
                 <li><a href="{{ url_for('users.users') }}">{{ _('Users') }}</a></li>
                 {% endif %}

@@ -12,6 +12,7 @@ from maediprojects.query import activity as qactivity
 from maediprojects.query import finances as qfinances
 from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.query import exchangerates as qexchangerates
+from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
@@ -82,6 +83,19 @@ def update_activity_data(activity, existing_activity, row, codelists):
         (row.get(u"Activity Dates (Start Date)") == None) or
         (row.get(u"Activity Dates (End Date)") == None)):
         return False
+    if existing_activity[u"Activity Title"] != row[u"Activity Title"]:
+        activity.title = row[u"Activity Title"]
+        updated = True
+    if existing_activity[u"Activity Description"] != row[u"Activity Description"]:
+        activity.description = row[u"Activity Description"]
+        updated = True
+    if existing_activity[u"Implemented by"] != row[u"Implemented by"]:
+        for organisation in activity.organisations:
+            if organisation.role == 4:
+                db.session.delete(organisation)
+        activity.organisations.append(qorganisations.make_organisation(
+            row[u"Implemented by"], 4))
+        updated = True
     if existing_activity[u"Activity Status"] != row[u"Activity Status"]:
         activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
         updated = True

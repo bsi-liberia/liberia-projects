@@ -290,8 +290,8 @@ class Activity(db.Model):
             return False
         op = _check_org_permission()
         return {
-        "edit": (bool(current_user.permissions_dict["domestic_external_edit"] != "none") or (op=="edit")),
-        "view": (bool(current_user.permissions_dict["domestic_external"] != "none") or (op in ("view", "edit")))
+        "edit": (bool(current_user.permissions_dict["edit"] != "none") or (op=="edit")),
+        "view": (bool(current_user.permissions_dict["view"] != "none") or (op in ("view", "edit")))
         }
 
     implementing_organisations = sa.orm.relationship("Organisation",
@@ -1052,6 +1052,11 @@ class ActivityResultIndicatorPeriod(db.Model):
     status = sa.Column(sa.Integer, nullable=False, default=3)
 
     @hybrid_property
+    def open(self):
+        if self.status == 4: return False
+        return self.period_start < datetime.datetime.utcnow().date()
+
+    @hybrid_property
     def percent_complete(self):
         if self.actual_value == None:
             return None
@@ -1074,7 +1079,9 @@ class ActivityResultIndicatorPeriod(db.Model):
         return None
 
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret_data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret_data.update({key: getattr(self, key) for key in ['open']})
+        return ret_data
 
 
 class ActivityLog(db.Model):
@@ -1233,6 +1240,10 @@ class Role(db.Model):
                     cascade="all, delete-orphan",
                     passive_deletes=True,
                     backref="role")
+    rolepermissions = db.relationship("RolePermission",
+                    cascade="all, delete-orphan",
+                    passive_deletes=True,
+                    backref="role")
 
     def setup(self,
              name,
@@ -1260,6 +1271,39 @@ class UserRole(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'role_id', name='user_id_role_id'),
+    )
+
+
+class Permission(db.Model):
+    __tablename__ = 'permission'
+    id = sa.Column(sa.Integer, primary_key=True)
+    slug = sa.Column(sa.UnicodeText)
+    name = sa.Column(sa.UnicodeText)
+    description = sa.Column(sa.UnicodeText)
+    rolepermissions = db.relationship("RolePermission",
+                    cascade="all, delete-orphan",
+                    passive_deletes=True,
+                    backref="permission")
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class RolePermission(db.Model):
+    __tablename__ = 'permissionrole'
+    id = sa.Column(sa.Integer, primary_key=True)
+    role_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('role.id',
+                        ondelete='CASCADE'), nullable=False)
+    permission_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('permission.id',
+                        ondelete='CASCADE'), nullable=False)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    __table_args__ = (
+        db.UniqueConstraint('role_id', 'permission_id', name='role_id_permission_id'),
     )
 
 
