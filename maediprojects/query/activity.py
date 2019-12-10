@@ -74,18 +74,22 @@ def activity_C_D_FSs():
     forward_disbursements = dict(map(lambda d: (d.activity_id, d.total_forward_disbursements), forward_disbursements_query))
     return commitments, disbursements, forward_disbursements
 
-def filter_activities_for_permissions(query):
+def filter_activities_for_permissions(query, permission_name="view"):
     permissions = session.get("permissions", {})
-    if permissions.get("domestic_external") == "both":
+    if permissions.get(permission_name) == "both":
         return query
-    elif permissions.get("domestic_external") == "domestic":
+    elif permissions.get(permission_name) == "domestic":
         return query.filter(models.Activity.domestic_external == "domestic")
-    elif permissions.get("domestic_external") == "external":
+    elif permissions.get(permission_name) == "external":
         return query.filter(models.Activity.domestic_external == "external")
-    elif permissions.get("domestic_external") == "external":
+    elif permissions.get(permission_name) == "external":
         return query.filter(models.Activity.domestic_external == "external")
     elif "organisations" in permissions and permissions["organisations"]:
-        return query.filter(models.Activity.reporting_org_id.in_(permissions["organisations"].keys()))
+        def filter_permitted(organisation):
+            return organisation["permission_value"] == permission_name
+        permitted_organisations = list(map(lambda o: o["organisation_id"],
+            filter(filter_permitted, permissions["organisations"].values())))
+        return query.filter(models.Activity.reporting_org_id.in_(permitted_organisations))
     return query
 
 def get_iati_list():
@@ -271,7 +275,7 @@ def getISODate(value):
 def getJSONDate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
-def list_activities_by_filters(filters):
+def list_activities_by_filters(filters, permission_name="view"):
     query = models.Activity.query.outerjoin(
                     models.ActivityFinances,
                     models.ActivityFinancesCodelistCode
@@ -314,7 +318,7 @@ def list_activities_by_filters(filters):
             query = query.filter(
                     this_codelist_code.id == codelist_val
             )
-    query = filter_activities_for_permissions(query)
+    query = filter_activities_for_permissions(query, permission_name=permission_name)
     acts = query.all()
     return acts
 
