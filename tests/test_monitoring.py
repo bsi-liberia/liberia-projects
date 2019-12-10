@@ -36,12 +36,18 @@ class TestActivityLog:
 class TestActivityLogLoads(LiveServerClass):
 
     def test_activity_log_loads(self, app, selenium, selenium_login):
-        test_activity_finances.add_activity_finances(self, app, selenium, selenium_login)
         selenium.get(url_for('users.users_log', _external=True))
         WebDriverWait(selenium, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#usersLog tbody tr'))
         )
-        assert len(selenium.find_elements(By.CSS_SELECTOR, '#usersLog tbody tr')) > 1
+        original_num_entries = len(selenium.find_elements(By.CSS_SELECTOR, '#usersLog tbody tr'))
+        test_activity_finances.add_activity_finances(self, app, selenium, selenium_login)
+        time.sleep(1)
+        selenium.get(url_for('users.users_log', _external=True))
+        WebDriverWait(selenium, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#usersLog tbody tr'))
+        )
+        assert len(selenium.find_elements(By.CSS_SELECTOR, '#usersLog tbody tr')) > original_num_entries
 
     def test_activity_log_popup_loads(self, app, selenium, selenium_login):
         test_activity_finances.add_activity_finances(self, app, selenium, selenium_login)
