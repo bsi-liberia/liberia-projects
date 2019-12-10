@@ -561,7 +561,7 @@ def jsonify_results_design(results):
 
 @blueprint.route("/api/activities/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
 @login_required
-#@quser.permissions_required("view")
+@quser.permissions_required("results-data-entry")
 def api_activities_results_data_entry(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data_entry(activity_id,
@@ -578,7 +578,7 @@ def api_activities_results_data_entry(activity_id):
 
 @blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
 @login_required
-@quser.permissions_required("view")
+@quser.permissions_required("results-design")
 def api_activities_results_design(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data(activity_id, request.json.get("results"))
@@ -589,6 +589,21 @@ def api_activities_results_design(activity_id):
             activity_id = activity.id,
             activity_title = activity.title,
             results=jsonify_results_design(results)
+        )
+
+@blueprint.route("/api/user-results/")
+@login_required
+@quser.permissions_required("view")
+def api_activities_user_results():
+    activities = qactivity.list_activities_by_filters({'result_indicator_periods': True}, "results-data-entry")
+    return jsonify(
+            activities=[{
+                "title": activity.id,
+                "title": activity.title,
+                "funding_org": ", ".join(list(map(lambda o: o.name, activity.funding_organisations))),
+                "results_average": activity.results_average,
+                "url": url_for("activities.results_data_entry", activity_id=activity.id)
+                } for activity in activities]
         )
 
 
