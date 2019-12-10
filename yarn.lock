@@ -479,6 +479,11 @@ vue-scrollto@^2.15.0:
   dependencies:
     bezier-easing "2.1.0"
 
+vue-select@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.4.0.tgz#e56b0612845d13d10162cd8df81bfb46af2083ac"
+  integrity sha512-UHd0fiUjPgRmHIGhI6yUKtnJsHOdvzD00QUGUtD+FaxWWZRWF2AAb7KPZRj0j/egVfZQvey6M6woHn78GbTogA==
+
 vue2-leaflet@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/vue2-leaflet/-/vue2-leaflet-2.2.1.tgz#cd67274951751a33df147481fce2b956ba174c7e"
