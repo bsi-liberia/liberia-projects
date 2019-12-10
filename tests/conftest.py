@@ -6,7 +6,7 @@ import pytest
 from maediprojects import create_app, models
 from maediprojects.extensions import db as _db
 from maediprojects.query.user import addUser, deleteUser
-from maediprojects.query.setup import create_codes_codelists, import_countries, import_responses
+from maediprojects.query.setup import create_codes_codelists, import_countries, import_responses, import_roles
 from werkzeug.datastructures import FileStorage
 from maediprojects.query.generate_xlsx import xlsx_to_csv, import_xls
 from maediprojects.query import activity as qactivity
@@ -35,6 +35,7 @@ def app():
         import_responses()
         import_countries(u"en")
         import_locations_from_file(os.path.join(basedir, "artefacts", "LR.zip"), u"LR")
+        import_roles()
         print os.path.abspath(os.path.join(basedir, "artefacts", "LR.zip"))
 
         user_user_dict = app.config["USER"]
@@ -113,7 +114,7 @@ def import_test_data(user_id):
             filename="testdata.xlsx")
         result = import_xls(
             input_file=_fakeUpload,
-            column_name=u'2018 Q4 (D)'
+            column_name=u'2019 Q1 (D)'
         )
 
 
