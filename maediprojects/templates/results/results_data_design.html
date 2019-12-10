@@ -153,7 +153,7 @@
         <b-row>
           <b-col>
             <h5>Reporting periods</h5>
-            <b-table :fields="['period_start', 'period_end', 'target_value', 'delete']"
+            <b-table :fields="['period_start', 'period_end', 'target_value', 'status', 'delete']"
               :items="result.periods">
               <template v-slot:cell(period_start)="data">
                 <b-form-input type="date" class="form-control" required
@@ -191,6 +191,10 @@
                     v-model="data.item.target_value">
                   </b-form-select>
                 </b-input-group>
+              </template>
+              <template v-slot:cell(status)="data">
+                <b-form-checkbox switch value="4" unchecked-value="3" required
+                  v-model="data.item.status">[[ statusSwitchText(data.item.status) ]]</form-checkbox>
               </template>
               <template v-slot:cell(delete)="data">
                 <b-btn variant="link"
@@ -272,6 +276,9 @@ var v = new Vue({
     this.loadResults()
   },
   methods: {
+    statusSwitchText(value) {
+      return {3: 'Unsubmitted', 4: 'Submitted'}[value]
+    },
     loadResults() {
       axios
         .get(`${api_base}activities/${activity_id}/results/design.json`
