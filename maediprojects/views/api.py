@@ -231,7 +231,7 @@ def reporting_orgs_user():
             qmonitoring.update_organisation_response(
                 request.json)
         return jsonify(result=True)
-    if ("user_id" in request.args) or (current_user.administrator != True): # Change to Roles
+    if ("user_id" in request.args) or ("admin" not in current_user.roles_list): # FIXME Change to Roles
         reporting_orgs = qorganisations.get_reporting_orgs(user_id=request.args.get('user_id', current_user.id))
         user = models.User.query.get(request.args.get('user_id', current_user.id))
         user_name = user.name
@@ -240,7 +240,7 @@ def reporting_orgs_user():
         reporting_orgs = qorganisations.get_reporting_orgs()
         user_name = None
         user_id = None
-    if current_user.administrator:
+    if "admin" in current_user.roles_list:
         users = list(map(lambda u: {'value': u.id, 'text': u.name},
             quser.users_with_role('desk-officer')))
     else:
@@ -281,31 +281,14 @@ def reporting_orgs():
 @login_required
 def reporting_orgs_summary():
     reporting_orgs = qorganisations.get_reporting_orgs()
-    ros_fiscal_years = qmonitoring.forwardspends_ros("current")
-    ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
-    ros_disbursements = qmonitoring.fydata_ros("todate")
-    def annotate_ro(ro):
-        _ro = ro.as_dict()
-        _ro["activities_count"] = ro.activities_count
-        _ro["forwardspends"] = {
-            "current": ros_fiscal_years.get(ro.id, 0.00),
-            "previous": ros_fiscal_years_previous.get(ro.id, 0.00)
-        }
-        _ro["disbursements"] = {
-            "Q1": ros_disbursements.get((ro.id, u"Q1"), 0.00),
-            "Q2": ros_disbursements.get((ro.id, u"Q2"), 0.00),
-            "Q3": ros_disbursements.get((ro.id, u"Q3"), 0.00),
-            "Q4": ros_disbursements.get((ro.id, u"Q4"), 0.00)
-        }
-        return _ro
-
-    orgs = list(map(lambda ro: annotate_ro(ro), reporting_orgs))
+    response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
 
     def generate_summary(list_of_quarters, orgs):
         out = dict(map(lambda q: (q, { True: 0, False: 0, "Total": 0 }), list_of_quarters.keys()))
         for ro in orgs:
             for disb_q, disb_v in ro["disbursements"].items():
-                out[disb_q][disb_v>0] += 1
+                out[disb_q][disb_v["status"]["name"]=="Donor responded with data"] += 1
                 out[disb_q]["Total"] += 1
         return out
 
@@ -399,7 +382,7 @@ def api_new_activity():
             "start_date": today,
             "end_date": today,
             "recipient_country_code": current_user.recipient_country_code,
-            "domestic_external": current_user.permissions_dict.get("domestic_external_edit"),
+            "domestic_external": current_user.permissions_dict.get("edit"),
             "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
                 {
                 "role": 1,
