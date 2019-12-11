@@ -290,10 +290,12 @@ class Activity(db.Model):
             return False
         op = _check_org_permission()
         return {
-        "edit": ((current_user.permissions_dict["edit"] == "both") or
+        "edit": (("admin" in current_user.roles_list) or
+            (current_user.permissions_dict["edit"] == "both") or
             (current_user.permissions_dict["edit"] == self.domestic_external) or
             (op=="edit")),
-        "view": ((current_user.permissions_dict["view"] != "none") or
+        "view": (("admin" in current_user.roles_list) or
+            (current_user.permissions_dict["view"] != "none") or
             (current_user.permissions_dict["view"] == self.domestic_external) or
             (op in ("view", "edit")))
         }
