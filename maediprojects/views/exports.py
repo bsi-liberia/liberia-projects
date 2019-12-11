@@ -50,7 +50,7 @@ def export():
 
 @blueprint.route("/exports/import_psip/", methods=["POST", "GET"])
 @login_required
-@quser.permissions_required("edit")
+@quser.permissions_required("edit", "domestic")
 def import_psip_transactions(fiscal_year=None):
     if request.method == "GET": return(redirect(url_for('exports.export')))
     if 'file' not in request.files:
@@ -74,7 +74,7 @@ def import_psip_transactions(fiscal_year=None):
 
 @blueprint.route("/exports/import/", methods=["POST", "GET"])
 @login_required
-@quser.permissions_required("edit")
+@quser.permissions_required("edit", "external")
 def import_template():
     if request.method == "GET": return(redirect(url_for('exports.export')))
     if 'file' not in request.files:

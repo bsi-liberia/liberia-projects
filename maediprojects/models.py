@@ -290,8 +290,14 @@ class Activity(db.Model):
             return False
         op = _check_org_permission()
         return {
-        "edit": (bool(current_user.permissions_dict["edit"] != "none") or (op=="edit")),
-        "view": (bool(current_user.permissions_dict["view"] != "none") or (op in ("view", "edit")))
+        "edit": (("admin" in current_user.roles_list) or
+            (current_user.permissions_dict["edit"] == "both") or
+            (current_user.permissions_dict["edit"] == self.domestic_external) or
+            (op=="edit")),
+        "view": (("admin" in current_user.roles_list) or
+            (current_user.permissions_dict["view"] != "none") or
+            (current_user.permissions_dict["view"] == self.domestic_external) or
+            (op in ("view", "edit")))
         }
 
     implementing_organisations = sa.orm.relationship("Organisation",
@@ -1195,6 +1201,16 @@ class User(db.Model):
 
     def is_authenticated(self):
         return True
+
+    @hybrid_property
+    def permissions_list(self):
+        if not self.permissions:
+            return {'organisations': {}}
+        permissions = dict(map(lambda p: (p.permission_name, p.permission_value), self.permissions))
+        permissions["organisations"] = collections.defaultdict(list)
+        for op in self.organisations:
+            permissions["organisations"][op.organisation_id].append(op.permission_value)
+        return permissions
 
     @hybrid_property
     def permissions_dict(self):

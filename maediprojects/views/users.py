@@ -137,7 +137,8 @@ def user_permissions_edit(user_id):
         permission_values = [
             {"name": "View projects", "value": "view"},
             {"name": "Edit projects", "value": "edit"},
-            {"name": "Results data entry", "value": "results-data-entry"}
+            {"name": "Results data entry", "value": "results-data-entry"},
+            {"name": "Results data design", "value": "results-data-design"}
         ]
         return jsonify(permissions=user_organisations,
             organisations=organisations,

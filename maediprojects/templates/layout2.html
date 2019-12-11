@@ -61,7 +61,7 @@
             {% endif %}
           </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
-            {% if "results-data-entry" in loggedinuser.roles_list %}
+            {% if ("results-data-entry" in loggedinuser.roles_list) or ("results-data-design" in loggedinuser.roles_list) %}
             <b-nav-item href="{{ url_for('activities.results_user_list') }}" {% if active_page == "results" %}active{% endif %}>{{ _('Results') }}</b-nav-item>
             {% endif %}
             {% if "desk-officer" in loggedinuser.roles_list %}

@@ -23,24 +23,39 @@ def administrator_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def check_permissions(permission_name):
-    if permission_name == "view": _p_n = "view"
-    elif permission_name in ("edit",
-        "results-data-entry", "results-design"): _p_n = "edit"
-    else: _p_n = permission_name
-    if current_user.permissions_dict.get(_p_n, "none") == "none":
-        return False
-    return True
+def check_permissions(permission_name, permission_value=None):
+    if "admin" in current_user.roles_list: return True
+    if permission_name in ("results-data-entry", "results-data-design"):
+        if "edit" in current_user.roles_list: return True
+    if permission_name in ("view") and "view" in current_user.permissions_list:
+        return True
+    if permission_name in ("view", "edit"):
+        if current_user.permissions_dict.get(permission_name, "none") in (permission_value, "both"):
+            return True
+    return False
 
 def check_activity_permissions(permission_name, activity_id):
+    def edit_rights(activity, permissions_search):
+        edit_permissions = permissions_search.get("edit", "none")
+        if edit_permissions == "both": return True
+        if edit_permissions == activity.domestic_external: return True
+        return False
+    if "admin" in current_user.roles_list: return True
     act = qactivity.get_activity(activity_id)
+    if permission_name in ('edit', 'results-data-entry', 'results-data-design'):
+        if edit_rights(act, current_user.permissions_dict): return True
     if act and current_user.permissions_dict.get("organisations"):
         if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
             # If the user is attached to an organisation, then they should always
             # at least have view rights.
             if permission_name == "view": return True
-            if current_user.permissions_dict["organisations"][act.reporting_org_id]["permission_value"] == permission_name:
+            if permission_name == "edit":
+                if edit_rights(act, current_user.permissions_dict["organisations"][act.reporting_org_id]): return True
+            if permission_name in current_user.permissions_list["organisations"][act.reporting_org_id]:
                 return True
+            elif permission_name in ("results-data-entry", "results-data-design"):
+                if "edit" in current_user.permissions_list["organisations"][act.reporting_org_id]:
+                    return True
     return False
 
 def check_new_activity_permission():
@@ -48,18 +63,20 @@ def check_new_activity_permission():
         if org["permission_value"] == "edit": return True
     return False
 
-def permissions_required(permission_name, activity_id=None):
+def permissions_required(permission_name, permission_value=None):
     def wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if kwargs.get('activity_id'):
+            if "admin" in current_user.roles_list:
+                check = True
+            elif kwargs.get('activity_id'):
                 activity_id = kwargs.get('activity_id')
                 check = (check_activity_permissions(permission_name, activity_id)
-                    or check_permissions(permission_name))
+                    or check_permissions(permission_name, permission_value))
             elif permission_name == "edit":
-                check = (check_new_activity_permission() or check_permissions(permission_name))
+                check = (check_new_activity_permission() or check_permissions(permission_name, permission_value))
             else:
-                check = (check_permissions(permission_name))
+                check = (check_permissions(permission_name, permission_value))
             if check is False:
                 flash("You do not have sufficient permissions to access that page.", "danger")
                 if request.referrer != None:

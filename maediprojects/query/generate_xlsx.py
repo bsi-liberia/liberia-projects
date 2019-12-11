@@ -84,17 +84,17 @@ def update_activity_data(activity, existing_activity, row, codelists):
         (row.get(u"Activity Dates (End Date)") == None)):
         return False
     if existing_activity[u"Activity Title"] != row[u"Activity Title"]:
-        activity.title = row[u"Activity Title"]
+        activity.title = row[u"Activity Title"].decode("utf-8")
         updated = True
-    if existing_activity[u"Activity Description"] != row[u"Activity Description"]:
-        activity.description = row[u"Activity Description"]
+    if ("Activity Description" in row) and (existing_activity[u"Activity Description"] != row[u"Activity Description"]):
+        activity.description = row[u"Activity Description"].decode("utf-8")
         updated = True
-    if existing_activity[u"Implemented by"] != row[u"Implemented by"]:
+    if ("Implemented by" in row) and (existing_activity[u"Implemented by"] != row[u"Implemented by"]):
         for organisation in activity.organisations:
             if organisation.role == 4:
                 db.session.delete(organisation)
         activity.organisations.append(qorganisations.make_organisation(
-            row[u"Implemented by"], 4))
+            row[u"Implemented by"].decode("utf-8"), 4))
         updated = True
     if existing_activity[u"Activity Status"] != row[u"Activity Status"]:
         activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
