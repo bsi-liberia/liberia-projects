@@ -27,6 +27,8 @@ def check_permissions(permission_name, permission_value=None):
     if "admin" in current_user.roles_list: return True
     if permission_name in ("results-data-entry", "results-data-design"):
         if "edit" in current_user.roles_list: return True
+    if permission_name in ("view") and "view" in current_user.permissions_list:
+        return True
     if permission_name in ("view", "edit"):
         if current_user.permissions_dict.get(permission_name, "none") in (permission_value, "both"):
             return True
