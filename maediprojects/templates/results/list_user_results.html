@@ -15,7 +15,14 @@ sort-desc="true" responsive>
     <a :href="data.item.url">[[ data.item.title ]]</a>
   </template>
   <template v-slot:cell(url)="data">
-    <b-btn variant="primary" :href="data.item.url" size="sm">
+    <b-btn variant="primary" :href="data.item.url_data_design"
+      style="margin-bottom: 5px;"
+      size="sm" v-if="data.item.permissions.data_design">
+      <span class="fa fa-magic"></span> Design results
+    </b-btn>
+    <b-btn variant="primary" :href="data.item.url_data_entry"
+      style="margin-bottom: 5px;"
+      size="sm" v-if="data.item.permissions.data_entry">
       <span class="fa fa-clipboard-list"></span> Enter results
     </b-btn>
   </template>
@@ -58,7 +65,7 @@ new Vue({
         },
         {
           key: 'url',
-          label: 'Enter results',
+          label: 'Enter data',
           sortable: true,
           thStyle: "width: 20%;",
           tdClass: "number",

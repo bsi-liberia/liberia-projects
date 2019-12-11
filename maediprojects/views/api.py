@@ -578,7 +578,7 @@ def api_activities_results_data_entry(activity_id):
 
 @blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
 @login_required
-@quser.permissions_required("results-design")
+@quser.permissions_required("results-data-design")
 def api_activities_results_design(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data(activity_id, request.json.get("results"))
@@ -602,7 +602,13 @@ def api_activities_user_results():
                 "title": activity.title,
                 "funding_org": ", ".join(list(map(lambda o: o.name, activity.funding_organisations))),
                 "results_average": activity.results_average,
-                "url": url_for("activities.results_data_entry", activity_id=activity.id)
+                "url": url_for("activities.activity", activity_id=activity.id),
+                "url_data_design": url_for("activities.results_data_design", activity_id=activity.id),
+                "url_data_entry": url_for("activities.results_data_entry", activity_id=activity.id),
+                "permissions": {
+                    "data_entry": ("results-data-entry" in current_user.roles_list) or ("results-data-design" in current_user.roles_list) or ("admin" in current_user.roles_list),
+                    "data_design": ("results-data-design" in current_user.roles_list) or ("admin" in current_user.roles_list)
+                }
                 } for activity in activities]
         )
 
