@@ -54,7 +54,9 @@ def import_roles():
     roles = [
         {'slug': 'desk-officer', 'name': 'Desk Officer'},
         {'slug': 'manager', 'name': 'Manager'},
-        {'slug': 'admin', 'name': 'Administrator'}
+        {'slug': 'admin', 'name': 'Administrator'},
+        {'slug': 'results-data-entry', 'name': 'Results data entry'},
+        {'slug': 'results-data-design', 'name': 'Results data design'}
     ]
     for role in roles:
         r = models.Role()
