@@ -516,7 +516,7 @@ def update_result_attr(data):
     setattr(result, data['attr'], data['value'])
     db.session.add(result)
     db.session.commit()
-    activity_updated(activity_id,
+    activity_updated(result.activity_id,
         {
         "user_id": current_user.id,
         "mode": "update",
@@ -602,6 +602,7 @@ def add_indicator(data, result_id, commit=True):
     i.indicator_description = data.get('indicator_description')
     if data.get("baseline_year"):
         i.baseline_year = isostring_year(data.get('baseline_year'))
+    i.baseline_value = data.get('baseline_value')
     i.baseline_description = data.get('baseline_description')
     i.measurement_type = data.get('measurement_type')
     i.measurement_unit_type = data.get('measurement_unit_type')
