@@ -205,9 +205,11 @@
 <div class="row" id="results">
   <div class="col-md-12">
     <h2>{{ _('Results') }}</h2>
+    {% if activity.domestic_external == 'external' %}
     <div class="alert alert-info">
       These results were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
     </div>
+    {% endif %}
     <table class="table">
       <thead>
         <th>Title</th>
