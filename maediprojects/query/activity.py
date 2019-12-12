@@ -516,7 +516,7 @@ def update_result_attr(data):
     setattr(result, data['attr'], data['value'])
     db.session.add(result)
     db.session.commit()
-    activity_updated(activity_id,
+    activity_updated(result.activity_id,
         {
         "user_id": current_user.id,
         "mode": "update",
