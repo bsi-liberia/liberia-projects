@@ -637,7 +637,7 @@ def api_activity_milestones(activity_id):
 
 @blueprint.route("/api/codelists.json", methods=["GET", "POST"])
 @login_required
-@quser.permissions_required("edit")
+@quser.permissions_required("view")
 def api_codelists():
     if (request.method == "GET"):
         return jsonify(
