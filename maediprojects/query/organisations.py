@@ -56,6 +56,13 @@ def get_or_create_organisation(name):
         "code": normality.slugify(name)
     }).id
 
+def make_organisation(name, role):
+    organisation_id = get_or_create_organisation(name)
+    activity_org = models.ActivityOrganisation()
+    activity_org.organisation_id = organisation_id
+    activity_org.role = role
+    return activity_org
+
 def create_activity_organisation(activity_id, name, role):
     organisation_id = get_or_create_organisation(name)
     activity_org = models.ActivityOrganisation()

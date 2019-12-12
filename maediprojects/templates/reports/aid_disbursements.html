@@ -18,25 +18,27 @@
 </b-row>
 <b-table class="table" :busy="isBusy" :fields="fields" :items="activities" sort-by="pct"
 sort-desc="true" :tbody-tr-class="rowClass" responsive>
-  <div slot="table-busy" class="text-center">
-    <b-spinner class="align-middle" label="Loading..."></b-spinner>
-    <strong>Loading...</strong>
-  </div>
-  <template slot="thead-top" slot-scope="data">
+  <template v-slot:table-busy>
+    <div class="text-center">
+      <b-spinner class="align-middle" label="Loading..."></b-spinner>
+      <strong>Loading...</strong>
+    </div>
+  </template>
+  <template v-slot:thead-top="data">
     <b-tr>
       <b-th colspan="5" class="text-center">Financial reporting for [[ fy_text ]] only</b-th>
     </b-tr>
   </template>
-  <template slot="[title]" slot-scope="data">
+  <template v-slot:cell(title)="data">
     <a :href="data.item.url">[[ data.item.title ]]</a>
   </template>
-  <template slot="[sum_forwardspends]" slot-scope="data">
+  <template v-slot:cell(sum_forwardspends)="data">
     [[ numberFormatter(data.item.sum_forwardspends) ]]
   </template>
-  <template slot="[sum_disbursements]" slot-scope="data">
+  <template v-slot:cell(sum_disbursements)="data">
     [[ numberFormatter(data.item.sum_disbursements) ]]
   </template>
-  <template slot="[pct]" slot-scope="data">
+  <template v-slot:cell(pct)="data">
     <template v-if="data.item.isTime">
       <b-progress :max="100" show-value variant="warning">
         <b-progress-bar :value="data.item.pct">

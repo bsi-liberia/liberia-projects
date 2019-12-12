@@ -12,8 +12,9 @@
     <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='packages/bootstrap-vue/dist/bootstrap-vue.min.css')}}" />
 
     <!-- Load polyfills to support older browsers -->
+    <!--
     <script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver" crossorigin="anonymous"></script>
-
+    -->
     <!-- Load Vue followed by BootstrapVue -->
     <script src="{{url_for('static', filename='packages/vue/dist/vue.min.js')}}"></script>
     <script src="{{url_for('static', filename='packages/bootstrap-vue/dist/bootstrap-vue.min.js')}}"></script>
@@ -45,13 +46,13 @@
             <b-nav-item{% if active_page == "dashboard" %} active{% endif %} href="{{ url_for('activities.dashboard') }}">Home
             </b-nav-item>
             <b-nav-item{% if active_page == "activities" %} active{% endif %} href="{{ url_for('activities.activities') }}">Activities</b-nav-item>
-            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            {% if loggedinuser.permissions_dict["view"] in ["domestic", "external", "both"] %}
             <b-nav-item-dropdown text="Reports">
-              {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "both"] %}
+              {% if loggedinuser.permissions_dict["view"] in ["domestic", "both"] %}
               <b-dropdown-item href="{{ url_for('reports.milestones') }}">{{ _('PSIP Project Development and Appraisal Tracking') }}</b-dropdown-item>
               <b-dropdown-item href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</b-dropdown-item>
               {% endif %}
-              {% if loggedinuser.permissions_dict["domestic_external"] in ["external", "both"] %}
+              {% if loggedinuser.permissions_dict["view"] in ["external", "both"] %}
               <b-dropdown-item href="{{ url_for('reports.aid_disbursements') }}">{{ _('Aid Disbursements') }}</b-dropdown-item>
               <b-dropdown-item href="{{ url_for('reports.results') }}">{{ _('Results') }}</b-dropdown-item>
               {% endif %}
@@ -60,18 +61,22 @@
             {% endif %}
           </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
+            {% if ("results-data-entry" in loggedinuser.roles_list) or ("results-data-design" in loggedinuser.roles_list) %}
+            <b-nav-item href="{{ url_for('activities.results_user_list') }}" {% if active_page == "results" %}active{% endif %}>{{ _('Results') }}</b-nav-item>
+            {% endif %}
             {% if "desk-officer" in loggedinuser.roles_list %}
             <b-nav-item href="{{ url_for('management.user_dashboard') }}" {% if active_page == "management" %}active{% endif %}>{{ _('Management') }}</b-nav-item>
-            {% else %}
+            {% endif %}
+            {% if "management" in loggedinuser.roles_list or "admin" in loggedinuser.roles_list %}
             <b-nav-item href="{{ url_for('management.management') }}" {% if active_page == "management" %}active{% endif %}>{{ _('Management') }}</b-nav-item>
             {% endif %}
-            {% if loggedinuser.permissions_dict["domestic_external"] in ["domestic", "external", "both"] %}
+            {% if loggedinuser.permissions_dict["view"] in ["domestic", "external", "both"] %}
             <b-nav-item {% if active_page == "export" %} active{% endif %} href="{{ url_for('exports.export') }}">{{ _('Export data') }}</b-nav-item>
             <b-nav-item {% if active_page == "help" %} active{% endif %} href="{{ url_for('documentation.help') }}">{{ _('Help') }}</b-nav-item>
             {% endif %}
             <b-nav-item-dropdown text="{{ loggedinuser.username }}" right>
                 <b-dropdown-item href="{{ url_for('users.profile') }}">{{ _('Profile') }}</b-dropdown-item>
-                {% if loggedinuser.administrator %}
+                {% if "admin" in loggedinuser.roles_list %}
                 <b-dropdown-item href="{{ url_for('codelists.codelists_management') }}">{{ _('Manage codelists') }}</b-dropdown-item>
                 <b-dropdown-item href="{{ url_for('users.users') }}">{{ _('Users') }}</b-dropdown-item>
                 {% endif %}

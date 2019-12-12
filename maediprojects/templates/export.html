@@ -5,7 +5,7 @@
 <b-row>
   <b-col md="6">
     <h1>{{ _('Export data in Excel format') }}</h1>
-    {% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
+    {% if loggedinuser.permissions_dict["view"] in ('external', 'both') %}
     <p class="lead">Download all data according to the AMCU Excel export format.</p>
     <p>
       <b-btn variant="primary" size="sm"
@@ -14,7 +14,7 @@
       </b-btn>
     </p>
     {% endif %}
-    {% if loggedinuser.permissions_dict["domestic_external"] in ('domestic', 'both') %}
+    {% if loggedinuser.permissions_dict["view"] in ('domestic', 'both') %}
     <p class="lead">Download all data according to the PIU Excel export format.</p>
     <p>
       <b-btn variant="primary" size="sm"
@@ -24,7 +24,7 @@
     </p>
     {% endif %}
   </b-col>
-  {% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
+  {% if loggedinuser.permissions_dict["view"] in ('external', 'both') %}
   <b-col md="6">
     <b-alert show variant="light">
       <h3>Advanced download formats</h3>
@@ -34,7 +34,7 @@
           <i class="fa fa-download"></i> {{ _('Download Excel') }}
         </b-btn>
       </p>
-      {% if loggedinuser.permissions_dict["domestic_external"] in ('both') %}
+      {% if loggedinuser.permissions_dict["view"] in ('both') %}
       <p class="lead">Download integrated dataset of AMCU and PSIP projects.</p>
       <p>
         <b-btn size="sm" href="{{url_for('exports.all_activities_xlsx')}}">
@@ -47,7 +47,7 @@
   {% endif %}
 </b-row>
 <hr />
-{% if loggedinuser.permissions_dict["domestic_external"] in ('external', 'both') %}
+{% if "desk-officer" in loggedinuser.roles_list or "admin" in loggedinuser.roles_list %}
 <h1 id="excel-reporting-templates">{{ _('Excel reporting templates') }}</h1>
 <p class="lead">You can import data that donors have entered on
   AMCU reporting templates. This means you do not have to go through
@@ -56,7 +56,9 @@
 <b-row>
   <b-col>
     <b-card>
-      <h4 slot="header"><i class="fa fa-download"></i> Download template</h4>
+      <template v-slot:header>
+        <h4><i class="fa fa-download"></i> Download template</h4>
+      </template>
       <p>Download a template. Then, send it to the donor, as an email attachment.</p>
       <b-form-group label="Select template type"
         :description="'Selected template: ' + selectedTemplateOptionDescription"
@@ -79,7 +81,7 @@
         value-field="id"
         text-field="name"
         v-model="selectedReportingOrganisation">
-          <template slot="first">
+          <template v-slot:first>
             <option value="all">All donors</option>
           </template>
         </b-form-select>
@@ -103,7 +105,9 @@
   </b-col>
   <b-col>
     <b-card>
-      <h4 slot="header"><i class="fa fa-upload"></i> Import template</h4>
+      <template v-slot:header>
+        <h4><i class="fa fa-upload"></i> Import template</h4>
+      </template>
       <p>Import data you have received back from a donor according to the AMCU import format.</p>
       <b-form method="post" enctype="multipart/form-data" action="{{ url_for('exports.import_template')}}">
         <b-form-group label="Select template type"
@@ -128,9 +132,11 @@
 </b-row>
 <hr />
 {% endif %}
-{% if loggedinuser.permissions_dict["domestic_external_edit"] in ('domestic', 'both') %}
+{% if "piu-desk-officer" in loggedinuser.roles_list or "admin" in loggedinuser.roles_list %}
 <b-card>
-  <h3 slot="header"><i class="fa fa-upload"></i> Upload data for PSIP projects from IFMIS</h3>
+  <template v-slot:header>
+    <h3><i class="fa fa-upload"></i> Upload data for PSIP projects from IFMIS</h3>
+  </template>
   <p class="lead">Upload an Excel file containing data on PSIP projects exported from IFMIS.</p>
   <b-form
     method="post"
@@ -147,7 +153,7 @@
       label-class="font-weight-bold">
       <b-form-select :options="fys"
       v-model="selectedFY" name="fiscal_year">
-        <template slot="first">
+        <template v-slot:first>
           <option value="">All Fiscal Years</option>
         </template>
       </b-form-select>

@@ -19,6 +19,16 @@ def isostring_year(value):
     # Returns a date object from a string of format YYYY
     return datetime.datetime.strptime(value, "%Y")
 
+def add_fund_source(data):
+    fS = models.FundSource()
+    fS.code = data["code"]
+    fS.name = data["name"]
+    fS.finance_type = data["finance_type"]
+    db.session.add(fS)
+    db.session.commit()
+    return fS
+
+
 def add_finances(activity_id, data):
     aF = models.ActivityFinances()
     aF.activity_id = activity_id
@@ -97,8 +107,7 @@ def delete_finances(activity_id, finances_id):
             "value": None
             }
             )
-        return True
-    print "Return False"
+        return {"result": True}
     return False
 
 def update_attr(data):

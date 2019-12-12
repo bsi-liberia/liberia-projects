@@ -74,18 +74,22 @@ def activity_C_D_FSs():
     forward_disbursements = dict(map(lambda d: (d.activity_id, d.total_forward_disbursements), forward_disbursements_query))
     return commitments, disbursements, forward_disbursements
 
-def filter_activities_for_permissions(query):
+def filter_activities_for_permissions(query, permission_name="view"):
     permissions = session.get("permissions", {})
-    if permissions.get("domestic_external") == "both":
+    if permissions.get(permission_name) == "both":
         return query
-    elif permissions.get("domestic_external") == "domestic":
+    elif permissions.get(permission_name) == "domestic":
         return query.filter(models.Activity.domestic_external == "domestic")
-    elif permissions.get("domestic_external") == "external":
+    elif permissions.get(permission_name) == "external":
         return query.filter(models.Activity.domestic_external == "external")
-    elif permissions.get("domestic_external") == "external":
+    elif permissions.get(permission_name) == "external":
         return query.filter(models.Activity.domestic_external == "external")
     elif "organisations" in permissions and permissions["organisations"]:
-        return query.filter(models.Activity.reporting_org_id.in_(permissions["organisations"].keys()))
+        def filter_permitted(organisation):
+            return organisation["permission_value"] == permission_name
+        permitted_organisations = list(map(lambda o: o["organisation_id"],
+            filter(filter_permitted, permissions["organisations"].values())))
+        return query.filter(models.Activity.reporting_org_id.in_(permitted_organisations))
     return query
 
 def get_iati_list():
@@ -271,7 +275,7 @@ def getISODate(value):
 def getJSONDate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
-def list_activities_by_filters(filters):
+def list_activities_by_filters(filters, permission_name="view"):
     query = models.Activity.query.outerjoin(
                     models.ActivityFinances,
                     models.ActivityFinancesCodelistCode
@@ -295,6 +299,10 @@ def list_activities_by_filters(filters):
                 models.Activity.implementing_organisations.any(
                     models.Organisation._type == filter_value)
             )
+        elif (filter_name == 'result_indicator_periods') and (filter_value == True):
+            query = query.filter(
+                models.Activity.result_indicator_periods != None
+            )
         else:
             query = query.filter(
                 getattr(models.Activity, filter_name)==filter_value
@@ -314,7 +322,7 @@ def list_activities_by_filters(filters):
             query = query.filter(
                     this_codelist_code.id == codelist_val
             )
-    query = filter_activities_for_permissions(query)
+    query = filter_activities_for_permissions(query, permission_name=permission_name)
     acts = query.all()
     return acts
 
@@ -378,35 +386,191 @@ def update_attr(data):
     )
     return True
 
+
+
+def update_activity_codelist(activitycodelistcode_id, data):
+    activity_codelist = models.ActivityCodelistCode.query.filter_by(
+        id = activitycodelistcode_id
+    ).first()
+    if not activity_codelist: return False
+    old_value = getattr(activity_codelist, data['attr'])
+    setattr(activity_codelist, data['attr'], data['value'])
+    db.session.add(activity_codelist)
+    db.session.commit()
+    activity_updated(activity_codelist.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityCodelistCode",
+        "target_id": activity_codelist.id,
+        "old_value": {data['attr']: old_value},
+        "value": {data['attr']: data['value']}
+        }
+    )
+    return True
+
+
+def save_period_data(indicator_id, periods_data):
+    existing_periods = models.ActivityResultIndicator.query.get(indicator_id).periods
+    existing_period_ids = list(map(lambda p: p.id, existing_periods))
+    new_period_ids = list(map(lambda p: p.get("id"), periods_data))
+    # Delete periods that no longer appear
+    periods_to_delete = filter(lambda r: r not in new_period_ids, existing_period_ids)
+    [delete_result_data({'result_type': "ActivityResultIndicatorPeriod", "id": period}) for period in periods_to_delete]
+    for period in periods_data:
+        if not "id" in period:
+            # Create a new period
+            new_period = add_indicator_period(period, indicator_id)
+        else:
+            # Update period
+            for k, v in period.items():
+                if k in ['open']: continue
+                update_indicator_period_attr({'id': period['id'], 'attr': k, 'value': v})
+
+def save_indicator_data(result_id, data):
+    existing_indicators = models.ActivityResult.query.get(result_id).indicators
+    if not "indicator_id" in data:
+        if len(existing_indicators) > 0:
+            for existing_indicator in existing_indicators:
+                delete_result_data({"result_type": "ActivityResultIndicator", "id": existing_indicator.id})
+        else:
+            # Indicator is new
+            add_indicator(data, result_id)
+    elif (len(existing_indicators) == 1) and (data.get("indicator_id") == existing_indicators[0].id):
+        # Indicator exists
+        for k in ['indicator_title', 'baseline_year', 'baseline_value', 'measurement_unit_type', 'measurement_type']:
+            indicator = update_indicator_attr({'id': result_id, 'attr': k, 'value': data.get(k)})
+        save_period_data(indicator.id, data.get('periods', []))
+
+
+def save_results_data_entry(activity_id, results_data, save_type):
+    activity = models.Activity.query.get(activity_id)
+    existing_results = activity.results
+    existing_result_ids = set(map(lambda r: r.id, existing_results))
+    new_result_ids = set(map(lambda r: r.get("id"), results_data))
+    assert new_result_ids == existing_result_ids
+    for result in results_data:
+        existing_result = models.ActivityResult.query.get(result["id"])
+        existing_period_ids = set(map(lambda p: p.id, existing_result.indicator_periods))
+        new_period_ids = set(map(lambda p: p["id"], result["periods"]))
+        assert existing_period_ids == new_period_ids
+        for period in result["periods"]:
+            existing_period = models.ActivityResultIndicatorPeriod.query.get(period["id"])
+            if (existing_period.open == False) or (existing_period.status == 4): continue
+            update_indicator_period_attr(
+                {'id': period['id'],
+                'attr': 'actual_value',
+                'value': period['actual_value']}
+            )
+            if ((save_type == "submitAll") or
+                ((save_type == "submitSelected") and (period['status'] == '4'))):
+                update_indicator_period_attr(
+                    {'id': period['id'],
+                    'attr': 'status',
+                    'value': 4}
+                )
+            else:
+                update_indicator_period_attr(
+                    {'id': period['id'],
+                    'attr': 'status',
+                    'value': 3}
+                )
+
+    return True
+
+
+def save_results_data(activity_id, results_data):
+    activity = models.Activity.query.get(activity_id)
+    existing_results = activity.results
+    existing_result_ids = list(map(lambda r: r.id, existing_results))
+    new_result_ids = list(map(lambda r: r.get("id"), results_data))
+    # Delete results that no longer appear
+    results_to_delete = filter(lambda r: r not in new_result_ids, existing_result_ids)
+    [delete_result_data({'result_type': "ActivityResult", "id": result}) for result in results_to_delete]
+
+    for result in results_data:
+        if not "id" in result:
+            result_to_add = result
+            result_to_add['result_type'] = {'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
+            result_to_add["indicators"] = [result] # They use different names so this is OK
+            new_result = add_result(result_to_add, activity_id)
+        else:
+            existing_result = update_result_attr({
+                    'id': result['id'],
+                    'attr': 'result_title',
+                    'value': result['result_title']
+                })
+            existing_result = update_result_attr({
+                    'id': result['id'],
+                    'attr': 'result_type',
+                    'value': {'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
+                })
+            save_indicator_data(existing_result.id, result)
+    return True
+
 def update_result_attr(data):
     result = models.ActivityResult.query.filter_by(
         id = data['id']
     ).first()
+    oldresult = result.as_dict()
     setattr(result, data['attr'], data['value'])
     db.session.add(result)
     db.session.commit()
+    activity_updated(result.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityResult",
+        "target_id": result.id,
+        "old_value": oldresult,
+        "value": result.as_dict()
+        }
+    )
     return result
 
 def update_indicator_attr(data):
     indicator = models.ActivityResultIndicator.query.filter_by(
         id = data['id']
     ).first()
-    if data['attr'].endswith("year"):
-        data['value'] = isostring_year(data['value'])
+    oldindicator = indicator.as_dict()
+    if (data['attr'].endswith("year")) and not (data['value'] in (None, '')):
+        data['value'] = isostring_year(str(data['value']))
     setattr(indicator, data['attr'], data['value'])
     db.session.add(indicator)
     db.session.commit()
+    activity_updated(indicator.result.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityResultIndicator",
+        "target_id": indicator.id,
+        "old_value": oldindicator,
+        "value": indicator.as_dict()
+        }
+    )
     return indicator
 
 def update_indicator_period_attr(data):
     period = models.ActivityResultIndicatorPeriod.query.filter_by(
         id = data['id']
     ).first()
+    oldperiod = period.as_dict()
     if data['attr'].startswith("period_"):
         data['value'] = isostring_date(data['value'])
-    setattr(period, data['attr'], data['value'])
+    if hasattr(period, data['attr']):
+        setattr(period, data['attr'], data['value'])
     db.session.add(period)
     db.session.commit()
+    activity_updated(period.result_indicator.result.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "update",
+        "target": "ActivityResultIndicatorPeriod",
+        "target_id": period.id,
+        "old_value": oldperiod,
+        "value": period.as_dict()
+        }
+    )
     return period
 
 def add_indicator_period(data, indicator_id, commit=True):
@@ -420,35 +584,67 @@ def add_indicator_period(data, indicator_id, commit=True):
     p.indicator_id = indicator_id
     db.session.add(p)
     db.session.commit()
+    activity_updated(p.result_indicator.result.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "add",
+        "target": "ActivityResultIndicatorPeriod",
+        "target_id": p.id,
+        "old_value": None,
+        "value": p.as_dict()
+        }
+    )
     return p
 
 def add_indicator(data, result_id, commit=True):
-    print "indicator"
     i = models.ActivityResultIndicator()
     i.indicator_title = data.get('indicator_title')
     i.indicator_description = data.get('indicator_description')
-    i.baseline_year = isostring_year(data.get('baseline_year'))
+    if data.get("baseline_year"):
+        i.baseline_year = isostring_year(data.get('baseline_year'))
+    i.baseline_value = data.get('baseline_value')
     i.baseline_description = data.get('baseline_description')
+    i.measurement_type = data.get('measurement_type')
+    i.measurement_unit_type = data.get('measurement_unit_type')
     i.result_id = result_id
     db.session.add(i)
     db.session.commit()
     if data.get("periods"):
         [add_indicator_period(period, i.id, False) for
                               period in data['periods']]
+    activity_updated(i.result.activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "add",
+        "target": "ActivityResultIndicator",
+        "target_id": i.id,
+        "old_value": None,
+        "value": i.as_dict()
+        }
+    )
     return i
 
-def add_result(data, activity_id, organisation_slug, commit=True):
+def add_result(data, activity_id, organisation_slug=None, commit=True):
     r = models.ActivityResult()
     r.result_title = data.get('result_title')
     r.result_description = data.get('result_description')
     r.result_type = data.get('result_type')
     r.activity_id = activity_id
-    r.organisation_slug = organisation_slug
     db.session.add(r)
     db.session.commit()
     if data.get("indicators"):
         [add_indicator(indicator, r.id, False) for
                        indicator in data['indicators']]
+    activity_updated(activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "add",
+        "target": "ActivityResult",
+        "target_id": r.id,
+        "old_value": None,
+        "value": r.as_dict()
+        }
+    )
     return r
 
 def add_results_data(results, activity_id, organisation_slug):
@@ -456,12 +652,12 @@ def add_results_data(results, activity_id, organisation_slug):
                 False) for result in results]
 
 def add_result_data(activity_id, data):
-    if data['type'] == "result":
+    if data['type'] == "ActivityResult":
         r = models.ActivityResult()
         r.activity_id = activity_id
-    elif data['type'] == "indicator":
+    elif data['type'] == "ActivityResultIndicator":
         r = models.ActivityResultIndicator()
-    elif data['type'] == "period":
+    elif data['type'] == "ActivityResultIndicatorPeriod":
         r = models.ActivityResultIndicatorPeriod()
 
     for k, v in data.items():
@@ -470,23 +666,36 @@ def add_result_data(activity_id, data):
         if k.endswith('year'):
             v = isostring_year(v)
         setattr(r, k, v)
-    print "Adding"
     db.session.add(r)
     db.session.commit()
     return r
 
 def delete_result_data(data):
-    if data['result_type'] == "result":
+    if data['result_type'] == "ActivityResult":
         r = models.ActivityResult.query.filter_by(
             id = data['id']
         ).first()
-    elif data['result_type'] == "indicator":
+        activity_id = r.activity_id
+    elif data['result_type'] == "ActivityResultIndicator":
         r = models.ActivityResultIndicator.query.filter_by(
             id = data['id']
         ).first()
-    elif data['result_type'] == "period":
+        activity_id = r.result.activity_id
+    elif data['result_type'] == "ActivityResultIndicatorPeriod":
         r = models.ActivityResultIndicatorPeriod.query.filter_by(
             id = data['id']
         ).first()
+        activity_id = r.result_indicator.result.activity_id
+
+    activity_updated(activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": "delete",
+        "target": data["result_type"],
+        "target_id": r.id,
+        "old_value": r.as_dict(),
+        "value": None
+        }
+    )
     db.session.delete(r)
     db.session.commit()

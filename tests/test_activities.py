@@ -52,7 +52,7 @@ class TestActivities:
     def test_filters_api_works(self, admin, app):
         res = self.client.get(url_for('api.api_activities_filters'))
         assert res.status_code == 200
-        assert len(json.loads(res.data)["filters"]) == 8
+        assert len(json.loads(res.data)["filters"]) == 9
 
 
 @pytest.mark.usefixtures('client_class')

@@ -12,7 +12,6 @@ def get_db_codelist_names():
 
 def get_db_codelists():
     # Get codelist name
-    # { codelist: cdata }
     codelist_data = models.CodelistCode.query.order_by(
         models.CodelistCode.name
     ).all()
@@ -23,6 +22,14 @@ def get_db_codelists():
             "code": cd.code,
             "name": cd.name
         })
+    currencies = models.Currency.query.order_by(models.Currency.code).all()
+    codelists["currency"] = [{
+        'code': 'USD', 'id': 'USD', 'name': 'USD - U.S. Dollar'
+        }]
+    codelists["currency"] += (list(map(lambda currency: {
+        'code': currency.code, 'id': currency.code,
+        'name': '{} - {}'.format(currency.code, currency.name)
+    }, currencies)))
     return codelists
 
 def get_codelists(LANG=None):
@@ -47,6 +54,9 @@ def get_codelists(LANG=None):
                 "id": row.get("id", row.get("code")),
                 "name": row["name_%s" % LANG]})
     out.update(get_db_codelists())
+    out['domestic_external'] = [
+        {'code': 'domestic', 'id': 'domestic', 'name': 'Domestic / PSIP (PIU)'},
+        {'code': 'external', 'id': 'external', 'name': 'External / Aid (AMCU)'}]
     return out
 
 def get_codelists_lookups():

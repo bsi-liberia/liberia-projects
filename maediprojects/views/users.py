@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, flash, request, redirect, url_for
+from flask import Blueprint, render_template, flash, request, redirect, url_for, abort
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_babel import gettext
 
+from maediprojects import models
 from maediprojects.query import user as quser
 from maediprojects.query import organisations as qorganisations
 from maediprojects.lib import codelists
@@ -14,13 +15,13 @@ blueprint = Blueprint('users', __name__, url_prefix='/', static_folder='../stati
 
 @login_manager.user_loader
 def load_user(id):
-    return quser.user(id)
+    return models.User.query.get(id)
 
 
 @blueprint.route("/profile/", methods=["GET", "POST"])
 @login_required
 def profile():
-    if current_user.administrator:
+    if "admin" in current_user.roles_list:
         return redirect(url_for("users.users_edit", user_id=current_user.id))
 
     if request.method == "POST":
@@ -50,7 +51,7 @@ def profile():
 @login_required
 @quser.administrator_required
 def users():
-    if not current_user.administrator:
+    if "admin" not in current_user.roles_list:
         flash(gettext(u"You must be an administrator to access that area."), "danger")
     users = quser.user()
     return render_template("users.html",
@@ -62,13 +63,13 @@ def users():
 @login_required
 @quser.administrator_required
 def users_delete():
-    if not current_user.administrator:
+    if "admin" not in current_user.roles_list:
         flash(gettext(u"You must be an administrator to create new users."), "danger")
         return redirect(url_for("activities.dashboard"))
-    if current_user.username == request.form.get("username"):
+    if current_user.username == request.get_json().get("username"):
         flash(gettext(u"You cannot delete your own user."), "danger")
         return redirect(url_for("activities.dashboard"))
-    if quser.deleteUser(request.form.get('username')):
+    if quser.deleteUser(request.get_json().get('username')):
         flash(gettext(u"Successfully deleted user."), "success")
     else:
         flash(gettext(u"Sorry, there was an error and that user could not be deleted."), "danger")
@@ -79,13 +80,10 @@ def users_delete():
 @login_required
 @quser.administrator_required
 def users_new():
-    #if not current_user.administrator:
-    #    flash("You must be an administrator to create new users.", "danger")
-    #    return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = {
             "permissions_dict": {
-                "domestic_external": current_user.permissions_dict["domestic_external"]
+                "view": current_user.permissions_dict["view"]
             },
             "recipient_country_code": "LR"
         }
@@ -107,11 +105,10 @@ def users_new():
 @login_required
 @quser.administrator_required
 def users_edit(user_id):
-    if not current_user.administrator:
-        flash("You must be an administrator to edit users.", "danger")
-        return redirect(url_for("activities.dashboard"))
+    user = quser.user(user_id)
     if request.method == "GET":
-        user = quser.user(user_id)
+        if not user:
+            return abort(404)
         return render_template("user.html",
                  user=user,
                  loggedinuser=current_user,
@@ -131,59 +128,39 @@ def users_edit(user_id):
 @login_required
 @quser.administrator_required
 def user_permissions_edit(user_id):
-    def _append_organisation(uo, organisations):
-        uo["organisations"] = dict(map(lambda o: (o.id, o.as_dict()), organisations))
-        if uo["organisations"].get(uo["organisation_id"]):
-            uo["organisations"].get(uo["organisation_id"])["selected"] = " selected"
-        uo["organisations"] = list(uo["organisations"].values())
-        select_options = {True: " selected", False: ""}
-        uo["permission_values"] = [
-            {"name": "View projects", "value": "view", "selected": select_options[bool(uo["permission_value"] == "view")]},
-            {"name": "Edit projects", "value": "edit", "selected": select_options[bool(uo["permission_value"] == "edit")]}
-        ]
-        return uo
-
-    if not current_user.administrator:
-        flash("You must be an administrator to edit users.", "danger")
-        return redirect(url_for("activities.dashboard"))
     if request.method == "GET":
         user = quser.user(user_id)
-        user_organisations = list(map(lambda uo:
-            (_append_organisation(uo.as_dict(), qorganisations.get_organisations())),
-            user.organisations))
-        return jsonify(permissions=user_organisations)
+        user_organisations = list(map(lambda uo: uo.as_dict(), user.organisations))
+        user_roles = list(map(lambda uo: uo.as_dict(), user.userroles))
+        roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
+        organisations = list(map(lambda o: o.as_dict(), qorganisations.get_organisations()))
+        permission_values = [
+            {"name": "View projects", "value": "view"},
+            {"name": "Edit projects", "value": "edit"},
+            {"name": "Results data entry", "value": "results-data-entry"},
+            {"name": "Results data design", "value": "results-data-design"}
+        ]
+        return jsonify(permissions=user_organisations,
+            organisations=organisations,
+            permission_values=permission_values,
+            user_roles=user_roles,
+            roles=roles)
     elif request.method == "POST":
-        data = request.form.to_dict()
+        data = request.get_json()
         data["user_id"] = user_id
         if data["action"] == "add":
             op = quser.addOrganisationPermission(data)
             if not op: return "False"
-            return jsonify({
-                "id": op.id,
-                "organisations": list(map(lambda o: o.as_dict(),
-                    qorganisations.get_organisations())),
-              "permission_values": [
-                {
-                  "selected": " selected",
-                  "name": "View projects",
-                  "value": "view"
-                },
-                {
-                  "selected": "",
-                  "name": "Edit projects",
-                  "value": "edit"
-                }
-              ],
-                })
+            return jsonify(op.as_dict())
         elif data["action"] == "delete":
             op = quser.deleteOrganisationPermission(data)
             if not op:
-                return False
+                return "error"
             return "ok"
         elif data["action"] == "edit":
             op = quser.updateOrganisationPermission(data)
             if not op:
-                return False
+                return "error"
             return "ok"
         return "error, unknown action"
 
@@ -192,8 +169,6 @@ def user_permissions_edit(user_id):
 @login_required
 @quser.administrator_required
 def users_log():
-    if not current_user.administrator:
-        flash(gettext(u"You must be an administrator to access that area."), "danger")
     userslog = quser.activitylog()
     return render_template("userslog.html",
                            userslog=userslog,

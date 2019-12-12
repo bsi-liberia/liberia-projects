@@ -17,29 +17,45 @@ import uuid
 def administrator_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.administrator is False:
+        if "admin" not in current_user.roles_list:
             flash("You must be an administrator to access that page.", "danger")
             return redirect(url_for("activities.dashboard"))
         return f(*args, **kwargs)
     return decorated_function
 
-def check_permissions(permission_name):
-    if permission_name == "view": _p_n = "domestic_external"
-    elif permission_name == "edit": _p_n = "domestic_external_edit"
-    else: _p_n = permission_name
-    if current_user.permissions_dict.get(_p_n, "none") == "none":
-        return False
-    return True
+def check_permissions(permission_name, permission_value=None):
+    if "admin" in current_user.roles_list: return True
+    if permission_name in ("results-data-entry", "results-data-design"):
+        if "edit" in current_user.roles_list: return True
+    if permission_name in ("view") and "view" in current_user.permissions_list:
+        return True
+    if permission_name in ("view", "edit"):
+        if current_user.permissions_dict.get(permission_name, "none") in (permission_value, "both"):
+            return True
+    return False
 
 def check_activity_permissions(permission_name, activity_id):
+    def edit_rights(activity, permissions_search):
+        edit_permissions = permissions_search.get("edit", "none")
+        if edit_permissions == "both": return True
+        if edit_permissions == activity.domestic_external: return True
+        return False
+    if "admin" in current_user.roles_list: return True
     act = qactivity.get_activity(activity_id)
+    if permission_name in ('edit', 'results-data-entry', 'results-data-design'):
+        if edit_rights(act, current_user.permissions_dict): return True
     if act and current_user.permissions_dict.get("organisations"):
         if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
             # If the user is attached to an organisation, then they should always
             # at least have view rights.
             if permission_name == "view": return True
-            if current_user.permissions_dict["organisations"][act.reporting_org_id]["permission_value"] == permission_name:
+            if permission_name == "edit":
+                if edit_rights(act, current_user.permissions_dict["organisations"][act.reporting_org_id]): return True
+            if permission_name in current_user.permissions_list["organisations"][act.reporting_org_id]:
                 return True
+            elif permission_name in ("results-data-entry", "results-data-design"):
+                if "edit" in current_user.permissions_list["organisations"][act.reporting_org_id]:
+                    return True
     return False
 
 def check_new_activity_permission():
@@ -47,19 +63,21 @@ def check_new_activity_permission():
         if org["permission_value"] == "edit": return True
     return False
 
-def permissions_required(permission_name, activity_id=None):
+def permissions_required(permission_name, permission_value=None):
     def wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if kwargs.get('activity_id'):
+            if "admin" in current_user.roles_list:
+                check = True
+            elif kwargs.get('activity_id'):
                 activity_id = kwargs.get('activity_id')
-                check = (not check_activity_permissions(permission_name, activity_id)
-                    and not check_permissions(permission_name))
+                check = (check_activity_permissions(permission_name, activity_id)
+                    or check_permissions(permission_name, permission_value))
             elif permission_name == "edit":
-                check = (not check_new_activity_permission() and not check_permissions(permission_name))
+                check = (check_new_activity_permission() or check_permissions(permission_name, permission_value))
             else:
-                check = (not check_permissions(permission_name))
-            if check:
+                check = (check_permissions(permission_name, permission_value))
+            if check is False:
                 flash("You do not have sufficient permissions to access that page.", "danger")
                 if request.referrer != None:
                     return redirect(request.referrer)
@@ -139,7 +157,13 @@ def delete_user_role(username, role_slug):
 
 def user_id_username():
     users = models.User.query.all()
-    return list(map(lambda u: {"id": u.id, "username": u.username}, users))
+    return list(map(lambda u: {
+        "id": u.id,
+        "username": u.username,
+        "name": u.name,
+        "organisation": u.organisation,
+        "user_roles": list(map(lambda ur: ur.role.as_dict(), u.userroles)),
+        "editable": True}, users))
 
 
 def activitylog(offset=0, user_id=None):
@@ -201,13 +225,31 @@ def updateUser(data):
         # Update password
         checkU.pw_hash = generate_password_hash(data["password"])
 
-    if current_user.administrator:
+    if "admin" in current_user.roles_list:
         # Only an admin user can give administrative privileges
-        checkU.administrator = bool(data.get('administrator'))
-        setPermission(checkU, u"domestic_external", data.get("domestic_external", "none"))
-        setPermission(checkU, u"domestic_external_edit", data.get("domestic_external_edit", "none"))
+        setPermission(checkU, u"view", data.get("view", "none"))
+        setPermission(checkU, u"edit", data.get("edit", "none"))
 
     db.session.add(checkU)
+    db.session.commit()
+
+    # This should be done more nicely on the model...
+    if "admin" in current_user.roles_list:
+        current_user_roles = list(map(lambda ur: str(ur.role_id), checkU.userroles))
+        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []).split(","))
+        roles_to_add = filter(lambda r: r not in current_user_roles, new_user_roles)
+        roles_to_delete = filter(lambda r: r not in new_user_roles, current_user_roles)
+        for role_id in roles_to_delete:
+            ur = models.UserRole.query.filter_by(user_id=checkU.id, role_id=int(role_id)).first()
+            if (current_user.id == ur.id) and (ur.role.slug == "admin"):
+                flash("As an administrator, you cannot remove administrative privileges from yourself. If you would like to remove administrative privileges from this account then you must log in as another user.", "danger")
+                continue
+            db.session.delete(ur)
+        for role_id in roles_to_add:
+            ur = models.UserRole()
+            ur.user_id = checkU.id
+            ur.role_id = role_id
+            db.session.add(ur)
     db.session.commit()
     return checkU
 
@@ -222,13 +264,16 @@ def addUser(data):
             name = data.get('name'),
             email_address = data.get('email_address'),
             organisation = data.get('organisation'),
-            recipient_country_code = data.get('recipient_country_code'),
-            administrator = bool(data.get('administrator'))
+            recipient_country_code = data.get('recipient_country_code')
             )
         db.session.add(newU)
         db.session.commit()
-        setPermission(newU, u"domestic_external", data.get("domestic_external"))
-        setPermission(newU, u"domestic_external_edit", data.get("domestic_external_edit"))
+        setPermission(newU, u"view", data.get("view"))
+        setPermission(newU, u"edit", data.get("edit"))
+
+        if data.get("administrator") == True:
+            add_user_role(data["username"], "admin")
+
         return newU
     return checkU
 
