@@ -58,9 +58,7 @@ def counterpart_funding():
 @blueprint.route("/reports/results/")
 @login_required
 def results():
-    activities = models.Activity.query.filter_by(
-            domestic_external=u"external",
-        ).filter(
+    activities = models.Activity.query.filter(
             models.Activity.results.any()
         ).all()
 
