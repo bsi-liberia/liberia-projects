@@ -28,6 +28,12 @@
 </div>
 <div class="row">
   <div class="col-md-6">
+    {% if (activity.permissions.edit == True) or ("results-data-design" in loggedinuser.roles_list) %}
+    <a class="btn btn-primary" href="{{url_for('activities.results_data_design', activity_id=activity.id)}}">Results design</a>
+    {% endif %}
+    {% if (activity.permissions.edit == True) or ("results-data-entry" in loggedinuser.roles_list) or ("results-data-design" in loggedinuser.roles_list) %}
+    <a class="btn btn-primary" href="{{url_for('activities.results_data_entry', activity_id=activity.id)}}">Results data entry</a>
+    {% endif %}
     <h3>Basic data</h3>
     <table class="table table-hover table-sm" responsive>
       <tbody>
@@ -78,6 +84,26 @@
           </td>
         </tr>
       {% endfor %}
+      {% if activity.domestic_external == 'external' %}
+        <tr>
+          <td><b>Finance Type</b></td>
+          <td>
+            {% for ft, pct in activity.disb_finance_types.items() %}
+              {{ ft }}: {{ pct }}% <br />
+            {% endfor %}
+          </td>
+        </tr>
+        {% if activity.disb_fund_sources|length > 1 %}
+        <tr>
+          <td><b>Fund Sources</b></td>
+          <td>
+            {% for fs, data in activity.disb_fund_sources.items() %}
+              {{ fs }} ({{ data.finance_type }}): {{ data.value }}% <br />
+            {% endfor %}
+          </td>
+        </tr>
+        {% endif %}
+      {% endif %}
       </tbody>
     </table>
     {% if activity.milestones_data %}
@@ -101,58 +127,81 @@
     <div id="locationMap"></div>
   </div>
 </div>
+<b-row>
+  <b-col>
+    <canvas id="chartArea" width="100%" height="30px"></canvas>
+  </b-col>
+</b-row>
 <div class="row">
   <div class="col">
     <hr />
   </div>
 </div>
-<div class="row" id="financialdata">
-  <div class="col-md-12">
+<b-row id="financialdata">
+  <b-col lg="9">
     <h2>Financial data</h3>
-  </div>
-</div>
-<div class="row">
-  <div class="col-md">
-    <h3>{% if activity.domestic_external == "external" %}Commitments{% else %}Appropriations{% endif %}</h3>
-    <b-table class="table financial-table table-sm" id="commitments-table"
-      :fields="fiscal_fields" :items="commitment_items"
-      sort-by="period"
-      sort-desc="true"
-      responsive>
-    </b-table>
-  </div>
-  {% if activity.FY_allotments_dict %}
-  <div class="col-md">
-    <h3>Allotments</h3>
-    <b-table class="table financial-table table-sm" id="allotments-table"
-      :fields="fiscal_fields" :items="allotment_items"
-      sort-by="period"
-      sort-desc="true"
-      responsive>
-    </b-table>
-  </div>
+  </b-col>
+  {% if (activity.domestic_external == 'external') and (activity.disb_fund_sources|length > 1) %}
+  <b-col lg="3">
+    <b-form-group class="text-right"
+    label="Display:">
+      <b-form-radio-group
+        id="btn-radios-1"
+        v-model="showFundSource"
+        :options="showFundSourceOptions"
+        buttons
+        button-variant="outline-dark"
+      ></b-form-radio-group>
+    </b-form-group>
+  </b-col>
   {% endif %}
-  <div class="col-md">
-    <h3>Disbursements</h3>
-    <b-table class="table financial-table table-sm" id="disbursements-table"
-      :fields="fiscal_fields" :items="disbursement_items"
-      sort-by="period"
-      sort-desc="true"
-      responsive>
-    </b-table>
-  </div>
-  {% if activity.FY_forward_spend_dict %}
-  <div class="col-md">
-    <h3>{% if activity.domestic_external == "external" %}MTEF Projections{% else %}Spending Plan{% endif %}</h3>
-    <b-table class="table financial-table table-sm" id="mtef-projections-table"
-      :fields="fiscal_fields" :items="forwardspend_items"
-      sort-by="period"
-      sort-desc="true"
-      responsive>
-    </b-table>
-  </div>
-  {% endif %}
-</div>
+</b-row>
+<template v-if="showFundSource">
+  <template v-for="finance in financesFundSources">
+    <b-row>
+      <template v-for="fundSourceData, fundSource in fundSources">
+          <b-col v-if="fundSource in finance.data">
+            <h3>
+              <template v-if="fundSource != 'null'">[[ fundSource ]]</template>
+              <b-badge>[[ fundSourceData.finance_type ]]</b-badge>
+              <br />[[ finance.title ]]</h3>
+            <b-table class="table financial-table table-sm"
+            :fields="fiscal_fields" :items="Object.values(finance.data[fundSource])"
+            sort-by="period"
+            sort-desc="true"
+            :busy="isBusy"
+            responsive>
+              <div v-slot:table-busy class="text-center text-muted my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </b-table>
+          </b-col>
+      </template>
+    </b-row>
+  </template>
+</template>
+<template v-else>
+  <b-row>
+    <template v-for="(finance, fkey) in finances">
+      <b-col>
+        <h3>[[ finance.title ]]</h3>
+        <b-table class="table financial-table table-sm"
+        :id="`${fkey}-table`"
+        :fields="fiscal_fields" :items="finance.data"
+        sort-by="period"
+        sort-desc="true"
+        :busy="isBusy"
+        responsive>
+        <div slot:table-busy class="text-center text-muted my-2">
+          <b-spinner class="align-middle"></b-spinner>
+          <strong>Loading...</strong>
+        </div>
+      </b-table>
+      </b-col>
+    </template>
+  </b-row>
+</template>
 <div class="row">
   <div class="col">
     <hr />
@@ -162,10 +211,12 @@
 <div class="row" id="results">
   <div class="col-md-12">
     <h2>{{ _('Results') }}</h2>
+    {% if activity.domestic_external == 'external' %}
     <div class="alert alert-info">
       These results were automatically captured from <a href="http://d-portal.org/q.html?aid={{ activity.code }}">this donor's IATI data</a>.
     </div>
-    <table class="table table-responsive">
+    {% endif %}
+    <table class="table">
       <thead>
         <th>Title</th>
         <th>From</th>
@@ -177,7 +228,10 @@
       <tbody>
         {% for period in activity.result_indicator_periods %}
         <tr>
-          <td>{{ period.result_indicator.indicator_title }}</a></td>
+          <td>{{ period.result_indicator.indicator_title }}</a>
+          {% if period.result_indicator.measurement_unit_type %}
+          ({{ period.result_indicator.measurement_unit_type}})
+          {% endif %}</td>
           <td>{{ period.period_start }}</a></td>
           <td>{{ period.period_end }}</a></td>
           <td>{{ period.target_value }}</a></td>
@@ -238,19 +292,16 @@
 <script type="text/javascript">
 var api_locations_url = "{{ api_locations_url }}";
 var api_activity_locations_url = "{{ api_activity_locations_url }}";
+var api_finances_url = "{{ url_for('api.api_activities_finances_by_id', activity_id=activity.id, _external=True) }}";
+var api_finances_fund_sources_url = "{{ url_for('api.api_activities_finances_fund_sources_by_id', activity_id=activity.id, _external=True) }}";
 </script>
 
 <link rel="stylesheet" href="{{url_for('static', filename='packages/leaflet/dist/leaflet.css')}}"/>
 <script src="{{url_for('static', filename='packages/leaflet/dist/leaflet.js')}}"></script>
 <script src="{{url_for('static', filename='js/map.js')}}" type="text/javascript"></script>
 <script src="{{url_for('static', filename='packages/vue-scrollto/vue-scrollto.js')}}"></script>
+<script src="{{url_for('static', filename='packages/chart.js/dist/Chart.min.js')}}"></script>
 {% endblock %}
 {% block vuejs %}
-<script type="text/javascript">
-var disbursement_items = {{ activity.FY_disbursements_dict.values()|tojson }},
-commitment_items = {{ activity.FY_commitments_dict.values()|tojson }},
-allotment_items = {{ activity.FY_allotments_dict.values()|tojson }},
-forwardspend_items = {{ activity.FY_forward_spend_dict.values()|tojson }}
-</script>
 <script src="{{url_for('static', filename='js/activity.js')}}" type="text/javascript"></script>
 {% endblock %}

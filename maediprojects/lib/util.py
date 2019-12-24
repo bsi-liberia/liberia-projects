@@ -194,6 +194,18 @@ def available_fy_fqs_as_dict():
              'selected': previous_fy_fq() == fyfqstring
               } for fyfqstring in available_fy_fqs()]
 
+
+def get_data_from_fy_fq_string(fy_fq_string):
+    pattern = r"FY(\d*) Q(\d)"
+    result = re.match(pattern, column_name).groups()
+    return (result[1], result[0])
+
+
+def fy_fq_string_to_date(fy_fq_string, start_end='start'):
+    year, quarter = get_data_from_fy_fq_string(fy_fq_string)
+    return fq_fy_to_date(quarter, year, start_end)
+
+
 def get_data_from_header(column_name):
     pattern = r"(\d*) Q(\d) \(D\)"
     result = re.match(pattern, column_name).groups()

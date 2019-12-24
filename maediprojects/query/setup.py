@@ -17,21 +17,30 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def import_responses():
-    responses = [{
-        'name': 'Data requested, but donor has not yet responded',
-        'icon': 'fa fa-check-circle text-muted'
+    responses = [
+    {
+        'name': 'Data requested',
+        'icon': 'fa fa-check-circle text-muted',
+        'slug': 'data-requested',
+        'order': 1
     },
     {
         'name': 'Donor responded, but has no spending in this period',
-        'icon': 'far fa-check-circle text-success'
+        'icon': 'far fa-check-circle text-success',
+        'slug': 'donor-responded-no-spending',
+        'order': 2
     },
     {
         'name': 'Donor responded with data',
-        'icon': 'fa fa-check-circle text-success'
+        'icon': 'fa fa-check-circle text-success',
+        'slug': 'donor-responded-with-data',
+        'order': 3
     },
     {
         'name': 'Donor refused request',
-        'icon': 'fa fa-exclamation-circle text-danger'
+        'icon': 'fa fa-exclamation-circle text-danger',
+        'slug': 'donor-refused-request',
+        'order': 4
     }]
     for response in responses:
         r = models.Response()
@@ -45,7 +54,9 @@ def import_roles():
     roles = [
         {'slug': 'desk-officer', 'name': 'Desk Officer'},
         {'slug': 'manager', 'name': 'Manager'},
-        {'slug': 'admin', 'name': 'Administrator'}
+        {'slug': 'admin', 'name': 'Administrator'},
+        {'slug': 'results-data-entry', 'name': 'Results data entry'},
+        {'slug': 'results-data-design', 'name': 'Results data design'}
     ]
     for role in roles:
         r = models.Role()

@@ -8,28 +8,6 @@ from maediprojects.extensions import db
 import activity as qactivity
 
 
-def update_activity_codelist(activitycodelistcode_id, data):
-    activity_codelist = models.ActivityCodelistCode.query.filter_by(
-        id = activitycodelistcode_id
-    ).first()
-    if not activity_codelist: return False
-    old_value = getattr(activity_codelist, data['attr'])
-    setattr(activity_codelist, data['attr'], data['value'])
-    db.session.add(activity_codelist)
-    db.session.commit()
-    qactivity.activity_updated(activity_codelist.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityCodelistCode",
-        "target_id": activity_codelist.id,
-        "old_value": {data['attr']: old_value},
-        "value": {data['attr']: data['value']}
-        }
-    )
-    print data
-    return True
-
 def get_code_by_name(codelist, name):
     code = models.CodelistCode.query.filter_by(
         codelist_code = codelist,
