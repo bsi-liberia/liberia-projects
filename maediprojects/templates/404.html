@@ -1,8 +1,16 @@
-{% set active_page='404' %}{% extends "layout.html" %}
+{% set active_page='404' %}{% extends "layout2.html" %}
 {% block title %}{{ _('Error 404: File Not Found') }}{% endblock %}
 {% block content %}
 <h1>{{ _('Error 404: File Not Found') }}</h1>
 
 <p class="lead">{{ _('Sorry, but the page you requested could not be found.') }}</p>
 
+{% endblock %}
+{% block vuejs %}
+<script>
+new Vue({
+  el: "#app",
+  delimiters: ["[[", "]]"]
+})
+</script>
 {% endblock %}

@@ -1,8 +1,16 @@
-{% set active_page='500' %}{% extends "layout.html" %}
+{% set active_page='500' %}{% extends "layout2.html" %}
 {% block title %}{{ _('Error 500: Internal Server Error') }}{% endblock %}
 {% block content %}
 <h1>{{ _('Error 500: Internal Server Error') }}</h1>
 
 <p class="lead">{{ _('Sorry, but there was an unexpected error and the page you requested could not be loaded.') }}</p>
 
+{% endblock %}
+{% block vuejs %}
+<script>
+new Vue({
+  el: "#app",
+  delimiters: ["[[", "]]"]
+})
+</script>
 {% endblock %}
