@@ -373,6 +373,8 @@ def api_new_activity():
     if request.method=="GET":
         today = datetime.datetime.now().date()
         activity = {
+            "title": "",
+            "description": "",
             "flow_type": "10",
             "aid_type": "C01",
             "collaboration_type": "1",
