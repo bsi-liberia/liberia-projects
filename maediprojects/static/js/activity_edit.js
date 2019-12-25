@@ -1211,9 +1211,11 @@ Vue.component('finances-section', {
         "transaction_type": transaction_type,
         "transaction_date": transaction_date,
         "transaction_value": "0.00",
-        "fund_source_id": last_transaction.fund_source_id,
         "currency": currency,
         "action": "add"
+      }
+      if (last_transaction) {
+        data["fund_source_id"] = last_transaction.fund_source_id
       }
       axios.post(api_routes.finances, data)
         .then(response => {

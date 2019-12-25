@@ -41,7 +41,7 @@ def profile():
             flash(gettext(u"Sorry, couldn't update!"), "danger")
         return redirect(url_for("users.profile"))
 
-    return render_template("profile.html",
+    return render_template("users/profile.html",
                            codelists=codelists.get_codelists(),
                            user=current_user,
                            loggedinuser=current_user)
@@ -54,7 +54,7 @@ def users():
     if "admin" not in current_user.roles_list:
         flash(gettext(u"You must be an administrator to access that area."), "danger")
     users = quser.user()
-    return render_template("users.html",
+    return render_template("users/users.html",
                            users=users,
                            loggedinuser=current_user)
 
@@ -87,7 +87,7 @@ def users_new():
             },
             "recipient_country_code": "LR"
         }
-        return render_template("user.html",
+        return render_template("users/user.html",
                                user=user,
                                loggedinuser=current_user,
                                codelists=codelists.get_codelists())
@@ -170,7 +170,7 @@ def user_permissions_edit(user_id):
 @quser.administrator_required
 def users_log():
     userslog = quser.activitylog()
-    return render_template("userslog.html",
+    return render_template("users/userslog.html",
                            userslog=userslog,
                            loggedinuser=current_user)
 
@@ -192,14 +192,14 @@ def login():
                 flash(gettext(u"Sorry, but you could not log in."), "danger")
         else:
             flash(gettext(u"Invalid username or password."), "danger")
-    return render_template("login.html",
+    return render_template("users/login.html",
              loggedinuser=current_user)
 
 
 @blueprint.route("/reset-password/password/", methods=["GET", "POST"])
 def reset_password_new_password():
     if request.method == "GET":
-        return render_template("reset_password_password.html",
+        return render_template("users/reset_password_password.html",
             email_address=request.args.get("email_address"),
             reset_password_key=request.args.get("reset_password_key"),
             loggedinuser=current_user
@@ -219,7 +219,7 @@ def reset_password_new_password():
                 return redirect(url_for('users.login'))
             else:
                 flash("Sorry, something went wrong, and your password could not be changed.", "danger")
-    return render_template("reset_password_password.html",
+    return render_template("users/reset_password_password.html",
         email_address=request.args.get("email_address"),
         reset_password_key=request.args.get("reset_password_key"),
         loggedinuser=current_user
@@ -251,7 +251,7 @@ def reset_password_with_key():
         else:
             flash(gettext(u"Please enter an email address and key."), "danger")
     email_address = request.args.get('email_address', "")
-    return render_template("reset_password_with_key.html",
+    return render_template("users/reset_password_with_key.html",
             email_address=email_address,
             loggedinuser=current_user)
 
@@ -266,7 +266,7 @@ def reset_password():
                     email_address=request.form["email_address"]))
         else:
             flash(gettext(u"Please enter an email address."), "danger")
-    return render_template("reset_password.html",
+    return render_template("users/reset_password.html",
              loggedinuser=current_user)
 
 
