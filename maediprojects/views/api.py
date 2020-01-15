@@ -372,6 +372,9 @@ def api_activities_by_id(activity_id):
 def api_new_activity():
     if request.method=="GET":
         today = datetime.datetime.now().date()
+        domestic_external = current_user.permissions_dict.get("edit")
+        if domestic_external == "both":
+            domestic_external = "external"
         activity = {
             "title": "",
             "description": "",
@@ -384,7 +387,7 @@ def api_new_activity():
             "start_date": today,
             "end_date": today,
             "recipient_country_code": current_user.recipient_country_code,
-            "domestic_external": current_user.permissions_dict.get("edit"),
+            "domestic_external": domestic_external,
             "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
                 {
                 "role": 1,
