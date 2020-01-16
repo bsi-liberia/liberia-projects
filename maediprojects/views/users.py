@@ -109,7 +109,7 @@ def users_edit(user_id):
     if request.method == "GET":
         if not user:
             return abort(404)
-        return render_template("user.html",
+        return render_template("users/user.html",
                  user=user,
                  loggedinuser=current_user,
                  organisations=qorganisations.get_organisations(),
