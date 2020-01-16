@@ -32,6 +32,9 @@ def check_permissions(permission_name, permission_value=None):
     if permission_name in ("view", "edit"):
         if current_user.permissions_dict.get(permission_name, "none") in (permission_value, "both"):
             return True
+    if permission_name in ("new"):
+        if current_user.permissions_dict.get("edit", "none") != "none":
+            return True
     return False
 
 def check_activity_permissions(permission_name, activity_id):
