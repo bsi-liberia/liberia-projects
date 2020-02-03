@@ -28,7 +28,7 @@ def add_activity_finances(self, app, selenium, selenium_login):
     newrow.find_element(By.NAME, "transaction_value_original").send_keys("500.00")
     newrow.find_element(By.NAME, "transaction_description").click()
     time.sleep(1) # Wait one second for DB roundtrip
-    assert("is-valid" in newrow.find_element(By.NAME, "transaction_value_original").get_attribute("class"))
+    assert "is-valid" in newrow.find_element(By.NAME, "transaction_value_original").get_attribute("class")
 
 
 @pytest.mark.usefixtures('client_class')
