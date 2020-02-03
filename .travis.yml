@@ -7,11 +7,11 @@ python:
 env:
   - FLASK_ENV=development
 before_install:
-  - wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-  - echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
-  - apt-get update -qqy
-  - apt-get -qqy install google-chrome-stable
-  - rm /etc/apt/sources.list.d/google-chrome.list
+  - sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+  - sudo echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+  - sudo apt-get update -qqy
+  - sudo apt-get -qqy install google-chrome-stable
+  - sudo rm /etc/apt/sources.list.d/google-chrome.list
   - whereis google-chrome-stable
   - google-chrome-stable --version
   - mkdir /tmp/chromedriver
