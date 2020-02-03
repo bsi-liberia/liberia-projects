@@ -1,4 +1,3 @@
-sudo: true
 language: python
 cache:
   - pip
@@ -7,14 +6,13 @@ python:
 env:
   - FLASK_ENV=development
 before_install:
-  - sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-  - sudo echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+  - wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+  - echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/apt/sources.list.d/google-chrome.list
   - sudo apt-get update -qqy
   - sudo apt-get -qqy install google-chrome-stable
   - sudo rm /etc/apt/sources.list.d/google-chrome.list
   - whereis google-chrome-stable
   - google-chrome-stable --version
-  - mkdir /tmp/chromedriver
   - export CHROMEDRIVER_VERSION=`curl -s http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
   - curl -L -O "http://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
   - unzip chromedriver_linux64.zip && chmod +x chromedriver && sudo mv chromedriver /usr/local/bin
