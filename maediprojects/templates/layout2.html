@@ -48,7 +48,7 @@
             <b-nav-item{% if active_page == "activities" %} active{% endif %} href="{{ url_for('activities.activities') }}">Activities</b-nav-item>
             {% if loggedinuser.permissions_dict["view"] in ["domestic", "external", "both"] %}
             <b-nav-item-dropdown text="Reports">
-              {% if loggedinuser.permissions_dict["view"] in ["domestic", "both"] %}
+              {% if loggedinuser.permissions_dict["edit"] in ["domestic", "both"] or "management" in loggedinuser.roles_list or "admin" in loggedinuser.roles_list %}
               <b-dropdown-item href="{{ url_for('reports.milestones') }}">{{ _('PSIP Project Development and Appraisal Tracking') }}</b-dropdown-item>
               <b-dropdown-item href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</b-dropdown-item>
               {% endif %}
