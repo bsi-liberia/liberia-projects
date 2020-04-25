@@ -542,7 +542,9 @@ Vue.component('counterpart-funding-section', {
       axios.post(api_routes.counterpart_funding, postdata)
       .then(response => {
         _this.validation = true
-        Vue.set(this.counterpartFunding, data.index, value)
+        _cf = this.counterpartFunding[data.index]
+        _cf[attr] = value
+        Vue.set(this.counterpartFunding, data.index, _cf)
       })
       .catch(error => {
         _this.validation = false
