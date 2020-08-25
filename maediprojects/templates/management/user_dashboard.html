@@ -136,7 +136,7 @@
     <template v-slot:thead-top="data">
       <b-tr>
         <b-th>&nbsp;</b-th>
-        <b-th variant="light" colspan="2" class="text-center">MTEF Projections</b-th>
+        <b-th variant="light" colspan="3" class="text-center">MTEF Projections</b-th>
         <b-th colspan="4" class="text-center">Disbursements</b-th>
       </b-tr>
     </template>
@@ -148,7 +148,7 @@
       </a>
     </template>
     <template v-slot:['cell(forwardspends_'+currentprevious+'year)']="data"
-      v-for="currentprevious in ['current', 'previous']">
+      v-for="currentprevious in ['current', 'previous', 'next']">
       <template v-if="selectedDisplayOption == 'check'">
         <i :class="data.item.forwardspends[currentprevious].status.icon"
           :title="data.item.forwardspends[currentprevious].status.name"
@@ -274,6 +274,12 @@ new Vue({
           {
             key: 'forwardspends_currentyear',
             label: data.current_year,
+            class: "number",
+            variant: "light"
+          },
+          {
+            key: 'forwardspends_nextyear',
+            label: data.next_year,
             class: "number",
             variant: "light"
           }]

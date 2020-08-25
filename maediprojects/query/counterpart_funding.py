@@ -1,6 +1,7 @@
 from flask_login import current_user
 import datetime
 from maediprojects import models
+from maediprojects.lib import util
 from maediprojects.extensions import db
 import activity as qactivity
 from sqlalchemy import func
@@ -164,7 +165,7 @@ def annotate_activities_with_aggregates(activities):
                 func.STRFTIME('%Y',
                     func.DATE(models.ActivityForwardSpend.period_start_date,
                         'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == FY
+                    ) == str(FY)
             ).group_by(
                 models.ActivityForwardSpend.activity_id
             ).all()
@@ -179,13 +180,13 @@ def annotate_activities_with_aggregates(activities):
                 func.STRFTIME('%Y',
                     func.DATE(models.ActivityCounterpartFunding.required_date,
                         'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == FY
+                    ) == str(FY)
             ).group_by(
                 models.ActivityCounterpartFunding.activity_id
             ).all()
         return result
 
-    FY = str(datetime.datetime.utcnow().date().year)
+    FY, _ = util.FY("next").numeric()
     fy_forwardspends = dict(FY_forwardspends_for_FY(FY))
     fy_counterpart_funding = dict(FY_counterpart_funding_for_FY(FY))
 

@@ -58,7 +58,7 @@ class TestActivityLogLoads(LiveServerClass):
         time.sleep(1)
         selenium.find_element(By.CSS_SELECTOR, '#usersLog tbody tr td:nth-child(5) a').click()
         time.sleep(1) # Wait one second for DB roundtrip
-        assert("Activity" in selenium.find_element(By.CSS_SELECTOR, "#activityLogDetail header h5").text)
+        assert "Activity" in selenium.find_element(By.CSS_SELECTOR, "#activityLogDetail header h5").text
 
 
 @pytest.mark.usefixtures('client_class')

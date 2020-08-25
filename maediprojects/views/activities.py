@@ -93,7 +93,7 @@ def activities():
 
 @blueprint.route("/activities/new/", methods=['GET', 'POST'])
 @login_required
-@quser.permissions_required("edit")
+@quser.permissions_required("new")
 def activity_new():
     if request.method == "GET":
         return render_template("activity_edit.html",

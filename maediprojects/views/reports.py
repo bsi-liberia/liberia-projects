@@ -50,6 +50,7 @@ def counterpart_funding():
 
     return render_template(
         "reports/counterpart_funding.html",
+        fy=util.FY("next").fy_fy(),
         activities = activities,
         loggedinuser = current_user
     )

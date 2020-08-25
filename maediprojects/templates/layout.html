@@ -50,7 +50,7 @@
               <b class="caret"></b>
               </a>
               <ul class="dropdown-menu">
-              {% if loggedinuser.permissions_dict["view"] in ["domestic", "both"] %}
+              {% if loggedinuser.permissions_dict["edit"] in ["domestic", "both"] or "management" in loggedinuser.roles_list or "admin" in loggedinuser.roles_list %}
               <li><a href="{{ url_for('reports.milestones') }}">{{ _('PSIP Project Development and Appraisal Tracking') }}</a></li>
               <li><a href="{{ url_for('reports.psip_disbursements') }}">{{ _('PSIP Disbursements') }}</a></li>
               {% endif %}

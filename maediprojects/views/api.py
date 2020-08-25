@@ -191,6 +191,7 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
         'icon': 'far fa-times-circle text-secondary'}
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
+    ros_fiscal_years_next = qmonitoring.forwardspends_ros("next")
     ros_disbursements = qmonitoring.fydata_ros("todate")
     def make_status(ro, qtr, disb_value):
         if disb_value:
@@ -212,6 +213,10 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
             "previous": {
                 'value': ros_fiscal_years_previous.get(ro.id, 0.00),
                 'status': make_status(ro, None, ros_fiscal_years_previous.get(ro.id)),
+            },
+            "next": {
+                'value': ros_fiscal_years_next.get(ro.id, 0.00),
+                'status': make_status(ro, None, ros_fiscal_years_next.get(ro.id)),
             }
         }
         _ro["disbursements"] = dict([
@@ -252,8 +257,9 @@ def reporting_orgs_user():
 
     return jsonify(
         orgs=orgs,
-        current_year = util.FY("current").fy_fy(),
         previous_year = util.FY("previous").fy_fy(),
+        current_year = util.FY("current").fy_fy(),
+        next_year = util.FY("next").fy_fy(),
         list_of_quarters = util.Last4Quarters().list_of_quarters(),
         users=users,
         user_name=user_name,
@@ -271,8 +277,9 @@ def reporting_orgs():
     orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
     return jsonify(
         orgs=orgs,
-        current_year = util.FY("current").fy_fy(),
         previous_year = util.FY("previous").fy_fy(),
+        current_year = util.FY("current").fy_fy(),
+        next_year = util.FY("next").fy_fy(),
         list_of_quarters = util.Last4Quarters().list_of_quarters()
         )
 
@@ -372,6 +379,9 @@ def api_activities_by_id(activity_id):
 def api_new_activity():
     if request.method=="GET":
         today = datetime.datetime.now().date()
+        domestic_external = current_user.permissions_dict.get("edit")
+        if domestic_external == "both":
+            domestic_external = "external"
         activity = {
             "title": "",
             "description": "",
@@ -384,7 +394,7 @@ def api_new_activity():
             "start_date": today,
             "end_date": today,
             "recipient_country_code": current_user.recipient_country_code,
-            "domestic_external": current_user.permissions_dict.get("edit"),
+            "domestic_external": domestic_external,
             "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
                 {
                 "role": 1,
