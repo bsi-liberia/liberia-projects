@@ -382,7 +382,7 @@ def api_activities_country():
 
 
 @blueprint.route("/api/activities/<activity_id>.json")
-@login_required
+@jwt_required
 def api_activities_by_id(activity_id):
     activity = qactivity.get_activity(activity_id).as_jsonable_dict()
     return jsonify(activity=activity)
@@ -501,7 +501,7 @@ def api_new_activity():
 
 
 @blueprint.route("/api/activities/<activity_id>/finances.json")
-@login_required
+@jwt_required
 def api_activities_finances_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
 
@@ -532,7 +532,7 @@ def api_activities_finances_by_id(activity_id):
         )
 
 @blueprint.route("/api/activities/<activity_id>/finances/fund_sources.json")
-@login_required
+@jwt_required
 def api_activities_finances_fund_sources_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
 
@@ -583,6 +583,22 @@ def jsonify_results_design(results):
             _result["periods"] = []
         out.append(_result)
     return out
+
+
+@blueprint.route("/api/activities/<activity_id>/results.json")
+@jwt_required
+def api_activities_results(activity_id):
+    activity = models.Activity.query.get(activity_id)
+    results = activity.results
+    return jsonify(results = jsonify_results_design(results))
+
+
+@blueprint.route("/api/activities/<activity_id>/documents.json")
+@jwt_required
+def api_activities_documents(activity_id):
+    activity = models.Activity.query.get(activity_id)
+    documents = list(map(lambda d: d.as_dict(), activity.documents))
+    return jsonify(documents = documents)
 
 
 @blueprint.route("/api/activities/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
@@ -911,7 +927,7 @@ def api_all_activity_locations():
     return jsonify(locations = locations)
 
 @blueprint.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
