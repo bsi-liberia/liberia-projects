@@ -9,6 +9,11 @@ from flask_login import login_required, current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
 import requests
+from flask_jwt_extended import (
+    jwt_required, create_access_token,
+    jwt_refresh_token_required, create_refresh_token,
+    get_jwt_identity, get_raw_jwt
+)
 
 from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
@@ -332,19 +337,27 @@ def api_activities_filters():
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
         ]
+    earliest, latest = qactivity.get_earliest_latest_dates(force=True)
+    activity_dates = {
+        "earliest": earliest,
+        "latest": latest,
+    }
     return jsonify(filters=list(map(lambda f: {
         "label": f[0],
         "name": f[1],
         "codes": list(map(lambda fo: fo.as_dict() if type(fo) != dict else fo, f[2])),
-        }, filters_codelists)))
+        }, filters_codelists)),
+        activity_dates=activity_dates
+    )
 
 
 @blueprint.route("/api/activities/")
-@login_required
+@jwt_required
 def api_activities_country():
     arguments = request.args.to_dict()
     activities = qactivity.list_activities_by_filters(arguments)
     activity_commitments, activity_disbursements, activity_projected_disbursements = qactivity.activity_C_D_FSs()
+
     def round_or_zero(value):
         if not value: return 0
         return round(value)
@@ -364,7 +377,8 @@ def api_activities_country():
         'user': activity.user.username,
         'user_id': activity.user.id,
         "permissions": activity.permissions
-    } for activity in activities])
+    } for activity in activities]
+    )
 
 
 @blueprint.route("/api/activities/<activity_id>.json")
