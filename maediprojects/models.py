@@ -203,7 +203,9 @@ class ActivityDocumentLink(db.Model):
     document_date = sa.Column(sa.Date)
 
     def as_dict(self):
-        return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
+        ret = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret['categories'] = list(map(lambda category: category.code, self.categories))
+        return ret
 
 
 class ActivityDocumentLinkCategory(db.Model):
@@ -614,12 +616,17 @@ class Activity(db.Model):
         role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").iteritems())
         ret_data = {
             'classifications': collections.defaultdict(dict),
+            'reporting_org': self.reporting_org.as_dict(),
             'organisations': collections.defaultdict(dict),
             'url': url_for("activities.activity", activity_id=self.id),
             'url_edit': url_for("activities.activity_edit", activity_id=self.id),
             'results': len(self.results),
             'documents': len(self.documents),
-            'milestones': len(self.milestones)
+            'milestones': len(self.milestones),
+            'permissions': self.permissions,
+            'disb_fund_sources': self.disb_fund_sources,
+            'disb_finance_types': self.disb_finance_types,
+            'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations))
         }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         for cc in self.classifications:
@@ -1090,7 +1097,8 @@ class ActivityResultIndicatorPeriod(db.Model):
 
     def as_dict(self):
         ret_data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
-        ret_data.update({key: getattr(self, key) for key in ['open']})
+        ret_data.update({key: getattr(self, key) for key in ['open', 'percent_complete',
+            'percent_complete_category']})
         return ret_data
 
 
