@@ -806,7 +806,11 @@ class Location(db.Model):
             backref="locations")
 
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        #FIXME
+        l_dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        l_dict['latitude'] = float(l_dict['latitude'])
+        l_dict['longitude'] = float(l_dict['longitude'])
+        return l_dict
 
 class ActivityLocation(db.Model):
     __tablename__ = 'activitylocation'
@@ -1221,7 +1225,12 @@ class User(db.Model):
         return permissions
 
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def as_simple_dict(self):
+        visible_columns = ['username', 'name', 'email_address',
+        'administrator', 'permissions_list', 'permissions_dict', 'roles_list']
+        return {c: getattr(self, c) for c in visible_columns}
 
 class UserPermission(db.Model):
     __tablename__ = 'userpermission'
