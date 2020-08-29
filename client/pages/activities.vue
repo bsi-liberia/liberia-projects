@@ -403,7 +403,3 @@ export default {
   }
 }
 </script>
-<!--
-<link rel="stylesheet" href="{{url_for('static', filename='packages/nouislider/distribute/nouislider.min.css')}}">
-<script src="{{url_for('static', filename='packages/nouislider/distribute/nouislider.min.js')}}"></script>
--->
