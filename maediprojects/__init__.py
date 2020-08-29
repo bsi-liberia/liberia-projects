@@ -1,5 +1,6 @@
 from flask import Flask, render_template, session, request, current_app
 from flask_login import current_user
+from flask_cors import CORS
 
 from maediprojects import commands, views, extensions
 
@@ -11,11 +12,12 @@ def create_app(config_object='config'):
     """
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_object)
+    register_blueprints(app)
     register_extensions(app)
     register_commands(app)
-    register_blueprints(app)
+    CORS(app)
     register_errorhandlers(app)
-    register_hooks(app)
+    #register_hooks(app)
     return app
 
 
@@ -54,6 +56,7 @@ def register_extensions(app):
     extensions.migrate.init_app(app, extensions.db)
     extensions.babel.init_app(app)
     extensions.mail.init_app(app)
+    extensions.jwt.init_app(app)
     extensions.login_manager.init_app(app)
 
 
