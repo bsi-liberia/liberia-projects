@@ -102,9 +102,9 @@
               </template>
 
               <template v-slot:cell(title)="data">
-                <a :href="activity_base_url + data.item.id + '/'">
+                <nuxt-link :to="{ name: 'activities-id', params: { id: data.item.id}}">
                   {{ data.item.title }}
-                </a>
+                </nuxt-link>
               </template>
 
               <template v-slot:cell(edit)="data">
