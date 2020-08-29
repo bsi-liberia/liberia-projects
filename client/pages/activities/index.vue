@@ -156,7 +156,6 @@ import 'vue-slider-component/theme/default.css'
 import { debounce } from 'vue-debounce'
 
 import { mapGetters } from 'vuex'
-import config from '../nuxt.config'
 
 export default {
   components: {
