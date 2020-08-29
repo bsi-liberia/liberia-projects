@@ -308,7 +308,7 @@ export default {
     },
     setupFilters() {
       this.$axios
-        .get(this.activities_filters_url)
+        .get('activities/filters.json')
         .then(response => {
           response.data.filters.reduce(
             (obj, item) => {
@@ -327,7 +327,7 @@ export default {
       },
     queryProjectsData: debounce(function (e) {
       this.$axios
-        .get(this.activity_api_url, {
+        .get('activities/', {
           params: this.nonDefaultFilters
         })
         .then(response => {
@@ -347,12 +347,6 @@ export default {
     },
     activity_base_url() {
       return ''
-    },
-    activity_api_url() {
-      return 'http://127.0.0.1:5000/api/activities/'
-    },
-    activities_filters_url() {
-      return 'http://127.0.0.1:5000/api/activities/filters.json'
     },
     sliderMinMax() {
       return {
