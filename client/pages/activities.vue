@@ -36,7 +36,7 @@
                 <p class="lead">Find projects matching all of the following conditions. Results automatically update.</p>
                 <b-form-group
                   :label="filter.label"
-                  :label-for="filter.name" v-for="filter in filters">
+                  :label-for="filter.name" v-for="filter in filters" v-bind:key="filter.name">
                   <b-select class="form-control filter-select" name="filter.name"
                     id="filter.name" :options="filter.codes" value-field="id" text-field="name"
                     v-model="selectedFilters[filter.name]" size="sm">
