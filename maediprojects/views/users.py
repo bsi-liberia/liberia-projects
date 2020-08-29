@@ -1,5 +1,10 @@
-from flask import Blueprint, render_template, flash, request, redirect, url_for, abort
+from flask import Blueprint, render_template, flash, request, redirect, url_for, abort, make_response
 from flask_login import current_user, login_required, login_user, logout_user
+from flask_jwt_extended import (
+    jwt_required, create_access_token,
+    jwt_refresh_token_required, create_refresh_token,
+    get_jwt_identity, get_raw_jwt
+)
 from flask_babel import gettext
 
 from maediprojects import models
@@ -13,9 +18,19 @@ from maediprojects.extensions import login_manager
 blueprint = Blueprint('users', __name__, url_prefix='/', static_folder='../static')
 
 
+@login_manager.request_loader
+def load_user_from_request(request):
+    current_user = get_jwt_identity()
+    if current_user is None: return None
+    user = models.User.query.filter_by(username=current_user).first()
+    if user:
+        return user
+    return None
+
+
 @login_manager.user_loader
-def load_user(id):
-    return models.User.query.get(id)
+def load_user(user_id):
+    return models.User.query.filter_by(id=user_id).first_or_404()
 
 
 @blueprint.route("/profile/", methods=["GET", "POST"])
@@ -45,6 +60,12 @@ def profile():
                            codelists=codelists.get_codelists(),
                            user=current_user,
                            loggedinuser=current_user)
+
+
+@blueprint.route("/user/")
+@jwt_required
+def user():
+    return jsonify(user=current_user.as_simple_dict())
 
 
 @blueprint.route("/users/")
@@ -177,23 +198,27 @@ def users_log():
 
 @blueprint.route("/login/", methods=["GET", "POST"])
 def login():
-    if request.method == "POST" and "username" in request.form:
-        user = quser.user_by_username(request.form["username"])
-        remember = True if request.form.get('remember') else False
-        if (user and user.check_password(request.form["password"])):
-            if login_user(user, remember=remember):
-                flash(gettext(u"Logged in!"), "success")
-                if request.args.get("next"):
-                    redir_url = request.script_root + request.args.get("next")
-                else:
-                    redir_url = url_for("activities.dashboard")
-                return redirect(redir_url)
-            else:
-                flash(gettext(u"Sorry, but you could not log in."), "danger")
-        else:
-            flash(gettext(u"Invalid username or password."), "danger")
-    return render_template("users/login.html",
-             loggedinuser=current_user)
+    if request.method == "POST" and "username" in request.json:
+        if not request.is_json:
+            return make_response(jsonify({"msg": "Missing JSON in request"}), 400)
+        username = request.json.get('username', None)
+        password = request.json.get('password', None)
+        if not username:
+            return make_response(jsonify({"msg": "Missing username parameter"}), 400)
+        if not password:
+            return make_response(jsonify({"msg": "Missing password parameter"}), 400)
+
+        user = models.User.query.filter_by(username=username).first()
+        if not (user and user.check_password(password) and user.is_active()):
+            return make_response(jsonify({"msg": "Bad username or password"}), 401)
+
+        # Identity can be any data that is json serializable
+        ret = {
+            'access_token': create_access_token(identity=username),
+            'refresh_token': create_refresh_token(identity=username)
+        }
+        return make_response(jsonify(ret), 200)
+    return make_response(jsonify({"msg": "Please login to continue."}), 200)
 
 
 @blueprint.route("/reset-password/password/", methods=["GET", "POST"])
