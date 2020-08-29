@@ -14,7 +14,7 @@
         <div class="col-md-2 text-center">
           <template v-if="loggedInUser.permissions_dict.edit != 'none' || loggedInUser.roles_list.contains('desk-officer')">
             <a class="btn btn-success btn-large float-md-right" :to="{name: 'activity_new'}">
-              <i class="fas fa-plus"></i>
+              <font-awesome-icon :icon="['fas', 'plus']" />
               New activity
             </a>
           </template>
@@ -25,8 +25,8 @@
         <div class="col-md-9">
           <b-button block href="#"
           :class="{'btn-danger': displayResetFilters}"
-          v-b-toggle.sidebar-filters>Show filters <i class="fas fa-filter"></i></b-button>
-          <b-sidebar id="sidebar-filters" title="Filter activities" right shadow no-close-on-route-change>
+          v-b-toggle.sidebar-filters>Show filters <font-awesome-icon :icon="['fas', 'filter']" /></b-button>
+          <b-sidebar id="sidebar-filters" title="Filter activities" width="500px" right shadow no-close-on-route-change>
             <div class="px-3 py-2">
               <form class="form-activity-filters">
                 <b-button id="filtersAppliedLabel"
@@ -48,7 +48,7 @@
                 <b-form-group
                   label="Date Range"
                   label-for="date-range">
-                  <b-row style="margin-top: 10px; margin-bottom: 35px;">
+                  <b-row class="mt-2 mb-5">
                     <b-col cols="1"></b-col>
                     <b-col>
                       <vue-slider v-model="sliderDates"
@@ -71,7 +71,7 @@
         </div>
         <div class="col-md-3 text-center">
           <a class="btn btn-primary float-md-right" id="download_excel" :to="'exports_all_activities_xlsx_filtered' + filtersHash" style="margin-top:4px;">
-            <span class="fas fa-download"></span> Export selection to Excel
+            <font-awesome-icon :icon="['fas', 'download']" /> Export selection to Excel
           </a>
         </div>
       </div>
@@ -109,14 +109,14 @@
 
               <template v-slot:cell(edit)="data">
                 <a :href="activity_base_url + data.item.id + '/edit/'" v-if="data.item.permissions.edit">
-                  <span class="fas fa-edit"></span></a>
+                  <font-awesome-icon :icon="['fas', 'edit']" /></a>
               </template>
 
               <template v-slot:cell(delete)="data">
                 <a href="#" class="text-danger"
                   @click.prevent="confirmDelete(activity_base_url + data.item.id + '/delete/')"
                   v-if="data.item.permissions.edit">
-                  <span class="fa fa-trash-alt"></span>
+                  <font-awesome-icon :icon="['fa', 'trash-alt']" />
                 </a>
               </template>
             </b-table>
