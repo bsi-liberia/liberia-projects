@@ -62,7 +62,7 @@ def profile():
                            loggedinuser=current_user)
 
 
-@blueprint.route("/user/")
+@blueprint.route("/api/user/")
 @jwt_required
 def user():
     return jsonify(user=current_user.as_simple_dict())
@@ -196,7 +196,7 @@ def users_log():
                            loggedinuser=current_user)
 
 
-@blueprint.route("/login/", methods=["GET", "POST"])
+@blueprint.route("/api/login/", methods=["GET", "POST"])
 def login():
     if request.method == "POST" and "username" in request.json:
         if not request.is_json:
@@ -295,7 +295,7 @@ def reset_password():
              loggedinuser=current_user)
 
 
-@blueprint.route('/logout/')
+@blueprint.route('/api/logout/')
 @login_required
 def logout():
     logout_user()
