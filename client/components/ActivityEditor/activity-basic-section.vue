@@ -54,8 +54,10 @@
         :required="true">
       </finances-select>
       <organisations-section
-        :activity.sync="activity" :codelists="codelists"
-        :mode="mode" :api_routes="api_routes"></organisations-section>
+        :activity.sync="activity"
+        :codelists="codelists"
+        :mode="mode"
+        :api_routes="api_routes"></organisations-section>
       <hr/>
       <div role="tablist">
         <b-card no-body>
