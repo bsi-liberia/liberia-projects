@@ -109,16 +109,17 @@
               </template>
 
               <template v-slot:cell(edit)="data">
-                <a :href="activity_base_url + data.item.id + '/edit/'" v-if="data.item.permissions.edit">
+                <nuxt-link :to="{ name: 'activities-id-edit', params: { id: data.item.id}}" v-if="data.item.permissions.edit">
                   <font-awesome-icon :icon="['fas', 'edit']" /></a>
+                </nuxt-link>
               </template>
 
               <template v-slot:cell(delete)="data">
-                <a href="#" class="text-danger"
-                  @click.prevent="confirmDelete(activity_base_url + data.item.id + '/delete/')"
+                <b-link href="#" variant="link" class="text-danger"
+                  @click="confirmDelete(data.item.id, data)"
                   v-if="data.item.permissions.edit">
                   <font-awesome-icon :icon="['fa', 'trash-alt']" />
-                </a>
+                </b-link>
               </template>
             </b-table>
             <b-row>
@@ -253,22 +254,36 @@ export default {
 
 
     },
-    confirmDelete: function(delete_url) {
-        this.$bvModal.msgBoxConfirm('Are you sure you want to delete this activity? This action cannot be undone!', {
-          title: 'Confirm delete',
-          okVariant: 'danger',
-          okTitle: 'Confirm delete',
-          hideHeaderClose: false,
-          centered: true
-        })
-          .then(value => {
-            if (value) {
-              window.location = delete_url;
-            }
+    confirmDelete(activity_id, data) {
+      this.$bvModal.msgBoxConfirm('Are you sure you want to delete this activity? This action cannot be undone!', {
+        title: 'Confirm delete',
+        okVariant: 'danger',
+        okTitle: 'Confirm delete',
+        hideHeaderClose: false,
+        centered: true
+      })
+      .then(value => {
+        if (value) {
+          this.$axios.post(`activities/${activity_id}/delete/`)
+          .then(response => {
+            /* Not quite sure why this is necessary... */
+            const getIndex = (project => {
+              return project.id == data.item.id
+            })
+            const index = this.projects.findIndex(getIndex)
+            Vue.delete(this.projects, index)
           })
-          .catch(err => {
-            alert("Sorry, there was an error, and that activity couldn't be deleted.")
+          .catch(error => {
+            this.$bvToast.toast('Sorry, there was an error, and your activity could not be deleted.', {
+              title: 'Error',
+              autoHideDelay: 5000,
+              variant: 'danger',
+              solid: true,
+              appendToast: true
+            })
           })
+        }
+      })
     },
     setFiltersFromQuery() {
       if (Object.keys(this.$route.query).length == 0) { return }
