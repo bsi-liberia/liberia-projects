@@ -3,6 +3,7 @@ import datetime
 from flask import Blueprint, render_template, flash, request, \
     redirect, url_for, abort, jsonify
 from flask_login import login_required, current_user
+from flask_jwt_extended import jwt_required
 
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import activity as qactivity
@@ -261,8 +262,8 @@ def activity_add_results_data(activity_id):
     return "error"
 
 
-@blueprint.route("/activities/<activity_id>/edit/update_activity/", methods=['POST'])
-@login_required
+@blueprint.route("/api/activities/<activity_id>/edit/update_activity/", methods=['POST'])
+@jwt_required
 @quser.permissions_required("edit")
 def activity_edit_attr(activity_id):
     request_data = request.get_json()
