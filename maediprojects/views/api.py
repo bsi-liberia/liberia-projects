@@ -389,7 +389,7 @@ def api_activities_by_id(activity_id):
 
 
 @blueprint.route("/api/activities/new.json", methods=['GET', 'POST'])
-@login_required
+@jwt_required
 def api_new_activity():
     if request.method=="GET":
         today = datetime.datetime.now().date()
@@ -656,7 +656,7 @@ def api_activities_user_results():
 
 
 @blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["GET", "POST"])
-@login_required
+@jwt_required
 @quser.permissions_required("view")
 def api_activity_milestones(activity_id):
     if request.method == "POST":
@@ -678,7 +678,7 @@ def api_activity_milestones(activity_id):
 
 
 @blueprint.route("/api/codelists.json", methods=["GET", "POST"])
-@login_required
+@jwt_required
 @quser.permissions_required("view")
 def api_codelists():
     if (request.method == "GET"):
@@ -695,7 +695,7 @@ def api_codelists():
 
 
 @blueprint.route("/api/activity_finances/<activity_id>/", methods=["POST", "GET"])
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id.
@@ -705,6 +705,7 @@ def api_activity_finances(activity_id):
         request_data = request.get_json()
         if request_data["action"] == "add":
             # Fallbak to activity data
+            print('classification_data', activity.classification_data)
             data = {
                 "transaction_type": request_data["transaction_type"],
                 "transaction_date": request_data["transaction_date"],
@@ -741,7 +742,7 @@ def api_activity_finances(activity_id):
         )
 
 @blueprint.route("/api/activity_finances/<activity_id>/update_finances/", methods=['POST'])
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def finances_edit_attr(activity_id):
     request_data = request.get_json()
@@ -779,7 +780,7 @@ def finances_edit_attr(activity_id):
     return abort(500)
 
 @blueprint.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def api_activity_counterpart_funding(activity_id):
     """GET returns a list of all counterpart funding for a given activity_id.
@@ -840,7 +841,7 @@ def api_activity_counterpart_funding(activity_id):
 
 @blueprint.route("/api/activity_forwardspends/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
 @blueprint.route("/api/activity_forwardspends/<activity_id>/", methods=["GET", "POST"])
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def api_activity_forwardspends(activity_id, fiscal_year=True):
     """GET returns a list of all forward spend data for a given activity_id.
@@ -912,7 +913,7 @@ def forwardspends_edit_attr(activity_id):
     return "error"
 
 @blueprint.route("/api/activity_locations/")
-@login_required
+@jwt_required
 def api_all_activity_locations():
     """GET returns a list of all locations."""
     query = models.ActivityLocation.query.join(models.Activity)
@@ -928,11 +929,11 @@ def api_all_activity_locations():
 
 @blueprint.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
 @jwt_required
-@quser.permissions_required("edit")
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
     if request.method == "POST":
+        if not quser.check_permissions("edit"): return abort(403)
         request_data = request.get_json()
         if request_data["action"] == "add":
             result = qlocation.add_location(activity_id, request_data["location_id"])
@@ -940,6 +941,7 @@ def api_activity_locations(activity_id):
             result = qlocation.delete_location(activity_id, request_data["location_id"])
         return str(result)
     elif request.method == "GET":
+        if not quser.check_permissions("view"): return abort(403)
         locations = list(map(lambda x: x.as_dict(),
                          qactivity.get_activity(activity_id).locations))
         return jsonify(locations = locations)
@@ -1020,7 +1022,7 @@ def api_iati_search():
 
 
 @blueprint.route("/api/iati_fetch_data/<activity_id>/")
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def api_iati_fetch_data(activity_id):
     iati_identifier = request.args["iati_identifier"]
