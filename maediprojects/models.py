@@ -584,7 +584,7 @@ class Activity(db.Model):
                       "id": classification.id
                     }
                 )
-                sector["entries"].append(classification)
+                sector["entries"].append(classification.as_dict())
         root = {}
         for s in self.classifications: append_path(root, s)
         return root
@@ -626,7 +626,8 @@ class Activity(db.Model):
             'permissions': self.permissions,
             'disb_fund_sources': self.disb_fund_sources,
             'disb_finance_types': self.disb_finance_types,
-            'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations))
+            'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
+            'classifications_data': list(map(lambda cl: cl, self.classification_data.values()))
         }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         for cc in self.classifications:
