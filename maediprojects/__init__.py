@@ -74,9 +74,8 @@ def register_blueprints(app):
 def register_errorhandlers(app):
     def render_error(error):
         error_code = getattr(error, 'code', 500)
-        return render_template('{0}.html'.format(error_code),
-                               loggedinuser=current_user), error_code
-    for errcode in [404, 500]:
+        return make_response(jsonify({'msg': 'Error {}'.format(error_code)}), error_code)
+    for errcode in [401, 403, 404, 500, 405]:
         app.errorhandler(errcode)(render_error)
     return None
 
