@@ -391,7 +391,6 @@ export default {
         })
     },
     updateFinances(_this, transaction, attr, value, oldValue) {
-      console.log("updatefinances")
       var data = {
         'finances_id': transaction.item.id,
         'attr': attr,
