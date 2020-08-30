@@ -28,6 +28,7 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
+    '~/plugins/errors'
   ],
   /*
   ** Nuxt.js dev-modules
@@ -72,6 +73,10 @@ export default {
           user: { url: '/user/', method: 'get', propertyName: 'user' }
         }
       }
+    },
+    redirect: {
+      logout: '/login',
+      home: '/'
     }
   },
   axios: {
