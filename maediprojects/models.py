@@ -573,8 +573,7 @@ class Activity(db.Model):
                     for fyval in fydata
                 }
 
-    @hybrid_property
-    def classification_data(self):
+    def make_classification_data(self, as_dict=False):
         def append_path(root, classification):
             if classification:
                 sector = root.setdefault("{}".format(classification.codelist_code.codelist.code),
@@ -584,10 +583,21 @@ class Activity(db.Model):
                       "id": classification.id
                     }
                 )
-                sector["entries"].append(classification.as_dict())
+                if as_dict == True:
+                    sector["entries"].append(classification.as_dict())
+                else:
+                    sector["entries"].append(classification)
         root = {}
         for s in self.classifications: append_path(root, s)
         return root
+
+    @hybrid_property
+    def classification_data_dict(self):
+        return self.make_classification_data(as_dict=True)
+
+    @hybrid_property
+    def classification_data(self):
+        return self.make_classification_data(as_dict=False)
 
     @hybrid_property
     def milestones_data(self):
@@ -627,7 +637,7 @@ class Activity(db.Model):
             'disb_fund_sources': self.disb_fund_sources,
             'disb_finance_types': self.disb_finance_types,
             'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
-            'classifications_data': list(map(lambda cl: cl, self.classification_data.values()))
+            'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values()))
         }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         for cc in self.classifications:
