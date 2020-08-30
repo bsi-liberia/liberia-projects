@@ -11,7 +11,7 @@
         :options="codelists.organisation"
         :value.sync="organisation.id"
         v-for="organisation in role.entries"
-        v-bind:key="organisation.id"></finances-select>
+        v-bind:key="`${role.role}-code`"></finances-select>
     </b-form-group>
   </div>
 </template>
