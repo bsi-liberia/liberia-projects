@@ -17,11 +17,11 @@
           <p class="lead">{{ activity.description }}</p>
         </b-col>
         <b-col md="2" v-if="activity.permissions.edit">
-          <a class="btn btn-success btn-large pull-right edit-project-button"
-             href="activities.activity_edit', activity_id=activity.id">
-            <i class="fas fa-edit"></i>
+
+          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="success">
+            <font-awesome-icon :icon="['fas', 'plus']" />
             Edit project
-          </a>
+          </b-btn>
         </b-col>
       </b-row>
       <b-row>
