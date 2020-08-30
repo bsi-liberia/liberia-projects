@@ -44,7 +44,7 @@
               </template>
                 <b-dropdown-item :to="{name: 'profile'}" active-class="active">Profile</b-dropdown-item>
                 <template v-if="loggedInUser.administrator">
-                <b-dropdown-item :to="{name: 'codelists_management'}" active-class="active">Manage codelists</b-dropdown-item>
+                <b-dropdown-item :to="{name: 'codelists'}" active-class="active">Manage codelists</b-dropdown-item>
                 <b-dropdown-item :to="{name: 'users'}" active-class="active">Users</b-dropdown-item>
                 </template>
               <b-dropdown-item href="#" @click="logout">Sign Out</b-dropdown-item>
