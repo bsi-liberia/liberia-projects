@@ -94,13 +94,15 @@ export default {
   },
   methods: {
     async logout() {
-      await this.$auth.logout();
+      await this.$auth.logout()
+        .then(() => {
+          this.$router.push('/')
+        });
       this.$bvToast.toast('Logged out!', {
         title: `You successfully logged out.`,
         variant: 'success',
         solid: true
       })
-      this.$store.commit("clearClaimsData")
     }
   }
 }
