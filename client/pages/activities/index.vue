@@ -12,11 +12,11 @@
           <h1>Activities: <span id="activities_loading" v-if="isBusy">loading...</span><span id="activities_count" v-else>{{ projects.length }} found</span></h1>
         </div>
         <div class="col-md-2 text-center">
-          <template v-if="loggedInUser.permissions_dict.edit != 'none' || loggedInUser.roles_list.contains('desk-officer')">
-            <a class="btn btn-success btn-large float-md-right" :to="{name: 'activity_new'}">
+          <template v-if="loggedInUser.permissions_dict.edit != 'none' || loggedInUser.roles_list.includes('desk-officer')">
+            <b-btn variant="success" :to="{ name: 'activities-new'}" class="float-md-right">
               <font-awesome-icon :icon="['fas', 'plus']" />
               New activity
-            </a>
+            </b-btn>
           </template>
         </div>
       </div>
