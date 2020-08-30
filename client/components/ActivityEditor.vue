@@ -65,9 +65,10 @@
           <transition name="fade">
             <b-card-body v-show="$route.query.tab === 'sectors'">
               <b-card-text class="activity-form-save form-horizontal" id="sectors">
+                <h2>Sectors</h2>
                 <sectors-section
                   :codelists="codelists"
-                  :activity="activity"
+                  :activity.sync="activity"
                   :api_routes="api_routes"
                   :mode="mode"></sectors-section>
               </b-card-text>
