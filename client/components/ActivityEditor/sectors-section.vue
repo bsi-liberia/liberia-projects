@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h2>Sectors</h2>
     <b-form-group
       :label="classification.name"
       label-cols-sm="3"
@@ -12,7 +11,7 @@
         :options="codelists[classification.codelist]"
         :value.sync="code.code"
         v-for="code in classification.entries"
-        v-bind:key="code.code"></finances-select>
+        v-bind:key="`${classification.codelist}-code`"></finances-select>
     </b-form-group>
   </div>
 </template>
