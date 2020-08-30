@@ -70,11 +70,11 @@
           <h3>Sectors</h3>
           <table class="table table-hover table-sm" responsive>
             <tbody>
-              <tr v-for="classification in activity.classification_data" v-bind:key="classification.code">
+              <tr v-for="(classification, cl_id) in activity.classifications_data" v-bind:key="classification.code">
                 <td><b>{{ classification.name }}</b></td>
                 <td>
-                  <span :class="`badge badge-secondary ${classification.code}-${entry.codelist_code.code}`"
-                  v-for="entry in classification.entries">{{ entry.codelist_code.name }}</span>
+                  <span :class="`badge badge-secondary ${classification.code}`"
+                  v-for="entry in classification.entries" v-bind:key="entry.id">{{ entry.codelist_code.name }}</span>
                 </td>
               </tr>
               <template v-if="activity.domestic_external == 'external'">
@@ -115,7 +115,7 @@
           <h3 id="locations">Locations</h3>
           <div id="locationMap">
             <no-ssr>
-              <l-map :zoom=7 :center="[6.5,-9.2]">
+              <l-map :zoom=7 :center="[6.5,-9.2]" :options="{scrollWheelZoom: false}">
                 <l-tile-layer url="https://d.tiles.mapbox.com/v3/markbrough.n3kod47p/{z}/{x}/{y}.png"></l-tile-layer>
                 <l-marker :lat-lng="location.latLng" v-for="location in locations" v-bind:key="location.id">
                   <l-popup>{{ location.name }}</l-popup>
@@ -201,12 +201,12 @@
           </template>
         </b-row>
       </template>
-      <b-row>
+      <b-row v-if="results.length > 0">
         <b-col>
           <hr />
         </b-col>
       </b-row>
-      <div class="row" id="results" v-if="results">
+      <div class="row" id="results" v-if="results.length > 0">
         <div class="col-md-12">
           <h2>Results</h2>
           <b-alert variant="info" :show="activity.domestic_external == 'external'">
@@ -245,12 +245,12 @@
           </b-table>
         </div>
       </div>
-      <div class="row">
+      <div class="row" v-if="documents.length > 0">
         <div class="col">
           <hr />
         </div>
       </div>
-      <div class="row" id="documents" v-if="documents">
+      <div class="row" id="documents" v-if="documents.length > 0">
         <div class="col-md-12">
           <h2>Documents</h2>
           <b-alert variant="info" :show="activity.domestic_external == 'external'">
