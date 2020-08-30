@@ -1,28 +1,27 @@
 from flask import Blueprint, render_template, flash, request, \
-    redirect, url_for
+    redirect, url_for, jsonify
 from flask_login import login_required, current_user
 
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
+from flask_jwt_extended import jwt_required
 
 
 blueprint = Blueprint('codelists', __name__, url_prefix='/', static_folder='../static')
 
 
-@blueprint.route("/codelists/")
-@login_required
+@blueprint.route("/api/codelists/")
+@jwt_required
 @quser.administrator_required
 def codelists_management():
-    return render_template("codelists.html",
-                loggedinuser=current_user,
-                codelist_codes = codelists.get_db_codelists(),
-                codelist_names = codelists.get_db_codelist_names(),
-                countries = codelists.get_codelists()["Country"],
-                countries_locations = qlocation.get_countries_locations(),
-                organisations = qorganisations.get_organisations()
-                          )
+    return jsonify(
+    codelist_codes = codelists.get_db_codelists(),
+    codelist_names = list(map(lambda codelist: codelist.as_dict(), codelists.get_db_codelist_names())),
+    countries = codelists.get_codelists()["Country"],
+    organisations = list(map(lambda org: org.as_dict(), qorganisations.get_organisations()))
+)
 
 @blueprint.route("/codelists/import_locations/", methods=["POST"])
 @login_required
