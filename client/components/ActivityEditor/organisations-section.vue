@@ -1,5 +1,5 @@
 <template>
-  <div id="organisations">
+  <div>
     <b-form-group
       :label="role.name"
       label-cols-sm="2"
@@ -10,7 +10,8 @@
         name="organisation_id"
         :options="codelists.organisation"
         :value.sync="organisation.id"
-        v-for="organisation in role.entries" v-bind:key="organisation.id"></finances-select>
+        v-for="organisation in role.entries"
+        v-bind:key="organisation.id"></finances-select>
     </b-form-group>
   </div>
 </template>
