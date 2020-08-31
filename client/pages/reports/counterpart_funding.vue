@@ -38,41 +38,6 @@
               <nuxt-link :to="{ name: 'activities-id', params: { id: data.item.id}}">{{ data.item.title }}</nuxt-link>
             </template>
           </b-table>
-          <!--
-            <th style="width:25%;" rowspan="2">Title</th>
-            <th rowspan="2">Donor</th>
-            <th rowspan="2">Ministry</th>
-            <th colspan="2">Requested and planned expenditure for {{ fy }} only (USD)</th>
-          -->
-          <!--
-          <table class="table" id="milestones">
-            <thead>
-              <tr>
-                <th style="width:25%;" rowspan="2">Title</th>
-                <th rowspan="2">Donor</th>
-                <th rowspan="2">Ministry</th>
-                <th colspan="2">Requested and planned expenditure for {{ fy }} only (USD)</th>
-              </tr>
-              <tr>
-                <th class="number">GoL (requested)</th>
-                <th class="number">Donor (planned)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for activity in activities %}
-              <tr>
-                <td><a href="{{ url_for('activities.activity', activity_id=activity.id) }}">{{ activity.title }}</a></td>
-                <td>{{ activity.reporting_org.name }}</td>
-                <td>{% for ministry in activity.classification_data.get('aligned-ministry-agency', {}).get('entries', []) %}
-                  {{ ministry.codelist_code.name }}
-                {% endfor %}</td>
-                <td class="number">{{ "{:,.2f}".format(activity._fy_counterpart_funding) }}</td>
-                <td class="number">{{ "{:,.2f}".format(activity._fy_forwardspends) }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          -->
         </b-col>
       </b-row>
     </template>
@@ -102,13 +67,15 @@ export default {
           key: 'gol_requested',
           label: 'GoL (requested)',
           class: 'number',
-          sortable: true
+          sortable: true,
+          formatter: this.numberFormatter
         },
         {
           key: 'donor_planned',
           label: 'Donor (planned)',
           class: 'number',
-          sortable: true
+          sortable: true,
+          formatter: this.numberFormatter
         }
       ],
       activities: [],
