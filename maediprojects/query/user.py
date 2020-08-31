@@ -411,12 +411,15 @@ And copy/paste the following password reset key into the box:
 {}
     """.format(
         user.username,
-        url_for('users.reset_password_with_key',
-                email_address=email_address,
-                reset_password_key=user.reset_password_key,
-                _external=True),
-        url_for('users.reset_password_with_key',
-                _external=True),
+        "{}users/reset-password/key/?email_address={}&reset_password_key={}".format(
+            request.url_root,
+            email_address,
+            user.reset_password_key
+        ),
+        "{}users/reset-password/key/?email_address={}".format(
+            request.url_root,
+            email_address
+        ),
         user.reset_password_key
     )
     qsend_email.send_async_email(
@@ -427,7 +430,7 @@ And copy/paste the following password reset key into the box:
 
 def make_password_reset_key(email_address):
     try:
-        user = user_by_email_address(request.form["email_address"])
+        user = user_by_email_address(email_address)
         if not user:
             send_unknown_user_password_reset_email(email_address)
         else:
