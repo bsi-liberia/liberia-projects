@@ -123,7 +123,7 @@ export default {
       breadcrumbItems: [
         {
           text: 'Management',
-          href: '/management/'
+          to: { name: 'management' }
         },
         {
           text: 'Data Quality',
