@@ -1,11 +1,9 @@
-
+<template lang="md">
 # Help
 
 This section describes how to use the Dashboard, including updating data, generating reports, and exporting data.
 
 ----
-
-[TOC]
 
 ## Updating data
 
@@ -27,7 +25,7 @@ Date | Required data
 
 ### Editing a single activity
 
-Where users are authorised, updating data on a particular project is simple. From the [Activities](/activities/) page, click the **Edit** icon to the right of any project. You will see the activity editor. As you click across the various tabs, you will see all the project data that can be edited, including:
+Where users are authorised, updating data on a particular project is simple. From the <nuxt-link :to="{name: 'activities'}">Activities</nuxt-link> page, click the **Edit** icon to the right of any project. You will see the activity editor. As you click across the various tabs, you will see all the project data that can be edited, including:
 
 * **Basic** - title, description, start and end dates, and other basic classifications of the project
 * **Sectors** - the MTEF Sector, aligned ministry/agency, SDG Goals and PAPD Pillar
@@ -118,4 +116,28 @@ There are a couple of ways of exporting data from the system.
    * **Export data in Excel Format** will export data according to AMCU's existing Excel format.
    * **Download detailed AMCU financial transactions data for analysis** provides a more detailed and advanced format, useful for time-series analysis.
    * **Download integrated dataset of AMCU and PSIP projects** follows the same format as the AMCU Excel format, but includes also PSIP projects.
-2. If you want to generate an export of a subsection of activities, you can filter for activities on the [Activities](/activities/) tab and then click `Export selection to Excel`.
+2. If you want to generate an export of a subsection of activities, you can filter for activities on the <nuxt-link :to="{name: 'activities'}">Activities</nuxt-link> tab and then click `Export selection to Excel`.
+</template>
+<style scoped>
+h3 {
+	margin-top: 10px;
+}
+table {
+	width: 100%;
+}
+</style>
+<script>
+export default {
+  middleware: 'auth',
+  data() {
+    return {
+    }
+  },
+  computed: {
+  },
+  methods: {
+  },
+  mounted() {
+  }
+}
+</script>
