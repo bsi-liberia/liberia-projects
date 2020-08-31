@@ -257,7 +257,9 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
     response_statuses = dict(map(lambda r: (r["id"], r), _response_statuses))
     response_statuses[0] = {
         'name': 'Donor did not respond',
-        'icon': 'far fa-times-circle text-secondary'}
+        'icon_class': 'far',
+        'icon': 'times-circle',
+        'colour': 'text-secondary'}
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
     ros_fiscal_years_next = qmonitoring.forwardspends_ros("next")
