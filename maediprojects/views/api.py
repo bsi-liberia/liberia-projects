@@ -62,7 +62,8 @@ def api():
 @blueprint.route("/api/disbursements/psip/")
 @jwt_required
 def psip_disbursements_api():
-    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    current_fy, _ = util.FY("current").numeric()
+    fiscal_year = int(request.args.get("fiscal_year", current_fy))
     start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
     days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
     progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
@@ -73,13 +74,15 @@ def psip_disbursements_api():
         progress_time=progress_time,
         days_since_fy_began=days_since_fy_began,
         fy_start_day=datetime.datetime.strftime(start_of_fy, "%d.%m.%Y"),
-        fiscalYears=fys)
+        fiscalYears=fys,
+        fiscalYear = str(fiscal_year))
 
 
 @blueprint.route("/api/disbursements/aid/")
 @jwt_required
 def aid_disbursements_api():
-    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    current_fy, _ = util.FY("current").numeric()
+    fiscal_year = int(request.args.get("fiscal_year", current_fy))
     start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
     days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
     progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
@@ -92,12 +95,14 @@ def aid_disbursements_api():
         progress_time=progress_time,
         days_since_fy_began=days_since_fy_began,
         fy_start_day=datetime.datetime.strftime(start_of_fy, "%d.%m.%Y"),
-        fiscalYears=fys)
+        fiscalYears=fys,
+        fiscalYear = str(fiscal_year))
 
 @blueprint.route("/api/reports/project-development-tracking/")
 @jwt_required
 def project_development_tracking():
-    fiscal_year = int(request.args.get("fiscal_year", 2018))
+    current_fy, _ = util.FY("current").numeric()
+    fiscal_year = int(request.args.get("fiscal_year", current_fy))
     activities = models.Activity.query.filter_by(
             domestic_external=u"domestic"
         ).all()
@@ -135,7 +140,8 @@ def project_development_tracking():
 
     return jsonify(activities=milestone_data,
         milestones = list(map(lambda m: m.name, milestones)),
-        fiscalYears = fys)
+        fiscalYears = fys,
+        fiscalYear = str(fiscal_year))
 
 
 @blueprint.route("/api/spreadsheet_headers.json")

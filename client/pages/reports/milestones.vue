@@ -82,7 +82,7 @@ export default {
       fields: [],
       activities: [],
       isBusy: true,
-      fiscalYear: '2018',
+      fiscalYear: null,
       fiscalYears: [],
       milestones: []
     }
@@ -133,6 +133,7 @@ export default {
                 }])
           this.fiscalYears = response.data.fiscalYears
           this.isBusy = false
+          this.fiscalYear = response.data.fiscalYear
         });
     }
   }
