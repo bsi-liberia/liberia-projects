@@ -292,6 +292,7 @@ export default {
   components: {
     LineChart
   },
+  middleware: 'auth',
   data() {
     return {
       activityID: this.$route.params.id,

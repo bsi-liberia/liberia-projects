@@ -169,6 +169,7 @@ import Vue from 'vue'
         isBusy: true
       }
     },
+    middleware: 'auth',
     mounted: function() {
       this.getCodelistsData()
     },

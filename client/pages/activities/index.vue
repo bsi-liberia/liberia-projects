@@ -181,6 +181,7 @@ export default {
       fields: []
     }
   },
+  middleware: 'auth',
   mounted: function() {
     this.setupFilters()
     this.setFiltersFromQuery()
@@ -272,6 +273,13 @@ export default {
             })
             const index = this.projects.findIndex(getIndex)
             Vue.delete(this.projects, index)
+            this.$bvToast.toast('Your activity was successfully deleted.', {
+              title: 'Deleted',
+              autoHideDelay: 5000,
+              variant: 'success',
+              solid: true,
+              appendToast: true
+            })
           })
           .catch(error => {
             this.$bvToast.toast('Sorry, there was an error, and your activity could not be deleted.', {

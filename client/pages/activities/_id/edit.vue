@@ -17,6 +17,7 @@ export default {
   components: {
     ActivityEditor,
   },
+  middleware: 'auth',
   data() {
     return {
     }
