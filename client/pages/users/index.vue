@@ -31,7 +31,7 @@
           <strong>Loading...</strong>
         </template>
         <template v-slot:cell(user_roles)="data">
-          <b-badge variant="secondary" v-for="role in data.item.user_roles">
+          <b-badge variant="secondary" v-for="role in data.item.user_roles" v-bind:key="role.id">
             {{ role.name }}
           </b-badge>
         </template>
