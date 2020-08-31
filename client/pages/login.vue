@@ -13,24 +13,14 @@
         label="Password"
         label-cols-sm="2"
         for="password">
-        <b-form-input type="password" v-model="password" name="password" autocomplete="current-password" required></b-form-input>
-      </b-form-group>
-
-      <div class="form-group form-check">
-        <div class="col-sm-12">
-          <div class="checkbox">
-            <label for="remember">
-              <input type="checkbox" id="remember" name="remember"> Remember me
-            </label>
-          </div>
-        </div>
-      </div>
-      <b-form-group>
-        <button type="submit" class="btn btn-default btn-primary"
-          id="submit">Log in</button>
+        <b-form-input type="password" v-model="password" name="password" autocomplete="password" required></b-form-input>
       </b-form-group>
       <b-form-group>
-        <a href="users.reset_password">Forgot your password? Reset it here</a>.
+        <b-btn type="submit" variant="primary"
+          id="submit">Log in</b-btn>
+      </b-form-group>
+      <b-form-group>
+        <nuxt-link :to="{ name: 'users-reset-password'}">Forgot your password? Reset it here</nuxt-link>.
       </b-form-group>
     </form>
   </div>
@@ -42,6 +32,7 @@ export default {
     return {
       username: null,
       password: null,
+      remember: false,
       error: null
     }
   },
