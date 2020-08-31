@@ -1214,7 +1214,7 @@ def generate_iati_xml(version, country_code):
 
 
 @blueprint.route("/api/activitylog.json")
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def activity_log():
     offset = (int(request.args.get("page", 1))-1)*10
@@ -1251,7 +1251,7 @@ def activity_log():
 
 
 @blueprint.route("/api/activitylog/<int:activitylog_id>.json")
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def activity_log_detail(activitylog_id):
     al = quser.activitylog_detail(activitylog_id)
