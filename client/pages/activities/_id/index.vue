@@ -26,10 +26,14 @@
       </b-row>
       <b-row>
         <b-col md="6">
-          <a class="btn btn-primary" href="url_for('activities.results_data_design', activity_id=activity.id)}}"
-          v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-design'))">Results design</a>
-          <a class="btn btn-primary" href="url_for('activities.results_data_entry', activity_id=activity.id)}}"
-          v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-entry')) || (loggedInUser.roles_list.includes('results-data-design'))">Results data entry</a>
+          <b-btn variant="primary" :to="{ name: 'activities-id-results-design', params: {id: activity.id}}"
+          v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-design'))">
+            <font-awesome-icon :icon="['fa', 'magic']" /> Results designer
+          </b-btn>
+          <b-btn variant="primary" :to="{ name: 'activities-id-results-data-entry', params: {id: activity.id}}"
+          v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-entry')) || (loggedInUser.roles_list.includes('results-data-design'))">
+            <font-awesome-icon :icon="['fa', 'clipboard-list']" /> Results data entry
+          </b-btn>
           <h3>Basic data</h3>
           <table class="table table-hover table-sm" responsive>
             <tbody>
@@ -114,14 +118,14 @@
         <b-col md="6" class="activity-profile-location-map-container">
           <h3 id="locations">Locations</h3>
           <div id="locationMap">
-            <no-ssr>
+            <client-only>
               <l-map :zoom=7 :center="[6.5,-9.2]" :options="{scrollWheelZoom: false}">
                 <l-tile-layer url="https://d.tiles.mapbox.com/v3/markbrough.n3kod47p/{z}/{x}/{y}.png"></l-tile-layer>
                 <l-marker :lat-lng="location.latLng" v-for="location in locations" v-bind:key="location.id">
                   <l-popup>{{ location.name }}</l-popup>
                 </l-marker>
               </l-map>
-           </no-ssr>
+           </client-only>
           </div>
         </b-col>
       </b-row>
