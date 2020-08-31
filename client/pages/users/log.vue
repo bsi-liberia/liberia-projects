@@ -125,7 +125,6 @@ export default {
         .then((response) => {
           this.users = response.data.users;
         });
-
     },
     getActivityLog: function(currentPage) {
       this.$axios
