@@ -34,7 +34,7 @@
               <b-nav-item :to="{name: 'management'}" v-if="loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('admin')">Management</b-nav-item>
               <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
                 <b-nav-item :to="{name: 'export'}">Export data</b-nav-item>
-                <b-nav-item :to="{name: 'help'}">Help</b-nav-item>
+                <b-nav-item :to="{name: 'help'}" active-class="active">Help</b-nav-item>
               </template>
             </template>
             <b-nav-item-dropdown right v-if="isAuthenticated">
