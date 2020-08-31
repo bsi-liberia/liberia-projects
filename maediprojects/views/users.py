@@ -65,6 +65,7 @@ def profile():
 @blueprint.route("/api/user/")
 @jwt_required
 def user():
+    print("current_user is", current_user)
     return jsonify(user=current_user.as_simple_dict())
 
 
@@ -230,78 +231,41 @@ def login():
     return make_response(jsonify({"msg": "Please login to continue."}), 200)
 
 
-@blueprint.route("/reset-password/password/", methods=["GET", "POST"])
+@blueprint.route("/api/reset-password/password/", methods=["POST"])
 def reset_password_new_password():
-    if request.method == "GET":
-        return render_template("users/reset_password_password.html",
-            email_address=request.args.get("email_address"),
-            reset_password_key=request.args.get("reset_password_key"),
-            loggedinuser=current_user
-            )
+    if not (request.json.get("password") == request.json.get("password_2")):
+        return make_response(jsonify({'msg': 'Please make sure you enter the same password twice.'}), 400)
+    elif request.json.get("password") == "":
+        return make_response(jsonify({'msg': 'Please enter a password.'}), 400)
     else:
-        if not (request.form.get("password") == request.form.get("password_2")):
-            flash("Please make sure you enter the same password twice.", "danger")
-        elif request.form.get("password") == "":
-            flash("Please enter a password.", "danger")
+        if quser.process_reset_password(
+            email_address=request.json.get("email_address"),
+            reset_password_key=request.json.get("reset_password_key"),
+            password=request.json.get("password")
+            ):
+            return make_response(jsonify({'msg': 'Password successfully changed! Please login with your new password.'}), 200)
         else:
-            if quser.process_reset_password(
-                email_address=request.form.get("email_address"),
-                reset_password_key=request.form.get("reset_password_key"),
-                password=request.form.get("password")
-                ):
-                flash("Password successfully changed! Please login with your new password.", "success")
-                return redirect(url_for('users.login'))
-            else:
-                flash("Sorry, something went wrong, and your password could not be changed.", "danger")
-    return render_template("users/reset_password_password.html",
-        email_address=request.args.get("email_address"),
-        reset_password_key=request.args.get("reset_password_key"),
-        loggedinuser=current_user
-        )
+            return make_response(jsonify({'msg': 'Sorry, something went wrong, and your password could not be changed.'}), 400)
 
 
-@blueprint.route("/reset-password/key/", methods=["GET", "POST"])
+@blueprint.route("/api/reset-password/key/", methods=["POST"])
 def reset_password_with_key():
-    if ((request.method == "GET") and
-        (request.args.get("email_address", "") != "") and
-        (request.args.get("reset_password_key", "") != "")):
-        if quser.check_password_reset(request.args["email_address"], request.args["reset_password_key"]):
-            return redirect(url_for('users.reset_password_new_password',
-                email_address=request.args.get("email_address"),
-                reset_password_key=request.args.get("reset_password_key")
-                ))
-        flash("Sorry, could not reset that passsword key. Please try resetting your password again, and make sure you use the reset key within 24 hours.", "danger")
-        return redirect(url_for('users.reset_password'))
-
-    elif request.method == "POST":
-        if (request.form.get("email_address", "") != "") and (request.form.get("reset_password_key", "") != ""):
-            if quser.check_password_reset(request.form["email_address"], request.form["reset_password_key"]):
-                return redirect(url_for('users.reset_password_new_password',
-                    email_address=request.form.get("email_address"),
-                    reset_password_key=request.form.get("reset_password_key")
-                    ))
-            flash("Sorry, could not reset that passsword key. Please try resetting your password again, and make sure you use the reset key within 24 hours.", "danger")
-            return redirect(url_for('users.reset_password'))
-        else:
-            flash(gettext(u"Please enter an email address and key."), "danger")
-    email_address = request.args.get('email_address', "")
-    return render_template("users/reset_password_with_key.html",
-            email_address=email_address,
-            loggedinuser=current_user)
+    if (request.json.get("email_address", "") != "") and (request.json.get("reset_password_key", "") != ""):
+        if quser.check_password_reset(request.json["email_address"], request.json["reset_password_key"]):
+            return make_response(jsonify({'msg': 'Key authenticated - please provide a new password.'}), 200)
+        return make_response(jsonify({'msg': 'Sorry, could not reset that passsword key. Please try resetting your password again, and make sure you use the reset key within 24 hours.'}), 400)
+    else:
+        return make_response(jsonify({'msg': "Please enter an email address and key."}), 400)
 
 
-@blueprint.route("/reset-password/", methods=["GET", "POST"])
+@blueprint.route("/api/reset-password/", methods=["POST"])
 def reset_password():
-    if request.method == "POST":
-        if request.form.get("email_address", "") != "":
-            if quser.make_password_reset_key(request.form["email_address"]):
-                flash(gettext(u"Sent an email to {} - please check your email for further instructions on how to reset your password.".format(request.form['email_address'])), "success")
-                return redirect(url_for('users.reset_password_with_key',
-                    email_address=request.form["email_address"]))
-        else:
-            flash(gettext(u"Please enter an email address."), "danger")
-    return render_template("users/reset_password.html",
-             loggedinuser=current_user)
+    email_address = request.json.get('email_address', '')
+    if email_address != "":
+        if quser.make_password_reset_key(email_address):
+            return make_response(jsonify({'msg': 'Sent an email to {} - please check your email for further instructions on how to reset your password.'.format(email_address)}), 200)
+    else:
+        return make_response(jsonify({'msg': 'Please enter an email address.'}), 400)
 
 
 @blueprint.route('/api/logout/')
