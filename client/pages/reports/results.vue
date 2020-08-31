@@ -22,7 +22,7 @@
           {{ data.item.reporting_org_name }}
         </template>
         <template v-slot:cell(results_average)="data">
-          <b-progress :max="100" v-if="data.item.results_average" :variant="data.item.results_average_status">
+          <b-progress :max="100" v-if="data.item.results_average">
             <b-progress-bar :value="data.item.results_average">
                 {{ data.item.results_average }}%
             </b-progress-bar>
