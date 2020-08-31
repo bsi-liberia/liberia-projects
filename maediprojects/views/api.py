@@ -62,7 +62,7 @@ def api():
 @blueprint.route("/api/disbursements/psip/")
 @jwt_required
 def psip_disbursements_api():
-    current_fy, _ = util.FY("current").numeric()
+    current_fy, _ = util.FY("previous").numeric()
     fiscal_year = int(request.args.get("fiscal_year", current_fy))
     start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
     days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
@@ -81,7 +81,7 @@ def psip_disbursements_api():
 @blueprint.route("/api/disbursements/aid/")
 @jwt_required
 def aid_disbursements_api():
-    current_fy, _ = util.FY("current").numeric()
+    current_fy, _ = util.FY("previous").numeric()
     fiscal_year = int(request.args.get("fiscal_year", current_fy))
     start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
     days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
@@ -101,7 +101,7 @@ def aid_disbursements_api():
 @blueprint.route("/api/reports/project-development-tracking/")
 @jwt_required
 def project_development_tracking():
-    current_fy, _ = util.FY("current").numeric()
+    current_fy, _ = util.FY("previous").numeric()
     fiscal_year = int(request.args.get("fiscal_year", current_fy))
     activities = models.Activity.query.filter_by(
             domestic_external=u"domestic"
@@ -148,7 +148,7 @@ def project_development_tracking():
 @jwt_required
 def counterpart_funding():
     if datetime.datetime.utcnow().month > 6:
-        next_fy, _ = util.FY("current").numeric()
+        next_fy, _ = util.FY("previous").numeric()
     else:
         next_fy, _ = util.FY("next").numeric()
     fiscal_year = int(request.args.get("fiscal_year", next_fy))
