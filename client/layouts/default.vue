@@ -15,14 +15,14 @@
             <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
               <b-nav-item-dropdown text="Reports" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
                 <template v-if="['domestic', 'both'].includes(loggedInUser.permissions_dict.edit) || loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('admin')">
-                  <b-dropdown-item :to="{name: 'milestones'}">PSIP Project Development and Appraisal Tracking</b-dropdown-item>
-                  <b-dropdown-item :to="{name: 'psip_disbursements'}">PSIP Disbursements</b-dropdown-item>
+                  <b-dropdown-item :to="{name: 'reports-milestones'}" active-class="active">PSIP Project Development and Appraisal Tracking</b-dropdown-item>
+                  <b-dropdown-item :to="{name: 'reports-psip_disbursements'}" active-class="active">PSIP Disbursements</b-dropdown-item>
                 </template>
                 <template v-if="['external', 'both'].includes(loggedInUser.permissions_dict.view)">
-                  <b-dropdown-item :to="{name: 'aid_disbursements'}">Aid Disbursements</b-dropdown-item>
-                  <b-dropdown-item :to="{name: 'results'}">Results</b-dropdown-item>
+                  <b-dropdown-item :to="{name: 'reports-aid_disbursements'}" active-class="active">Aid Disbursements</b-dropdown-item>
+                  <b-dropdown-item :to="{name: 'reports-results'}" active-class="active">Results</b-dropdown-item>
                 </template>
-                <b-dropdown-item :to="{name: 'counterpart_funding'}">Counterpart funding</b-dropdown-item>
+                <b-dropdown-item :to="{name: 'reports-counterpart_funding'}" active-class="active">Counterpart funding</b-dropdown-item>
               </b-nav-item-dropdown>
             </template>
           </b-navbar-nav>
