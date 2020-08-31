@@ -144,6 +144,40 @@ def project_development_tracking():
         fiscalYear = str(fiscal_year))
 
 
+@blueprint.route("/api/reports/counterpart-funding/")
+@jwt_required
+def counterpart_funding():
+    if datetime.datetime.utcnow().month > 6:
+        next_fy, _ = util.FY("current").numeric()
+    else:
+        next_fy, _ = util.FY("next").numeric()
+    fiscal_year = int(request.args.get("fiscal_year", next_fy))
+    start_date, end_date = qactivity.get_earliest_latest_dates_filter(
+        {'key': 'domestic_external', 'val': 'external'})
+    start_date = max(start_date, datetime.date(2018,07,01))
+    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+
+    def annotate_activity(activity):
+        return {
+            'id': activity.id,
+            'title': activity.title,
+            'reporting_org_name': activity.reporting_org.name,
+            'ministry_name': ", ".join(list(map(lambda ministry: ministry.codelist_code.name, activity.classification_data.get('aligned-ministry-agency', {}).get('entries', [])))),
+            'gol_requested': activity._fy_counterpart_funding,
+            'donor_planned': activity._fy_forwardspends
+        }
+
+    activities = list(map(lambda activity: annotate_activity(activity),
+        qcounterpart_funding.annotate_activities_with_aggregates(fiscal_year)))
+
+    return jsonify(
+        fy=util.FY("next").fy_fy(),
+        activities = activities,
+        fiscalYears = fys,
+        fiscalYear = str(fiscal_year)
+    )
+
+
 @blueprint.route("/api/spreadsheet_headers.json")
 def spreadsheet_field_names():
     headers = spreadsheet_headers.headers

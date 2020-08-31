@@ -155,7 +155,7 @@ def create_or_update_counterpart_funding(activity_id, required_date, value):
     )
     return True
 
-def annotate_activities_with_aggregates(activities):
+def annotate_activities_with_aggregates(fiscal_year):
     def FY_forwardspends_for_FY(FY):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
         result = db.session.query(
@@ -169,7 +169,10 @@ def annotate_activities_with_aggregates(activities):
             ).group_by(
                 models.ActivityForwardSpend.activity_id
             ).all()
-        return result
+
+        def filter_blank(row):
+            return row.value > 0
+        return filter(filter_blank, result)
 
     def FY_counterpart_funding_for_FY(FY):
         fiscalyear_modifier = 6 #FIXME this is just for Liberia
@@ -184,11 +187,17 @@ def annotate_activities_with_aggregates(activities):
             ).group_by(
                 models.ActivityCounterpartFunding.activity_id
             ).all()
-        return result
 
-    FY, _ = util.FY("next").numeric()
-    fy_forwardspends = dict(FY_forwardspends_for_FY(FY))
-    fy_counterpart_funding = dict(FY_counterpart_funding_for_FY(FY))
+        def filter_blank(row):
+            return row.value > 0
+        return filter(filter_blank, result)
+
+    fy_forwardspends = dict(FY_forwardspends_for_FY(fiscal_year))
+    fy_counterpart_funding = dict(FY_counterpart_funding_for_FY(fiscal_year))
+
+    activities = models.Activity.query.filter(
+        models.Activity.id.in_(fy_forwardspends.keys()+fy_counterpart_funding.keys())
+    ).all()
 
     def annotate_aggs(activity):
         activity._fy_forwardspends = fy_forwardspends.get(
