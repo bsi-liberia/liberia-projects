@@ -45,6 +45,7 @@ export default {
     '@nuxtjs/axios',
     '@nuxtjs/auth',
     'nuxt-leaflet',
+    '@nuxtjs/markdownit',
     [
       'nuxt-fontawesome', {
         imports: [
@@ -59,6 +60,15 @@ export default {
        ]
     }]
   ],
+  markdownit: {
+    preset: 'default',
+    linkify: true,
+    use: [
+    [
+      'markdown-it-anchor', { permalink: true, permalinkBefore: true }
+    ]
+    ]
+  },
   /*
   ** Axios module configuration
   ** See https://axios.nuxtjs.org/options
