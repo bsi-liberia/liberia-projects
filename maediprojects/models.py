@@ -1375,7 +1375,9 @@ class Response(db.Model):
     __tablename__ = 'response'
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.UnicodeText, nullable=False)
+    icon_class = sa.Column(sa.UnicodeText, nullable=False)
     icon = sa.Column(sa.UnicodeText, nullable=False)
+    colour = sa.Column(sa.UnicodeText, nullable=False)
     organisationresponse = sa.orm.relationship("OrganisationResponse",
             cascade="all, delete-orphan",
             backref="response")
