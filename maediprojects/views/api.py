@@ -178,6 +178,30 @@ def counterpart_funding():
     )
 
 
+@blueprint.route("/api/reports/results/")
+@jwt_required
+def results():
+    def annotate_activity(activity):
+        return {
+            'id': activity.id,
+            'title': activity.title,
+            'reporting_org_name': activity.reporting_org.name,
+            'implementer_name': ", ".join(list(map(lambda org: org.name, activity.implementing_organisations))),
+            'results_average': activity.results_average,
+            'results_average_status': activity.results_average_status
+        }
+
+    activities = list(map(lambda activity: annotate_activity(activity),
+        models.Activity.query.filter(
+            models.Activity.results.any()
+        ).all()
+    ))
+
+    return jsonify(
+        activities = activities
+    )
+
+
 @blueprint.route("/api/spreadsheet_headers.json")
 def spreadsheet_field_names():
     headers = spreadsheet_headers.headers
