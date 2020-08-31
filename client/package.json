@@ -26,6 +26,7 @@
     "nuxt": "^2.0.0",
     "nuxt-fontawesome": "^0.4.0",
     "nuxt-leaflet": "0.0.21",
+    "nuxt-vue-select": "^0.1.4",
     "vue-chartjs": "^3.5.1",
     "vue-debounce": "^2.5.7",
     "vue-slider-component": "^3.2.5"

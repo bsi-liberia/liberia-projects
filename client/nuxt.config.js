@@ -46,6 +46,7 @@ export default {
     '@nuxtjs/auth',
     'nuxt-leaflet',
     '@nuxtjs/markdownit',
+    'nuxt-vue-select',
     [
       'nuxt-fontawesome', {
         imports: [
