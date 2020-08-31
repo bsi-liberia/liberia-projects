@@ -614,8 +614,8 @@ class Activity(db.Model):
             "id": ms.id,
             "notes": ms_achieved_notes.get(ms.id, ""),
             "achieved": {
-                True: {"status": True, "name": "Completed", "icon": "fa-check-circle", "colour": "success"},
-                False: {"status": False, "name": "Pending", "icon": "fa-times-circle", "colour": "warning"},
+                True: {"status": True, "name": "Completed", "icon": "check-circle", "colour": "success"},
+                False: {"status": False, "name": "Pending", "icon": "times-circle", "colour": "warning"},
                 }[bool(ms_achieved.get(ms.id, False))]}, all_milestones))
         return ms
 
