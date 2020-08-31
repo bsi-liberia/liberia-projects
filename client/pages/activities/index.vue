@@ -110,7 +110,7 @@
 
               <template v-slot:cell(edit)="data">
                 <nuxt-link :to="{ name: 'activities-id-edit', params: { id: data.item.id}}" v-if="data.item.permissions.edit">
-                  <font-awesome-icon :icon="['fas', 'edit']" /></a>
+                  <font-awesome-icon :icon="['fas', 'edit']" />
                 </nuxt-link>
               </template>
 
