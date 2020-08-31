@@ -60,7 +60,7 @@ def api():
 
 
 @blueprint.route("/api/disbursements/psip/")
-@login_required
+@jwt_required
 def psip_disbursements_api():
     fiscal_year = int(request.args.get("fiscal_year", 2018))
     start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
@@ -77,7 +77,7 @@ def psip_disbursements_api():
 
 
 @blueprint.route("/api/disbursements/aid/")
-@login_required
+@jwt_required
 def aid_disbursements_api():
     fiscal_year = int(request.args.get("fiscal_year", 2018))
     start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
@@ -95,7 +95,7 @@ def aid_disbursements_api():
         fiscalYears=fys)
 
 @blueprint.route("/api/reports/project-development-tracking/")
-@login_required
+@jwt_required
 def project_development_tracking():
     fiscal_year = int(request.args.get("fiscal_year", 2018))
     activities = models.Activity.query.filter_by(
