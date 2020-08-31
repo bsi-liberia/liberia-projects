@@ -80,77 +80,86 @@ def users():
                            loggedinuser=current_user)
 
 
-@blueprint.route("/users/delete/", methods=["POST"])
-@login_required
+@blueprint.route("/api/users/delete/", methods=["POST"])
+@jwt_required
 @quser.administrator_required
 def users_delete():
     if "admin" not in current_user.roles_list:
-        flash(gettext(u"You must be an administrator to create new users."), "danger")
-        return redirect(url_for("activities.dashboard"))
+        return make_response(
+            jsonify({'msg': "You must be an administrator to delete users."}),
+            403)
     if current_user.username == request.get_json().get("username"):
-        flash(gettext(u"You cannot delete your own user."), "danger")
-        return redirect(url_for("activities.dashboard"))
+        return make_response(
+            jsonify({'msg': "You cannot delete your own user."}),
+            400)
     if quser.deleteUser(request.get_json().get('username')):
-        flash(gettext(u"Successfully deleted user."), "success")
-    else:
-        flash(gettext(u"Sorry, there was an error and that user could not be deleted."), "danger")
-    return redirect(url_for("users.users"))
+        return make_response(
+            jsonify({'msg': "Successfully deleted user."}),
+            200)
+    return make_response(
+        jsonify({'msg': "Sorry, there was an error and that user could not be deleted."}),
+        500)
 
 
-@blueprint.route("/users/new/", methods=["GET", "POST"])
-@login_required
+@blueprint.route("/api/users/new/", methods=["GET", "POST"])
+@jwt_required
 @quser.administrator_required
 def users_new():
     if request.method == "GET":
         user = {
-            "permissions_dict": {
-                "view": current_user.permissions_dict["view"]
-            },
+            "view": current_user.permissions_dict["view"],
+            "edit": 'none',
             "recipient_country_code": "LR"
         }
-        return render_template("users/user.html",
-                               user=user,
-                               loggedinuser=current_user,
-                               codelists=codelists.get_codelists())
+        roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
+        return make_response(jsonify(
+            user=user,
+            roles=roles), 200)
     elif request.method == "POST":
-        user = quser.addUser(request.form)
+        user = quser.addUser(request.json)
         if user:
-            flash(gettext(u"Successfully created user!"), "success")
-            return redirect(url_for("users.users_edit", user_id=user.id))
+            return make_response(jsonify({
+                'msg': 'Successfully created user!',
+                'user': user.as_dict()
+            }), 200)
         else:
-            flash(gettext(u"Sorry, couldn't create that user!"), "danger")
-        return redirect(url_for("users.users"))
+            return make_response(jsonify({'msg': "Sorry, couldn't create that user!"}), 500)
 
 
-@blueprint.route("/users/<user_id>/", methods=["GET", "POST"])
-@login_required
+@blueprint.route("/api/users/<user_id>/", methods=["GET", "POST"])
+@jwt_required
 @quser.administrator_required
 def users_edit(user_id):
     user = quser.user(user_id)
+    if user == None: return abort(404)
+    roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
+
+    def annotate_user(user):
+        _user = user.as_dict()
+        _user['view'] = user.permissions_dict["view"]
+        _user['edit'] = user.permissions_dict["edit"]
+        return _user
+
     if request.method == "GET":
-        if not user:
-            return abort(404)
-        return render_template("users/user.html",
-                 user=user,
-                 loggedinuser=current_user,
-                 organisations=qorganisations.get_organisations(),
-                 codelists=codelists.get_codelists())
+        return jsonify(
+            user=annotate_user(user),
+            roles=roles)
     elif request.method == "POST":
-        data = request.form.to_dict()
+        data = request.json
         data["id"] = user_id
         if quser.updateUser(data):
-            flash(gettext(u"Successfully updated user!"), "success")
+            return make_response(jsonify({'msg': "Successfully updated user!"}), 200)
         else:
-            flash(gettext(u"Sorry, couldn't update that user!"), "danger")
-        return redirect(url_for("users.users_edit", user_id=user_id))
+            return make_response(jsonify({'msg': "Sorry, couldn't update that user!"}), 500)
 
 
-@blueprint.route("/users/<user_id>/permissions/", methods=["GET", "POST"])
-@login_required
+@blueprint.route("/api/users/<user_id>/permissions/", methods=["GET", "POST"])
+@jwt_required
 @quser.administrator_required
 def user_permissions_edit(user_id):
     if request.method == "GET":
         user = quser.user(user_id)
+        if user == None: return abort(404)
         user_organisations = list(map(lambda uo: uo.as_dict(), user.organisations))
         user_roles = list(map(lambda uo: uo.as_dict(), user.userroles))
         roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))

@@ -450,8 +450,9 @@ def api_activities_country():
 @blueprint.route("/api/activities/<activity_id>.json")
 @jwt_required
 def api_activities_by_id(activity_id):
-    activity = qactivity.get_activity(activity_id).as_jsonable_dict()
-    return jsonify(activity=activity)
+    activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
+    return jsonify(activity=activity.as_jsonable_dict())
 
 
 @blueprint.route("/api/activities/new.json", methods=['GET', 'POST'])
@@ -570,6 +571,7 @@ def api_new_activity():
 @jwt_required
 def api_activities_finances_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
 
     commitments = activity.FY_commitments_dict
     allotments = activity.FY_allotments_dict
@@ -601,6 +603,7 @@ def api_activities_finances_by_id(activity_id):
 @jwt_required
 def api_activities_finances_fund_sources_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
 
     commitments = activity.FY_commitments_dict_fund_sources
     allotments = activity.FY_allotments_dict_fund_sources
@@ -655,6 +658,7 @@ def jsonify_results_design(results):
 @jwt_required
 def api_activities_results(activity_id):
     activity = models.Activity.query.get(activity_id)
+    if activity == None: return abort(404)
     results = activity.results
     return jsonify(results = jsonify_results_design(results))
 
@@ -663,12 +667,13 @@ def api_activities_results(activity_id):
 @jwt_required
 def api_activities_documents(activity_id):
     activity = models.Activity.query.get(activity_id)
+    if activity == None: return abort(404)
     documents = list(map(lambda d: d.as_dict(), activity.documents))
     return jsonify(documents = documents)
 
 
 @blueprint.route("/api/activities/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
-@login_required
+@jwt_required
 @quser.permissions_required("results-data-entry")
 def api_activities_results_data_entry(activity_id):
     if request.method == "POST":
@@ -676,6 +681,7 @@ def api_activities_results_data_entry(activity_id):
             request.json.get("results"), request.json.get("saveType"))
         if not result: return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)
+    if activity == None: return abort(404)
     results = activity.results
     return jsonify(
             activity_id = activity.id,
@@ -685,13 +691,14 @@ def api_activities_results_data_entry(activity_id):
 
 
 @blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
-@login_required
+@jwt_required
 @quser.permissions_required("results-data-design")
 def api_activities_results_design(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data(activity_id, request.json.get("results"))
         if not result: return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)
+    if activity == None: return abort(404)
     results = activity.results
     return jsonify(
             activity_id = activity.id,
@@ -700,7 +707,7 @@ def api_activities_results_design(activity_id):
         )
 
 @blueprint.route("/api/user-results/")
-@login_required
+@jwt_required
 @quser.permissions_required("view")
 def api_activities_user_results():
     activities = qactivity.list_activities_by_filters({'result_indicator_periods': True}, "results-data-entry")
@@ -740,6 +747,7 @@ def api_activity_milestones(activity_id):
         return "error"
     else:
         activity = qactivity.get_activity(activity_id)
+        if activity == None: return abort(404)
         return jsonify(milestones=activity.milestones_data)
 
 
@@ -767,6 +775,7 @@ def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id.
     POST also accepts financial data to be added or deleted."""
     activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
     if request.method == "POST":
         request_data = request.get_json()
         if request_data["action"] == "add":
@@ -849,6 +858,8 @@ def finances_edit_attr(activity_id):
 @jwt_required
 @quser.permissions_required("edit")
 def api_activity_counterpart_funding(activity_id):
+    activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
     """GET returns a list of all counterpart funding for a given activity_id.
     POST also accepts counterpart funding data to be added, deleted, updated."""
     if request.method == "POST":
@@ -910,6 +921,8 @@ def api_activity_counterpart_funding(activity_id):
 @jwt_required
 @quser.permissions_required("edit")
 def api_activity_forwardspends(activity_id, fiscal_year=True):
+    activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
     """GET returns a list of all forward spend data for a given activity_id.
     POST updates value for a given forwardspend_id."""
     if request.method == "GET":
@@ -998,6 +1011,8 @@ def api_all_activity_locations():
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
+    activity = qactivity.get_activity(activity_id)
+    if activity == None: return abort(404)
     if request.method == "POST":
         if not quser.check_permissions("edit"): return abort(403)
         request_data = request.get_json()
@@ -1284,7 +1299,7 @@ def activity_log_detail(activitylog_id):
 
 
 @blueprint.route("/api/users.json")
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def users():
     _users = quser.user_id_username()

@@ -238,8 +238,8 @@ def updateUser(data):
 
     # This should be done more nicely on the model...
     if "admin" in current_user.roles_list:
-        current_user_roles = list(map(lambda ur: str(ur.role_id), checkU.userroles))
-        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []).split(","))
+        current_user_roles = list(map(lambda ur: ur.role_id, checkU.userroles))
+        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []))
         roles_to_add = filter(lambda r: r not in current_user_roles, new_user_roles)
         roles_to_delete = filter(lambda r: r not in new_user_roles, current_user_roles)
         for role_id in roles_to_delete:
@@ -276,6 +276,13 @@ def addUser(data):
 
         if data.get("administrator") == True:
             add_user_role(data["username"], "admin")
+        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []))
+        for role_id in new_user_roles:
+            ur = models.UserRole()
+            ur.user_id = newU.id
+            ur.role_id = role_id
+            db.session.add(ur)
+        db.session.commit()
 
         return newU
     return checkU
