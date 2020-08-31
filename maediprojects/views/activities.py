@@ -119,16 +119,15 @@ def activity_new():
             flash("An error occurred and your activity couldn't be added", "danger")
         return redirect(url_for('activities.activity_edit', activity_id=a.id))
 
-@blueprint.route("/activities/<activity_id>/delete/")
-@login_required
+@blueprint.route("/api/activities/<activity_id>/delete/", methods=['POST'])
+@jwt_required
 @quser.permissions_required("edit")
 def activity_delete(activity_id):
     result = qactivity.delete_activity(activity_id)
     if result:
-        flash("Successfully deleted that activity", "success")
+        return jsonify({'msg': "Successfully deleted that activity"}, 200)
     else:
-        flash("Sorry, unable to delete that activity", "danger")
-    return redirect(url_for("activities.activities"))
+        return jsonify({'msg': "Sorry, unable to delete that activity"}, 500)
 
 
 @blueprint.route("/activities/<activity_id>/")
