@@ -9,7 +9,7 @@
           <b-input type="text" class="form-control" v-model="email_address" reuqired/>
       </b-form-group>
       <b-form-group>
-        <b-btn type="submit">Reset password</b-btn>
+        <b-btn type="submit" variant="primary">Reset password</b-btn>
       </b-form-group>
     </b-form>
   </div>

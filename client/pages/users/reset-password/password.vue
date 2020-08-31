@@ -14,7 +14,7 @@
           <b-input type="password" class="form-control" v-model="password_2" required/>
       </b-form-group>
       <b-form-group>
-        <b-btn type="submit">Reset password</b-btn>
+        <b-btn type="submit" variant="primary">Reset password</b-btn>
       </b-form-group>
     </b-form>
   </div>
