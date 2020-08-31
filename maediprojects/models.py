@@ -389,7 +389,6 @@ class Activity(db.Model):
 
     @hybrid_property
     def results_average_status(self):
-        return "primary"
         if self.results_average is not None:
             if self.results_average >= 80:
                 return "success"
