@@ -142,12 +142,10 @@
               <b-card-body v-show="$route.query.tab === 'results'" v-if="mode=='edit'">
                 <b-card-text id="results">
                   <h3>Results</h3>
-                  <b-btn variant="primary" href="{ url_for('activities.results_data_design',
-                    activity_id=activity.id) }">
-                    Results designer<font-awesome-icon :icon="['fa', 'magic']" /></b-btn>
-                  <b-btn variant="primary" href="{ url_for('activities.results_data_entry',
-                    activity_id=activity.id) }" v-if="activity.results">
-                    Results data entry <font-awesome-icon :icon="['fa', 'clipboard-list']" /></b-btn>
+                  <b-btn variant="primary" :to="{ name: 'activities-id-results-design', params: {id: activity.id}}">
+                    <font-awesome-icon :icon="['fa', 'magic']" /> Results designer</b-btn>
+                  <b-btn variant="primary" :to="{ name: 'activities-id-results-data-entry', params: {id: activity.id}}" v-if="activity.results">
+                    <font-awesome-icon :icon="['fa', 'clipboard-list']" /> Results data entry</b-btn>
                   <div class="row">
                     <div class="col-md-12">
                       <results-section
@@ -264,7 +262,6 @@ export default {
         .then(response => {
           this.activity = response.data.activity
           this.isBusy = false
-          this.setDocumentTitle()
         })
     },
     async setupCodelists() {
