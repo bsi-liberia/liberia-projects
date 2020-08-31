@@ -298,7 +298,7 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
 
 
 @blueprint.route("/api/reporting_orgs_user.json", methods=["GET", "POST"])
-@login_required
+@jwt_required
 def reporting_orgs_user():
     if request.method == "POST":
         if ("organisation_id" in request.json) and ("response_id" in request.json):
@@ -339,7 +339,7 @@ def reporting_orgs_user():
 
 
 @blueprint.route("/api/reporting_orgs.json")
-@login_required
+@jwt_required
 def reporting_orgs():
     reporting_orgs = qorganisations.get_reporting_orgs()
     response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
@@ -354,7 +354,7 @@ def reporting_orgs():
 
 
 @blueprint.route("/api/reporting_orgs/summary.json")
-@login_required
+@jwt_required
 def reporting_orgs_summary():
     reporting_orgs = qorganisations.get_reporting_orgs()
     response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
