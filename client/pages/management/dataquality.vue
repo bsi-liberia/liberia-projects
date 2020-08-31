@@ -73,13 +73,12 @@
             </b-tr>
           </template>
           <template v-slot:cell(name)="data">
-            <a :href="'/activities/#?reporting_org_id=' + data.item.id"
+            <nuxt-link :to="{ name: 'activities', query: {reporting_org_id: data.item.id}}"
               title="View this organisation's projects"
               v-b-tooltip.hover>
               {{ data.item.name }}
-            </a>
+            </nuxt-link>
           </template>
-
           <template v-slot:[`cell(forwardspends_${currentprevious}year)`]="data" v-for="currentprevious in ['current', 'previous', 'next']">
             <template v-if="selectedDisplayOption == 'check'">
               <span
