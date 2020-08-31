@@ -24,7 +24,7 @@
           </b-form-group>
         </b-col>
       </b-row>
-      <b-table class="table" :busy="isBusy" :fields="fields" :items="activities" sort-by="pct" sort-desc="true" :tbody-tr-class="rowClass" responsive>
+      <b-table class="table" :busy="isBusy" :fields="fields" :items="activities" sort-by="pct" :sort-desc="true" :tbody-tr-class="rowClass" responsive>
         <template v-slot:table-busy>
           <div class="text-center">
             <b-spinner class="align-middle" label="Loading..."></b-spinner>
