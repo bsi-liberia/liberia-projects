@@ -44,7 +44,7 @@ However, sometimes you may want to update many activities at once. For this, you
 
 In the past, it took a lot of effort each quarter to update disbursement data for every donor. This is now much simpler and faster, if you follow these steps:
 
-1. On the [Export Data](/export) tab, scroll down to `Excel reporting templates`
+1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
 2. Click on the `Quarterly disbursement reporting` drop-down to expand it, if the section is not already visible.
 3. Select a template to download.
 4. Send the template _as an email attachment_ to the relevant donor. Ask them to update the quarterly disbursements column.
@@ -52,7 +52,7 @@ In the past, it took a lot of effort each quarter to update disbursement data fo
 Review the file you receive back from the donor and check the numbers make sense. If you're happy, continue to the next section and import the file.
 
 #### Importing the updated data
-1. On the [Export Data](/export) tab, scroll down to `Excel reporting templates`
+1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
 2. Click on the `Quarterly disbursement reporting` drop-down to expand it, if the section is not already visible.
 3. Upload the file you received back from the donor. All projects will be updated according to the data entered into the file by the donor.
 
@@ -69,7 +69,7 @@ The following fields will be automatically updated:
 
 Each year, MTEF projections data has to be collected from donors for the forthcoming fiscal years, as part of the budget process. This should be a fairly straightforward process to collect and input this data, if you follow these steps:
 
-1. On the [Export Data](/export) tab, scroll down to `Excel reporting templates`
+1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
 2. Click on the `MTEF projections reporting` drop-down to expand it, if it's not already visible.
 3. Select a template to download.
 4. Send the template _as an email attachment_ to the relevant donor. Ask them to update the quarterly disbursements column.
@@ -77,7 +77,7 @@ Each year, MTEF projections data has to be collected from donors for the forthco
 Review the file you receive back from the donor and check the numbers make sense. If you're happy, continue to the next section and import the file.
 
 #### Importing the updated data
-1. On the [Export Data](/export) tab, scroll down to `Excel reporting templates`
+1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
 2. Click on the `MTEF projections reporting` drop-down to expand it, if it's not already visible.
 3. Upload the file you received back from the donor. All projects will be updated according to the data entered into the file by the donor.
 
@@ -96,13 +96,13 @@ The following fields will be automatically updated:
 
 A number of standard reports are automatically updated as the data is updated throughout the system:
 
-* On the [home page](/):
+* On the <nuxt-link :to="{name: 'index'}">home page</nuxt-link>:
     * disbursements, projected disbursements, and new commitments by sector (you can select for a specific Fiscal Year)
     * change by sector over time (you can select to see this by disbursements, projected disbursements, or new commitments)
     * commitments and disbursements by sector and source to date
 * On the reports drop-down (from the menu at the top of the page):
-    * [counterpart funding requirements](/reports/counterpart-funding) (for AMCU projects)
-    * [milestone tracking](/reports/milestones) (for PSIP projects)
+    * <nuxt-link :to="{name: 'reports-counterpart_funding'}">counterpart funding requirements</nuxt-link> (for AMCU projects)
+    * <nuxt-link :to="{name: 'reports-milestones'}">milestone tracking</nuxt-link> (for PSIP projects)
 
 You may not have access to all of these reports.
 
@@ -112,7 +112,7 @@ You may not have access to all of these reports.
 
 There are a couple of ways of exporting data from the system.
 
-1. If you want to generate an export of all activities, you can do so on the [Export Data](/export/) tab:
+1. If you want to generate an export of all activities, you can do so on the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab:
    * **Export data in Excel Format** will export data according to AMCU's existing Excel format.
    * **Download detailed AMCU financial transactions data for analysis** provides a more detailed and advanced format, useful for time-series analysis.
    * **Download integrated dataset of AMCU and PSIP projects** follows the same format as the AMCU Excel format, but includes also PSIP projects.
