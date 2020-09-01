@@ -65,7 +65,6 @@ def profile():
 @blueprint.route("/api/user/")
 @jwt_required
 def user():
-    print("current_user is", current_user)
     return jsonify(user=current_user.as_simple_dict())
 
 
