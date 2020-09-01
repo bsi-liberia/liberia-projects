@@ -71,9 +71,16 @@
           </b-sidebar>
         </div>
         <div class="col-md-3 text-center">
-          <a class="btn btn-primary float-md-right" id="download_excel" :to="'exports_all_activities_xlsx_filtered' + filtersHash" style="margin-top:4px;">
-            <font-awesome-icon :icon="['fas', 'download']" /> Export selection to Excel
-          </a>
+          <template v-if="preparingFile">
+            <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-top:4px;" @click="getActivitiesFile">
+              <b-spinner label="Preparing" small></b-spinner> Preparing file...
+            </b-btn>
+          </template>
+          <template v-else>
+            <b-btn variant="primary" class="float-md-right" id="download_excel" href="#" style="margin-top:4px;" @click="getActivitiesFile">
+              <font-awesome-icon :icon="['fas', 'download']" /> Export selection to Excel
+            </b-btn>
+          </template>
         </div>
       </div>
       <div class="row mt-2 mb-3">
@@ -156,8 +163,10 @@ import 'vue-slider-component/dist-css/vue-slider-component.css'
 // import theme
 import 'vue-slider-component/theme/default.css'
 import { debounce } from 'vue-debounce'
-
 import { mapGetters } from 'vuex'
+import { saveAs } from 'file-saver'
+// We use saveAs because we have token-based authentication so a normal
+// link won't work.
 
 export default {
   components: {
@@ -178,7 +187,8 @@ export default {
       selectedFilters: {
       },
       projects: [],
-      fields: []
+      fields: [],
+      preparingFile: false,
     }
   },
   middleware: 'auth',
@@ -198,6 +208,24 @@ export default {
     }
   },
   methods: {
+    async getActivitiesFile() {
+      this.preparingFile = true
+      await this.$axios({url: this.downloadURL,
+        method: 'GET',
+        responseType: 'blob'}).then(response => {
+        if (response.status === 200) {
+          saveAs(
+            new Blob([response.data]),
+            `export.xlsx`
+          )
+        } else if (response.status === 500) {
+          alert(
+            'Sorry, there was an error, and your file could not be downloaded.'
+          )
+        }
+      })
+      this.preparingFile = false
+    },
     dateFormatter(value) {
       return new Date(value).toISOString().split("T")[0]
     },
@@ -362,6 +390,9 @@ export default {
     }, 500)
   },
   computed: {
+    downloadURL() {
+      return `exports/activities_filtered.xlsx${this.filtersHash}`
+    },
     earliestDateReadable() {
       return this.selectedFilters.earliest_date.toISOString().split("T")[0]
     },
@@ -408,13 +439,17 @@ export default {
       return Object.keys(this.nonDefaultFilters).length > 0
     },
     filtersHash() {
-      return Object.entries(this.nonDefaultFilters).reduce(
+      const entries = Object.entries(this.nonDefaultFilters).reduce(
             (obj, item, index) => {
-              if (index > 0) { obj += "&"}
-              obj += `${item[0]}=${item[1]}`
+              obj.push(`${item[0]}=${item[1]}`)
               return obj
             },
-        "?")
+        [])
+      if (entries.length > 0) {
+        return `?${entries.join("&")}`
+      } else {
+        return ``
+      }
     },
     ...mapGetters(['isAuthenticated', 'loggedInUser'])
   }
