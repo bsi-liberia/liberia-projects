@@ -221,8 +221,7 @@ def make_updated_info(updated, activity, num_updated_activities):
     if updated.get("disbursements"):
         msgs.append(u"updated disbursement data for {}".format(
             ", ".join(updated["disbursements"])))
-    flash(msg + "; ".join(msgs), "success")
-    return num_updated_activities
+    return msg + "; ".join(msgs), num_updated_activities
 
 def import_xls_mtef(input_file):
     return import_xls_new(input_file, "mtef")
@@ -231,10 +230,12 @@ def import_xls(input_file, column_name):
     return import_xls_new(input_file, "disbursements", [column_name])
 
 def import_xls_new(input_file, _type, disbursement_cols=[]):
+    num_updated_activities = 0
+    messages = []
+    activity_id = None
     xl_workbook = xlrd.open_workbook(filename=input_file.filename,
         file_contents=input_file.read())
     num_sheets = len(xl_workbook.sheet_names())
-    num_updated_activities = 0
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
     def filter_mtef(column):
@@ -290,13 +291,14 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                         'disbursements': parse_disbursement_cols(currency, disbursement_cols, activity, existing_activity, row)
                     }
                 # Mark activity as updated and inform user
-                num_updated_activities = make_updated_info(updated, activity, num_updated_activities)
+                update_message, num_updated_activities = make_updated_info(updated, activity, num_updated_activities)
+                messages.append(update_message)
     except xlrd.xldate.XLDateNegative as e:
         flash(u"""There was an unexpected error when importing your projects,
         one of the dates in your sheet has a negative value: {}. Please check your sheet
         and try again.""".format(e), "danger")
     except Exception as e:
-        if activity_id:
+        if activity_id is not None:
             flash("""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
             The error was: {}""".format(activity_id, e), "danger")
@@ -304,7 +306,7 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
             flash("""There was an unexpected error when importing your projects,
         the error was: {}""".format(e), "danger")
     db.session.commit()
-    return num_updated_activities
+    return messages, num_updated_activities
 
 def generate_xlsx_filtered(arguments={}):
     disbFYs = generate_disb_fys()
