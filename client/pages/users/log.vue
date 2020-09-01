@@ -106,6 +106,7 @@ export default {
       isBusy: true
     }
   },
+  middleware: 'auth',
   created: function() {
     this.getUsersWithEditPermissions()
     this.getActivityLog(1)
