@@ -38,7 +38,12 @@
           </b-tr>
         </template>
         <template v-slot:cell(title)="data">
-          <nuxt-link :to="{ name: 'activities-id', params: { id: data.item.id}}">{{ data.item.title }}</nuxt-link>
+          <template v-if="data.item.id">
+            <nuxt-link :to="{ name: 'activities-id', params: { id: data.item.id}}">{{ data.item.title }}</nuxt-link>
+          </template>
+          <template v-else>
+            {{ data.item.title }}
+          </template>
         </template>
         <template v-slot:cell(sum_forwardspends)="data">
           {{ numberFormatter(data.item.sum_forwardspends) }}
