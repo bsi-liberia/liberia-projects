@@ -198,7 +198,7 @@ export default {
       },
       {
         'value': 'external',
-        'text': 'View all domestic projects (PSIP / PIU)'
+        'text': 'View all external projects (Aid / AMCU)'
       }],
       editOptions: [{
         'value': 'none',
@@ -214,7 +214,7 @@ export default {
       },
       {
         'value': 'external',
-        'text': 'Edit all domestic projects (PSIP / PIU)'
+        'text': 'Edit all external projects (Aid / AMCU)'
       }]
     }
   },
