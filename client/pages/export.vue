@@ -159,7 +159,7 @@
                     </template>
                     Import template</b-btn>
                 </b-form-group>
-                <b-alert variant="success" v-for="(message, id) in importMessagesTemplate" v-key:bind="message" show dismissible>{{ message }}</b-alert>
+                <b-alert variant="success" v-for="(message, id) in importMessagesTemplate" v-bind:key="message" show dismissible>{{ message }}</b-alert>
               </b-form>
             </b-card>
           </b-col>
@@ -204,7 +204,7 @@
                 Import data from IFMIS
               </b-btn>
             </b-form-group>
-            <b-alert variant="success" v-for="(message, id) in importMessagesPSIP" v-key:bind="message" show dismissible>{{ message }}</b-alert>
+            <b-alert variant="success" v-for="(message, id) in importMessagesPSIP" v-bind:key="message" show dismissible>{{ message }}</b-alert>
           </b-form>
         </b-card>
         <hr />
