@@ -37,9 +37,9 @@ bootstrap3.body {
 .width-25pct {
   width: 25%;
 }
-#locationMap {
-  width: 100%;
-  height: 400px;
+  #locationMap {
+    width: 100%;
+    height: 400px;
 }
 @media print
 {
@@ -112,105 +112,6 @@ td.number input, th.number input {
   border-color: #007bff;
 }
 
-.toc {
-  border: 1px solid #eeeeee;
-  padding: 8px;
-  float: right;
-  width: 350px;
-  clear: none; }
-  @media screen and (max-width: 600px) {
-    .toc {
-      width: 100%; } }
-  .toc .toctitle {
-    font-size: 24px;
-  }
-  .toc li {
-    list-style-type: none;}
-  .toc ul {
-    margin-left: 0px; }
-  .toc ul li {
-    list-style-type: square;}
-  .toc ul li ul {
-    margin-left: 0px;
-  }
-  .toc ul li ul li {
-    list-style-type: circle;
-  }
-
-  .toc li > ul, .toc li > ol {
-    margin-left: 10px; }
-
-/* D3 TIP */
-.d3-tip {
-  line-height: 1;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  border-radius: 2px;
-  pointer-events: none;
-  font-size: 1.2em;
-  top: 0;
-/* Creates a small triangle extender for the tooltip */
-/* Northward tooltips */
-/* Eastward tooltips */
-/* Southward tooltips */
-/* Westward tooltips */ }
-.d3-tip::after {
-  box-sizing: border-box;
-  display: inline;
-  font-size: 10px;
-  width: 100%;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.8);
-  position: absolute;
-  pointer-events: none; }
-.d3-tip.n:after {
-  content: "\25BC";
-  margin: -2px 0 0 0;
-  top: 100%;
-  left: 0;
-  text-align: center; }
-.d3-tip.e:after {
-  content: "\25C0";
-  margin: -4px 0 0 0;
-  top: 50%;
-  left: -8px; }
-.d3-tip.s:after {
-  content: "\25B2";
-  margin: 0 0 1px 0;
-  top: -8px;
-  left: 0;
-  text-align: center; }
-.d3-tip.w:after {
-  content: "\25B6";
-  margin: -4px 0 0 -1px;
-  top: 50%;
-  left: 100%; }
-
-/* Loading spinner */
-
-@-webkit-keyframes spin2 {
-    from { -webkit-transform: rotate(0deg);}
-    to { -webkit-transform: rotate(360deg);}
-}
-
-@keyframes spin {
-    from { transform: scale(1) rotate(0deg);}
-    to { transform: scale(1) rotate(360deg);}
-}
-.loader {
-  -webkit-animation:spin2 2s infinite linear;
-  animation:spin 2s infinite linear;
-}
-
-/* Pie charts */
-#sectors-pie {
-  width: 900px;
-  height:270px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 .mtef-sector-09 {
   fill: #555E7B !important;
   background-color: #555E7B !important;
@@ -265,11 +166,8 @@ td.number input, th.number input {
 }
 .intro {
     padding: 0 20px 130px 0;
-    position: relative;
 }
 .intro-message {
-    position: relative;
-    z-index: 999;
     background-color: #ffffff;
     border: 1px solid transparent;
         border-top-color: transparent;
@@ -288,87 +186,9 @@ td.number input, th.number input {
     text-shadow: 1px 1px 2px #dddddd;
     /*font-family: "Trebuchet MS","Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;*/
 }
-.intro #locationMap {
-  left: 0;
-  position: absolute;
-  right: 0;
-  z-index: 0;
-}
-@media only screen and (max-width: 768px) {
-  .navbar-brand {
-    font-size: 1rem;
-  }
-  .bootstrap3 .navbar-brand {
-    font-size: 18px
-  }
-  .intro {
-    padding-right: 0px;
-    padding-bottom: 0px;
-  }
-  .intro-message {
-    position:inherit;
-    margin-top:0px;
-    /*box-shadow: none;*/
-    border:none;
-    background-color: #369;
-    width:100%;
-  }
-  .intro-message h1 {
-    width: 100%;
-    margin: 0px;
-    font-size: 35px;
-    padding: 10px 0px 10px 10px;
-    color:#fff;
-  }
-  .intro #locationMap {
-    position:inherit;
-  }
-}
-.bootstrap3 .navbar-brand {
-  height: 50px;
-  color:#333333;
-  max-height: 50px;
-  overflow: visible;
-  padding-top: 10px;
-  padding-bottom: 0;
-}
-.navbar-default, nav.navbar {
-    background: #fefefe;
-    background: -moz-linear-gradient(180deg,#ffffff 0%,#eeeeee 100%);
-    background: -webkit-gradient(linear,left bottom,right top,color-stop(0%,#3e9336),color-stop(100%,#7c9ac4));
-    background: -webkit-linear-gradient(45deg,#3e9336 0%,#7c9ac4 100%);
-    background: -o-linear-gradient(45deg,#3e9336 0%,#7c9ac4 100%);
-    background: -ms-linear-gradient(45deg,#3e9336 0%,#7c9ac4 100%);
-    background: linear-gradient(180deg, #ffffff 0%, #eeeeee 100%) repeat scroll 0 0 transparent;
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#3e9336',endColorstr='#7c9ac4',GradientType=1);
-    border-bottom:1px solid #cccccc;
-    /*
-    -webkit-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
-    -moz-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
-    box-shadow: outset 0 3px 7px rgba(0,0,0,.2),inset 0 3px 7px rgba(0,0,0,.2);
-    padding:60px 0 30px;
-    margin-top:none;
-    top:0;
-    color:#ffffff;*/
-
-}
 img.brand {
   padding: 0}
-.date-slider .noUi-connect {
-  background-color: #337ab7;
-}
-.noUi-tooltip {
-    display: none !important;
-}
-.noUi-active .noUi-tooltip {
-    display: block !important;
-}
-.slider-track .slider-track-low, .slider-track .slider-track-high {
-  background-color: #e0e0e0;
-}
-.slider-selection {
-  background: #337ab7 !important;
-}
+
 .date-select .min-date, .date-select .max-date {
   font-weight: bold;
   margin: auto 10px auto 10px;
