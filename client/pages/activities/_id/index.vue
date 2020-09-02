@@ -287,7 +287,6 @@
   height: 400px;
 }
 </style>
-
 <script>
 import { mapGetters } from 'vuex'
 import LineChart from '~/components/charts/line-chart'
