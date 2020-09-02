@@ -28,7 +28,8 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
-    '~/plugins/errors'
+    '~/plugins/errors',
+    {src: '~/plugins/vue2-leaflet-markercluster.js', mode: 'client'}
   ],
   /*
   ** Nuxt.js dev-modules

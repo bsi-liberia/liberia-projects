@@ -30,7 +30,8 @@
     "nuxt-vue-select": "^0.1.4",
     "vue-chartjs": "^3.5.1",
     "vue-debounce": "^2.5.7",
-    "vue-slider-component": "^3.2.5"
+    "vue-slider-component": "^3.2.5",
+    "vue2-leaflet-markercluster": "^3.1.0"
   },
   "devDependencies": {}
 }
