@@ -230,6 +230,13 @@ def filters_currency():
     return jsonify(currencies=list(map(lambda c: annotate(c), qexchangerates.get_currencies())))
 
 
+@blueprint.route("/api/filters/available_fys.json")
+def available_fys():
+    fy, _ = util.FY("previous").numeric()
+    return jsonify(fys=util.available_fys_as_dict(),
+        current_fy=fy)
+
+
 @blueprint.route("/api/filters/available_fys_fqs.json")
 def available_fys_fqs():
     def mtef_or_disbursements():
@@ -995,14 +1002,23 @@ def forwardspends_edit_attr(activity_id):
 @jwt_required
 def api_all_activity_locations():
     """GET returns a list of all locations."""
-    query = models.ActivityLocation.query.join(models.Activity)
+    query = models.ActivityLocation.query.join(
+        models.Activity
+    )
     query = qactivity.filter_activities_for_permissions(query)
+    query = query.outerjoin(
+                    models.ActivityFinances).filter(
+        models.ActivityFinances.transaction_date >= '2019-01-01'
+        )
     activitylocations = query.all()
-    locations = list(map(lambda al: ({"locations": al.locations.as_dict(),
+    locations = list(map(lambda al: ({
+        'locationID': al.id,
+        'latitude': al.locations.latitude,
+        'longitude': al.locations.longitude,
+        'latlng': [ al.locations.latitude, al.locations.longitude ],
+        'name': al.locations.name,
         "title": al.activity.title,
-        "id": al.activity_id,
-        "url": url_for('activities.activity', activity_id=al.activity_id,
-            _external=True)}),
+        "id": al.activity_id}),
         activitylocations))
     return jsonify(locations = locations)
 
