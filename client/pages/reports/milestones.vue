@@ -46,7 +46,7 @@
             <font-awesome-icon :icon="['fas', 'check-circle']" />
             <span class="sr-only">True</span>
           </span>
-          <span v-else class="text-warning" v-else>
+          <span class="text-warning" v-else>
             <font-awesome-icon :icon="['fas', 'times-circle']" />
             <span class="sr-only">False</span>
           </span>
