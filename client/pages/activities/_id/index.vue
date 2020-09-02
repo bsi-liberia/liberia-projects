@@ -16,10 +16,10 @@
         <b-col md="10">
           <p class="lead">{{ activity.description }}</p>
         </b-col>
-        <b-col md="2" v-if="activity.permissions.edit">
+        <b-col md="2" v-if="activity.permissions.edit" class="text-right">
 
-          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="success">
-            <font-awesome-icon :icon="['fas', 'plus']" />
+          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning">
+            <font-awesome-icon :icon="['fas', 'edit']" />
             Edit project
           </b-btn>
         </b-col>
