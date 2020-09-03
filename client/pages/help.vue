@@ -22,6 +22,7 @@ Date | Required data
 **July 15th** | Disbursement data for Q4 of the previous FY (April-June).
 **October 15th** | Disbursement data for Q1 of this FY (July-September).
 
+<template v-if="(loggedInUser.permissions_dict.edit != 'none') || (loggedInUser.roles_list.includes('desk-officer'))">
 
 ### Editing a single activity
 
@@ -88,6 +89,8 @@ The following fields will be automatically updated:
 * Activity Start Date
 * Activity End Date
 
+</template>
+
 ---
 
 ## Reports and exports
@@ -128,8 +131,8 @@ table {
 </style>
 <script>
 import config from '~/nuxt.config'
+import { mapGetters } from 'vuex'
 export default {
-  middleware: 'auth',
   data() {
     return {
     }
@@ -140,6 +143,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['isAuthenticated', 'loggedInUser'])
   },
   methods: {
   },
