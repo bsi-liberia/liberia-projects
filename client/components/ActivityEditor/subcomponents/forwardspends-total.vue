@@ -30,7 +30,6 @@ export default {
         availableqtrs.forEach(qtr => {
           this.data.item[qtr].value = (newTotalValue / availableqtrs.length)
         })
-        console.log('updated!')
       }
     }
   }
