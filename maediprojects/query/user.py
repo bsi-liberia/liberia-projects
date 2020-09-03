@@ -47,6 +47,7 @@ def check_activity_permissions(permission_name, activity_id):
     act = qactivity.get_activity(activity_id)
     if permission_name in ('edit', 'results-data-entry', 'results-data-design'):
         if edit_rights(act, current_user.permissions_dict): return True
+        if permission_name in current_user.roles_list: return True
     if act and current_user.permissions_dict.get("organisations"):
         if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
             # If the user is attached to an organisation, then they should always
