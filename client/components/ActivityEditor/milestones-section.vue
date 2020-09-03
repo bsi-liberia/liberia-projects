@@ -29,10 +29,11 @@ import FinancesCheckbox from './subcomponents/finances-checkbox.vue'
 export default {
   data() {
     return {
-      fields: ['name', 'achieved', 'notes', "api_routes"],
+      fields: ['name', 'achieved', 'notes'],
       milestones: []
     }
   },
+  props: ['api_routes'],
   components: {
     FinancesTextarea,
     FinancesCheckbox
