@@ -549,6 +549,7 @@ class Activity(db.Model):
         return {
             None: {
                 "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -564,6 +565,7 @@ class Activity(db.Model):
         fydata = fwddata_query(self, fiscalyear_modifier)
         return {
                     "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
