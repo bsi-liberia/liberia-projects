@@ -424,7 +424,7 @@ def save_period_data(indicator_id, periods_data):
         else:
             # Update period
             for k, v in period.items():
-                if k in ['open']: continue
+                if k in ['open', 'percent_complete', 'percent_complete_category']: continue
                 update_indicator_period_attr({'id': period['id'], 'attr': k, 'value': v})
 
 def save_indicator_data(result_id, data):
