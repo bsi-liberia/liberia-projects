@@ -75,7 +75,7 @@ def activity_C_D_FSs():
     return commitments, disbursements, forward_disbursements
 
 def filter_activities_for_permissions(query, permission_name="view"):
-    permissions = session.get("permissions", {})
+    permissions = current_user.permissions_dict
     if permissions.get(permission_name) == "both":
         return query
     elif permissions.get(permission_name) == "domestic":
