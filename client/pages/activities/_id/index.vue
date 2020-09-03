@@ -129,7 +129,7 @@
           </div>
         </b-col>
       </b-row>
-      <b-row>
+      <b-row v-if="showFinancesChart">
         <b-col>
           <LineChart
             :data="financesChartData"
@@ -322,6 +322,7 @@ export default {
       documents: [],
       finances: {},
       financesFundSources: {},
+      showFinancesChart: true,
       showFundSource: false,
       fundSources: [],
       showFundSourceOptions: [{
@@ -444,7 +445,10 @@ export default {
           var disbYears = this.finances.disbursement ? this.finances.disbursement.data.map(item => new Date(item.date).getFullYear()): []
           var commitmentYears = this.finances.commitments ? this.finances.commitments.data.map(item => new Date(item.date).getFullYear()) : []
           var years = [...disbYears, ...commitmentYears]
-          if ((disbYears.length === 0) || (commitmentYears.length === 0)) { return false }
+          if ((disbYears.length === 0) || (commitmentYears.length === 0)) {
+            this.showFinancesChart = false
+            return false
+          }
           this.years = this.getRange(Math.min.apply(Math, years), new Date().getFullYear()+1) // to this year
           this.chartData = this.getChartData(response.data.finances)
         });
