@@ -13,13 +13,13 @@
           <home-map id="locationMap"></home-map>
         </b-col>
       </b-row>
-      <b-row class="mt-2 mb-2">
+      <b-row class="mt-3 mb-3">
         <b-col><hr />
         </b-col>
       </b-row>
       <b-row>
         <b-col>
-          <h2>Projected and Actual Disbursements by Sector</h2>
+          <h2>Planned and Actual Disbursements by Sector</h2>
           <b-row>
             <b-col md="6">
               <b-form-group
@@ -34,30 +34,30 @@
           <home-bar-chart :selected-fy="selectedFY" /></home-bar-chart>
         </b-col>
       </b-row>
-      <b-row class="mt-2 mb-2">
+      <b-row class="mt-3 mb-3">
         <b-col><hr />
         </b-col>
       </b-row>
       <b-row>
         <b-col>
           <h2>Planned / Actual Disbursements by Sector, over time</h2>
-          <b-row>
+          <b-row class="mb-2">
             <b-col md="6">
-              <b-form-group
-                label="Display"
-                label-align="right"
-                label-cols-sm="3">
-                <b-select v-model="selectedPlannedActualDisbursements"
-                :options="plannedActualDisbursementOptions"></b-select>
-              </b-form-group>
+              <b-form-radio-group
+                v-model="selectedPlannedActualDisbursements"
+                :options="plannedActualDisbursementOptions"
+                button-variant="outline-primary"
+                buttons
+                size="sm"
+              ></b-form-radio-group>
             </b-col>
             <b-col md="6" class="text-right">
               <b-form-radio-group
-                id="btn-radios-1"
                 v-model="plannedActualDisbursementsStacked"
                 :options="plannedActualDisbursementsStackedOptions"
+                button-variant="outline-secondary"
                 buttons
-                name="radios-btn-default"
+                size="sm"
               ></b-form-radio-group>
             </b-col>
           </b-row>
@@ -88,7 +88,7 @@
     -webkit-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
     -moz-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
     box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
-    padding: 50px 0 40px;
+    padding: 80px 0 60px;
     margin-top: none;
     color: #ffffff;
 }
