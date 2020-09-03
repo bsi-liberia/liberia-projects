@@ -35,15 +35,13 @@ export default {
         return ['fa', 'download']
       }
     }
-  }
-  ,
+  },
   methods: {
     async getActivitiesFile() {
       this.preparingFile = true
       await this.$axios({url: this.url,
         method: 'GET',
         responseType: 'blob'}).then(response => {
-          console.log("response", response)
         if (response.status === 200) {
           saveAs(
             new Blob([response.data]),
