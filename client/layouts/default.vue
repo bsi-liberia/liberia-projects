@@ -8,10 +8,10 @@
         </b-navbar-brand>
         <b-navbar-toggle target="navbar-collapse"></b-navbar-toggle>
         <b-collapse id="navbar-collapse" is-nav>
-          <b-navbar-nav v-if="isAuthenticated">
+          <b-navbar-nav>
             <b-nav-item :to="{name: 'index'}" exact-active-class="active">Home
             </b-nav-item>
-            <b-nav-item  :to="{name: 'activities'}" active-class="active">Activities</b-nav-item>
+            <b-nav-item  :to="{name: 'activities'}" active-class="active" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">Activities</b-nav-item>
             <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
               <b-nav-item-dropdown text="Reports" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
                 <template v-if="['domestic', 'both'].includes(loggedInUser.permissions_dict.edit) || loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('admin')">
@@ -28,7 +28,7 @@
           </b-navbar-nav>
           <!-- Right aligned nav items -->
           <b-navbar-nav class="ml-auto">
-            <template v-if="isAuthenticated">
+            <template>
               <b-nav-item :to="{name: 'results'}" v-if="loggedInUser.roles_list.includes('results-data-entry') || loggedInUser.roles_list.includes('results-data-design')">Results</b-nav-item>
               <b-nav-item :to="{name: 'management-desk-officer'}" v-if="loggedInUser.roles_list.includes('desk-officer')">Management</b-nav-item>
               <b-nav-item :to="{name: 'management'}" v-if="loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('admin')">Management</b-nav-item>
