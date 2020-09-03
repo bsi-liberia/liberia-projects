@@ -471,10 +471,11 @@ def api_activities_by_id(activity_id):
 
 @blueprint.route("/api/activities/new.json", methods=['GET', 'POST'])
 @jwt_required
+@quser.permissions_required("new")
 def api_new_activity():
     if request.method=="GET":
         today = datetime.datetime.now().date()
-        domestic_external = current_user.permissions_dict.get("edit")
+        domestic_external = current_user.permissions_dict.get("edit") or current_user.permissions_dict.get("view")
         if domestic_external == "both":
             domestic_external = "external"
         activity = {
@@ -1035,13 +1036,14 @@ def api_all_activity_locations():
     return jsonify(locations = locations)
 
 @blueprint.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
+@jwt_optional
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
     activity = qactivity.get_activity(activity_id)
     if activity == None: return abort(404)
     if request.method == "POST":
-        if not quser.check_permissions("edit"): return abort(403)
+        if not quser.check_permissions("edit", None, activity_id): return abort(403)
         request_data = request.get_json()
         if request_data["action"] == "add":
             result = qlocation.add_location(activity_id, request_data["location_id"])
