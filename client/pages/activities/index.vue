@@ -197,7 +197,6 @@ export default {
       preparingFile: false,
     }
   },
-  middleware: 'auth',
   mounted: function() {
     this.setupFilters()
     this.setFiltersFromQuery()
