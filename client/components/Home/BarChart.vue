@@ -40,7 +40,7 @@ export default {
       valueLabel: "Amount (USD mn)"
     }
   },
-  props: ['selectedFY'],
+  props: ['selected-fy'],
   components: {
     BarChart
   },
@@ -112,11 +112,11 @@ export default {
       }
     },
     filteredData() {
-      if (this.selectedFY == null) {
+      if (this.selectedFy == null) {
         return this.data
       }
       return this.data.filter(item => {
-        return item.fy == this.selectedFY
+        return item.fy == this.selectedFy
       })
     },
     summaryData() {
