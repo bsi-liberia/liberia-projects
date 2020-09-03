@@ -127,10 +127,16 @@ table {
 }
 </style>
 <script>
+import config from '~/nuxt.config'
 export default {
   middleware: 'auth',
   data() {
     return {
+    }
+  },
+  head() {
+    return {
+      title: `Help | ${config.head.title}`
     }
   },
   computed: {

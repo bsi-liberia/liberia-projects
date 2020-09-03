@@ -39,7 +39,7 @@
             <b-nav-item :to="{query: {'tab': 'conditions'}}"  :active="$route.query.tab === 'conditions'" v-if="mode=='edit'">
               Conditions
             </b-nav-item>
-            <b-nav-item :to="{query: {'tab': 'milestones'}}"  :active="$route.query.tab === 'milestones'" v-if="activity.milestones">
+            <b-nav-item :to="{query: {'tab': 'milestones'}}"  :active="$route.query.tab === 'milestones'" v-if="(mode=='edit') && (activity.domestic_external=='domestic')">
               Milestones
             </b-nav-item>
             <b-nav-item :to="{query: {'tab': 'results'}}"  :active="$route.query.tab === 'results'" v-if="mode=='edit'">
@@ -96,8 +96,7 @@
             </b-card-body>
           </transition>
           <transition name="fade">
-            <!-- Milestones data -->
-            <b-card-body v-show="$route.query.tab === 'milestones'" v-if="activity.milestones">
+            <b-card-body v-show="$route.query.tab === 'milestones'" v-if="(mode=='edit') && (activity.domestic_external=='domestic')">
               <b-card-text id="milestones">
                 <h2>Milestones</h2>
                 <div class="row">
@@ -182,6 +181,7 @@ import LocationsSection from '~/components/ActivityEditor/locations-section.vue'
 import CounterpartFundingSection from '~/components/ActivityEditor/counterpart-funding-section.vue'
 import ResultsSection from '~/components/ActivityEditor/results-section.vue'
 import DocumentsSection from '~/components/ActivityEditor/documents-section.vue'
+import config from '~/nuxt.config'
 
 export default {
   components: {
@@ -202,6 +202,11 @@ export default {
       activity: {},
       codelists: {
       }
+    }
+  },
+  head() {
+    return {
+      title: this.mode == 'new' ? `New Activity | ${config.head.title}` : this.activity.title ? `Edit Activity: ${this.activity.title} | ${config.head.title}` : `Edit Activity | ${config.head.title}`
     }
   },
   mounted: function() {

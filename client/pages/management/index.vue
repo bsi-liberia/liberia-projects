@@ -43,12 +43,18 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
       items: [],
       quarters: [],
       isBusy: true,
+    }
+  },
+  head() {
+    return {
+      title: `Data quality summary | ${config.head.title}`
     }
   },
   mounted: function() {

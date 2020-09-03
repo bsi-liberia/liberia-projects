@@ -302,13 +302,18 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config.js'
+import config from '~/nuxt.config'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import DownloadFile from '~/components/DownloadFile.vue'
 export default {
   components: {
     DownloadFile
+  },
+  head() {
+    return {
+      title: `Export data | ${config.head.title}`
+    }
   },
   data() {
     return {

@@ -46,6 +46,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -79,6 +80,11 @@ export default {
       ],
       activities: [],
       isBusy: true
+    }
+  },
+  head() {
+    return {
+      title: `Results | ${config.head.title}`
     }
   },
   mounted: function() {

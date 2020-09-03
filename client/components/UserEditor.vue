@@ -167,10 +167,16 @@ import Vue from 'vue'
 import PermissionOrganisation from './UserEditor/permission-organisation.vue'
 import PermissionValue from './UserEditor/permission-value.vue'
 import { mapGetters } from 'vuex'
+import config from '~/nuxt.config'
 export default {
   components: {
     PermissionOrganisation,
     PermissionValue
+  },
+  head() {
+    return {
+      title: this.mode == 'new' ? `New User | ${config.head.title}` : `Edit User | ${config.head.title}`
+    }
   },
   data() {
     return {

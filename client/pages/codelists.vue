@@ -127,6 +127,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 import Vue from 'vue'
   export default {
     data() {
@@ -167,6 +168,11 @@ import Vue from 'vue'
           text: 'NGO'
         }],
         isBusy: true
+      }
+    },
+    head() {
+      return {
+        title: `Codelists | ${config.head.title}`
       }
     },
     middleware: 'auth',

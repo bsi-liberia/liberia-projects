@@ -207,6 +207,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -252,6 +253,11 @@ export default {
         {
           "key": "data_request"
         }]
+    }
+  },
+  head() {
+    return {
+      title: `Data quality dashboard | ${config.head.title}`
     }
   },
   mounted: function() {

@@ -15,10 +15,16 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
       email_address: null
+    }
+  },
+  head() {
+    return {
+      title: `Reset password | ${config.head.title}`
     }
   },
   methods: {

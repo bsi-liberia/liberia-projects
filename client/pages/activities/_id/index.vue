@@ -288,12 +288,18 @@
 }
 </style>
 <script>
+import config from '~/nuxt.config'
 import { mapGetters } from 'vuex'
 import LineChart from '~/components/charts/line-chart'
 
 export default {
   components: {
     LineChart
+  },
+  head() {
+    return {
+      title: this.activity.title ? `${this.activity.title} | ${config.head.title}` : config.head.title
+    }
   },
   middleware: 'auth',
   data() {

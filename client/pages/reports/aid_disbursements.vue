@@ -72,6 +72,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -109,6 +110,11 @@ export default {
       isBusy: true,
       fiscalYear: null,
       fiscalYears: []
+    }
+  },
+  head() {
+    return {
+      title: `Aid disbursements | ${config.head.title}`
     }
   },
   mounted: function() {

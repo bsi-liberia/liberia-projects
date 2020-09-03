@@ -113,6 +113,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -141,6 +142,11 @@ export default {
         }
       ],
       selectedDisplayOption: "check"
+    }
+  },
+  head() {
+    return {
+      title: `Data quality dashboard | ${config.head.title}`
     }
   },
   mounted: function() {

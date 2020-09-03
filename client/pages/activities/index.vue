@@ -168,9 +168,15 @@ import { saveAs } from 'file-saver'
 // We use saveAs because we have token-based authentication so a normal
 // link won't work.
 
+import config from '~/nuxt.config'
 export default {
   components: {
     VueSlider
+  },
+  head() {
+    return {
+      title: `Activities | ${config.head.title}`
+    }
   },
   data() {
     return {

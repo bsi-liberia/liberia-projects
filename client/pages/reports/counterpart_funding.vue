@@ -49,6 +49,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -87,6 +88,11 @@ export default {
       isBusy: true,
       fiscalYear: null,
       fiscalYears: []
+    }
+  },
+  head() {
+    return {
+      title: `Counterpart funding | ${config.head.title}`
     }
   },
   mounted: function() {

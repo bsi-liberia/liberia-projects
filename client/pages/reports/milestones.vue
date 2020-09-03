@@ -76,6 +76,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -85,6 +86,11 @@ export default {
       fiscalYear: null,
       fiscalYears: [],
       milestones: []
+    }
+  },
+  head() {
+    return {
+      title: `Project Development and Appraisal Tracking | ${config.head.title}`
     }
   },
   mounted: function() {

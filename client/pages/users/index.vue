@@ -47,12 +47,18 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
       fields: [],
       items: [],
       isBusy: true
+    }
+  },
+  head() {
+    return {
+      title: `Users | ${config.head.title}`
     }
   },
   mounted: function() {

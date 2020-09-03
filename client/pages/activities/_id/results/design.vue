@@ -263,6 +263,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -276,6 +277,11 @@ export default {
       saveDisabled: true,
       activity_id: this.$route.params.id,
       activity_title: null
+    }
+  },
+  head() {
+    return {
+      title: this.activity_title ? `Results data entry: ${this.activity_title} | ${config.head.title}` : `Results data entry | ${config.head.title}`
     }
   },
   mounted: function() {

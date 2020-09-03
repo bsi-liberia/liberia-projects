@@ -87,6 +87,7 @@
   </div>
 </template>
 <script>
+import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -104,6 +105,11 @@ export default {
       selectedUser: null,
       users: [],
       isBusy: true
+    }
+  },
+  head() {
+    return {
+      title: `Activity log | ${config.head.title}`
     }
   },
   middleware: 'auth',
