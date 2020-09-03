@@ -39,7 +39,7 @@ export default {
   },
   head() {
     return {
-      title: `Login | ${this.config.head.title}`
+      title: `Login | ${config.head.title}`
     }
   },
   computed: {
