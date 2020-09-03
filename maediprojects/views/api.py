@@ -12,7 +12,7 @@ import requests
 from flask_jwt_extended import (
     jwt_required, create_access_token,
     jwt_refresh_token_required, create_refresh_token,
-    get_jwt_identity, get_raw_jwt
+    get_jwt_identity, get_raw_jwt, jwt_optional
 )
 
 from maediprojects.query import activity as qactivity
@@ -60,7 +60,8 @@ def api():
 
 
 @blueprint.route("/api/disbursements/psip/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view", "domestic")
 def psip_disbursements_api():
     current_fy, _ = util.FY("previous").numeric()
     fiscal_year = int(request.args.get("fiscal_year", current_fy))
@@ -79,7 +80,8 @@ def psip_disbursements_api():
 
 
 @blueprint.route("/api/disbursements/aid/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view", "external")
 def aid_disbursements_api():
     current_fy, _ = util.FY("previous").numeric()
     fiscal_year = int(request.args.get("fiscal_year", current_fy))
@@ -99,7 +101,8 @@ def aid_disbursements_api():
         fiscalYear = str(fiscal_year))
 
 @blueprint.route("/api/reports/project-development-tracking/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view", "domestic")
 def project_development_tracking():
     current_fy, _ = util.FY("previous").numeric()
     fiscal_year = int(request.args.get("fiscal_year", current_fy))
@@ -145,7 +148,8 @@ def project_development_tracking():
 
 
 @blueprint.route("/api/reports/counterpart-funding/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view", "external")
 def counterpart_funding():
     if datetime.datetime.utcnow().month > 6:
         next_fy, _ = util.FY("previous").numeric()
@@ -179,7 +183,8 @@ def counterpart_funding():
 
 
 @blueprint.route("/api/reports/results/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view", "external")
 def results():
     def annotate_activity(activity):
         return {
@@ -425,7 +430,8 @@ def api_activities_filters():
 
 
 @blueprint.route("/api/activities/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_activities_country():
     arguments = request.args.to_dict()
     activities = qactivity.list_activities_by_filters(arguments)
@@ -455,7 +461,8 @@ def api_activities_country():
 
 
 @blueprint.route("/api/activities/<activity_id>.json")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_activities_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
     if activity == None: return abort(404)
@@ -575,7 +582,8 @@ def api_new_activity():
 
 
 @blueprint.route("/api/activities/<activity_id>/finances.json")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_activities_finances_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
     if activity == None: return abort(404)
@@ -607,7 +615,8 @@ def api_activities_finances_by_id(activity_id):
         )
 
 @blueprint.route("/api/activities/<activity_id>/finances/fund_sources.json")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_activities_finances_fund_sources_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
     if activity == None: return abort(404)
@@ -662,7 +671,8 @@ def jsonify_results_design(results):
 
 
 @blueprint.route("/api/activities/<activity_id>/results.json")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_activities_results(activity_id):
     activity = models.Activity.query.get(activity_id)
     if activity == None: return abort(404)
@@ -671,7 +681,8 @@ def api_activities_results(activity_id):
 
 
 @blueprint.route("/api/activities/<activity_id>/documents.json")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_activities_documents(activity_id):
     activity = models.Activity.query.get(activity_id)
     if activity == None: return abort(404)
@@ -736,7 +747,7 @@ def api_activities_user_results():
 
 
 @blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["GET", "POST"])
-@jwt_required
+@jwt_optional
 @quser.permissions_required("view")
 def api_activity_milestones(activity_id):
     if request.method == "POST":
@@ -985,7 +996,7 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
         return "error"
 
 @blueprint.route("/api/activity_forwardspends/<activity_id>/update_forwardspends/", methods=['POST'])
-@login_required
+@jwt_required
 @quser.permissions_required("edit")
 def forwardspends_edit_attr(activity_id):
     data = {
@@ -999,7 +1010,8 @@ def forwardspends_edit_attr(activity_id):
     return "error"
 
 @blueprint.route("/api/activity_locations/")
-@jwt_required
+@jwt_optional
+@quser.permissions_required("view")
 def api_all_activity_locations():
     """GET returns a list of all locations."""
     query = models.ActivityLocation.query.join(
@@ -1023,7 +1035,6 @@ def api_all_activity_locations():
     return jsonify(locations = locations)
 
 @blueprint.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
-@jwt_required
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
