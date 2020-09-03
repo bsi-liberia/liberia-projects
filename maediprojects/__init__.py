@@ -89,7 +89,7 @@ def register_hooks(app):
         else:
             session["permissions"] = {}
             current_user.permissions_dict = {
-                'domestic_external': 'none',
+                'domestic_external': 'external',
                 'domestic_external_edit': 'none'
             }
             if request.headers['Host'] == "psip.liberiaprojects.org":
