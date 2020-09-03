@@ -1179,7 +1179,8 @@ def api_sectors_C_D():
         models.CodelistCode
     ).filter(
         models.CodelistCode.codelist_code == u"mtef-sector",
-        models.CodelistCode.name != u""
+        models.CodelistCode.name != u"",
+        models.Activity.domestic_external == 'external'
     ).group_by(
         models.CodelistCode.name,
         models.CodelistCode.code,
@@ -1203,7 +1204,8 @@ def api_sectors_C_D():
         models.CodelistCode
     ).filter(
         models.CodelistCode.codelist_code == u"mtef-sector",
-        models.CodelistCode.name != u""
+        models.CodelistCode.name != u"",
+        models.Activity.domestic_external == 'external'
     ).group_by(
         models.CodelistCode.name,
         models.CodelistCode.code,
