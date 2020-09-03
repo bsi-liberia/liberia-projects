@@ -66,9 +66,7 @@ export default {
         .get(`reporting_orgs/summary.json`)
         .then((response) => {
           this.quarters = response.data.list_of_quarters
-          console.log(this.quarters)
-          this.items = response.data.summary;
-          console.log(this.items)
+          this.items = response.data.summary
           this.isBusy = false
         });
     }
