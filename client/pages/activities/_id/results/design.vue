@@ -348,7 +348,6 @@ export default {
         return item.actual_value
       }))
       if ((actuals.size > 0) && (!(actuals.has(null)) && (!(actuals.has(''))))) {
-        console.log(actuals)
         this.$bvModal.msgBoxOk("Actually achieved data has already been entered for this indicator.", {
           title: 'Unable to delete',
           okVariant: 'danger',
