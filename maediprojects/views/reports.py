@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 
 from maediprojects import models
 from maediprojects.query import counterpart_funding as qcounterpart_funding
+from maediprojects.query import user as quser
 from maediprojects.lib import util
 
 
@@ -13,13 +14,13 @@ blueprint = Blueprint('reports', __name__, url_prefix='/', static_folder='../sta
 
 
 @blueprint.route("/reports/dataquality/")
-@login_required
+@quser.permissions_required("edit")
 def dataquality_redir():
     return redirect(url_for('management.management'))
 
 
 @blueprint.route("/reports/milestones/")
-@login_required
+@quser.permissions_required("view", "domestic")
 def milestones():
     activities = models.Activity.query.filter_by(
             domestic_external=u"domestic"
@@ -39,7 +40,7 @@ def milestones():
 
 
 @blueprint.route("/reports/counterpart-funding/")
-@login_required
+@quser.permissions_required("view", "external")
 def counterpart_funding():
     activities = models.Activity.query.filter_by(
             domestic_external=u"external"
@@ -57,7 +58,7 @@ def counterpart_funding():
 
 
 @blueprint.route("/reports/results/")
-@login_required
+@quser.permissions_required("view", "external")
 def results():
     activities = models.Activity.query.filter(
             models.Activity.results.any()
@@ -71,7 +72,7 @@ def results():
 
 
 @blueprint.route("/reports/disbursements/aid/")
-@login_required
+@quser.permissions_required("view", "external")
 def aid_disbursements():
     return render_template(
         "reports/aid_disbursements.html",
@@ -80,7 +81,7 @@ def aid_disbursements():
 
 
 @blueprint.route("/reports/disbursements/psip/")
-@login_required
+@quser.permissions_required("view", "domestic")
 def psip_disbursements():
     return render_template(
         "reports/psip_disbursements.html",
