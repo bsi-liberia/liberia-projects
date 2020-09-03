@@ -301,7 +301,6 @@ export default {
       title: this.activity.title ? `${this.activity.title} | ${config.head.title}` : config.head.title
     }
   },
-  middleware: 'auth',
   data() {
     return {
       activityID: this.$route.params.id,
