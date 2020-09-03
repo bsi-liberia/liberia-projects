@@ -4,6 +4,9 @@ export default {
   /*
   ** Headers of the page
   */
+  publicRuntimeConfig: {
+    title: 'Liberia Project Dashboard'
+  },
   head: {
     title: 'Liberia Project Dashboard',
     meta: [
@@ -35,6 +38,7 @@ export default {
   ** Nuxt.js dev-modules
   */
   buildModules: [
+    '@nuxtjs/fontawesome'
   ],
   /*
   ** Nuxt.js modules
@@ -48,20 +52,17 @@ export default {
     'nuxt-leaflet',
     '@nuxtjs/markdownit',
     'nuxt-vue-select',
-    [
-      'nuxt-fontawesome', {
-        imports: [
-         {
-           set: '@fortawesome/free-solid-svg-icons',
-           icons: ['fas']
-         },
-         {
-           set: '@fortawesome/free-regular-svg-icons',
-           icons: ['far']
-         }
-       ]
-    }]
+    'nuxt-purgecss'
   ],
+  fontawesome: {
+    icons: {
+      solid: ['faCog', 'faTrashAlt', 'faPlus', 'faExclamationCircle',
+       'faMagic', 'faClipboardList', 'faSave', 'faLock', 'faLockOpen',
+       'faTrash', 'faCheckCircle', 'faTimesCircle', 'faQuestionCircle',
+       'faUpload', 'faDownload' , 'faEdit', 'faFilter'],
+      regular: ['faCheckCircle', 'faTimesCircle']
+    }
+  },
   markdownit: {
     preset: 'default',
     linkify: true,
@@ -102,6 +103,9 @@ export default {
     ** You can extend webpack config here
     */
     extend (config, ctx) {
+      config.externals = {
+        moment: 'moment'
+      }
     }
   }
 }

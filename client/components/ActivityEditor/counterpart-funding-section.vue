@@ -58,7 +58,6 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
 import FinancesSelect from './subcomponents/finances-select.vue'
 import FinancesInput from './subcomponents/finances-input.vue'
 import FinancesCheckbox from './subcomponents/finances-checkbox.vue'
@@ -135,7 +134,7 @@ export default {
               "action": "delete"
             })
             .then(response => {
-              Vue.delete(this.counterpartFunding, data.index)
+              this.$delete(this.counterpartFunding, data.index)
             })
           }
         })
@@ -155,7 +154,7 @@ export default {
         _this.validation = true
         var _cf = this.counterpartFunding[data.index]
         _cf[attr] = value
-        Vue.set(this.counterpartFunding, data.index, _cf)
+        this.$set(this.counterpartFunding, data.index, _cf)
       })
       .catch(error => {
         _this.validation = false

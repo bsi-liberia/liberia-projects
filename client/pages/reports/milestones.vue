@@ -76,7 +76,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -90,7 +89,7 @@ export default {
   },
   head() {
     return {
-      title: `Project Development and Appraisal Tracking | ${config.head.title}`
+      title: `Project Development and Appraisal Tracking | ${this.$config.title}`
     }
   },
   mounted: function() {

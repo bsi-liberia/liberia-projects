@@ -288,7 +288,6 @@
 }
 </style>
 <script>
-import config from '~/nuxt.config'
 import { mapGetters } from 'vuex'
 import LineChart from '~/components/charts/line-chart'
 
@@ -298,7 +297,7 @@ export default {
   },
   head() {
     return {
-      title: this.activity.title ? `${this.activity.title} | ${config.head.title}` : config.head.title
+      title: this.activity.title ? `${this.activity.title} | ${this.$config.title}` : this.$config.title
     }
   },
   data() {
@@ -392,6 +391,8 @@ export default {
       var disbursements = Object.values(finances.disbursement.data.reduce((obj, item) => {
         var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
       var commitments = Object.values(finances.commitments.data.reduce((obj, item) => {
+        var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
+      var forwardspends = Object.values(finances.forwardspends.data.reduce((obj, item) => {
         var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
       return {
         disbursements: disbursements.reduce((obj, item, index) => { if (index == 0) { return obj } obj[index] = item + obj[index-1]; return obj }, disbursements),

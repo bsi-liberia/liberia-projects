@@ -171,8 +171,6 @@
   }
 </style>
 <script>
-import Vue from 'vue'
-
 import ActivityBasicSection from '~/components/ActivityEditor/activity-basic-section.vue'
 import SectorsSection from '~/components/ActivityEditor/sectors-section.vue'
 import FinancesSection from '~/components/ActivityEditor/finances-section.vue'
@@ -181,7 +179,6 @@ import LocationsSection from '~/components/ActivityEditor/locations-section.vue'
 import CounterpartFundingSection from '~/components/ActivityEditor/counterpart-funding-section.vue'
 import ResultsSection from '~/components/ActivityEditor/results-section.vue'
 import DocumentsSection from '~/components/ActivityEditor/documents-section.vue'
-import config from '~/nuxt.config'
 
 export default {
   components: {
@@ -206,7 +203,7 @@ export default {
   },
   head() {
     return {
-      title: this.mode == 'new' ? `New Activity | ${config.head.title}` : this.activity.title ? `Edit Activity: ${this.activity.title} | ${config.head.title}` : `Edit Activity | ${config.head.title}`
+      title: this.mode == 'new' ? `New Activity | ${this.$config.title}` : this.activity.title ? `Edit Activity: ${this.activity.title} | ${this.$config.title}` : `Edit Activity | ${this.$config.title}`
     }
   },
   mounted: function() {

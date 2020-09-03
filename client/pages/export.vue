@@ -302,8 +302,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
-import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import DownloadFile from '~/components/DownloadFile.vue'
 export default {
@@ -312,7 +310,7 @@ export default {
   },
   head() {
     return {
-      title: `Export data | ${config.head.title}`
+      title: `Export data | ${this.$config.title}`
     }
   },
   data() {
@@ -439,8 +437,8 @@ export default {
   },
   methods: {
     async submitFile(data, url, messages) {
-      Vue.set(this, messages, [])
-      Vue.set(data, 'isBusy', true)
+      this.$set(this, messages, [])
+      this.$set(data, 'isBusy', true)
       let postData = new FormData()
       Object.entries(data).forEach(d => {
         if (d[0] != 'file') {
@@ -456,12 +454,12 @@ export default {
             variant: 'success',
             solid: true
           })
-          Vue.set(this, messages, [response.data.msg].concat(response.data.messages ? response.data.messages : []))
+          this.$set(this, messages, [response.data.msg].concat(response.data.messages ? response.data.messages : []))
         })
         .catch(error => {
           alert(error)
         })
-      Vue.set(data, 'isBusy', false)
+      this.$set(data, 'isBusy', false)
     },
     addColumn: function() {
       this.selectedHeaders[this.selectedTemplateOption].push(this.newColumnName)

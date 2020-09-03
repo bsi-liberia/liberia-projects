@@ -1,4 +1,3 @@
-import { BVToastPlugin } from 'bootstrap-vue'
 
 export default function ({ $axios, app, redirect }) {
   $axios.onError(error => {

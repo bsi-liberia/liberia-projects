@@ -72,7 +72,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -114,7 +113,7 @@ export default {
   },
   head() {
     return {
-      title: `Aid disbursements | ${config.head.title}`
+      title: `Aid disbursements | ${this.$config.title}`
     }
   },
   mounted: function() {

@@ -130,7 +130,6 @@ table {
 }
 </style>
 <script>
-import config from '~/nuxt.config'
 import { mapGetters } from 'vuex'
 export default {
   data() {
@@ -139,7 +138,7 @@ export default {
   },
   head() {
     return {
-      title: `Help | ${config.head.title}`
+      title: `Help | ${this.$config.title}`
     }
   },
   computed: {

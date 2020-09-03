@@ -1,5 +1,3 @@
-import config from '../nuxt.config'
-import Vue from 'vue'
 export const state = () => ({
   unathenticatedUserDefaults: {
     "username": null,

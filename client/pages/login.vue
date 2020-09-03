@@ -26,7 +26,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   middleware: ['auth'],
   data() {
@@ -39,7 +38,7 @@ export default {
   },
   head() {
     return {
-      title: `Login | ${config.head.title}`
+      title: `Login | ${this.$config.title}`
     }
   },
   computed: {

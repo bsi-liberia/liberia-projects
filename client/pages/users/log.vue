@@ -87,7 +87,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -109,7 +108,7 @@ export default {
   },
   head() {
     return {
-      title: `Activity log | ${config.head.title}`
+      title: `Activity log | ${this.$config.title}`
     }
   },
   middleware: 'auth',

@@ -6,10 +6,7 @@
 <style>
 </style>
 <script>
-import Vue from 'vue'
   // ACTIVITIES APP
-
-Vue.config.devtools = true
 
 import ActivityEditor from '~/components/ActivityEditor.vue'
 

@@ -156,7 +156,6 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
 // import component
 import VueSlider from 'vue-slider-component/dist-css/vue-slider-component.umd.min.js'
 import 'vue-slider-component/dist-css/vue-slider-component.css'
@@ -167,15 +166,13 @@ import { mapGetters } from 'vuex'
 import { saveAs } from 'file-saver'
 // We use saveAs because we have token-based authentication so a normal
 // link won't work.
-
-import config from '~/nuxt.config'
 export default {
   components: {
     VueSlider
   },
   head() {
     return {
-      title: `Activities | ${config.head.title}`
+      title: `Activities | ${this.$config.title}`
     }
   },
   data() {
@@ -305,7 +302,7 @@ export default {
               return project.id == data.item.id
             })
             const index = this.projects.findIndex(getIndex)
-            Vue.delete(this.projects, index)
+            this.$delete(this.projects, index)
             this.$bvToast.toast('Your activity was successfully deleted.', {
               title: 'Deleted',
               autoHideDelay: 5000,
@@ -330,9 +327,9 @@ export default {
       if (Object.keys(this.$route.query).length == 0) { return }
       Object.entries(this.$route.query).forEach((k) => {
         if (['earliest_date', 'latest_date'].includes(k[0])) {
-          Vue.set(this.selectedFilters, k[0], new Date(k[1]))
+          this.$set(this.selectedFilters, k[0], new Date(k[1]))
         } else {
-          Vue.set(this.selectedFilters, k[0], k[1])
+          this.$set(this.selectedFilters, k[0], k[1])
         }
       })
     },
@@ -340,7 +337,7 @@ export default {
       Object.entries(this.selectedFilters).map(
         item =>  {
           if (item[0] != this.defaultFilters[item[0]]) {
-            Vue.set(this.selectedFilters, item[0], this.defaultFilters[item[0]])
+            this.$set(this.selectedFilters, item[0], this.defaultFilters[item[0]])
           }
         })
     },
@@ -368,17 +365,17 @@ export default {
         .then(response => {
           response.data.filters.reduce(
             (obj, item) => {
-              Vue.set(this.defaultFilters, item.name, "all")
+              this.$set(this.defaultFilters, item.name, "all")
               if (!(item.name in this.selectedFilters)) {
-                Vue.set(this.selectedFilters, item.name, "all")
+                this.$set(this.selectedFilters, item.name, "all")
               }
             },
             {})
           this.filters = response.data.filters
-          Vue.set(this.defaultFilters, 'earliest_date', new Date(response.data.activity_dates.earliest))
-          Vue.set(this.defaultFilters, 'latest_date', new Date(response.data.activity_dates.latest))
-          Vue.set(this.selectedFilters, 'earliest_date', new Date(response.data.activity_dates.earliest))
-          Vue.set(this.selectedFilters, 'latest_date', new Date(response.data.activity_dates.latest))
+          this.$set(this.defaultFilters, 'earliest_date', new Date(response.data.activity_dates.earliest))
+          this.$set(this.defaultFilters, 'latest_date', new Date(response.data.activity_dates.latest))
+          this.$set(this.selectedFilters, 'earliest_date', new Date(response.data.activity_dates.earliest))
+          this.$set(this.selectedFilters, 'latest_date', new Date(response.data.activity_dates.latest))
         });
       },
     queryProjectsData: debounce(function (e) {
@@ -423,8 +420,8 @@ export default {
       },
       // setter
       set: function (newValue) {
-        Vue.set(this.selectedFilters, 'earliest_date', new Date(newValue[0]))
-        Vue.set(this.selectedFilters, 'latest_date', new Date(newValue[1]))
+        this.$set(this.selectedFilters, 'earliest_date', new Date(newValue[0]))
+        this.$set(this.selectedFilters, 'latest_date', new Date(newValue[1]))
       }
     },
     nonDefaultFilters() {

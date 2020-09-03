@@ -225,7 +225,6 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
 import FinancesSubsection from './finances-subsection.vue'
 import FinancesSelect from './subcomponents/finances-select.vue'
 import FinancesInput from './subcomponents/finances-input.vue'
@@ -382,7 +381,7 @@ export default {
             }
             this.$axios.post(this.api_routes.finances, data)
             .then(returndata => {
-              Vue.delete(this.finances[this.transaction_types[transaction_type]], transaction.index)
+              this.$delete(this.finances[this.transaction_types[transaction_type]], transaction.index)
             });
           }
         })
@@ -414,7 +413,7 @@ export default {
           copyData.currency_rate = data.currency_rate
           copyData.currency_source = data.currency_source
           copyData.currency_value_date = data.currency_value_date
-          Vue.set(this.finances[finances_long_name], transaction.index, copyData)
+          this.$set(this.finances[finances_long_name], transaction.index, copyData)
         }
         _this.validation = true
       }).catch(error => {
@@ -467,7 +466,7 @@ export default {
           // Change that row to use this new fund source
           var ft = this.finances[this.newFundSource.transaction_type][this.newFundSource.finance_index]
           ft.fund_source_id = response.data.id
-          Vue.set(this.finances[this.newFundSource.transaction_type], this.newFundSource.finance_index, ft)
+          this.$set(this.finances[this.newFundSource.transaction_type], this.newFundSource.finance_index, ft)
           this.$bvModal.hide('add-fund-source')
         })
         .catch(error => {

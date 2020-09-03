@@ -74,7 +74,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -122,7 +121,7 @@ export default {
   },
   head() {
     return {
-      title: `PSIP Disbursements | ${config.head.title}`
+      title: `PSIP Disbursements | ${this.$config.title}`
     }
   },
   mounted: function() {

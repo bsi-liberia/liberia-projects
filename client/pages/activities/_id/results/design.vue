@@ -263,7 +263,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -281,7 +280,7 @@ export default {
   },
   head() {
     return {
-      title: this.activity_title ? `Results data entry: ${this.activity_title} | ${config.head.title}` : `Results data entry | ${config.head.title}`
+      title: this.activity_title ? `Results data entry: ${this.activity_title} | ${this.$config.title}` : `Results data entry | ${this.$config.title}`
     }
   },
   mounted: function() {

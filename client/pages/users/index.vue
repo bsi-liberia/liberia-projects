@@ -47,7 +47,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -58,7 +57,7 @@ export default {
   },
   head() {
     return {
-      title: `Users | ${config.head.title}`
+      title: `Users | ${this.$config.title}`
     }
   },
   mounted: function() {

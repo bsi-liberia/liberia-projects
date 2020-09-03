@@ -20,7 +20,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -32,7 +31,7 @@ export default {
   },
   head() {
     return {
-      title: `Reset password | ${config.head.title}`
+      title: `Reset password | ${this.$config.title}`
     }
   },
   mounted: function() {

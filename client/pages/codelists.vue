@@ -127,8 +127,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
-import Vue from 'vue'
   export default {
     data() {
       return {
@@ -172,7 +170,7 @@ import Vue from 'vue'
     },
     head() {
       return {
-        title: `Codelists | ${config.head.title}`
+        title: `Codelists | ${this.$config.title}`
       }
     },
     middleware: 'auth',
@@ -209,10 +207,10 @@ import Vue from 'vue'
         }
         this.$axios.post("codelists/update/", data)
           .then(response => {
-            Vue.set(code.item.validation, attr, true)
+            this.$set(code.item.validation, attr, true)
           })
           .catch(error => {
-            Vue.set(code.item.validation, attr, false)
+            this.$set(code.item.validation, attr, false)
           })
 
       },
@@ -265,9 +263,9 @@ import Vue from 'vue'
                   alert("There was an error deleting that code.");
                 } else {
                   if (codelist == 'organisation') {
-                    Vue.delete(this.organisations, code.index)
+                    this.$delete(this.organisations, code.index)
                   } else {
-                    Vue.delete(this.codelist_codes[codelist], code.index)
+                    this.$delete(this.codelist_codes[codelist], code.index)
                   }
                 }
               }

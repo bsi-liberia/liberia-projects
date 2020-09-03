@@ -33,7 +33,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -66,7 +65,7 @@ export default {
   },
   head() {
     return {
-      title: `Results | ${config.head.title}`
+      title: `Results | ${this.$config.title}`
     }
   },
   mounted: function() {
