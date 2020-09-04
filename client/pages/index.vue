@@ -31,7 +31,9 @@
               </b-form-group>
             </b-col>
           </b-row>
-          <home-bar-chart :selected-fy="selectedFY" /></home-bar-chart>
+          <client-only>
+            <home-bar-chart :selected-fy="selectedFY" /></home-bar-chart>
+          </client-only>
         </b-col>
       </b-row>
       <b-row class="mt-3 mb-3">
@@ -61,9 +63,11 @@
               ></b-form-radio-group>
             </b-col>
           </b-row>
-          <home-line-chart
-            :value-field="selectedPlannedActualDisbursements"
-            :fy-options="fyOptions" :stacked="plannedActualDisbursementsStacked"/></home-line-chart>
+          <client-only>
+            <home-line-chart
+              :value-field="selectedPlannedActualDisbursements"
+              :fy-options="fyOptions" :stacked="plannedActualDisbursementsStacked"/></home-line-chart>
+          </client-only>
         </b-col>
       </b-row>
     </b-container>
