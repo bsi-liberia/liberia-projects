@@ -52,8 +52,7 @@ export default {
     '@nuxtjs/auth',
     'nuxt-leaflet',
     '@nuxtjs/markdownit',
-    'nuxt-vue-select',
-    'nuxt-purgecss'
+    'nuxt-vue-select'
   ],
   fontawesome: {
     icons: {
