@@ -52,15 +52,17 @@
                   <b-row class="mt-2 mb-5">
                     <b-col cols="1"></b-col>
                     <b-col>
-                      <vue-slider v-model="sliderDates"
-                        :enable-cross="false"
-                        :min="sliderMinMax.min"
-                        :max="sliderMinMax.max"
-                        height="6px"
-                        :tooltip="'always'"
-                        :tooltip-placement="['bottom', 'bottom']"
-                        :tooltip-formatter="dateFormatter">
-                      </vue-slider>
+                      <client-only>
+                        <vue-slider v-model="sliderDates"
+                          :enable-cross="false"
+                          :min="sliderMinMax.min"
+                          :max="sliderMinMax.max"
+                          height="6px"
+                          :tooltip="'always'"
+                          :tooltip-placement="['bottom', 'bottom']"
+                          :tooltip-formatter="dateFormatter">
+                        </vue-slider>
+                      </client-only>
                     </b-col>
                     <b-col cols="1"></b-col>
                   </b-row>
