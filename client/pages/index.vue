@@ -10,7 +10,9 @@
       <b-row class="mt-5">
         <b-col>
           <h2>Activity locations</h2>
-          <home-map id="locationMap"></home-map>
+          <client-only>
+            <home-map id="locationMap"></home-map>
+          </client-only>
         </b-col>
       </b-row>
       <b-row class="mt-3 mb-3">
