@@ -10,26 +10,24 @@
     </template>
     <template v-else>
       <div id="locationMap">
-        <client-only>
-          <l-map
-            ref="activityMap"
-            :options="mapOptions"
-            :dragging="dragging"
-            :tap="tap"
-            :maxZoom="maxZoom"
-            :bounds="bounds"
-            :zoom="zoom">
-            <l-tile-layer :url="url"></l-tile-layer>
-            <v-marker-cluster :options="{chunkedLoading: true, showCoverageOnHover: false}">
-              <l-marker :lat-lng="marker.latlng" v-for="marker in allLocations" v-bind:key="marker.locationID">
-                <l-popup>
-                  <b>{{ marker.name }}</b><br />
-                  <nuxt-link :to="{ name: 'activities-id', params: {id: marker.id }}">{{ marker.title }}</nuxt-link>
-                </l-popup>
-              </l-marker>
-            </v-marker-cluster>
-          </l-map>
-        </client-only>
+        <l-map
+          ref="activityMap"
+          :options="mapOptions"
+          :dragging="dragging"
+          :tap="tap"
+          :maxZoom="maxZoom"
+          :bounds="bounds"
+          :zoom="zoom">
+          <l-tile-layer :url="url"></l-tile-layer>
+          <v-marker-cluster :options="{chunkedLoading: true, showCoverageOnHover: false}">
+            <l-marker :lat-lng="marker.latlng" v-for="marker in allLocations" v-bind:key="marker.locationID">
+              <l-popup>
+                <b>{{ marker.name }}</b><br />
+                <nuxt-link :to="{ name: 'activities-id', params: {id: marker.id }}">{{ marker.title }}</nuxt-link>
+              </l-popup>
+            </l-marker>
+          </v-marker-cluster>
+        </l-map>
       </div>
     </template>
   </div>
