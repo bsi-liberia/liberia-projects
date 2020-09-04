@@ -4,7 +4,7 @@
       <b-container>
         <b-navbar-brand :to="'/'">
           <img src="~/assets/img/flag-lr.png" alt="Flag" />
-          Liberia Project Dashboard
+          {{ this.$config.title }}
         </b-navbar-brand>
         <b-navbar-toggle target="navbar-collapse"></b-navbar-toggle>
         <b-collapse id="navbar-collapse" is-nav>
