@@ -21,7 +21,7 @@
       </b-row>
       <b-row>
         <b-col>
-          <h2>Planned and Actual Disbursements by Sector</h2>
+          <h2>Projected and Actual Disbursements by Sector</h2>
           <b-row>
             <b-col md="6">
               <b-form-group
@@ -44,7 +44,7 @@
       </b-row>
       <b-row>
         <b-col>
-          <h2>Planned / Actual Disbursements by Sector, over time</h2>
+          <h2>Projected / Actual Disbursements by Sector, over time</h2>
           <b-row class="mb-2">
             <b-col md="6" class="mt-1">
               <b-form-radio-group
@@ -132,12 +132,12 @@ export default {
       ],
       plannedActualDisbursementOptions: [
         {
-          'value': 'Disbursements',
-          'text': 'Actual Disbursements'
+          'value': 'Disbursement Projection',
+          'text': 'Projected Disbursements'
         },
         {
-          'value': 'Disbursement Projection',
-          'text': 'Planned Disbursements'
+          'value': 'Disbursements',
+          'text': 'Actual Disbursements'
         }
       ]
     }
