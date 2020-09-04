@@ -113,7 +113,6 @@
   </div>
 </template>
 <script>
-import config from '~/nuxt.config'
 export default {
   data() {
     return {
@@ -146,7 +145,7 @@ export default {
   },
   head() {
     return {
-      title: `Data quality dashboard | ${config.head.title}`
+      title: `Data quality dashboard | ${this.$config.title}`
     }
   },
   mounted: function() {
