@@ -390,11 +390,14 @@ export default {
       return Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * step)
     },
     getChartData: function(finances) {
-      var disbursements = Object.values(finances.disbursement.data.reduce((obj, item) => {
+      const _disbursements = finances.disbursements ? finances.disbursements : {'data': []}
+      var disbursements = Object.values(_disbursements.data.reduce((obj, item) => {
         var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
-      var commitments = Object.values(finances.commitments.data.reduce((obj, item) => {
+      const _commitments = finances.commitments ? finances.commitments : {'data': []}
+      var commitments = Object.values(_commitments.data.reduce((obj, item) => {
         var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
-      var forwardspends = Object.values(finances.forwardspends.data.reduce((obj, item) => {
+      const _forwardspends = finances.forwardspends ? finances.forwardspends : {'data': []}
+      var forwardspends = Object.values(_forwardspends.data.reduce((obj, item) => {
         var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
       return {
         disbursements: disbursements.reduce((obj, item, index) => { if (index == 0) { return obj } obj[index] = item + obj[index-1]; return obj }, disbursements),
