@@ -382,7 +382,7 @@ export default {
       requiredFields: ['ID', 'Activity Status',
           'Activity Dates (Start Date)', 'Activity Dates (End Date)'],
       newColumnName: "",
-      baseURL: config.axios.baseURL,
+      baseURL: this.$config.baseURL,
       isBusy: true,
       importMessagesTemplate: [],
       importMessagesPSIP: []
