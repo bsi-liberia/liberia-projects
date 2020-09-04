@@ -73,9 +73,11 @@
             label="User roles"
             label-cols-sm="2"
             for="user_roles">
-            <v-select :options="roles" label="name" value="id" v-model="user.user_roles" multiple
-              :reduce="role => role.id" :get-option-label="getRoleLabel" required>
-            </v-select>
+            <client-only>
+              <v-select :options="roles" label="name" value="id" v-model="user.user_roles" multiple
+                :reduce="role => role.id" :get-option-label="getRoleLabel" required>
+              </v-select>
+            </client-only>
           </b-form-group>
         </template>
         <b-form-group
