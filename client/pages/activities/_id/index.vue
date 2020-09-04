@@ -131,10 +131,12 @@
       </b-row>
       <b-row v-if="showFinancesChart">
         <b-col>
-          <LineChart
-            :data="financesChartData"
-            :height="100"
-            class="line-chart"></LineChart>
+          <client-only>
+            <LineChart
+              :data="financesChartData"
+              :height="100"
+              class="line-chart"></LineChart>
+          </client-only>
         </b-col>
       </b-row>
       <b-row>
