@@ -34,7 +34,7 @@
             </b-col>
           </b-row>
           <client-only>
-            <home-bar-chart :selected-fy="selectedFY" /></home-bar-chart>
+            <home-bar-chart :selected-fy="selectedFY"></home-bar-chart>
           </client-only>
         </b-col>
       </b-row>
@@ -68,7 +68,7 @@
           <client-only>
             <home-line-chart
               :value-field="selectedPlannedActualDisbursements"
-              :fy-options="fyOptions" :stacked="plannedActualDisbursementsStacked"/></home-line-chart>
+              :fy-options="fyOptions" :stacked="plannedActualDisbursementsStacked"></home-line-chart>
           </client-only>
         </b-col>
       </b-row>
