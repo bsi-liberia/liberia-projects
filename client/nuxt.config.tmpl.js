@@ -5,7 +5,8 @@ export default {
   ** Headers of the page
   */
   publicRuntimeConfig: {
-    title: 'Liberia Project Dashboard'
+    title: 'Liberia Project Dashboard',
+    baseURL: 'http://127.0.0.1:5000/api'
   },
   head: {
     title: 'Liberia Project Dashboard',
