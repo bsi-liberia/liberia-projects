@@ -46,7 +46,7 @@
         <b-col>
           <h2>Planned / Actual Disbursements by Sector, over time</h2>
           <b-row class="mb-2">
-            <b-col md="6">
+            <b-col md="6" class="mt-1">
               <b-form-radio-group
                 v-model="selectedPlannedActualDisbursements"
                 :options="plannedActualDisbursementOptions"
@@ -55,7 +55,7 @@
                 size="sm"
               ></b-form-radio-group>
             </b-col>
-            <b-col md="6" class="text-right">
+            <b-col md="6" class="text-md-right mt-1">
               <b-form-radio-group
                 v-model="plannedActualDisbursementsStacked"
                 :options="plannedActualDisbursementsStackedOptions"
