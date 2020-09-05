@@ -129,16 +129,24 @@
           </div>
         </b-col>
       </b-row>
-      <b-row v-if="showFinancesChart">
-        <b-col>
-          <client-only>
-            <LineChart
-              :data="financesChartData"
-              :height="100"
-              class="line-chart"></LineChart>
-          </client-only>
-        </b-col>
-      </b-row>
+      <template v-if="years.length>0">
+        <b-row>
+          <b-col>
+            <hr />
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <h2>Financial summary</h2>
+            <client-only>
+              <LineChart
+                :data="financesChartData"
+                :options="chartOptions"
+                class="line-chart"></LineChart>
+            </client-only>
+          </b-col>
+        </b-row>
+      </template>
       <b-row>
         <b-col>
           <hr />
@@ -284,6 +292,7 @@
 <style scoped>
 .line-chart {
   width: 100%;
+  height: 300px;
 }
 #locationMap {
   height: 400px;
@@ -334,9 +343,7 @@ export default {
           'value': true,
           'text': 'By Fund Source'
         },
-      ],
-      years: this.getRange(2008, 2020),
-      chartData: []
+      ]
     }
   },
   mounted: function() {
@@ -360,27 +367,121 @@ export default {
     resultsFields() {
       return ['title', 'from', 'to', 'target', 'actual'].concat({key: '%', thStyle: 'width: 30%'})
     },
+    years() {
+      const _years = Object.values(this.finances).reduce((years, finance) => {
+        years = years.concat(finance.data.map(item => Number(item.fiscal_year)))
+        return years
+      }, [])
+      if (_years.length == 0) { return [] }
+      if (this.activity.start_date) {
+        _years.push(new Date(this.activity.start_date).getFullYear())
+      }
+      _years.push(new Date(this.activity.end_date).getFullYear()+1)
+      if (this.activity.end_date) {
+        _years.push(new Date(this.activity.end_date).getFullYear())
+      }
+      return this.getRange(Math.min.apply(Math, _years), Math.max.apply(Math, _years)+1)
+    },
+    chartData() {
+      const data = Object.keys(this.finances).reduce((out, key) => {
+        const entries = (key in this.finances) ? this.finances[key].data : []
+        out[key] = Object.entries(entries.reduce((keyItems, entry) => {
+          /* For each allowed year, add the value for this entry */
+          if (Number(entry.fiscal_year) in keyItems) {
+            keyItems[Number(entry.fiscal_year)] += entry.value
+          }
+          return keyItems
+        }, /* Pass in list of available years with default amount 0.0 */
+          this.years.reduce((yearObj, year) => {
+            yearObj[year] = 0.0; return yearObj
+          }, {}))
+        ).reduce((_keyItems, entry, index) => {
+          /* Cumulative: add previous year's amount to current year's */
+          if (index == 0) { _keyItems.push(entry[1]) }
+          else { _keyItems.push(entry[1] + _keyItems[index-1]) }
+          return _keyItems
+        }, [])
+        return out
+      }, {})
+      return data
+    },
+    chartOptions() {
+      return {
+        maintainAspectRatio: false,
+        tooltips: {
+          callbacks: {
+            label: ((tooltipItem, data) => {
+              const datasetLabel = data.datasets[tooltipItem.datasetIndex].label
+              const value = tooltipItem.yLabel.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0
+              })
+              return `${datasetLabel}: USD ${value}`;
+            })
+          }
+        },
+        scales: {
+          yAxes: [
+            {
+              ticks: {
+                beginAtZero: true,
+                callback: function(tick) {
+                  return tick.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0
+                  })
+                }
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Amount (USD)'
+              }
+            }
+          ],
+          xAxes: [
+            {
+              ticks: {
+                callback: function(tick) {
+                  return `FY${tick}`
+                }
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Fiscal Year'
+              }
+            }
+          ]
+        }
+      }
+    },
     financesChartData() {
+      const colours = [ '#CF3D1E', '#F15623', '#F68B1F', '#FFC60B', '#DFCE21',
+      '#BCD631', '#95C93D', '#48B85C', '#00833D', '#00B48D', '#60C4B1', '#27C4F4',
+      '#478DCB', '#3E67B1', '#4251A3', '#59449B', '#6E3F7C', '#6A246D', '#8A4873',
+      '#EB0080', '#EF58A0', '#C05A89']
+      const transactionTypes = {
+        'disbursement': {'label': 'Disbursements', 'colour': colours[3]},
+        'forwardspend': {'label': 'MTEF Projections', 'colour': colours[6]},
+        'commitments': {'label': 'Commitments', 'colour': colours[12]},
+        'allotment': {'label': 'Allotments', 'colour': colours[18]}
+      }
+      if (Object.keys(this.chartData).length == 0) { return null }
       return {
         "labels": this.years,
-        "datasets": [
-          {
-            "label": "Disbursements",
-            "data": this.chartData.disbursements || [],
-            "borderColor":"rgb(0, 131, 61)",
-            "fillColor":"rgb(0, 131, 61)",
-            "fill": false,
-            "lineTension":0.1
-          },
-          {
-            "label": "Commitments",
-            "data": this.chartData.commitments || [],
-            "borderColor": "rgb(241, 86, 35)",
-            "fillColor": "rgb(241, 86, 35)",
-            "fill": false,
-            "lineTension":0.1
-          }
-        ]
+        "datasets": Object.entries(this.chartData).reduce((datasets, item, index) => {
+          const key = item[0]; const data = item[1];
+          console.log('key', key)
+          console.log('data', data)
+          datasets.push({
+            label: transactionTypes[key].label,
+            fill: false,
+            data: data,
+            backgroundColor: transactionTypes[key].colour,
+            borderColor: transactionTypes[key].colour,
+            lineTension: 0.1
+          })
+          return datasets
+        }, [])
       }
     },
     ...mapGetters(['isAuthenticated', 'loggedInUser'])
@@ -388,21 +489,6 @@ export default {
   methods: {
     getRange: function(start, stop, step = 1) {
       return Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * step)
-    },
-    getChartData: function(finances) {
-      const _disbursements = finances.disbursements ? finances.disbursements : {'data': []}
-      var disbursements = Object.values(_disbursements.data.reduce((obj, item) => {
-        var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
-      const _commitments = finances.commitments ? finances.commitments : {'data': []}
-      var commitments = Object.values(_commitments.data.reduce((obj, item) => {
-        var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
-      const _forwardspends = finances.forwardspends ? finances.forwardspends : {'data': []}
-      var forwardspends = Object.values(_forwardspends.data.reduce((obj, item) => {
-        var d = new Date(item.date); var y = d.getFullYear(); obj[y] += item.value; return obj; }, this.years.reduce((obj, item) => {obj[item] = 0; return obj}, {})))
-      return {
-        disbursements: disbursements.reduce((obj, item, index) => { if (index == 0) { return obj } obj[index] = item + obj[index-1]; return obj }, disbursements),
-        commitments: commitments.reduce((obj, item, index) => { if (index == 0) { return obj } obj[index] = item + obj[index-1]; return obj }, commitments),
-      }
     },
     async getActivity() {
       await this.$axios
@@ -448,15 +534,6 @@ export default {
         .get(`activities/${this.activityID}/finances.json`)
         .then((response) => {
           this.finances = response.data.finances
-          var disbYears = this.finances.disbursement ? this.finances.disbursement.data.map(item => new Date(item.date).getFullYear()): []
-          var commitmentYears = this.finances.commitments ? this.finances.commitments.data.map(item => new Date(item.date).getFullYear()) : []
-          var years = [...disbYears, ...commitmentYears]
-          if ((disbYears.length === 0) || (commitmentYears.length === 0)) {
-            this.showFinancesChart = false
-            return false
-          }
-          this.years = this.getRange(Math.min.apply(Math, years), new Date().getFullYear()+1) // to this year
-          this.chartData = this.getChartData(response.data.finances)
         });
     },
     async getFinancesFundSources() {
