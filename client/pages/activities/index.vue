@@ -244,6 +244,7 @@ export default {
           label: "Organisation",
           sortable: true
         },
+        /*
         {
           key: 'total_commitments',
           label: 'Commitments',
@@ -253,6 +254,7 @@ export default {
             return "$" + value.toLocaleString(undefined, {minimumFractionDigits: 2})
           }
         },
+        */
         {
           key: 'total_disbursements',
           label: 'Disbursements',
@@ -265,7 +267,8 @@ export default {
         {
           key: 'updated_date',
           label: "Last updated",
-          sortable: true
+          sortable: true,
+          tdClass: 'text-nowrap'
         }]
 
       var edit_permissions = projects.map(
