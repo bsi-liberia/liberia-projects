@@ -198,7 +198,8 @@ def results():
 
     activities = list(map(lambda activity: annotate_activity(activity),
         models.Activity.query.filter(
-            models.Activity.results.any()
+            models.Activity.results.any(),
+            models.Activity.domestic_external=='external'
         ).all()
     ))
 
