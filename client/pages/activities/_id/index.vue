@@ -138,6 +138,7 @@
         <b-row>
           <b-col>
             <h2>Financial summary</h2>
+            <p class="text-muted">Showing cumulative amounts over time.</p>
             <client-only>
               <LineChart
                 :data="financesChartData"
