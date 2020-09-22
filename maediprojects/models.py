@@ -629,8 +629,6 @@ class Activity(db.Model):
             'classifications': collections.defaultdict(dict),
             'reporting_org': self.reporting_org.as_dict(),
             'organisations': collections.defaultdict(dict),
-            'url': url_for("activities.activity", activity_id=self.id),
-            'url_edit': url_for("activities.activity_edit", activity_id=self.id),
             'results': len(self.results),
             'documents': len(self.documents),
             'milestones': len(self.milestones),
