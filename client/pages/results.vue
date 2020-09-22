@@ -12,7 +12,7 @@
       <h1>Results</h1>
       <p class="lead">Please enter results data for the following activities.</p>
       <b-table class="table" :busy="isBusy" :fields="fields" :items="activities" sort-by="pct"
-      sort-desc="true" responsive>
+      :sort-desc="true" responsive>
         <template v-slot:table-busy>
           <div class="text-center">
             <b-spinner class="align-middle" label="Loading..."></b-spinner>
@@ -20,15 +20,15 @@
           </div>
         </template>
         <template v-slot:cell(title)="data">
-          <a :href="data.item.url">{{ data.item.title }}</a>
+            <nuxt-link :to="{ name: 'activities-id', params: { id: data.item.id}}">{{ data.item.title }}</nuxt-link>
         </template>
         <template v-slot:cell(url)="data">
-          <b-btn variant="primary" :href="data.item.url_data_design"
+          <b-btn variant="primary" :to="{ name: 'activities-id-results-design', params: { id: data.item.id}}"
             style="margin-bottom: 5px;"
             size="sm" v-if="data.item.permissions.data_design">
             <font-awesome-icon :icon="['fa', 'magic']" /> Design results
           </b-btn>
-          <b-btn variant="primary" :href="data.item.url_data_entry"
+          <b-btn variant="primary" :to="{ name: 'activities-id-results-data-entry', params: { id: data.item.id}}"
             style="margin-bottom: 5px;"
             size="sm" v-if="data.item.permissions.data_entry">
             <font-awesome-icon :icon="['fa', 'clipboard-list']" /> Enter results

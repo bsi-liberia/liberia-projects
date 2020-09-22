@@ -37,8 +37,8 @@
           </div>
         </template>
         <template v-slot:cell(user)="data">
-          <a :href="data.item.user.url">
-            {{ data.item.user.username }}</a>
+          <nuxt-link :to="{ name: 'users-id', params: { id: data.item.user.id }}">
+            {{ data.item.user.username }}</nuxt-link>
         </template>
         <template v-slot:cell(action)="data">
             {{ data.item.mode.text }} {{ data.item.target.text }}
@@ -67,7 +67,7 @@
             {{ activitylog_detail.activity.title }}
           </nuxt-link>
         </template>
-        {{ activitylog_detail.user.username }} {{ activitylog_detail.mode.text }}
+        <nuxt-link :to="{ name: 'users-id', params: {id: activitylog_detail.user.id }}">{{ activitylog_detail.user.username }}</nuxt-link> {{ activitylog_detail.mode.text }}
         {{ activitylog_detail.target.text }} ({{ activitylog_detail.target.id }})
         <hr />
         <template v-if="activitylog_detail.old_value">

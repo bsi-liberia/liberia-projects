@@ -125,8 +125,6 @@ def project_development_tracking():
             'id': activity.id,
             'title': activity.title,
             'implementer': ", ".join(list(map(lambda io: io.name, activity.implementing_organisations))),
-            'url': url_for('activities.activity',
-                activity_id=activity.id),
             'sum_appropriations': sum_appropriations.get(activity.id, 0.00),
             'sum_allotments': sum_allotments.get(activity.id, 0.00),
             'sum_disbursements': sum_disbursements.get(activity.id, 0.00)
@@ -733,13 +731,10 @@ def api_activities_user_results():
     activities = qactivity.list_activities_by_filters({'result_indicator_periods': True}, "results-data-entry")
     return jsonify(
             activities=[{
-                "title": activity.id,
+                "id": activity.id,
                 "title": activity.title,
                 "funding_org": ", ".join(list(map(lambda o: o.name, activity.funding_organisations))),
                 "results_average": activity.results_average,
-                "url": url_for("activities.activity", activity_id=activity.id),
-                "url_data_design": url_for("activities.results_data_design", activity_id=activity.id),
-                "url_data_entry": url_for("activities.results_data_entry", activity_id=activity.id),
                 "permissions": {
                     "data_entry": ("results-data-entry" in current_user.roles_list) or ("results-data-design" in current_user.roles_list) or ("admin" in current_user.roles_list),
                     "data_design": ("results-data-design" in current_user.roles_list) or ("admin" in current_user.roles_list)
@@ -1259,13 +1254,11 @@ def activity_log():
             "id": al.id,
             "user": {
                 "id": al.user_id,
-                "username": al.user.username,
-                "url": url_for("users.users_edit", user_id=al.id, _external=True)
+                "username": al.user.username
             },
             "activity": {
                 "id": al.activity_id,
-                "title": al.activity.title,
-                "url": url_for("activities.activity", activity_id=al.activity_id, _external=True)
+                "title": al.activity.title
             },
             "mode": {
                 "id": al.mode,
@@ -1306,13 +1299,11 @@ def activity_log_detail(activitylog_id):
         "id": al.id,
         "user": {
             "id": al.user_id,
-            "username": al.user.username,
-            "url": url_for("users.users_edit", user_id=al.id, _external=True)
+            "username": al.user.username
         },
         "activity": {
             "id": al.activity_id,
-            "title": al.activity.title,
-            "url": url_for("activities.activity", activity_id=al.activity_id, _external=True)
+            "title": al.activity.title
         },
         "mode": {
             "id": al.mode,
