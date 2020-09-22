@@ -2,7 +2,7 @@ from collections import defaultdict
 import datetime
 
 from flask import Blueprint, request, \
-    url_for, Response, send_file, render_template, redirect, flash, make_response, jsonify
+    url_for, Response, send_file, redirect, flash, make_response, jsonify
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required, jwt_optional
 from maediprojects.query import activity as qactivity
