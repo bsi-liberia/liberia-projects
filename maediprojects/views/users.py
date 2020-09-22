@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, flash, request, redirect, url_for, abort, make_response
+from flask import Blueprint, flash, request, redirect, url_for, abort, make_response
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_jwt_extended import (
     jwt_required, create_access_token,
@@ -33,35 +33,6 @@ def load_user(user_id):
     return models.User.query.filter_by(id=user_id).first_or_404()
 
 
-@blueprint.route("/profile/", methods=["GET", "POST"])
-@login_required
-def profile():
-    if "admin" in current_user.roles_list:
-        return redirect(url_for("users.users_edit", user_id=current_user.id))
-
-    if request.method == "POST":
-        data = {
-            k: v
-            for k, v in request.form.items()
-            if k in ["name", "organisation", "recipient_country_code",
-                     "change_password", "password"]
-        }
-        data["id"] = current_user.id
-        data["username"] = current_user.username
-        data["email_address"] = current_user.email_address
-
-        if quser.updateUser(data):
-            flash(gettext(u"Profile successfully updated!"), "success")
-        else:
-            flash(gettext(u"Sorry, couldn't update!"), "danger")
-        return redirect(url_for("users.profile"))
-
-    return render_template("users/profile.html",
-                           codelists=codelists.get_codelists(),
-                           user=current_user,
-                           loggedinuser=current_user)
-
-
 @blueprint.route("/api/unauthenticated_user/")
 def unauthenticated_user():
     return jsonify(user=UnauthenticatedUser().as_simple_dict())
@@ -71,18 +42,6 @@ def unauthenticated_user():
 @jwt_optional
 def user():
     return jsonify(user=current_user.as_simple_dict())
-
-
-@blueprint.route("/users/")
-@login_required
-@quser.administrator_required
-def users():
-    if "admin" not in current_user.roles_list:
-        flash(gettext(u"You must be an administrator to access that area."), "danger")
-    users = quser.user()
-    return render_template("users/users.html",
-                           users=users,
-                           loggedinuser=current_user)
 
 
 @blueprint.route("/api/users/delete/", methods=["POST"])
@@ -198,16 +157,6 @@ def user_permissions_edit(user_id):
                 return "error"
             return "ok"
         return "error, unknown action"
-
-
-@blueprint.route("/users/log/")
-@login_required
-@quser.administrator_required
-def users_log():
-    userslog = quser.activitylog()
-    return render_template("users/userslog.html",
-                           userslog=userslog,
-                           loggedinuser=current_user)
 
 
 @blueprint.route("/api/login/", methods=["GET", "POST"])
