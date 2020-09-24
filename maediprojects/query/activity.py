@@ -246,7 +246,7 @@ def list_activities_by_filters(filters, permission_name="view"):
                     models.ActivityFinances,
                     models.ActivityFinancesCodelistCode
                 )
-    codelist_names = codelists.get_db_codelists().keys()
+    codelist_names = list(codelists.get_db_codelists().keys())
     if "organisation" in codelist_names:
         codelist_names.remove("organisation")
     codelist_vals = []
