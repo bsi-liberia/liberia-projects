@@ -13,6 +13,7 @@ from maediprojects.query import finances as qfinances
 from maediprojects.query import counterpart_funding as qcounterpart_funding
 from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import organisations as qorganisations
+from maediprojects.query.activity_log import activity_updated
 from maediprojects.lib import xlsx_to_csv, util
 from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from maediprojects.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
@@ -20,7 +21,7 @@ from maediprojects.lib.spreadsheets.formatting import yellowFill, orangeFill
 from maediprojects.lib.spreadsheets import apply_formatting, helpers, xlsx_writer
 from maediprojects.lib.codelist_helpers import codelists
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
-from generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
+from maediprojects.query.generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
 
 
 def tidy_amount(amount_value):
@@ -203,7 +204,7 @@ def parse_disbursement_cols(currency, disbursement_cols, activity, existing_acti
 def make_updated_info(updated, activity, num_updated_activities):
     if updated.get("mtef_years") or updated.get("counterpart_years") or updated.get("disbursements") or updated.get("activity"):
         num_updated_activities += 1
-        qactivity.activity_updated(activity.id)
+        activity_updated(activity.id)
     else:
         return num_updated_activities
     msg = u"Updated {} (Project ID: {}): ".format(
