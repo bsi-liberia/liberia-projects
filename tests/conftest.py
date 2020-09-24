@@ -36,7 +36,7 @@ def app():
         import_countries(u"en")
         import_locations_from_file(os.path.join(basedir, "artefacts", "LR.zip"), u"LR")
         import_roles()
-        print os.path.abspath(os.path.join(basedir, "artefacts", "LR.zip"))
+        print(os.path.abspath(os.path.join(basedir, "artefacts", "LR.zip")))
 
         user_user_dict = app.config["USER"]
         user_user = addUser(user_user_dict)
