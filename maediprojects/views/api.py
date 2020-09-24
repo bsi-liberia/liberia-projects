@@ -155,7 +155,6 @@ def counterpart_funding():
     fiscal_year = int(request.args.get("fiscal_year", next_fy))
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'external'})
-    start_date = max(start_date, datetime.date(2018,07,01))
     fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
 
     def annotate_activity(activity):
