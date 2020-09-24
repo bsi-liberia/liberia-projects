@@ -145,7 +145,6 @@ def add_user_role(username, role_slug):
 def list_user_role_by_username(username):
     user = user_by_username(username)
     if not user: return False
-    print user.roles_list
     return user.roles_list
 
 
