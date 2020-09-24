@@ -1,7 +1,11 @@
 # -*- coding: UTF-8 -*-
 
 import datetime
-import unicodecsv
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
 from io import StringIO
 import re
 
