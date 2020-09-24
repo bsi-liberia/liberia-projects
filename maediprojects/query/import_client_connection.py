@@ -93,7 +93,7 @@ def import_transactions(data, fiscal_year):
 
     for project_code, project_data in data_by_project.items():
         if project_code in grouped_by_code:
-            print "Importing project code {}".format(project_code)
+            print("Importing project code {}".format(project_code))
             if len(grouped_by_code[project_code])>1:
                 flash("Project {} was not imported, as more than one project is mapped to it.".format(project_code), "danger")
             else:
