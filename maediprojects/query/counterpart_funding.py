@@ -3,7 +3,7 @@ import datetime
 from maediprojects import models
 from maediprojects.lib import util
 from maediprojects.extensions import db
-import activity as qactivity
+from maediprojects.query import activity as qactivity
 from sqlalchemy import func
 
 
