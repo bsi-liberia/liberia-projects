@@ -10,7 +10,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 from maediprojects.lib import util, codelist_helpers
-from flask import url_for
 
 from maediprojects.extensions import db
 
