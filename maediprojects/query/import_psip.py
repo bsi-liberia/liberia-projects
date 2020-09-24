@@ -22,7 +22,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 def preprocess_data(csv):
     def append_path(root, data):
-        project = root.setdefault("{}".format(data["project_code"]), 
+        project = root.setdefault("{}".format(data["project_code"]),
             { "rows": [],
               "name": data["project_name"],
               "code": data["project_code"],
@@ -74,7 +74,7 @@ def read_file(FILENAME=os.path.join(basedir, "..", "lib/import_files/", "psip_mi
 
 def nonempty_from_list(some_list):
     for item in some_list:
-        if item.strip() != "": return item 
+        if item.strip() != "": return item
     return ""
 
 def get_date(date_value):
@@ -88,7 +88,7 @@ def get_date(date_value):
     if date_value == "":
         return dt.datetime.utcnow().date()
     raise Exception ## Warn of strangely formatted dates
-    
+
 CODES = {
     "collaboration_type": {
         "Multilateral": u"4",
@@ -164,7 +164,7 @@ def process_transactions(activity, CODELIST_IDS_BY_CODE):
     transactions = []
     for row in activity["rows"]:
         tr = models.ActivityFinances()
-        tr.transaction_date = util.fp_fy_to_date(row["fiscalperiod"], 
+        tr.transaction_date = util.fp_fy_to_date(row["fiscalperiod"],
             int(row["fy"][0:4]), "end")
         tr.transaction_type = row["transaction_type"]
         tr.transaction_description = u"{} {} FY{}, imported from IFMIS PSIP data".format(
@@ -190,9 +190,9 @@ def process_forward_spends(activity, start_date, end_date):
     From then until latest of end_date or last forward spend date, add
     either a value or 0.
     Return list of forward spends, start_date and end_date."""
-    mtef_cols = ['MTEF 2013/2014', 'MTEF 2014/2015', 'MTEF 2015/2016', 
+    mtef_cols = ['MTEF 2013/2014', 'MTEF 2014/2015', 'MTEF 2015/2016',
     'MTEF 2016/2017', 'MTEF 2017/2018', 'MTEF 2018/2019', 'MTEF 2019/2020']
-    
+
     def get_activity_mtefs(activity):
         activity_mtefs = {}
         for col in mtef_cols:
@@ -200,31 +200,31 @@ def process_forward_spends(activity, start_date, end_date):
             mtef_year = int(re.match("MTEF (\d{4})/\d{4}", col).groups()[0])
             activity_mtefs[mtef_year] = tidy_amount(activity[col])[0]
         return activity_mtefs
-    
+
     activity_mtefs = get_activity_mtefs(activity)
     # If there is no MTEF data, set everything to 0
     if len(activity_mtefs) == 0:
         forwardspends = (
             qfinances.create_forward_spends(
-                start_date, 
+                start_date,
                 end_date
             )
         )
         return start_date, end_date, forwardspends
-    
+
     first_mtef = min(activity_mtefs)
     last_mtef = max(activity_mtefs)
-    
+
     start_date_fy, start_date_fq = util.date_to_fy_fq(start_date)
     end_date_fy, end_date_fq = util.date_to_fy_fq(end_date)
     if start_date_fy < first_mtef:
         forwardspends += (
             qfinances.create_forward_spends(
-                start_date, 
+                start_date,
                 util.fq_fy_to_date(1, first_mtef, 'start')-dt.timedelta(days=1)
             )
         )
-    
+
     for mtef_year, mtef_value in activity_mtefs.items():
         forwardspends += (
             qfinances.create_forward_spends(
@@ -233,7 +233,7 @@ def process_forward_spends(activity, start_date, end_date):
                 mtef_value
             )
         )
-    
+
     # create 0-value quarters up to first mtef
     if end_date_fy > last_mtef:
         forwardspends += (
@@ -242,7 +242,7 @@ def process_forward_spends(activity, start_date, end_date):
                 end_date
             )
         )
-    
+
     #FIXME decide whether to do this…
     # Make adjustments to start/end dates if there are MTEFs found
     #  outside of these dates
@@ -250,14 +250,14 @@ def process_forward_spends(activity, start_date, end_date):
     #    first = util.fq_fy_to_date(1, first_mtef, "start")
     #if last_mtef > end_date_fy:
     #    end_date = util.fq_fy_to_date(4, last_mtef, "end")
-    
+
     return start_date, end_date, forwardspends
 
 def process_classifications(activity, CODELIST_IDS):
     classifications = []
     for sector_code, sector_name in activity["sectors"]:
         cl = models.ActivityCodelistCode()
-        cl.codelist_code_id = CODELIST_IDS["mtef-sector"].get(sector_code, 
+        cl.codelist_code_id = CODELIST_IDS["mtef-sector"].get(sector_code,
             CODELIST_IDS["mtef-sector"][u""])
         cl.percentage = 100.0/len(activity["sectors"])
         classifications.append(cl)
@@ -266,17 +266,17 @@ def process_classifications(activity, CODELIST_IDS):
 def import_file():
     data = read_file()
     print("There are {} projects found".format(len(data)))
-    
+
     # Get codelists for lookup
     CODELISTS_BY_NAME = codelists.get_codelists_lookups_by_name()
     CODELISTS_IDS_BY_NAME = codelists.get_codelists_ids_by_name()
     CODELISTS_IDS = codelists.get_codelists_lookups()
     CODELIST_IDS_BY_CODE = codelists.get_codelists_lookups_by_code()
-    
+
     for activity in data:
         start_date = util.fq_fy_to_date(1, int(activity["earliest_year"][0:4]), "start")
         end_date = util.fq_fy_to_date(4, int(activity["latest_year"][0:4]), "end")
-        
+
         d = {
             "user_id": 1, #FIXME
             "domestic_external": u"domestic",
