@@ -1,1 +1,1 @@
-import activities, api, codelists, users, exports
+from maediprojects.views import activities, api, codelists, users, exports
