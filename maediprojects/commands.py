@@ -20,7 +20,7 @@ def setup(language):
 def setup_country(country_code):
     """Setup a country."""
     from query import setup as qsetup
-    qsetup.import_countries(country_code)
+    qsetup.import_countries('en', country_code)
 
 
 @click.command()
