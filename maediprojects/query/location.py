@@ -8,7 +8,7 @@ import unicodecsv
 
 from maediprojects import models
 from maediprojects.extensions import db
-import activity as qactivity
+from maediprojects.query.activity_log import activity_updated
 
 
 GEONAMES_URL="http://download.geonames.org/export/dump/%s.zip"
@@ -45,7 +45,7 @@ def add_location(activity_id, location_id):
         db.session.add(aL)
         db.session.commit()
 
-        qactivity.activity_updated(activity_id,
+        activity_updated(activity_id,
             {
             "user_id": current_user.id,
             "mode": "add",
@@ -68,7 +68,7 @@ def delete_location(activity_id, location_id):
         db.session.commit()
 
 
-        qactivity.activity_updated(activity_id,
+        activity_updated(activity_id,
             {
             "user_id": current_user.id,
             "mode": "delete",
