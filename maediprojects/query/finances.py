@@ -86,7 +86,7 @@ def update_finances_classification(data):
     return models.ActivityFinances.query.filter_by(id=data["finances_id"]).first()
 
 def delete_finances(activity_id, finances_id):
-    print "Delete activity id {} finances id {}".format(activity_id, finances_id)
+    print("Delete activity id {} finances id {}".format(activity_id, finances_id))
     checkF = models.ActivityFinances.query.filter_by(
         activity_id = activity_id,
         id = finances_id
@@ -95,7 +95,6 @@ def delete_finances(activity_id, finances_id):
         old_value = checkF.as_dict()
         db.session.delete(checkF)
         db.session.commit()
-        print "Return True"
 
         activity_updated(checkF.activity_id,
             {
