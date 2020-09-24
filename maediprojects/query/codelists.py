@@ -5,7 +5,6 @@ import normality
 
 from maediprojects import models
 from maediprojects.extensions import db
-import activity as qactivity
 
 
 def get_code_by_name(codelist, name):
