@@ -1,14 +1,14 @@
 from functools import wraps
 
 from werkzeug.security import generate_password_hash
-from flask import flash, redirect, url_for, request
+from flask import flash, redirect, url_for, request, make_response, jsonify
 from flask_login import current_user
 
 from maediprojects import models
 from maediprojects.extensions import db
-import organisations as qorganisations
-import activity as qactivity
-import send_email as qsend_email
+from maediprojects.query import organisations as qorganisations
+from maediprojects.query import activity as qactivity
+from maediprojects.query import send_email as qsend_email
 from smtplib import SMTPRecipientsRefused
 
 import datetime
@@ -18,8 +18,7 @@ def administrator_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "admin" not in current_user.roles_list:
-            flash("You must be an administrator to access that page.", "danger")
-            return redirect(url_for("activities.dashboard"))
+            return make_response(jsonify({'msg': 'You must be an administrator to access that page.'}), 403)
         return f(*args, **kwargs)
     return decorated_function
 
@@ -90,10 +89,7 @@ def permissions_required(permission_name, permission_value=None):
             else:
                 check = (check_permissions(permission_name, permission_value))
             if check is False:
-                flash("You do not have sufficient permissions to access that page.", "danger")
-                if request.referrer != None:
-                    return redirect(request.referrer)
-                return redirect(url_for("activities.dashboard"))
+                return make_response(jsonify({'msg': 'You do not have sufficient permissions to access that page.'}), 403)
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
