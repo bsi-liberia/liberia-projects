@@ -1224,7 +1224,7 @@ def api_sectors_C_D():
     root = {}
     for s in sector_totals: append_path(root, s)
     for s in fy_sector_totals: append_path(root, s)
-    return jsonify(sectors = root.values())
+    return jsonify(sectors = list(root.values()))
 
 @blueprint.route("/api/iati/<version>/<country_code>.xml")
 def generate_iati_xml(version, country_code):
