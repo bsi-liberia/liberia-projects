@@ -2,7 +2,7 @@
 
 import datetime
 import unicodecsv
-import StringIO
+from io import StringIO
 import re
 
 from maediprojects.query import activity as qactivity
