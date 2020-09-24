@@ -4,7 +4,11 @@ from zipfile import ZipFile
 from flask_login import current_user
 from sqlalchemy import *
 import requests
-import unicodecsv
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
 
 from maediprojects import models
 from maediprojects.extensions import db
