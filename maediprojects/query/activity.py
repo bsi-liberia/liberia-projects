@@ -7,19 +7,11 @@ from sqlalchemy.orm import aliased
 
 from maediprojects.lib.util import isostring_date, isostring_year
 from maediprojects.lib import codelists, util
-from maediprojects.query import finances as qfinances
+from . import finances as qfinances
 from maediprojects.query import organisations as qorganisations
 from maediprojects import models
 from maediprojects.extensions import db
-
-import json
-
-
-class JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if (isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date)):
-            return obj.isoformat()
-        return json.JSONEncoder.default(self, obj)
+from maediprojects.query.activity_log import activity_updated
 
 
 def force_earliest_latest(earliest, latest):
@@ -130,32 +122,6 @@ def get_updates():
 
     updated = filter(filterout, updated)
     return created, updated
-
-def activity_add_log(activity_id, user_id, mode=None, target=None, target_id=None, old_value=None, value=None):
-    activity_log = models.ActivityLog()
-    activity_log.activity_id = activity_id
-    activity_log.user_id = user_id
-    activity_log.mode = unicode(mode)
-    activity_log.target = unicode(target)
-    activity_log.target_id = target_id
-    activity_log.old_value = json.dumps(old_value, cls=JSONEncoder) if old_value != None else None
-    activity_log.value = json.dumps(value, cls=JSONEncoder) if value != None else None
-    db.session.add(activity_log)
-    db.session.commit()
-    return activity_log
-
-def activity_updated(activity_id, update_data=False):
-    activity = models.Activity.query.filter_by(id=activity_id).first()
-    if not activity:
-        flash("Could not update last updated date for activity ID {}: activity not found".format(
-            activity_id), "danger")
-        return False
-    activity.updated_date = datetime.datetime.utcnow()
-    db.session.add(activity)
-    db.session.commit()
-    if update_data:
-        activity_add_log(activity_id, **update_data)
-    return True
 
 def create_activity_for_test(data, user_id):
     act = models.Activity()
