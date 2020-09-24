@@ -4,7 +4,11 @@ import os
 import re
 import datetime as dt
 
-import unicodecsv
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
 
 from maediprojects import models
 from maediprojects.lib import codelists, util
