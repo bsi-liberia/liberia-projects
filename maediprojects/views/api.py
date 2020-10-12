@@ -45,6 +45,10 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if (isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date)):
             return obj.isoformat()
+        elif (type(obj) is {}.values().__class__) or (type(obj) is {}.keys().__class__):
+            return list(obj)
+        elif (type(obj) is range):
+            return list(obj)
         return json.JSONEncoder.default(self, obj)
 
 def jsonify(*args, **kwargs):
@@ -372,10 +376,13 @@ def reporting_orgs_summary():
     orgs = generate_reporting_organisation_checklist(reporting_orgs, response_statuses)
 
     def generate_summary(list_of_quarters, orgs):
-        out = dict(map(lambda q: (q, { True: 0, False: 0, "Total": 0 }), list_of_quarters.keys()))
+        out = dict(map(lambda q: (q, { 'True': 0, 'False': 0, "Total": 0 }), list_of_quarters.keys()))
         for ro in orgs:
             for disb_q, disb_v in ro["disbursements"].items():
-                out[disb_q][disb_v["status"]["name"]=="Donor responded with data"] += 1
+                if disb_v["status"]["name"]=="Donor responded with data":
+                    out[disb_q]['True'] += 1
+                else:
+                    out[disb_q]['False'] += 1
                 out[disb_q]["Total"] += 1
         return out
 
