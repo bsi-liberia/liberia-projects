@@ -13,22 +13,21 @@
         </b-col>
       </b-row>
       <b-row>
-        <b-col md="10">
+        <b-col md="8">
           <p class="lead">{{ activity.description }}</p>
         </b-col>
-        <b-col md="2" v-if="activity.permissions.edit" class="text-right">
-
+        <b-col md="4" v-if="activity.permissions.edit" class="text-right">
           <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning">
             <font-awesome-icon :icon="['fas', 'edit']" />
             Edit project
           </b-btn>
           <template v-if="preparingFile">
-            <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-top:4px;" @click="getProjectBrief">
+            <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-left:4px;" @click="getProjectBrief">
               <b-spinner label="Preparing" small></b-spinner> Preparing file...
             </b-btn>
           </template>
           <template v-else>
-            <b-btn variant="primary" class="float-md-right" id="download_excel" href="#" style="margin-top:4px;" @click="getProjectBrief">
+            <b-btn variant="primary" class="float-md-right" id="download_excel" href="#" style="margin-left:4px;" @click="getProjectBrief">
               <font-awesome-icon :icon="['fas', 'download']" /> Project Brief
             </b-btn>
           </template>
