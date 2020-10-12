@@ -39,15 +39,17 @@
           <b-col md="6">
             <b-alert show variant="light">
               <h3>Advanced download formats</h3>
-              <p class="lead">Download detailed AMCU financial transactions data for analysis.</p>
-              <p>
-                <DownloadFile
-                  label="Download Excel"
-                  file-name="activities_external_transactions.xlsx"
-                  variant="secondary"
-                  size="sm"
-                  url="exports/activities_external_transactions.xlsx" />
-              </p>
+              <template v-if="['external', 'both'].includes(loggedInUser.permissions_dict.view)">
+                <p class="lead">Download detailed AMCU financial transactions data for analysis.</p>
+                <p>
+                  <DownloadFile
+                    label="Download Excel"
+                    file-name="activities_external_transactions.xlsx"
+                    variant="secondary"
+                    size="sm"
+                    url="exports/activities_external_transactions.xlsx" />
+                </p>
+              </template>
               <template v-if="['both'].includes(loggedInUser.permissions_dict.view)">
                 <p class="lead">Download integrated dataset of AMCU and PSIP projects.</p>
                 <p>
@@ -63,6 +65,33 @@
           </b-col>
         </template>
       </b-row>
+      <template v-if="['external', 'both'].includes(loggedInUser.permissions_dict.view)">
+        <b-row>
+          <b-col md="6">
+            <h2>Project Briefs</h2>
+            <p class="lead">Download all project briefs for a particular donor.</p>
+            <b-form-group label="Select donor"
+              label-class="font-weight-bold">
+              <b-form-select :options="reportingOrganisations"
+              value-field="id"
+              text-field="name"
+              v-model="projectBriefDonorID">
+                <template v-slot:first>
+                  <option :value="null">Select a donor</option>
+                </template>
+              </b-form-select>
+            </b-form-group>
+            <p v-if="projectBriefDonorID!=null">
+              <DownloadFile
+                :label="`Download Project Briefs for ${projectBriefDonorName}`"
+                :file-name="`Project Briefs ${projectBriefDonorName}.zip`"
+                variant="secondary"
+                size="sm"
+                :url="`project-brief/donor/${projectBriefDonorID}.zip`" />
+            </p>
+          </b-col>
+        </b-row>
+      </template>
       <hr />
       <template v-if="loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('admin')">
         <h1 id="excel-reporting-templates">Excel reporting templates</h1>
@@ -385,7 +414,8 @@ export default {
       baseURL: this.$config.baseURL,
       isBusy: true,
       importMessagesTemplate: [],
-      importMessagesPSIP: []
+      importMessagesPSIP: [],
+      projectBriefDonorID: null
     }
   },
   computed: {
@@ -396,6 +426,14 @@ export default {
         return obj
           },
       {})[this.importTemplate.template_type]
+    },
+    projectBriefDonorName() {
+      if (this.projectBriefDonorID == null) {
+        return "(Select a donor)"
+      }
+      return this.reportingOrganisations.filter(org => {
+        return org.id == this.projectBriefDonorID
+      })[0].name
     },
     selectedTemplateOptionDescription() {
       return this.templateOptions.reduce(
@@ -455,9 +493,10 @@ export default {
             solid: true
           })
           this.$set(this, messages, [response.data.msg].concat(response.data.messages ? response.data.messages : []))
+          data.file = null
         })
         .catch(error => {
-          alert(error)
+          console.log('Error uploading file', error)
         })
       this.$set(data, 'isBusy', false)
     },
