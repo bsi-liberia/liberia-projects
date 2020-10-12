@@ -38,7 +38,7 @@ def get_db_codelists():
 
 def get_codelists(LANG=None):
     if not LANG:
-        LANG = babel.get_locale()
+        LANG = babel.get_locale() or "en"
 
     current_dir = os.path.join(os.path.dirname(__file__))
 
