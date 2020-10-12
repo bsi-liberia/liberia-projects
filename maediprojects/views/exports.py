@@ -13,7 +13,12 @@ from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import import_psip_transactions as qimport_psip_transactions
 from maediprojects.query import import_client_connection as qimport_client_connection
 from maediprojects.query import user as quser
+from maediprojects.query import generate_docx as qgenerate_docx
 from maediprojects.lib import util
+import io
+import sys
+import re
+import zipfile
 
 
 blueprint = Blueprint('exports', __name__, url_prefix='/', static_folder='../static')
@@ -22,6 +27,31 @@ ALLOWED_EXTENSIONS = set(['xlsx', 'xls'])
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@blueprint.route("/api/project-brief/<activity_id>.docx")
+def export_project_brief(activity_id):
+    brief = qgenerate_docx.make_doc(activity_id)
+    brief.seek(0)
+    return Response(brief, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
+@blueprint.route("/api/project-brief/donor/<reporting_org_id>.zip")
+def export_project_brief_donor(reporting_org_id):
+    zip_buffer = io.BytesIO()
+    activities = qactivity.get_activities_by_reporting_org_id(reporting_org_id)
+    def make_title(title):
+        if sys.version_info.major == 2:
+            return re.sub("/", "-", title.encode("utf-8"))
+        return re.sub("/", "-", title)
+
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        for activity in activities:
+            brief = qgenerate_docx.make_doc(activity.id)
+            brief.seek(0)
+            zip_file.writestr("{} - {}.docx".format(activity.id, make_title(activity.title)), brief.getvalue())
+    zip_buffer.seek(0)
+    return Response(zip_buffer, mimetype="application/zip, application/octet-stream, application/x-zip-compressed, multipart/x-zip")
 
 
 @blueprint.route("/api/client-connection/")
