@@ -196,7 +196,7 @@ def annotate_activities_with_aggregates(fiscal_year):
     fy_counterpart_funding = dict(FY_counterpart_funding_for_FY(fiscal_year))
 
     activities = models.Activity.query.filter(
-        models.Activity.id.in_(fy_forwardspends.keys()+fy_counterpart_funding.keys())
+        models.Activity.id.in_(list(fy_forwardspends.keys())+list(fy_counterpart_funding.keys()))
     ).all()
 
     def annotate_aggs(activity):
