@@ -65,7 +65,7 @@
           </b-col>
         </template>
       </b-row>
-      <template v-if="['external', 'both'].includes(loggedInUser.permissions_dict.view)">
+      <template v-if="(loggedInUser.roles_list.includes('desk-officer')) || (loggedInUser.roles_list.includes('admin')) || (loggedInUser.roles_list.includes('management'))">
         <b-row>
           <b-col md="6">
             <h2>Project Briefs</h2>
@@ -243,14 +243,6 @@
         <dt>IATI XML file</dt>
         <dd><code>
           <a :href="`${baseURL}/iati/2.01/LR.xml`">{{baseURL}}/iati/2.01/LR.xml</a></code></dd>
-        <dt>CSV file</dt>
-        <dd>
-          <DownloadFile
-            label="Download CSV file"
-            file-name="activities.csv"
-            variant="secondary"
-            size="sm"
-            url="exports/activities.csv" /></dd>
       </dl>
       <p></p>
       <b-modal id="customise-fields" title="Customise columns" size="xl" scrollable ok-only>
