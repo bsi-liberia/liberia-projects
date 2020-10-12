@@ -6,7 +6,7 @@ if sys.version_info.major == 2:
     import unicodecsv
 else:
     import csv as unicodecsv
-from io import StringIO
+import io
 import re
 
 from maediprojects.query import activity as qactivity
@@ -94,17 +94,17 @@ def disb_fy_fqs(start=2013):
 
 
 def disb_fy_fqs_with_mtefs(start=2013):
-    disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
-                     "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy),
-                     "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
-                     "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
+    disbFYs_QTRs = [(u"{} Q1 (MTEF)".format(fy), u"{} Q2 (MTEF)".format(fy),
+                     u"{} Q3 (MTEF)".format(fy), u"{} Q4 (MTEF)".format(fy),
+                     u"{} Q1 (D)".format(fy), u"{} Q2 (D)".format(fy),
+                     u"{} Q3 (D)".format(fy), u"{} Q4 (D)".format(fy)
              ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
     return [item for sublist in disbFYs_QTRs for item in sublist]
 
 
 def mtef_fy_fqs(start=datetime.datetime.utcnow().year+1, end=False):
-    MTEFFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
-                     "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy)
+    MTEFFYs_QTRs = [(u"{} Q1 (MTEF)".format(fy), u"{} Q2 (MTEF)".format(fy),
+                     u"{} Q3 (MTEF)".format(fy), u"{} Q4 (MTEF)".format(fy)
                      ) for fy in range(start, {False: start+3, True: end}[bool(end)])]
     return [item for sublist in MTEFFYs_QTRs for item in sublist]
 
@@ -126,7 +126,7 @@ def generate_disb_fys():
     return disbFYs_QTRs+MTEFFYs_QTRs
 
 def generate_csv():
-    csv_file = StringIO.StringIO()
+    csv_file = io.StringIO()
     cl_lookups = get_codelists_lookups()
     disb_fys = generate_disb_fys()
     _headers = headers + disb_fys
