@@ -22,6 +22,16 @@
             <font-awesome-icon :icon="['fas', 'edit']" />
             Edit project
           </b-btn>
+          <template v-if="preparingFile">
+            <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-top:4px;" @click="getProjectBrief">
+              <b-spinner label="Preparing" small></b-spinner> Preparing file...
+            </b-btn>
+          </template>
+          <template v-else>
+            <b-btn variant="primary" class="float-md-right" id="download_excel" href="#" style="margin-top:4px;" @click="getProjectBrief">
+              <font-awesome-icon :icon="['fas', 'download']" /> Project Brief
+            </b-btn>
+          </template>
         </b-col>
       </b-row>
       <b-row>
@@ -344,7 +354,8 @@ export default {
           'value': true,
           'text': 'By Fund Source'
         },
-      ]
+      ],
+      preparingFile: false
     }
   },
   mounted: function() {
@@ -544,6 +555,24 @@ export default {
           this.financesFundSources = response.data.finances
           this.fundSources = response.data.fund_sources
         });
+    },
+    async getProjectBrief() {
+      this.preparingFile = true
+      await this.$axios({url: `project-brief/${this.activityID}.docx`,
+        method: 'GET',
+        responseType: 'blob'}).then(response => {
+        if (response.status === 200) {
+          saveAs(
+            new Blob([response.data]),
+            `${this.activityID} - ${this.activity.title}.docx`
+          )
+        } else if (response.status === 500) {
+          alert(
+            'Sorry, there was an error, and the project brief could not be downloaded.'
+          )
+        }
+      })
+      this.preparingFile = false
     }
   }
 }
