@@ -49,7 +49,7 @@ pytz==2015.7
 requests==2.20.0
 scandir==1.10.0
 selenium==3.141.0
-six==1.10.0
+six==1.15.0
 speaklater==1.3
 SQLAlchemy==1.3.0
 unicodecsv==0.14.1
