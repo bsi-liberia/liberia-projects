@@ -1,5 +1,6 @@
 import xlrd
 import datetime
+import sys
 
 
 def getDataFromFile(f, file_contents, sheet, by_id=False, headers_row=0):
@@ -29,7 +30,10 @@ def getDataFromFile(f, file_contents, sheet, by_id=False, headers_row=0):
                 val = val.strftime("%d/%m/%Y")
             elif cell_type == xlrd.XL_CELL_BOOLEAN:
                 val = ('FALSE', 'TRUE')[val]
-            return (sheet.cell_value(headers_row,j).strip(), val.encode("utf8"))
+            if sys.version_info.major == 2:
+                return (sheet.cell_value(headers_row,j).strip(), val.encode("utf8"))
+            else:
+                return (sheet.cell_value(headers_row,j).strip(), val)
 
         out = [ dict(item(i,j) for j in range(sheet.ncols)) \
             for i in range(headers_row+1, sheet.nrows) ]
