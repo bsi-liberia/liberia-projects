@@ -5,6 +5,9 @@ import re
 from flask import flash
 from openpyxl.styles import Protection
 import xlrd
+import sys
+
+from six import u as unicode
 
 from maediprojects import models
 from maediprojects.extensions import db
@@ -73,6 +76,12 @@ def process_transaction(activity, amount, currency, column_name):
     disbursement.classifications = process_transaction_classifications(activity)
     return disbursement
 
+
+def clean_string(_string):
+    if sys.version_info.major == 2:
+        return _string.decode("utf-8")
+    return _string
+
 def update_activity_data(activity, existing_activity, row, codelists):
     updated = False
     start_date = datetime.datetime.strptime(row[u"Activity Dates (Start Date)"], "%d/%m/%Y").date()
@@ -84,18 +93,18 @@ def update_activity_data(activity, existing_activity, row, codelists):
         (row.get(u"Activity Dates (Start Date)") == None) or
         (row.get(u"Activity Dates (End Date)") == None)):
         return False
-    if existing_activity[u"Activity Title"] != row[u"Activity Title"]:
-        activity.title = row[u"Activity Title"].decode("utf-8")
+    if existing_activity[u"Activity Title"] != clean_string(row[u"Activity Title"]):
+        activity.title = clean_string(row[u"Activity Title"])
         updated = True
-    if ("Activity Description" in row) and (existing_activity[u"Activity Description"] != row[u"Activity Description"]):
-        activity.description = row[u"Activity Description"].decode("utf-8")
+    if ("Activity Description" in row) and (existing_activity[u"Activity Description"] != clean_string(row[u"Activity Description"])):
+        activity.description = clean_string(row[u"Activity Description"])
         updated = True
-    if ("Implemented by" in row) and (existing_activity[u"Implemented by"] != row[u"Implemented by"]):
+    if ("Implemented by" in row) and (existing_activity[u"Implemented by"] != clean_string(row[u"Implemented by"])):
         for organisation in activity.organisations:
             if organisation.role == 4:
                 db.session.delete(organisation)
         activity.organisations.append(qorganisations.make_organisation(
-            row[u"Implemented by"].decode("utf-8"), 4))
+            clean_string(row[u"Implemented by"]), 4))
         updated = True
     if existing_activity[u"Activity Status"] != row[u"Activity Status"]:
         activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
@@ -206,7 +215,7 @@ def make_updated_info(updated, activity, num_updated_activities):
         num_updated_activities += 1
         activity_updated(activity.id)
     else:
-        return num_updated_activities
+        return None, num_updated_activities
     msg = u"Updated {} (Project ID: {}): ".format(
             activity.title,
             activity.id)
@@ -257,25 +266,23 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
             data = xlsx_to_csv.getDataFromFile(
                 input_file.filename, input_file.read(), sheet_id, True)
             if _type == 'mtef':
-                mtef_cols = filter(filter_mtef, data[0].keys())
-                counterpart_funding_cols = filter(filter_counterpart, data[0].keys())
+                mtef_cols = list(filter(filter_mtef, data[0].keys()))
+                counterpart_funding_cols = list(filter(filter_counterpart, data[0].keys()))
                 if len(mtef_cols) == 0:
-                    flash("No columns containing MTEF projections data \
-                    were found in the uploaded spreadsheet!", "danger")
-                    raise Exception
+                    raise Exception("No columns containing MTEF projections data \
+                    were found in the uploaded spreadsheet!")
             elif _type == 'disbursements':
                 for _column_name in disbursement_cols:
                     if _column_name not in data[0].keys():
-                        flash(u"The column {} containing financial data was not \
-                        found in the uploaded spreadsheet!".format(column_name), "danger")
-                        raise Exception
+                        raise Exception(u"The column {} containing financial data was not \
+                        found in the uploaded spreadsheet!".format(_column_name))
             for row in data: # each row is one ID
-                activity_id = row[u"ID"]
+                activity_id = int(row[u"ID"])
                 activity = qactivity.get_activity(activity_id)
                 if not activity:
-                    flash("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                    messages.append("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
                         and was not imported! Please create this activity in the \
-                        system before trying to import.".format(row[u'ID'], row[u'Activity Title']), "warning")
+                        system before trying to import.".format(row[u'ID'], row[u'Activity Title']))
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
                 if _type == 'mtef':
@@ -293,20 +300,21 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                     }
                 # Mark activity as updated and inform user
                 update_message, num_updated_activities = make_updated_info(updated, activity, num_updated_activities)
-                messages.append(update_message)
+                if update_message is not None: messages.append(update_message)
     except xlrd.xldate.XLDateNegative as e:
-        flash(u"""There was an unexpected error when importing your projects,
+        messages.append(u"""There was an unexpected error when importing your projects,
         one of the dates in your sheet has a negative value: {}. Please check your sheet
-        and try again.""".format(e), "danger")
+        and try again.""".format(e))
     except Exception as e:
         if activity_id is not None:
-            flash("""There was an unexpected error when importing your
+            messages.append("""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
-            The error was: {}""".format(activity_id, e), "danger")
+            The error was: {}""".format(activity_id, e))
         else:
-            flash("""There was an unexpected error when importing your projects,
-        the error was: {}""".format(e), "danger")
+            messages.append("""There was an error while importing your projects,
+        the error was: {}""".format(e))
     db.session.commit()
+    print(messages)
     return messages, num_updated_activities
 
 def generate_xlsx_filtered(arguments={}):
@@ -339,7 +347,7 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=No
     mtef_cols, counterpart_funding_cols, disb_cols, _headers = helpers.get_column_information(mtef, _headers)
     for required_field in [u"ID", u"Activity Status", u'Activity Dates (Start Date)', u'Activity Dates (End Date)']:
         if required_field not in _headers:
-            flash("Error: the field `{}` is required in this export. Please adjust your selected fields and try again!".format(required_field), "danger")
+            flash("Error: the field `{}` is required in this export. Please adjust your selected fields and try again!".format(required_field))
             return False
     writer = xlsx_writer.xlsxDictWriter(_headers,
         _type={True: "mtef", False: "disbursements"}[mtef],
