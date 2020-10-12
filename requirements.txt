@@ -45,6 +45,7 @@ pytest-selenium==1.17.0
 pytest-variables==1.7.1
 python-dateutil==2.7.3
 python-editor==1.0.4
+python-docx==0.8.10
 pytz==2015.7
 requests==2.20.0
 scandir==1.10.0
