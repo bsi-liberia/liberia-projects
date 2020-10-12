@@ -30,6 +30,7 @@ def allowed_file(filename):
 
 
 @blueprint.route("/api/project-brief/<activity_id>.docx")
+@jwt_required
 def export_project_brief(activity_id):
     brief = qgenerate_docx.make_doc(activity_id)
     brief.seek(0)
@@ -37,6 +38,7 @@ def export_project_brief(activity_id):
 
 
 @blueprint.route("/api/project-brief/donor/<reporting_org_id>.zip")
+@jwt_required
 def export_project_brief_donor(reporting_org_id):
     zip_buffer = io.BytesIO()
     activities = qactivity.get_activities_by_reporting_org_id(reporting_org_id)
