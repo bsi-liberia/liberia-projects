@@ -9,6 +9,7 @@ if sys.version_info.major == 2:
     import unicodecsv
 else:
     import csv as unicodecsv
+from six import u as unicode
 
 from maediprojects import models
 from maediprojects.lib import codelists, util
@@ -19,6 +20,11 @@ from maediprojects.query import organisations as qorganisations
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+
+def clean_string(_string):
+    if sys.version_info.major == 2:
+        return unicode(_string.decode("utf-8"))
+    return _string
 
 def preprocess_data(csv):
     def append_path(root, data):
@@ -121,7 +127,7 @@ CODES = {
 
 def clean_get_create_organisation(_name, _code=None):
     # Remove "\" character from string
-    name = re.sub(r"\\", "", unicode(_name.decode("utf-8")).strip())
+    name = re.sub(r"\\", "", clean_string(_name.strip()))
     if _code is not None:
         org_from_code = qorganisations.get_organisation_by_code(_code)
         if org_from_code: return org_from_code
@@ -281,7 +287,7 @@ def import_file():
             "user_id": 1, #FIXME
             "domestic_external": u"domestic",
             "code": unicode(activity["code"]),
-            "title": unicode(activity["name"].decode("utf-8")),
+            "title": clean_string(activity["name"]),
             "description": u"",
             # "description": nonempty_from_list([
             #     unicode(activity["Project Description"].decode("utf-8")),
