@@ -242,7 +242,7 @@ def build_transaction_103(transaction):
 
     tvalue = et.Element("value")
     t.append(tvalue)
-    tvalue.text = unicode(transaction_value)
+    tvalue.text = unicode(str(transaction_value))
     tvalue.set("value-date", transaction_date)
 
     if transaction_description:
@@ -273,7 +273,7 @@ def build_transaction(transaction):
 
     tvalue = et.Element("value")
     t.append(tvalue)
-    tvalue.text = unicode(transaction_value)
+    tvalue.text = unicode(str(transaction_value))
     tvalue.set("value-date", transaction_date)
 
     if transaction_description:
