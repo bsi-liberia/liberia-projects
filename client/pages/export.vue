@@ -65,7 +65,7 @@
           </b-col>
         </template>
       </b-row>
-      <template v-if="(loggedInUser.roles_list.includes('desk-officer')) || (loggedInUser.roles_list.includes('admin')) || (loggedInUser.roles_list.includes('management'))">
+      <template v-if="loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('admin') || loggedInUser.roles_list.includes('management')">
         <b-row>
           <b-col md="6">
             <h2>Project Briefs</h2>
