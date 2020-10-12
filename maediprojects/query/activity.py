@@ -5,6 +5,8 @@ from collections import OrderedDict
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
+from six import u as unicode
+
 from maediprojects.lib.util import isostring_date, isostring_year
 from maediprojects.lib import codelists, util
 from . import finances as qfinances
@@ -240,6 +242,11 @@ def getISODate(value):
 
 def getJSONDate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+
+def get_activities_by_reporting_org_id(reporting_org_id):
+    return models.Activity.query.filter_by(reporting_org_id=reporting_org_id).all()
+
 
 def list_activities_by_filters(filters, permission_name="view"):
     query = models.Activity.query.outerjoin(
