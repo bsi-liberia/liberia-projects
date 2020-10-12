@@ -9,6 +9,7 @@ if sys.version_info.major == 2:
     import unicodecsv
 else:
     import csv as unicodecsv
+from six import u as unicode
 
 from maediprojects import models
 from maediprojects.lib import codelists
