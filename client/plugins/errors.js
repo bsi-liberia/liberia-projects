@@ -2,9 +2,9 @@
 export default function ({ $axios, app, redirect }) {
   $axios.onError(error => {
     const code = parseInt(error.response && error.response.status)
-    if ([401, 422].includes(code)) {
+    if ([401, 403, 422].includes(code)) {
       if (app.router.app._route.name == "login") { return }
-      app.router.app.$bvToast.toast(`Please login again.`, {
+      app.router.app.$bvToast.toast(`Please login to access this page.`, {
           title: 'Error',
           autoHideDelay: 10000,
           solid: true,
