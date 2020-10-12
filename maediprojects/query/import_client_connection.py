@@ -8,6 +8,7 @@ import openpyxl
 import os
 from collections import defaultdict
 import datetime
+from six import u as unicode
 
 
 def first_or_only(list_or_dict):
