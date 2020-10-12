@@ -1,6 +1,6 @@
 import datetime
 from lxml import etree as et
-
+from six import u as unicode
 from flask import current_app
 
 from maediprojects.query import activity as qactivity
