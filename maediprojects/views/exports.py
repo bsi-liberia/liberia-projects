@@ -76,7 +76,8 @@ def import_template():
             were found. Check that you selected the correct file and that it
             contains updated MTEF projections data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
-            on this page."""}), 200)
+            on this page.""",
+            'messages': result_messages}), 200)
         elif request.form.get('template_type') == 'disbursements':
             fy_fq = util.previous_fy_fq() #FIXME request.form['fy_fq']
             # For each sheet: convert to dict
@@ -95,7 +96,9 @@ def import_template():
             were found. Check that you selected the correct file and that it
             contains updated {} data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
-            on this page.""".format(util.column_data_to_string(fy_fq))}), 200)
+            on this page.""".format(util.column_data_to_string(fy_fq)),
+            'messages': result_messages
+            }), 200)
     return make_response(jsonify({'msg': "Sorry, but that file cannot be imported. It must be of type xls or xlsx."}), 400)
 
 @blueprint.route("/api/exports/activities.csv")
