@@ -382,7 +382,7 @@ class Activity(db.Model):
 
     @hybrid_property
     def results_average(self):
-        numerical_periods = filter(lambda ip: ip.percent_complete != None, self.result_indicator_periods)
+        numerical_periods = list(filter(lambda ip: ip.percent_complete != None, self.result_indicator_periods))
         if not numerical_periods: return None
         return sum(list(map(lambda ip: ip.percent_complete, numerical_periods)))/len(numerical_periods)
 
@@ -623,7 +623,7 @@ class Activity(db.Model):
         return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
     def as_jsonable_dict(self):
-        role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").iteritems())
+        role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").items())
         ret_data = {
             'classifications': collections.defaultdict(dict),
             'reporting_org': self.reporting_org.as_dict(),
