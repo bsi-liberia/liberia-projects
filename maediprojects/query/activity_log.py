@@ -2,6 +2,7 @@ import datetime
 import json
 from maediprojects.extensions import db
 from maediprojects import models
+from six import u as unicode
 
 
 class JSONEncoder(json.JSONEncoder):
