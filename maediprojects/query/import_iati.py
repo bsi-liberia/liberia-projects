@@ -11,6 +11,7 @@ from maediprojects.lib.codelists import get_codelists_lookups
 from maediprojects import models
 from maediprojects.extensions import db
 import requests
+from six import u as unicode
 
 
 DATASTORE_URL = "http://datastore.iatistandard.org/api/1/access/activity.xml?iati-identifier={}"
