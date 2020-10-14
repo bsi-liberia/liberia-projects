@@ -252,7 +252,6 @@ export default {
         .get(this.getUserURL)
         .then((response) => {
           this.user = response.data.user
-          Vue.set(this.user, 'user_roles', response.data.userRoles)
           this.roles = response.data.roles
         })
         .catch(error => {
@@ -263,8 +262,14 @@ export default {
       this.isBusy = false
     },
     updateUser() {
+      var _userData = this.user
+      if (this.changePassword == true) {
+        this.$set(_userData, 'change_password', true)
+      } else {
+        this.$delete(_userData, 'change_password')
+      }
       this.$axios
-        .post(this.getUserURL, this.user).then(response => {
+        .post(this.getUserURL, _userData).then(response => {
             if (this.mode == 'new') {
               this.user = response.data.user
               this.$router.push({ name: 'users-id', params: {id: this.user.id}})
