@@ -16,8 +16,8 @@
         <b-col md="8">
           <p class="lead">{{ activity.description }}</p>
         </b-col>
-        <b-col md="4" v-if="activity.permissions.edit" class="text-right">
-          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning">
+        <b-col md="4" v-if="activity.permissions.edit || loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('management')" class="text-right">
+          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning" v-if="activity.permissions.edit">
             <font-awesome-icon :icon="['fas', 'edit']" />
             Edit project
           </b-btn>
