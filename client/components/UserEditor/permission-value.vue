@@ -1,5 +1,5 @@
 <template>
-  <b-form-group state="validation">
+  <b-form-group :state="validation">
     <b-select
     class="form-control" :options="permissionValues"
     text-field="name" v-model="permission_value"
