@@ -1,9 +1,19 @@
 <template>
     <div>
       <h2>Basic data</h2>
+      <b-form-group
+        label="Dashboard ID" label-cols-sm="2"
+        for="id">
+        <b-input plaintext name="id" id="id"
+        :value="activity.id" v-if="activity.id"></b-input>
+      </b-form-group>
       <finances-input
-       label="Project code" label-cols-sm="2"
-       :transaction="activity" type="text" name="code" id="code"
+        label="Donor project code" label-cols-sm="2"
+        :transaction="activity" type="text" name="iati_identifier" id="iati_identifier"
+        :value.sync="activity.iati_identifier" placeholder="If known"></finances-input>
+      <finances-input
+        label="GoL budget code" label-cols-sm="2"
+        :transaction="activity" type="text" name="code" id="code"
         :value.sync="activity.code" placeholder="If known"></finances-input>
       <b-form-group
         label="Last updated" label-cols-sm="2"
@@ -18,7 +28,23 @@
       <finances-textarea
         label="Description" label-cols-sm="2"
         name="description" id="description"
+        description="Describes the overall purpose of the project and outlines its various components."
         rows="2" :value.sync="activity.description"></finances-textarea>
+      <finances-textarea
+        label="Objectives" label-cols-sm="2"
+        name="objectives" id="objectives"
+        description="Describes the specific objectives of the project in detail."
+        rows="2" :value.sync="activity.objectives"></finances-textarea>
+      <finances-textarea
+        label="Alignment to PAPD" label-cols-sm="2"
+        name="papd_alignment" id="papd_alignment"
+        description="A brief description of how this project is aligned to the national development agenda"
+        rows="2" :value.sync="activity.papd_alignment"></finances-textarea>
+      <finances-textarea
+        label="Expected deliverables" label-cols-sm="2"
+        name="deliverables" id="deliverables"
+        description="Describes the project's expected results"
+        rows="2" :value.sync="activity.deliverables"></finances-textarea>
       <finances-input
         label="Start date" label-cols-sm="2"
         type="date" name="start_date" id="start_date"
