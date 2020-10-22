@@ -224,9 +224,13 @@ class Activity(db.Model):
             nullable=False,
             index=True)
     user = sa.orm.relationship("User")
+    iati_identifier = sa.Column(sa.UnicodeText)
     code = sa.Column(sa.UnicodeText)
     title = sa.Column(sa.UnicodeText)
     description = sa.Column(sa.UnicodeText)
+    objectives = sa.Column(sa.UnicodeText)
+    deliverables = sa.Column(sa.UnicodeText)
+    papd_alignment = sa.Column(sa.UnicodeText)
     start_date = sa.Column(sa.Date)
     end_date = sa.Column(sa.Date)
     organisations = sa.orm.relationship("ActivityOrganisation",
