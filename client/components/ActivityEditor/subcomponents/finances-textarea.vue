@@ -2,7 +2,8 @@
   <b-form-group :state="validation"
     :label="label"
     :label-cols-sm="labelColsSm"
-    :label-for="name">
+    :label-for="name"
+    :description="description">
     <b-textarea :name="name" :placeholder="placeholder"
     v-model="_value" :rows="rows" :disabled="disabled"
     v-on:change="update" :state="validation">
@@ -14,7 +15,7 @@ export default {
   data() {
     return { validation: null }
   },
-  props: ["transaction", "name", "placeholder", "value", "rows", "disabled", "label", "label-cols-sm"],
+  props: ["transaction", "name", "placeholder", "value", "rows", "disabled", "label", "label-cols-sm", "description"],
   inject: ['updateFinances'],
   methods: {
     update(newValue, oldValue) {
