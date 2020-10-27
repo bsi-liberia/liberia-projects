@@ -15,9 +15,9 @@ def make_doc(activity_id):
     ('LPD code', str(activity.id)),
     ('Donor Project Code', activity.code or ""),
     ('Project Description', activity.description or ""),
-    ('Project Objectives', ''),
-    ('Expected Deliverables', ''),
-    ('Alignment to PAPD', ''),
+    ('Project Objectives', activity.objectives or ""),
+    ('Expected Deliverables', activity.deliverables or ""),
+    ('Alignment to PAPD', activity.papd_alignment or ""),
     ]
     docx.rows_to_table(descriptive_data, document)
     document.add_heading("Basic data", 2)
