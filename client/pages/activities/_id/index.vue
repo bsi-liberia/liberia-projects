@@ -8,7 +8,7 @@
     </template>
     <template v-else>
       <b-row>
-        <b-col md="8">
+        <b-col :md="this.showTools ? 8 : false">
           <b-row>
             <b-col>
               <h1>{{ activity.title }}</h1>
@@ -32,7 +32,7 @@
             </b-col>
           </b-row>
         </b-col>
-        <b-col md="4" v-if="activity.permissions.edit || loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('results-data-entry') || loggedInUser.roles_list.includes('results-data-design')" class="text-right">
+        <b-col md="4" v-if="showTools" class="text-right">
           <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning" v-if="activity.permissions.edit" class="mb-1">
             <font-awesome-icon :icon="['fas', 'edit']" />
             Edit project
@@ -396,6 +396,9 @@ export default {
     */
   },
   computed: {
+    showTools() {
+      return this.activity.permissions.edit || this.loggedInUser.roles_list.includes('desk-officer') || this.loggedInUser.roles_list.includes('management') || this.loggedInUser.roles_list.includes('results-data-entry') || this.loggedInUser.roles_list.includes('results-data-design')
+    },
     isBusy() {
       return Object.keys(this.activity).length == 0
     },
