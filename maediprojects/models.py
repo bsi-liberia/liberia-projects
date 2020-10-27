@@ -615,8 +615,8 @@ class Activity(db.Model):
                     'significance': pm.significance
                 }), self.policy_markers))
         for policy_marker in all_markers:
-            if policy_marker not in activity_policy_markers:
-                activity_policy_markers[policy_marker] = {
+            if policy_marker.code not in activity_policy_markers:
+                activity_policy_markers[policy_marker.code] = {
                     'code': policy_marker.code,
                     'name': policy_marker.name,
                     'significance': None
