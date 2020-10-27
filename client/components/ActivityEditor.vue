@@ -71,6 +71,12 @@
                   :activity.sync="activity"
                   :api_routes="api_routes"
                   :mode="mode"></sectors-section>
+                <h2>Policy Markers</h2>
+                <policy-markers-section
+                  :codelists="codelists"
+                  :activity.sync="activity"
+                  :api_routes="api_routes"
+                  :mode="mode"></policy-markers-section>
               </b-card-text>
             </b-card-body>
           </transition>
@@ -173,6 +179,7 @@
 <script>
 import ActivityBasicSection from '~/components/ActivityEditor/activity-basic-section.vue'
 import SectorsSection from '~/components/ActivityEditor/sectors-section.vue'
+import PolicyMarkersSection from '~/components/ActivityEditor/policy-markers-section.vue'
 import FinancesSection from '~/components/ActivityEditor/finances-section.vue'
 import MilestonesSection from '~/components/ActivityEditor/milestones-section.vue'
 import LocationsSection from '~/components/ActivityEditor/locations-section.vue'
@@ -184,6 +191,7 @@ export default {
   components: {
     ActivityBasicSection,
     SectorsSection,
+    PolicyMarkersSection,
     FinancesSection,
     MilestonesSection,
     LocationsSection,
