@@ -283,6 +283,9 @@ class Activity(db.Model):
     activity_logs = cascade_relationship(
         "ActivityLog",
         backref="activity")
+    policy_markers = sa.orm.relationship("ActivityPolicyMarker",
+            cascade="all, delete-orphan",
+            backref="activity")
 
     @hybrid_property
     def permissions(self):
@@ -604,6 +607,25 @@ class Activity(db.Model):
         return self.make_classification_data(as_dict=False)
 
     @hybrid_property
+    def policy_markers_data(self):
+        all_markers = PolicyMarker.query.all()
+        activity_policy_markers = dict(map(lambda pm: (pm.policy_marker_code, {
+                    'code': pm.policy_marker_code,
+                    'name': pm.policy_marker.name,
+                    'significance': pm.significance
+                }), self.policy_markers))
+        for policy_marker in all_markers:
+            if policy_marker not in activity_policy_markers:
+                activity_policy_markers[policy_marker] = {
+                    'code': policy_marker.code,
+                    'name': policy_marker.name,
+                    'significance': None
+                }
+
+        print('pms', activity_policy_markers)
+        return activity_policy_markers.values()
+
+    @hybrid_property
     def milestones_data(self):
         all_milestones = Milestone.query.filter_by(
             domestic_external = self.domestic_external
@@ -637,7 +659,7 @@ class Activity(db.Model):
             'milestones': len(self.milestones),
             'permissions': self.permissions,
             'disb_fund_sources': self.disb_fund_sources,
-            'disb_finance_types': self.disb_finance_types,
+            'policy_markers': self.policy_markers_data,
             'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
             'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values()))
         }
@@ -969,6 +991,35 @@ class ActivityFinancesCodelistCode(db.Model):
        ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
        ret_data.update({key: getattr(self, key).as_dict() for key in ['codelist_code']})
        return ret_data
+
+class PolicyMarker(db.Model):
+    __tablename__ = 'policy_marker'
+    code = sa.Column(sa.UnicodeText, primary_key=True)
+    name = sa.Column(sa.UnicodeText)
+    activity_policy_markers = sa.orm.relationship("ActivityPolicyMarker",
+            cascade="all, delete-orphan",
+            backref="policy_marker")
+    __table_args__ = (sa.UniqueConstraint('code',),)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ActivityPolicyMarker(db.Model):
+    __tablename__ = 'activity_policy_marker'
+    id = sa.Column(sa.Integer, primary_key=True)
+    significance = sa.Column(sa.Integer, nullable=True)
+    activity_id = sa.Column(sa.Integer,
+            sa.ForeignKey('activity.id'),
+            nullable=False)
+    policy_marker_code = sa.Column(sa.UnicodeText,
+            sa.ForeignKey('policy_marker.code'),
+            nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint('activity_id', 'policy_marker_code', name='unique_activity_policy_marker_code'),
+    )
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class Milestone(db.Model):
     __tablename__ = 'milestone'
