@@ -19,28 +19,6 @@ import FinancesSelect from './subcomponents/finances-select.vue'
 export default {
   data() {
     return {
-      significance: [
-        {
-          'id': null,
-          'name': 'Unknown',
-          'description': 'The activity has not been assessed as to whether it targets the policy objective.'
-        },
-        {
-          'id': 0,
-          'name': 'Not targeted',
-          'description': 'The activity was examined but found not to target the policy objective.'
-        },
-        {
-          'id': 1,
-          'name': 'Significant objective',
-          'description': 'Significant (secondary) policy objectives are those which, although important, were not the prime motivation for undertaking the activity.'
-        },
-        {
-          'id': 2,
-          'name': 'Principal objective',
-          'description': 'Principal (primary) policy objectives are those which can be identified as being fundamental in the design and impact of the activity and which are an explicit objective of the activity. They may be selected by answering the question "Would the activity have been undertaken without this objective?"'
-        }
-      ]
     }
   },
   components: {
@@ -52,8 +30,18 @@ export default {
       updateFinances: this.updateSector
     }
   },
+  computed: {
+    significance() {
+      if (this.codelists.PolicySignificance == undefined) { return [] }
+      return this.codelists.PolicySignificance.map(item=> {
+        if (item.id == "") { item.id = null }
+        return item
+      })
+    }
+  },
   methods: {
     descriptionText(significance) {
+      if (this.significance.length == 0) { return "" }
       return this.significance.filter(item => {
         return item.id == significance
       })[0].description
