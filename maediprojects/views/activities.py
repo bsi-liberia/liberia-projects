@@ -112,6 +112,15 @@ def activity_edit_attr(activity_id):
             )
         if update_status: return "success"
         else: return "error"
+    elif request_data['type'] == 'policy_marker':
+        policy_marker_code = request_data['code']
+        update_status = qactivity.update_activity_policy_marker(
+            activity_id,
+            int(policy_marker_code),
+            {"attr": request_data['attr'], "value": request_data['value']}
+            )
+        if update_status: return "success"
+        else: return "error"
     elif request_data['type'] == 'organisation':
         update_status = qorganisations.update_activity_organisation(
             request_data['activityorganisation_id'],

@@ -361,6 +361,37 @@ def update_attr(data):
 
 
 
+def update_activity_policy_marker(activity_id, policy_marker_code, data):
+    activity_policy_marker = models.ActivityPolicyMarker.query.filter_by(
+        activity_id = activity_id,
+        policy_marker_code = policy_marker_code
+    ).first()
+    if activity_policy_marker:
+        old_value = getattr(activity_policy_marker, data['attr'])
+        mode = "update"
+    else:
+        activity_policy_marker = models.ActivityPolicyMarker()
+        activity_policy_marker.activity_id = activity_id
+        activity_policy_marker.policy_marker_code = policy_marker_code
+        old_value = {}
+        mode = "add"
+    setattr(activity_policy_marker, data['attr'], data['value'])
+    db.session.add(activity_policy_marker)
+    db.session.commit()
+    activity_updated(activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": mode,
+        "target": "ActivityPolicyMarker",
+        "target_id": activity_policy_marker.id,
+        "old_value": old_value,
+        "value": {data['attr']: data['value']}
+        }
+    )
+    return True
+
+
+
 def update_activity_codelist(activitycodelistcode_id, data):
     activity_codelist = models.ActivityCodelistCode.query.filter_by(
         id = activitycodelistcode_id
