@@ -56,7 +56,8 @@ def get_codelists(LANG=None):
         for row in csv:
             out[cl_name].append({"code": row["code"],
                 "id": row.get("id", row.get("code")),
-                "name": row["name_{}".format(LANG)]})
+                "name": row["name_{}".format(LANG)],
+                "description": row.get("description_{}".format(LANG))})
     out.update(get_db_codelists())
     out['domestic_external'] = [
         {'code': 'domestic', 'id': 'domestic', 'name': 'Domestic / PSIP (PIU)'},
