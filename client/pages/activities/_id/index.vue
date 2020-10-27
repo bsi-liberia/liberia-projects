@@ -8,33 +8,45 @@
     </template>
     <template v-else>
       <b-row>
-        <b-col>
-          <h1>{{ activity.title }}</h1>
-        </b-col>
-      </b-row>
-      <b-row>
         <b-col md="8">
-          <p class="lead">{{ activity.description }}</p>
+          <b-row>
+            <b-col>
+              <h1>{{ activity.title }}</h1>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col>
+              <p class="lead">{{ activity.description }}</p>
+              <template v-if="activity.objectives">
+                <h3>Objectives</h3>
+                <p>{{ activity.objectives }}</p>
+              </template>
+              <template v-if="activity.deliverables">
+                <h3>Deliverables</h3>
+                <p>{{ activity.deliverables }}</p>
+              </template>
+              <template v-if="activity.papd_alignment">
+                <h3>PAPD Alignment</h3>
+                <p>{{ activity.papd_alignment }}</p>
+              </template>
+            </b-col>
+          </b-row>
         </b-col>
-        <b-col md="4" v-if="activity.permissions.edit || loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('management')" class="text-right">
-          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning" v-if="activity.permissions.edit">
+        <b-col md="4" v-if="activity.permissions.edit || loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('results-data-entry') || loggedInUser.roles_list.includes('results-data-design')" class="text-right">
+          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning" v-if="activity.permissions.edit" class="mb-1">
             <font-awesome-icon :icon="['fas', 'edit']" />
             Edit project
           </b-btn>
           <template v-if="preparingFile">
-            <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-left:4px;" @click="getProjectBrief">
+            <b-btn variant="secondary" class="float-md-right mb-1" id="download_excel" style="margin-left:4px;" @click="getProjectBrief">
               <b-spinner label="Preparing" small></b-spinner> Preparing file...
             </b-btn>
           </template>
           <template v-else>
-            <b-btn variant="primary" class="float-md-right" id="download_excel" href="#" style="margin-left:4px;" @click="getProjectBrief">
+            <b-btn variant="primary" class="float-md-right mb-1" id="download_excel" href="#" style="margin-left:4px;" @click="getProjectBrief">
               <font-awesome-icon :icon="['fas', 'download']" /> Project Brief
             </b-btn>
           </template>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col md="6">
           <b-btn variant="primary" :to="{ name: 'activities-id-results-design', params: {id: activity.id}}"
           v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-design'))">
             <font-awesome-icon :icon="['fa', 'magic']" /> Results designer
@@ -43,11 +55,23 @@
           v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-entry')) || (loggedInUser.roles_list.includes('results-data-design'))">
             <font-awesome-icon :icon="['fa', 'clipboard-list']" /> Results data entry
           </b-btn>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col md="6">
           <h3>Basic data</h3>
           <table class="table table-hover table-sm" responsive>
             <tbody>
               <tr>
-                <td><b>Project code</b></td>
+                <td><b>Dashboard ID</b></td>
+                <td>{{ activity.id }}</td>
+              </tr>
+              <tr>
+                <td><b>Donor project code</b></td>
+                <td>{{ activity.iati_identifier }}</td>
+              </tr>
+              <tr>
+                <td><b>GoL budget code</b></td>
                 <td>{{ activity.code }}</td>
               </tr>
               <tr>
