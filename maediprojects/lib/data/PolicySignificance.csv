@@ -1,0 +1,5 @@
+code,name_en,description_en,status
+,Unknown,The activity has not been assessed as to whether it targets the policy objective.,
+0,Not targeted,The activity was examined but found not to target the policy objective.,active
+1,Significant objective,"Significant (secondary) policy objectives are those which, although important, were not the prime motivation for undertaking the activity.",active
+2,Principal objective,"Principal (primary) policy objectives are those which can be identified as being fundamental in the design and impact of the activity and which are an explicit objective of the activity. They may be selected by answering the question ""Would the activity have been undertaken without this objective?""",active
