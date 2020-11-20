@@ -98,11 +98,13 @@
                   name="collaboration_type" id="collaboration_type"
                   :options="codelists.CollaborationType" :value.sync="activity.collaboration_type">
                 </finances-select>
+                <!--
                 <finances-select
                   label="Recipient Country" label-cols-sm="2"
                   name="recipient_country_code" id="recipient_country_code"
                   :options="codelists.Country" :value.sync="activity.recipient_country_code">
                 </finances-select>
+                -->
                 <finances-select
                   label="External or Domestic Finance" label-cols-sm="2"
                   name="domestic_external" id="domestic_external"
