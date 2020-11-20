@@ -153,7 +153,7 @@
           <div id="locationMap">
             <client-only>
               <l-map :zoom=7 :center="[6.5,-9.2]" :options="{scrollWheelZoom: false}">
-                <l-tile-layer url="https://d.tiles.mapbox.com/v3/markbrough.n3kod47p/{z}/{x}/{y}.png"></l-tile-layer>
+                <l-tile-layer url="https://api.mapbox.com/styles/v1/markbrough/ckhe9jol304hs19pd9xkkswsf/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFya2Jyb3VnaCIsImEiOiJUZXFjRHowIn0.8e3Fq018PP1x5QMTxa8n_A"></l-tile-layer>
                 <l-marker :lat-lng="location.latLng" v-for="location in locations" v-bind:key="location.id">
                   <l-popup>{{ location.name }}</l-popup>
                 </l-marker>
