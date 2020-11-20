@@ -43,7 +43,7 @@ export default {
     return {
       validation: null,
       allLocations: [],
-      url: "https://d.tiles.mapbox.com/v3/markbrough.n3kod47p/{z}/{x}/{y}.png",
+      url: "https://api.mapbox.com/styles/v1/markbrough/ckhe9jol304hs19pd9xkkswsf/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFya2Jyb3VnaCIsImEiOiJUZXFjRHowIn0.8e3Fq018PP1x5QMTxa8n_A",
       mapOptions: {
         zoomSnap: 0.,
         scrollWheelZoom: false
