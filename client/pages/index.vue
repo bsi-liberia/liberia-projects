@@ -6,6 +6,11 @@
           across Liberia</h1>
       </b-col>
     </b-row>
+    <b-row class="nopadding">
+      <b-col class="ministry-logo text-center">
+        <img src="~/assets/img/mfdp-logo.png" alt="Ministry of Finance and Development Planning"/>
+      </b-col>
+    </b-row>
     <b-container>
       <b-row class="mt-5">
         <b-col>
@@ -82,6 +87,16 @@
 .nopadding .col {
   padding-right: 0px;
 }
+/*
+.intro-message {
+  background: url('https://eeas.europa.eu/sites/eeas/files/mount_coffee_dam_-_aerial_with_reservoir_0.jpg');
+  background-position: 60% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding: 170px 0 170px;
+  margin-top: none;
+}
+*/
 .intro-message {
   background: #313578;
     background: -moz-linear-gradient(45deg,#313578 0%,#666666 100%);
@@ -99,9 +114,16 @@
     color: #ffffff;
 }
 .intro-message h1 {
-    color: #ffffff;
+    color: #eeeeee;
     font-size: 50px;
-    text-shadow: 1px 1px 2px #333333;
+    text-shadow: 0px 0px 4px #111111;
+}
+.ministry-logo {
+  background: #55a44f;
+    box-shadow: inset 0 0px 0px rgba(0,0,0,.2),inset 0 2px 4px rgba(0,0,0,.2);
+    padding: 10px 0 10px;
+    margin-top: none;
+    color: #ffffff;
 }
 .intro #locationMap {
   width: 100%;
