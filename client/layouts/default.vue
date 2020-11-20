@@ -1,7 +1,7 @@
 <template>
   <div>
-    <b-navbar toggleable="lg" type="light" variant="light" sticky>
-      <b-container>
+    <b-navbar toggleable="lg" type="dark" variant="light" sticky>
+      <b-container fluid>
         <b-navbar-brand :to="'/'">
           <img src="~/assets/img/flag-lr.png" alt="Flag" />
           {{ this.$config.title }}
@@ -84,6 +84,20 @@
   padding-top: 10px;
   padding-bottom: 0;
 }
+/* #55a44f */
+.navbar-default, nav.navbar {
+    background: #55a44f;
+    background: -moz-linear-gradient(45deg,#55a44f 0%,#68b761 100%);
+    background: -webkit-gradient(linear,left bottom,right top,color-stop(0%,#55a44f),color-stop(100%,#68b761));
+    background: -webkit-linear-gradient(45deg,#55a44f 0%,#68b761 100%);
+    background: -o-linear-gradient(45deg,#55a44f 0%,#68b761 100%);
+    background: -ms-linear-gradient(45deg,#55a44f 0%,#68b761 100%);
+    background: linear-gradient(45deg, #55a44f 0%, #68b761 100%) repeat scroll 0 0 transparent;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#55a44f',endColorstr='#68b761',GradientType=1);
+    border-bottom:1px solid #666666;
+
+}
+/*
 .navbar-default, nav.navbar {
     background: #fefefe;
     background: -moz-linear-gradient(180deg,#ffffff 0%,#eeeeee 100%);
@@ -96,6 +110,7 @@
     border-bottom:1px solid #cccccc;
 
 }
+*/
 </style>
 <script>
 import { mapGetters } from 'vuex'
