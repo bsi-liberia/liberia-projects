@@ -109,8 +109,8 @@
     -webkit-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
     -moz-box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
     box-shadow: inset 0 3px 7px rgba(0,0,0,.2),inset 0 -3px 7px rgba(0,0,0,.2);
-    padding: 80px 0 60px;
-    margin-top: none;
+    padding: 80px 0px 60px 0px;
+    margin-top: 0px;
     color: #ffffff;
 }
 .intro-message h1 {
@@ -120,10 +120,14 @@
 }
 .ministry-logo {
   background: #55a44f;
-    box-shadow: inset 0 0px 0px rgba(0,0,0,.2),inset 0 2px 4px rgba(0,0,0,.2);
-    padding: 10px 0 10px;
-    margin-top: none;
-    color: #ffffff;
+  box-shadow: inset 0 0px 0px rgba(0,0,0,.2),inset 0 2px 4px rgba(0,0,0,.2);
+  padding: 10px 1px 10px 10px;
+  margin-top: 0px;
+  color: #ffffff;
+}
+.ministry-logo img {
+  max-width: 100%;
+  padding: 0px 20px 0px 20px;
 }
 .intro #locationMap {
   width: 100%;
