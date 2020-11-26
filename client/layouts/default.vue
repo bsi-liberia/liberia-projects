@@ -35,6 +35,7 @@
               <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
                 <b-nav-item :to="{name: 'export'}">Export data</b-nav-item>
                 <b-nav-item :to="{name: 'help'}" active-class="active">Help</b-nav-item>
+                <b-nav-item :to="{name: 'about'}" active-class="active">About</b-nav-item>
               </template>
             </template>
             <b-nav-item-dropdown right v-if="isAuthenticated">
