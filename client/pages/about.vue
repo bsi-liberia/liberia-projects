@@ -14,13 +14,13 @@ For more information please contact the Department of Economic Management at the
 ### Supported by
 
 <b-row class="text-center">
-  <b-col>
+  <b-col md="4">
     <img src="~/assets/img/swedish-embassy.png" alt="Embassy of Sweden, Monrovia" />
   </b-col>
-  <b-col>
+  <b-col md="4">
     <img src="~/assets/img/USAID.png" alt="USAID" height="60px" />
   </b-col>
-  <b-col>
+  <b-col md="4">
     <img src="~/assets/img/afdb.png" alt="African Development Bank" height="60px" />
   </b-col>
 </b-row>
