@@ -439,7 +439,7 @@ export default {
       const year = today.getFullYear()
       const month = today.getMonth()
       const quarter = months_quarters[month]
-      const previous_quarter = quarters[quarter-1] || quarter[4]
+      const previous_quarter = quarters[quarter-1] || quarters[4]
       const correct_year = year + previous_quarter.year
       return `${correct_year}-${previous_quarter.date}`
     },
