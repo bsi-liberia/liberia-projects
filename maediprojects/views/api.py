@@ -136,29 +136,6 @@ def api_activities_user_results():
         )
 
 
-@blueprint.route("/api/api_activity_milestones/<activity_id>/", methods=["GET", "POST"])
-@jwt_optional
-@quser.permissions_required("view")
-def api_activity_milestones(activity_id):
-    if request.method == "POST":
-        request_data = request.get_json()
-        milestone_id = request_data["milestone_id"]
-        attribute = request_data["attr"]
-        value = request_data["value"]
-        update_status = qmilestone.add_or_update_activity_milestone({
-                    "activity_id": activity_id,
-                    "milestone_id": milestone_id,
-                    "attribute": attribute,
-                    "value": value})
-        if update_status == True:
-            return "success"
-        return "error"
-    else:
-        activity = qactivity.get_activity(activity_id)
-        if activity == None: return abort(404)
-        return jsonify(milestones=activity.milestones_data)
-
-
 @blueprint.route("/api/codelists.json", methods=["GET", "POST"])
 @jwt_required
 @quser.permissions_required("view")
@@ -175,52 +152,6 @@ def api_codelists():
             return jsonify(id = new_fund_source.id)
         return abort(500)
 
-
-@blueprint.route("/api/activity_locations/")
-@jwt_optional
-@quser.permissions_required("view")
-def api_all_activity_locations():
-    """GET returns a list of all locations."""
-    query = models.ActivityLocation.query.join(
-        models.Activity
-    )
-    query = qactivity.filter_activities_for_permissions(query)
-    query = query.outerjoin(
-                    models.ActivityFinances).filter(
-        models.ActivityFinances.transaction_date >= '2019-01-01'
-        )
-    activitylocations = query.all()
-    locations = list(map(lambda al: ({
-        'locationID': al.id,
-        'latitude': al.locations.latitude,
-        'longitude': al.locations.longitude,
-        'latlng': [ al.locations.latitude, al.locations.longitude ],
-        'name': al.locations.name,
-        "title": al.activity.title,
-        "id": al.activity_id}),
-        activitylocations))
-    return jsonify(locations = locations)
-
-@blueprint.route("/api/activity_locations/<activity_id>/", methods=["POST", "GET"])
-@jwt_optional
-def api_activity_locations(activity_id):
-    """GET returns a list of all locations for a given activity_id.
-    POST also accepts locations to be added or deleted."""
-    activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
-    if request.method == "POST":
-        if not quser.check_permissions("edit", None, activity_id): return abort(403)
-        request_data = request.get_json()
-        if request_data["action"] == "add":
-            result = qlocation.add_location(activity_id, request_data["location_id"])
-        elif request_data["action"] == "delete":
-            result = qlocation.delete_location(activity_id, request_data["location_id"])
-        return str(result)
-    elif request.method == "GET":
-        if not quser.check_permissions("view"): return abort(403)
-        locations = list(map(lambda x: x.as_dict(),
-                         qactivity.get_activity(activity_id).locations))
-        return jsonify(locations = locations)
 
 @blueprint.route("/api/locations/<country_code>/")
 def api_locations(country_code):

@@ -8,6 +8,7 @@ from maediprojects.query import activity as qactivity
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import exchangerates as qexchangerates
+from maediprojects.query import milestones as qmilestones
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
 from maediprojects.lib.codelists import get_codelists
@@ -476,3 +477,26 @@ def activity_edit_attr(activity_id):
     if update_status == True:
         return "success"
     return "error"
+
+
+@blueprint.route("/<activity_id>/milestones/", methods=["GET", "POST"])
+@jwt_optional
+@quser.permissions_required("view")
+def api_activity_milestones(activity_id):
+    if request.method == "POST":
+        request_data = request.get_json()
+        milestone_id = request_data["milestone_id"]
+        attribute = request_data["attr"]
+        value = request_data["value"]
+        update_status = qmilestones.add_or_update_activity_milestone({
+                    "activity_id": activity_id,
+                    "milestone_id": milestone_id,
+                    "attribute": attribute,
+                    "value": value})
+        if update_status == True:
+            return "success"
+        return "error"
+    else:
+        activity = qactivity.get_activity(activity_id)
+        if activity == None: return abort(404)
+        return jsonify(milestones=activity.milestones_data)
