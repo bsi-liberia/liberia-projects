@@ -134,7 +134,7 @@ export default {
     },
     getActivityLog: function(currentPage) {
       this.$axios
-        .get('activitylog.json',
+        .get('activity-log/',
           { params: {
               page: currentPage,
               user_id: this.selectedUser
@@ -149,7 +149,7 @@ export default {
     getDetails: function(e) {
       var activitylog_id = e.target.dataset.id;
       this.$axios
-        .get(`activitylog/${activitylog_id}.json`)
+        .get(`activity-log/${activitylog_id}.json`)
         .then(response => {
           this.activitylog_detail = response.data.data;
           this.$bvModal.show("activityLogDetail")
