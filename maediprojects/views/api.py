@@ -5,14 +5,12 @@ from collections import OrderedDict
 
 from flask import Blueprint, request, \
     url_for, Response, current_app, abort
-from flask_login import login_required, current_user
+from flask_login import current_user
 import sqlalchemy as sa
 from sqlalchemy.sql import func
 import requests
 from flask_jwt_extended import (
-    jwt_required, create_access_token,
-    jwt_refresh_token_required, create_refresh_token,
-    get_jwt_identity, get_raw_jwt, jwt_optional
+    jwt_required, jwt_optional
 )
 
 from maediprojects.query import activity as qactivity
@@ -20,14 +18,10 @@ from maediprojects.query import location as qlocation
 from maediprojects.query import finances as qfinances
 from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import counterpart_funding as qcounterpart_funding
-from maediprojects.query import codelists as qcodelists
 from maediprojects.query import organisations as qorganisations
-from maediprojects.query import generate as qgenerate
 from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
-from maediprojects.query import monitoring as qmonitoring
-from maediprojects.query import reports as qreports
 from maediprojects.lib import util, spreadsheet_headers
 from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
 from maediprojects.lib.util import MONTHS_QUARTERS
@@ -264,67 +258,6 @@ def finances_edit_attr(activity_id):
         return jsonify(update_status.as_simple_dict())
     return abort(500)
 
-@blueprint.route("/api/activity_counterpart_funding/<activity_id>/", methods=["POST", "GET"])
-@jwt_required
-@quser.permissions_required("edit")
-def api_activity_counterpart_funding(activity_id):
-    activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
-    """GET returns a list of all counterpart funding for a given activity_id.
-    POST also accepts counterpart funding data to be added, deleted, updated."""
-    if request.method == "POST":
-        request_data = request.get_json()
-        if request_data["action"] == "add":
-            required_date = util.fq_fy_to_date(1,
-                int(request_data["required_fy"])).date().isoformat()
-            data = {
-                "required_value": request_data["required_value"],
-                "required_date": required_date,
-                "budgeted": False,
-                "allotted": False,
-                "disbursed": False,
-            }
-            result = qcounterpart_funding.add_entry(activity_id, data)
-            cf = result.as_dict()
-            cf["required_fy"], fq = util.date_to_fy_fq(cf["required_date"])
-            return jsonify(counterpart_funding=cf)
-        elif request_data["action"] == "delete":
-            result = qcounterpart_funding.delete_entry(activity_id, request_data["id"])
-            if result: return jsonify(result=True)
-            return abort(500)
-        elif request_data["action"] == "update":
-            attr = request_data['attr']
-            value = request_data['value']
-            if value == "true":
-                value = True
-            elif value == "false":
-                value = False
-            if attr == "required_fy":
-                attr = "required_date"
-                value = util.fq_fy_to_date(1,
-                    int(value)).date().isoformat()
-            data = {
-                'activity_id': activity_id,
-                'attr': attr,
-                'value': value,
-                'id': request_data['id'],
-            }
-            update_status = qcounterpart_funding.update_entry(data)
-            if update_status:
-                return jsonify(result=True)
-            return abort(500)
-        return str(result)
-    elif request.method == "GET":
-        def to_fy(counterpart_funding):
-            cf = counterpart_funding.as_dict()
-            cf["required_fy"], fq = util.date_to_fy_fq(counterpart_funding.required_date)
-            return cf
-        counterpart_funding = sorted(
-                        list(map(lambda cf: to_fy(cf),
-                        qactivity.get_activity(activity_id).counterpart_funding)),
-            key=lambda x: x["required_date"])
-        return jsonify(counterpart_funding = counterpart_funding,
-                       fiscal_years = range(2013,2025))
 
 @blueprint.route("/api/activity_forwardspends/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
 @blueprint.route("/api/activity_forwardspends/<activity_id>/", methods=["GET", "POST"])

@@ -241,7 +241,7 @@ export default {
         finances: `activity_finances/${this.$route.params.id}/`,
         finances_update: `activity_finances/${this.$route.params.id}/update_finances/`,
         forwardspends: `activity_forwardspends/${this.$route.params.id}/`,
-        counterpart_funding: `activity_counterpart_funding/${this.$route.params.id}/`,
+        counterpart_funding: `counterpart_funding/${this.$route.params.id}/`,
         results: `activities/${this.$route.params.id}/results.json`,
         documents: `activities/${this.$route.params.id}/documents.json`,
         iati_search: `iati/search/`,
