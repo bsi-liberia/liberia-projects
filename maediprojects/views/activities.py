@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, request, \
     redirect, url_for, abort
 from flask_login import login_required, current_user
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, jwt_optional
 
 from maediprojects.query import codelists as qcodelists
 from maediprojects.query import activity as qactivity
