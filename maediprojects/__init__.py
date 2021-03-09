@@ -65,6 +65,7 @@ def register_blueprints(app):
     app.register_blueprint(views.api.blueprint)
     app.register_blueprint(views.iati.blueprint)
     app.register_blueprint(views.codelists.blueprint)
+    app.register_blueprint(views.activity_log.blueprint)
     app.register_blueprint(views.users.blueprint)
     app.register_blueprint(views.exports.blueprint)
     app.register_blueprint(views.reports.blueprint)
