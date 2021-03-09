@@ -459,47 +459,6 @@ def api_locations(country_code):
             locations[i]["name"] = " - %s" % location["name"]
     return jsonify(locations = locations)
 
-@blueprint.route("/api/codelists/update/", methods=["POST"])
-@jwt_required
-@quser.administrator_required
-def api_codelists_update():
-    # FIXME check for admin status
-    if request.json["codelist_code"] == "organisation":
-        result = qorganisations.update_attr(request.json)
-    else:
-        result = qcodelists.update_attr(request.json)
-    if result:
-        return "OK"
-    else:
-        return "ERROR"
-
-@blueprint.route("/api/codelists/delete/", methods=["POST"])
-@jwt_required
-@quser.administrator_required
-def api_codelists_delete():
-    # FIXME check for admin status
-    if request.json["codelist_code"] == "organisation":
-        result = qorganisations.delete_org(request.json)
-    else:
-        result = qcodelists.delete_code(request.json)
-    if result:
-        return "OK"
-    else:
-        return "ERROR"
-
-@blueprint.route("/api/codelists/new/", methods=["POST"])
-@jwt_required
-@quser.administrator_required
-def api_codelists_new():
-    # FIXME check for admin status
-    if request.json["codelist_code"] == "organisation":
-        result = qorganisations.create_organisation(request.json)
-    else:
-        result = qcodelists.create_code(request.json)
-    if result:
-        return str(result.id)
-    else:
-        return "ERROR"
 
 @blueprint.route("/api/")
 def api_list_routes():
