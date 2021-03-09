@@ -26,7 +26,6 @@ from maediprojects.query import generate as qgenerate
 from maediprojects.query import milestones as qmilestone
 from maediprojects.query import generate_csv as qgenerate_csv
 from maediprojects.query import user as quser
-from maediprojects.query import import_iati as qimport_iati
 from maediprojects.query import monitoring as qmonitoring
 from maediprojects.query import reports as qreports
 from maediprojects.lib import util, spreadsheet_headers
@@ -38,8 +37,6 @@ from maediprojects.extensions import db
 
 blueprint = Blueprint('api', __name__, url_prefix='/', static_folder='../static')
 
-
-OIPA_SEARCH_URL = "https://www.oipa.nl/api/activities/?format=json&q=%22{}%22&recipient_country=LR&reporting_organisation_identifier={}"
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -1114,31 +1111,9 @@ def api_codelists_new():
 @blueprint.route("/api/")
 def api_list_routes():
     return jsonify({
-        "iati": url_for("api.api_list_iati_files", _external=True),
+        "iati": url_for("iati.api_list_iati_files", _external=True),
         "csv": url_for("exports.activities_csv", _external=True)
     })
-
-@blueprint.route("/api/iati.json")
-def api_list_iati_files():
-    urls = qactivity.get_iati_list()
-    return jsonify(urls = urls)
-
-@blueprint.route("/api/iati_search/")
-def api_iati_search():
-    title = request.args["title"]
-    reporting_org_code = re.sub(r"\|", ",", request.args["reporting_org_code"]) # For OR, OIPA uses , rather than |
-    r = requests.get(OIPA_SEARCH_URL.format(title.encode("utf-8"), reporting_org_code))
-    data = json.loads(r.text)
-    return jsonify(data)
-
-
-@blueprint.route("/api/iati_fetch_data/<activity_id>/")
-@jwt_required
-@quser.permissions_required("edit")
-def api_iati_fetch_data(activity_id):
-    iati_identifier = request.args["iati_identifier"]
-    iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
-    return str(iati_document_result)
 
 
 @blueprint.route("/api/sectors.json")
@@ -1232,17 +1207,6 @@ def api_sectors_C_D():
     for s in sector_totals: append_path(root, s)
     for s in fy_sector_totals: append_path(root, s)
     return jsonify(sectors = list(root.values()))
-
-@blueprint.route("/api/iati/<version>/<country_code>.xml")
-def generate_iati_xml(version, country_code):
-    if version == "1.03":
-        xml = qgenerate.generate_103(country_code)
-        return Response(xml, mimetype='text/xml')
-    elif version == "2.01":
-        xml = qgenerate.generate_201(country_code)
-        return Response(xml, mimetype='text/xml')
-
-    return "ERROR: UNKNOWN VERSION"
 
 
 @blueprint.route("/api/activitylog.json")
