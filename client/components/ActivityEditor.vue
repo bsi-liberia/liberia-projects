@@ -244,8 +244,8 @@ export default {
         counterpart_funding: `activity_counterpart_funding/${this.$route.params.id}/`,
         results: `activities/${this.$route.params.id}/results.json`,
         documents: `activities/${this.$route.params.id}/documents.json`,
-        iati_search: `iati_search/`,
-        iati_fetch_data: `iati_fetch_data/${this.$route.params.id}/`
+        iati_search: `iati/search/`,
+        finances_summary: `activities/${this.$route.params.id}/finances.json`
       }
     },
     mode() {
