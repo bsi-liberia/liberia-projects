@@ -12,11 +12,66 @@ from maediprojects import models
 from maediprojects.extensions import db
 import requests
 from six import u as unicode
+from iatiflattener.transaction import FlatIATITransaction
+from iatiflattener.budget import FlatIATIBudget
+from collections import namedtuple
+import exchangerates
 
 
 DATASTORE_URL = "http://datastore.iatistandard.org/api/1/access/activity.xml?iati-identifier={}"
 DPORTAL_URL = "http://d-portal.org/q.xml?aid={}"
 
+
+def aggregate_transactions(transactions):
+    out = {}
+    def get_transaction_data(transaction, out):
+        target = (
+            transaction['fiscal_year'],
+            transaction['fiscal_quarter'],
+            transaction['transaction_type']
+        )
+        if target not in out:
+            out[target] = 0.0
+        out[target] += transaction['value_usd']
+        return out
+    for transaction in transactions:
+        out = get_transaction_data(transaction, out)
+    parts = list(map(lambda item: {
+            'fiscal_year': item[0][0],
+            'fiscal_quarter': item[0][1],
+            'transaction_type': item[0][2],
+            'value': item[1]
+        }, out.items()))
+    _parts = {'2': [], '3': [], 'budget': []}
+    for part in parts:
+        if part['transaction_type'] not in _parts: continue
+        _parts[part['transaction_type']].append(part)
+    return _parts
+
+
+def get_transactions_summary(activity):
+    iati_identifier = activity.find("iati-identifier").text
+    flattener = namedtuple("FlattenIATIData",
+        ["activity_data", "organisations",
+        "category_group", "countries"])
+    flattener.activity_data = {}
+    flattener.organisations = {}
+    flattener.category_group = {}
+    flattener.countries = ['LR']
+    flattener.exchange_rates = exchangerates.CurrencyConverter(
+    update=False, source="consolidated-exchangerates.csv")
+
+    transaction_parts = [transaction_part for transaction in
+        activity.findall("transaction") for transaction_part in FlatIATITransaction(
+        flattener, activity, transaction,
+        limit_transaction_types=False).flatten_transaction(as_dict=True)]
+
+    budget_parts = [budget_part for budget_part in FlatIATIBudget(
+        flattener, activity).flatten_budget(as_dict=True)]
+
+    transaction_parts+=budget_parts
+    #return transaction_parts
+    return aggregate_transactions(transaction_parts)
 
 def first_or_only(list_or_dict):
     if type(list_or_dict) == list:
