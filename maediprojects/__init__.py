@@ -70,6 +70,7 @@ def register_blueprints(app):
     app.register_blueprint(views.reports.blueprint)
     app.register_blueprint(views.management.blueprint)
     app.register_blueprint(views.counterpart_funding.blueprint)
+    app.register_blueprint(views.activity_finances.blueprint)
 
 
 def register_errorhandlers(app):
