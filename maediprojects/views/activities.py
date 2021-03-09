@@ -10,8 +10,9 @@ from maediprojects.query import organisations as qorganisations
 from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
-from maediprojects.lib.codelists import get_codelist
+from maediprojects.lib.codelists import get_codelists
 from maediprojects.views.api import jsonify
+from maediprojects import models
 
 from collections import OrderedDict
 import datetime
