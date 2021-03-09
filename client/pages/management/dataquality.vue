@@ -193,7 +193,7 @@ export default {
     },
     getDataQualityData: function() {
       this.$axios
-        .get(`reporting_orgs.json`)
+        .get(`management/reporting_orgs.json`)
         .then((response) => {
           this.fields = this.makeFields(response.data)
           this.items = response.data.orgs

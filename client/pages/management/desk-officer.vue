@@ -331,7 +331,7 @@ export default {
         var user_id_string = `?user_id=${this.user_id}`
       } else { var user_id_string = '' }
       this.$axios
-        .post(`reporting_orgs_user.json${user_id_string}`, {
+        .post(`management/reporting_orgs_user.json${user_id_string}`, {
             organisation_id: organisation_id,
             response_id: response_id,
             fyfq: this.selectedQuarter
@@ -354,7 +354,7 @@ export default {
         var user_id_string = `?user_id=${this.user_id}`
       } else { var user_id_string = '' }
       this.$axios
-        .get(`reporting_orgs_user.json${user_id_string}`)
+        .get(`management/reporting_orgs_user.json${user_id_string}`)
         .then((response) => {
           this.fields = this.makeFields(response.data)
           this.statuses = response.data.statuses

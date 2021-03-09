@@ -62,7 +62,7 @@ export default {
   methods: {
     getDataQualitySummary: function() {
       this.$axios
-        .get(`reporting_orgs/summary.json`)
+        .get(`management/reporting_orgs/summary.json`)
         .then((response) => {
           this.quarters = response.data.list_of_quarters
           this.items = response.data.summary

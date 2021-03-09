@@ -68,6 +68,7 @@ def register_blueprints(app):
     app.register_blueprint(views.users.blueprint)
     app.register_blueprint(views.exports.blueprint)
     app.register_blueprint(views.reports.blueprint)
+    app.register_blueprint(views.management.blueprint)
 
 
 def register_errorhandlers(app):
