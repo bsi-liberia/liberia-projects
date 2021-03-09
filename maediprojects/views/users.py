@@ -38,6 +38,14 @@ def unauthenticated_user():
     return jsonify(user=UnauthenticatedUser().as_simple_dict())
 
 
+@blueprint.route("/api/users.json")
+@jwt_required
+@quser.permissions_required("edit")
+def users():
+    _users = quser.user_id_username()
+    return jsonify(users=_users)
+
+
 @blueprint.route("/api/user/")
 @jwt_optional
 def user():

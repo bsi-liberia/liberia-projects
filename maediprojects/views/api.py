@@ -487,11 +487,3 @@ def activity_log_detail(activitylog_id):
         "old_value": json.loads(al.old_value) if al.old_value else None
     })
 
-
-@blueprint.route("/api/users.json")
-@jwt_required
-@quser.permissions_required("edit")
-def users():
-    _users = quser.user_id_username()
-    return jsonify(users=_users)
-
