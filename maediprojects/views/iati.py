@@ -2,6 +2,7 @@ from maediprojects.views.api import jsonify
 from maediprojects.query import activity as qactivity
 from maediprojects.query import user as quser
 from maediprojects.query import import_iati as qimport_iati
+from maediprojects.query import generate as qgenerate
 
 from flask import Blueprint, request, \
     url_for, Response, current_app, abort
