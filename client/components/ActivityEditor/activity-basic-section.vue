@@ -1,26 +1,35 @@
 <template>
     <div>
       <h2>Basic data</h2>
-      <b-form-group
-        label="Dashboard ID" label-cols-sm="2"
-        for="id">
-        <b-input plaintext name="id" id="id"
-        :value="activity.id" v-if="activity.id"></b-input>
-      </b-form-group>
-      <finances-input
-        label="Donor project code" label-cols-sm="2"
-        :transaction="activity" type="text" name="iati_identifier" id="iati_identifier"
-        :value.sync="activity.iati_identifier" placeholder="If known"></finances-input>
-      <finances-input
-        label="GoL budget code" label-cols-sm="2"
-        :transaction="activity" type="text" name="code" id="code"
-        :value.sync="activity.code" placeholder="If known"></finances-input>
-      <b-form-group
-        label="Last updated" label-cols-sm="2"
-        for="updated_date">
-        <b-input plaintext name="updated_date" id="updated_date"
-        :value="activity.updated_date" v-if="activity.updated_date"></b-input>
-      </b-form-group>
+      <b-row>
+        <b-col md="8">
+          <b-form-group
+            label="Dashboard ID" label-cols-sm="2"
+            for="id">
+            <b-input plaintext name="id" id="id"
+            :value="activity.id" v-if="activity.id"></b-input>
+          </b-form-group>
+          <finances-input
+            label="Donor project code" label-cols-sm="3"
+            :transaction="activity" type="text" name="iati_identifier" id="iati_identifier"
+            :value.sync="activity.iati_identifier" placeholder="If known"></finances-input>
+          <finances-input
+            label="GoL budget code" label-cols-sm="3"
+            :transaction="activity" type="text" name="code" id="code"
+            :value.sync="activity.code" placeholder="If known"></finances-input>
+          <b-form-group
+            label="Last updated" label-cols-sm="3"
+            for="updated_date">
+            <b-input plaintext name="updated_date" id="updated_date"
+            :value="activity.updated_date" v-if="activity.updated_date"></b-input>
+          </b-form-group>
+        </b-col>
+        <b-col md="4">
+          <IATISearch
+            :activity="activity"
+            :api_routes="api_routes" />
+        </b-col>
+      </b-row>
       <finances-input
         label="Title" label-cols-sm="2"
         type="text" name="title" id="title"
@@ -122,6 +131,7 @@ import FinancesInput from './subcomponents/finances-input.vue'
 import FinancesTextarea from './subcomponents/finances-textarea.vue'
 import FinancesSelect from './subcomponents/finances-select.vue'
 import OrganisationsSection from './organisations-section.vue'
+import IATISearch from './iati-search.vue'
 export default {
   data() {
     return {
@@ -131,7 +141,8 @@ export default {
     FinancesInput,
     FinancesTextarea,
     FinancesSelect,
-    OrganisationsSection
+    OrganisationsSection,
+    IATISearch
   },
   props: ["activity", "codelists", "api_routes", "mode"],
   provide: function () {
