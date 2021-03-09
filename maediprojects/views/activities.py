@@ -1,7 +1,5 @@
-import datetime
-
 from flask import Blueprint, flash, request, \
-    redirect, url_for, abort, jsonify
+    redirect, url_for, abort
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required
 
@@ -12,11 +10,17 @@ from maediprojects.query import organisations as qorganisations
 from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
+from maediprojects.lib.codelists import get_codelist
+from maediprojects.views.api import jsonify
+
+from collections import OrderedDict
+import datetime
 
 
-blueprint = Blueprint('activities', __name__, url_prefix='/', static_folder='../static')
+blueprint = Blueprint('activities', __name__, url_prefix='/api/activities')
 
-@blueprint.route("/api/activities/filters.json")
+
+@blueprint.route("/filters.json")
 def api_activities_filters():
     reporting_orgs = qorganisations.get_reporting_orgs()
     organisation_types = qorganisations.get_organisation_types()
@@ -52,7 +56,7 @@ def api_activities_filters():
     )
 
 
-@blueprint.route("/api/activities/")
+@blueprint.route("/")
 @jwt_optional
 @quser.permissions_required("view")
 def api_activities_country():
@@ -83,7 +87,7 @@ def api_activities_country():
     )
 
 
-@blueprint.route("/api/activities/<activity_id>.json")
+@blueprint.route("/<activity_id>.json")
 @jwt_optional
 @quser.permissions_required("view")
 def api_activities_by_id(activity_id):
@@ -92,7 +96,7 @@ def api_activities_by_id(activity_id):
     return jsonify(activity=activity.as_jsonable_dict())
 
 
-@blueprint.route("/api/activities/new.json", methods=['GET', 'POST'])
+@blueprint.route("/new.json", methods=['GET', 'POST'])
 @jwt_required
 @quser.permissions_required("new")
 def api_new_activity():
@@ -205,7 +209,7 @@ def api_new_activity():
             return abort(500)
 
 
-@blueprint.route("/api/activities/<activity_id>/finances.json")
+@blueprint.route("/<activity_id>/finances.json")
 @jwt_optional
 @quser.permissions_required("view")
 def api_activities_finances_by_id(activity_id):
@@ -238,7 +242,7 @@ def api_activities_finances_by_id(activity_id):
         finances=OrderedDict(finances)
         )
 
-@blueprint.route("/api/activities/<activity_id>/finances/fund_sources.json")
+@blueprint.route("/<activity_id>/finances/fund_sources.json")
 @jwt_optional
 @quser.permissions_required("view")
 def api_activities_finances_fund_sources_by_id(activity_id):
@@ -294,7 +298,7 @@ def jsonify_results_design(results):
     return out
 
 
-@blueprint.route("/api/activities/<activity_id>/results.json")
+@blueprint.route("/<activity_id>/results.json")
 @jwt_optional
 @quser.permissions_required("view")
 def api_activities_results(activity_id):
@@ -304,7 +308,7 @@ def api_activities_results(activity_id):
     return jsonify(results = jsonify_results_design(results))
 
 
-@blueprint.route("/api/activities/<activity_id>/documents.json")
+@blueprint.route("/<activity_id>/documents.json")
 @jwt_optional
 @quser.permissions_required("view")
 def api_activities_documents(activity_id):
@@ -314,7 +318,7 @@ def api_activities_documents(activity_id):
     return jsonify(documents = documents)
 
 
-@blueprint.route("/api/activities/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
+@blueprint.route("/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
 @jwt_required
 @quser.permissions_required("results-data-entry")
 def api_activities_results_data_entry(activity_id):
@@ -332,7 +336,7 @@ def api_activities_results_data_entry(activity_id):
         )
 
 
-@blueprint.route("/api/activities/<activity_id>/results/design.json", methods=['GET', 'POST'])
+@blueprint.route("/<activity_id>/results/design.json", methods=['GET', 'POST'])
 @jwt_required
 @quser.permissions_required("results-data-design")
 def api_activities_results_design(activity_id):
@@ -349,7 +353,7 @@ def api_activities_results_design(activity_id):
         )
 
 
-@blueprint.route("/api/activities/<activity_id>/delete/", methods=['POST'])
+@blueprint.route("/<activity_id>/delete/", methods=['POST'])
 @jwt_required
 @quser.permissions_required("edit")
 def activity_delete(activity_id):
@@ -435,7 +439,7 @@ def activity_add_results_data(activity_id):
 """
 
 
-@blueprint.route("/api/activities/<activity_id>/edit/update_activity/", methods=['POST'])
+@blueprint.route("/<activity_id>/edit/update_activity/", methods=['POST'])
 @jwt_required
 @quser.permissions_required("edit")
 def activity_edit_attr(activity_id):
