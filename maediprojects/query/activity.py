@@ -96,11 +96,11 @@ def get_iati_list():
           {
               "country": x.recipient_country.as_dict(),
               "urls":
-                  {"1.03": url_for('api.generate_iati_xml',
+                  {"1.03": url_for('iati.generate_iati_xml',
                                    version="1.03",
                                    country_code=x.recipient_country_code,
                                    _external=True),
-                   "2.01": url_for('api.generate_iati_xml',
+                   "2.01": url_for('iati.generate_iati_xml',
                                    version="2.01",
                                    country_code=x.recipient_country_code,
                                    _external=True),
