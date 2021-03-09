@@ -1,16 +1,14 @@
-from flask import Blueprint, flash, request, redirect, url_for, abort, make_response
-from flask_login import current_user, login_required, login_user, logout_user
+from flask import Blueprint, request, abort, make_response
+from flask_login import current_user
 from flask_jwt_extended import (
     jwt_required, create_access_token,
-    jwt_refresh_token_required, create_refresh_token,
-    get_jwt_identity, get_raw_jwt, jwt_optional
+    create_refresh_token,
+    get_jwt_identity, jwt_optional
 )
-from flask_babel import gettext
 
 from maediprojects import models
 from maediprojects.query import user as quser
 from maediprojects.query import organisations as qorganisations
-from maediprojects.lib import codelists
 from maediprojects.views.api import jsonify
 from maediprojects.extensions import login_manager, UnauthenticatedUser
 
