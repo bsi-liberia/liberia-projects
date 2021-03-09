@@ -508,8 +508,6 @@ export default {
         "labels": this.years,
         "datasets": Object.entries(this.chartData).reduce((datasets, item, index) => {
           const key = item[0]; const data = item[1];
-          console.log('key', key)
-          console.log('data', data)
           datasets.push({
             label: transactionTypes[key].label,
             fill: false,
