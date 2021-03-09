@@ -56,11 +56,11 @@ def jsonify(*args, **kwargs):
 @blueprint.route("/api/")
 def api():
     return jsonify(
-        activities = url_for('api.api_activities_country', _external=True)
+        activities = url_for('activities.api_activities_country', _external=True)
     )
 
 
-@blueprint.route("/api/disbursements/psip/")
+@blueprint.route("/api/reports/disbursements/psip/")
 @jwt_optional
 @quser.permissions_required("view", "domestic")
 def psip_disbursements_api():
@@ -80,7 +80,7 @@ def psip_disbursements_api():
         fiscalYear = str(fiscal_year))
 
 
-@blueprint.route("/api/disbursements/aid/")
+@blueprint.route("/api/reports/disbursements/aid/")
 @jwt_optional
 @quser.permissions_required("view", "external")
 def aid_disbursements_api():

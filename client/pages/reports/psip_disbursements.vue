@@ -148,7 +148,7 @@ export default {
     },
     getReportData: function() {
       this.$axios
-        .get(`disbursements/psip/`, {
+        .get(`reports/disbursements/psip/`, {
           params: { fiscal_year: this.fiscalYear }
         })
         .then((response) => {

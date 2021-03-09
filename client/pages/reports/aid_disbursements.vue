@@ -140,7 +140,7 @@ export default {
     },
     getReportData: function() {
       this.$axios
-        .get(`disbursements/aid/`, {
+        .get(`reports/disbursements/aid/`, {
           params: { fiscal_year: this.fiscalYear }
         })
         .then((response) => {
