@@ -235,7 +235,7 @@ export default {
         activity: this.$route.params.id ? `activities/${this.$route.params.id}.json` : `activities/new.json`,
         activity_update: this.$route.params.id ? `activities/${this.$route.params.id}/edit/update_activity/` : `activities/new.json`,
         codelists: "codelists.json",
-        milestones: `api_activity_milestones/${this.$route.params.id}/`,
+        milestones: `activities/${this.$route.params.id}/milestones/`,
         country_locations: `locations/LR/`,
         locations: `activity_locations/${this.$route.params.id}/`,
         finances: `activity_finances/${this.$route.params.id}/`,
