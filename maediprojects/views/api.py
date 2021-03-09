@@ -50,7 +50,11 @@ def jsonify(*args, **kwargs):
 @blueprint.route("/api/")
 def api():
     return jsonify(
-        activities = url_for('activities.api_activities_country', _external=True)
+        activities = url_for('activities.api_activities_country', _external=True),
+        data = {
+            "iati": url_for("iati.api_list_iati_files", _external=True),
+            "csv": url_for("exports.activities_csv", _external=True)
+        }
     )
 
 
@@ -231,14 +235,6 @@ def api_locations(country_code):
     return jsonify(locations = locations)
 
 
-@blueprint.route("/api/")
-def api_list_routes():
-    return jsonify({
-        "iati": url_for("iati.api_list_iati_files", _external=True),
-        "csv": url_for("exports.activities_csv", _external=True)
-    })
-
-
 @blueprint.route("/api/sectors.json")
 def api_sectors():
     sector_totals = db.session.query(
@@ -264,6 +260,7 @@ def api_sectors():
         "code": s.code,
         "fy": s.fiscal_year
     }, sector_totals)))
+
 
 @blueprint.route("/api/sectors_C_D.json")
 def api_sectors_C_D():
