@@ -347,7 +347,7 @@ export default {
       var data = {
         "transaction_type": transaction_type,
         "transaction_date": transaction_date,
-        "transaction_value": "0.00",
+        "transaction_value_original": 0.00,
         "currency": currency,
         "action": "add"
       }
