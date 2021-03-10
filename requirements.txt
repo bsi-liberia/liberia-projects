@@ -17,6 +17,7 @@ lxml==4.6.2
 normality==0.2.4
 openpyxl==3.0.7
 pluggy==0.13.1
+python-docx==0.8.10
 requests==2.25.1
 six==1.15.0
 unicodecsv==0.14.1
