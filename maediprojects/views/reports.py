@@ -19,7 +19,7 @@ blueprint = Blueprint('reports', __name__, url_prefix='/api/reports')
 
 
 @blueprint.route("/disbursements/psip/")
-@jwt_optional
+@jwt_required
 @quser.permissions_required("view", "domestic")
 def psip_disbursements_api():
     current_fy, _ = util.FY("previous").numeric()
@@ -29,7 +29,10 @@ def psip_disbursements_api():
     progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'domestic'})
-    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    if start_date is not None:
+        fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    else:
+        fys = []
     return jsonify(activities=qreports.make_appropriations_disbursements_data(fiscal_year),
         progress_time=progress_time,
         days_since_fy_began=days_since_fy_began,
@@ -60,7 +63,7 @@ def aid_disbursements_api():
         fiscalYear = str(fiscal_year))
 
 @blueprint.route("/project-development-tracking/")
-@jwt_optional
+@jwt_required
 @quser.permissions_required("view", "domestic")
 def project_development_tracking():
     current_fy, _ = util.FY("previous").numeric()
@@ -95,7 +98,10 @@ def project_development_tracking():
 
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'domestic'})
-    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    if start_date is not None:
+        fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    else:
+        fys = []
 
     return jsonify(activities=milestone_data,
         milestones = list(map(lambda m: m.name, milestones)),
