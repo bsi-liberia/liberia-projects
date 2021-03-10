@@ -4,10 +4,11 @@ import datetime
 import re
 from flask import flash
 from openpyxl.styles import Protection
-import xlrd
+import openpyxl
 import sys
 
 from six import u as unicode
+from io import BytesIO
 
 from maediprojects import models
 from maediprojects.extensions import db
@@ -28,6 +29,10 @@ from maediprojects.query.generate_csv import activity_to_json, generate_disb_fys
 
 
 def tidy_amount(amount_value):
+    if type(amount_value) == int:
+        return float(amount_value)
+    if type(amount_value) == float:
+        return amount_value
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
     if re.match(r'^-?\d*\.?\d*$', amount_value):  # 2000 or -2000
@@ -41,6 +46,10 @@ def tidy_amount(amount_value):
 
 
 def clean_value(amount_value):
+    if type(amount_value) == int:
+        return float(amount_value)
+    if type(amount_value) == float:
+        return amount_value
     if amount_value.strip() in ("", "-"): return 0
     return float(amount_value.strip())
 
@@ -84,8 +93,8 @@ def clean_string(_string):
 
 def update_activity_data(activity, existing_activity, row, codelists):
     updated = False
-    start_date = datetime.datetime.strptime(row[u"Activity Dates (Start Date)"], "%d/%m/%Y").date()
-    end_date = datetime.datetime.strptime(row[u"Activity Dates (End Date)"], "%d/%m/%Y").date()
+    start_date = row[u"Activity Dates (Start Date)"].date()
+    end_date = row[u"Activity Dates (End Date)"].date()
 
     # The older templates did not contain these columns, so we return here if these
     # columns are not present, in order to avoid a key error
@@ -243,9 +252,9 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
     num_updated_activities = 0
     messages = []
     activity_id = None
-    xl_workbook = xlrd.open_workbook(filename=input_file.filename,
-        file_contents=input_file.read())
-    num_sheets = len(xl_workbook.sheet_names())
+    file_contents = BytesIO(input_file.read())
+    xl_workbook = openpyxl.load_workbook(file_contents)
+    num_sheets = len(xl_workbook.sheetnames)
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
     def filter_mtef(column):
@@ -254,8 +263,9 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
     def filter_counterpart(column):
         pattern = r"(.*) \(GoL counterpart fund request\)$"
         return re.match(pattern, column)
-    if u"Instructions" in xl_workbook.sheet_names():
-        currency = xl_workbook.sheet_by_name(u"Instructions").cell_value(5,2)
+    if u"Instructions" in xl_workbook.sheetnames:
+        currency = xl_workbook["Instructions"].cell(6,3).value
+        print("Currency is {}".format(currency))
         begin_sheet = 1
     else:
         currency = u"USD"
@@ -301,10 +311,6 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                 # Mark activity as updated and inform user
                 update_message, num_updated_activities = make_updated_info(updated, activity, num_updated_activities)
                 if update_message is not None: messages.append(update_message)
-    except xlrd.xldate.XLDateNegative as e:
-        messages.append(u"""There was an unexpected error when importing your projects,
-        one of the dates in your sheet has a negative value: {}. Please check your sheet
-        and try again.""".format(e))
     except Exception as e:
         if activity_id is not None:
             messages.append("""There was an unexpected error when importing your
