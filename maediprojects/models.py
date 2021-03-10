@@ -234,7 +234,8 @@ class Activity(db.Model):
     start_date = sa.Column(sa.Date)
     end_date = sa.Column(sa.Date)
     organisations = sa.orm.relationship("ActivityOrganisation",
-            cascade="all, delete-orphan")
+            cascade="all, delete-orphan",
+            backref="activity")
     reporting_org_id = sa.Column(
             act_ForeignKey('organisation.id'),
             nullable=False,
@@ -311,13 +312,15 @@ class Activity(db.Model):
     implementing_organisations = sa.orm.relationship("Organisation",
         secondary="activityorganisation",
         secondaryjoin="""and_(ActivityOrganisation.role==4,
-            ActivityOrganisation.organisation_id==Organisation.id)"""
+            ActivityOrganisation.organisation_id==Organisation.id)""",
+        viewonly=True
         )
 
     funding_organisations = sa.orm.relationship("Organisation",
         secondary="activityorganisation",
         secondaryjoin="""and_(ActivityOrganisation.role==1,
-            ActivityOrganisation.organisation_id==Organisation.id)"""
+            ActivityOrganisation.organisation_id==Organisation.id)""",
+        viewonly=True
         )
 
     @hybrid_property
