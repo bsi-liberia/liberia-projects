@@ -1,74 +1,99 @@
 from flask import url_for
 import pytest
-import warnings
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 import json
-import time
-from conftest import LiveServerClass
-
-
-def add_activity_finances(self, app, selenium, selenium_login):
-    selenium.get(url_for('activities.activity_edit', activity_id=1, _external=True))
-    WebDriverWait(selenium, 10).until(
-        EC.presence_of_element_located((By.TAG_NAME, 'h1'))
-    )
-    selenium.find_element(By.CSS_SELECTOR, '.card-header ul.nav-tabs li.nav-item a[href="#/finances"]').click()
-    before_num_transactions = len(selenium.find_elements(By.CSS_SELECTOR, "#collapse-D table tbody tr"))
-    selenium.find_element(By.CSS_SELECTOR, "#collapse-D .addFinancial").click()
-    WebDriverWait(selenium, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, '#collapse-D table tbody tr:nth-child({})'.format(
-            before_num_transactions+1)))
-    )
-    assert len(selenium.find_elements(By.CSS_SELECTOR, "#collapse-D table tbody tr")) == before_num_transactions+1
-    newrow = selenium.find_element(By.CSS_SELECTOR, "#collapse-D table tbody tr:nth-child(2)")
-    newrow.find_element(By.NAME, "transaction_value_original").send_keys(Keys.BACKSPACE)
-    newrow.find_element(By.NAME, "transaction_value_original").send_keys("500.00")
-    newrow.find_element(By.NAME, "transaction_description").click()
-    time.sleep(1) # Wait one second for DB roundtrip
-    assert "is-valid" in newrow.find_element(By.NAME, "transaction_value_original").get_attribute("class")
 
 
 @pytest.mark.usefixtures('client_class')
-class TestActivity:
-    def test_auth_routes_work_user(self, user):
+class TestActivityFinances:
+    def test_auth_routes_work_user(self, user, headers_user):
         routes = [
-            (url_for('api.api_activity_finances', activity_id=1), 302),
-            (url_for('api.api_activity_finances', activity_id=2), 302),
+            (url_for('activity_finances.api_activity_finances', activity_id=1), 403),
+            (url_for('activity_finances.api_activity_finances', activity_id=2), 403),
         ]
         for route, status_code in routes:
-            res = self.client.get(route)
+            res = self.client.get(route, headers=headers_user)
             assert res.status_code == status_code
 
 
-    def test_auth_routes_work_admin(self, admin):
+    def test_auth_routes_work_admin(self, admin, headers_admin):
         routes = [
-            (url_for('api.api_activity_finances', activity_id=1), 200),
-            (url_for('api.api_activity_finances', activity_id=2), 200),
+            (url_for('activity_finances.api_activity_finances', activity_id=1), 200),
+            (url_for('activity_finances.api_activity_finances', activity_id=2), 200),
         ]
         for route, status_code in routes:
-            res = self.client.get(route)
+            res = self.client.get(route, headers=headers_admin)
             assert res.status_code == status_code
-            assert len(json.loads(res.data)["finances"]) == 3
+            data = json.loads(res.data)
+            assert len(data["finances"]) == 3
+            assert len(data["finances"]['disbursements']) == 1
 
 
-@pytest.mark.usefixtures('client_class')
-class TestActivityLoads(LiveServerClass):
+    def test_edit_finances(self, admin, headers_admin):
+        activity_id = 1
+        # Check transaction value is 100.00
+        route = url_for('activity_finances.api_activity_finances', activity_id=activity_id)
+        res = self.client.get(route, headers=headers_admin)
+        data = json.loads(res.data)["finances"]
+        disbursement = data['disbursements'][0]
+        assert disbursement['transaction_value_original'] == 100.00
 
-    def test_activity_editor_finances_tab(self, app, selenium, selenium_login):
-        selenium.get(url_for('activities.activity_edit', activity_id=1, _external=True))
-        WebDriverWait(selenium, 10).until(
-            EC.presence_of_element_located((By.TAG_NAME, 'h1'))
-        )
-        selenium.find_element(By.CSS_SELECTOR, '.card-header ul.nav-tabs li.nav-item a[href="#/finances"]').click()
-        WebDriverWait(selenium, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#collapse-D table tbody tr'))
-        )
-        assert selenium.find_element(By.CSS_SELECTOR, "#collapse-D table tbody tr"
-            ).find_element(By.NAME, "transaction_value_original"
-            ).get_attribute("value") == "100"
+        # Change it too 500.00
+        route = url_for('activity_finances.finances_edit_attr', activity_id=activity_id)
+        data = {
+            'activity_id': activity_id,
+            'attr': 'transaction_value_original',
+            'value': 500.00,
+            'finances_id': disbursement['id']
+        }
+        res = self.client.post(route, json=data, headers=headers_admin)
+        assert res.status_code == 200
+        assert json.loads(res.data)['transaction_value_original'] == 500.00
+        # We make sure that the USD value has been automatically updated to reflect this
+        assert json.loads(res.data)['transaction_value'] == 500.00
 
-    def test_add_activity_finances(self, app, selenium, selenium_login):
-        add_activity_finances(self, app, selenium, selenium_login)
+        # Change it back to 100.00
+        data = {
+            'activity_id': activity_id,
+            'attr': 'transaction_value_original',
+            'value': 100.00,
+            'finances_id': disbursement['id']
+        }
+        res = self.client.post(route, json=data, headers=headers_admin)
+        assert res.status_code == 200
+
+
+    def test_add_delete_finances(self, admin, headers_admin):
+        activity_id = 1
+        # Check there is only 1 disbursement
+        route = url_for('activity_finances.api_activity_finances', activity_id=activity_id)
+        res = self.client.get(route, headers=headers_admin)
+        data = json.loads(res.data)["finances"]
+        assert len(data['disbursements']) == 1
+
+        # Add one disbursement of USD 200
+        data = {
+            'transaction_type': 'D',
+            'transaction_date': '2020-12-31',
+            'transaction_value_original': 200.00,
+            'currency': 'USD',
+            'action': 'add',
+            'fund_source_id': None
+        }
+        res = self.client.post(route, json=data, headers=headers_admin)
+        assert res.status_code == 200
+        transaction = json.loads(res.data)
+        assert transaction['transaction_value_original'] == 200.00
+
+        # Check there are now two disbursements
+        res = self.client.get(route, headers=headers_admin)
+        data = json.loads(res.data)["finances"]
+        assert len(data['disbursements']) == 2
+
+        # Delete transaction
+        data = {
+            'action': 'delete',
+            'activity_id': activity_id,
+            'transaction_id': transaction['id']
+        }
+        res = self.client.post(route, json=data, headers=headers_admin)
+        assert res.status_code == 200
