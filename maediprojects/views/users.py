@@ -3,7 +3,7 @@ from flask_login import current_user
 from flask_jwt_extended import (
     jwt_required, create_access_token,
     create_refresh_token,
-    get_jwt_identity, jwt_optional
+    get_jwt_identity
 )
 
 from maediprojects import models
@@ -37,7 +37,7 @@ def unauthenticated_user():
 
 
 @blueprint.route("/api/users.json")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def users():
     _users = quser.user_id_username()
@@ -45,13 +45,13 @@ def users():
 
 
 @blueprint.route("/api/user/")
-@jwt_optional
+@jwt_required(optional=True)
 def user():
     return jsonify(user=current_user.as_simple_dict())
 
 
 @blueprint.route("/api/users/delete/", methods=["POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def users_delete():
     if "admin" not in current_user.roles_list:
@@ -72,7 +72,7 @@ def users_delete():
 
 
 @blueprint.route("/api/users/new/", methods=["GET", "POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def users_new():
     if request.method == "GET":
@@ -97,7 +97,7 @@ def users_new():
 
 
 @blueprint.route("/api/users/<user_id>/", methods=["GET", "POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def users_edit(user_id):
     user = quser.user(user_id)
@@ -124,7 +124,7 @@ def users_edit(user_id):
 
 
 @blueprint.route("/api/users/<user_id>/permissions/", methods=["GET", "POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def user_permissions_edit(user_id):
     if request.method == "GET":
@@ -228,6 +228,6 @@ def reset_password():
 
 
 @blueprint.route('/api/logout/')
-@jwt_optional
+@jwt_required(optional=True)
 def logout():
     return make_response(jsonify({'msg': 'Logged out successfully'}), 200)

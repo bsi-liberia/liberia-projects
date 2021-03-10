@@ -7,7 +7,7 @@ from flask import Blueprint, request, abort
 from flask_login import current_user
 
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 from maediprojects.lib import util
 from maediprojects import models
@@ -17,7 +17,7 @@ blueprint = Blueprint('activity_locations', __name__, url_prefix='/api/activity_
 
 
 @blueprint.route("/")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def api_all_activity_locations():
     """GET returns a list of all locations."""
@@ -43,7 +43,7 @@ def api_all_activity_locations():
 
 
 @blueprint.route("/<activity_id>/", methods=["POST", "GET"])
-@jwt_optional
+@jwt_required(optional=True)
 def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""

@@ -8,7 +8,7 @@ from flask import Blueprint, request, \
     url_for, Response, current_app, abort
 
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 from maediprojects.lib import util
 from maediprojects import models
@@ -19,7 +19,7 @@ blueprint = Blueprint('reports', __name__, url_prefix='/api/reports')
 
 
 @blueprint.route("/disbursements/psip/")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("view", "domestic")
 def psip_disbursements_api():
     current_fy, _ = util.FY("previous").numeric()
@@ -42,7 +42,7 @@ def psip_disbursements_api():
 
 
 @blueprint.route("/disbursements/aid/")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def aid_disbursements_api():
     current_fy, _ = util.FY("previous").numeric()
@@ -63,7 +63,7 @@ def aid_disbursements_api():
         fiscalYear = str(fiscal_year))
 
 @blueprint.route("/project-development-tracking/")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("view", "domestic")
 def project_development_tracking():
     current_fy, _ = util.FY("previous").numeric()
@@ -110,7 +110,7 @@ def project_development_tracking():
 
 
 @blueprint.route("/counterpart-funding/")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def counterpart_funding():
     if datetime.datetime.utcnow().month > 6:
@@ -144,7 +144,7 @@ def counterpart_funding():
 
 
 @blueprint.route("/results/")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def results():
     def annotate_activity(activity):

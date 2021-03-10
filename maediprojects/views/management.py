@@ -7,7 +7,7 @@ from flask import Blueprint, request
 from flask_login import current_user
 
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 from maediprojects.lib import util
 from maediprojects import models
@@ -63,7 +63,7 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
 
 
 @blueprint.route("/reporting_orgs_user.json", methods=["GET", "POST"])
-@jwt_required
+@jwt_required()
 def reporting_orgs_user():
     if request.method == "POST":
         if ("organisation_id" in request.json) and ("response_id" in request.json):
@@ -104,7 +104,7 @@ def reporting_orgs_user():
 
 
 @blueprint.route("/reporting_orgs.json")
-@jwt_required
+@jwt_required()
 def reporting_orgs():
     reporting_orgs = qorganisations.get_reporting_orgs()
     response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
@@ -119,7 +119,7 @@ def reporting_orgs():
 
 
 @blueprint.route("/reporting_orgs/summary.json")
-@jwt_required
+@jwt_required()
 def reporting_orgs_summary():
     reporting_orgs = qorganisations.get_reporting_orgs()
     response_statuses = list(map(lambda r: r.as_dict(), qmonitoring.response_statuses()))

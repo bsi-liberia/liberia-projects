@@ -67,7 +67,7 @@ def urlencode_text(text):
 
 
 @blueprint.route("/search/", methods=["POST"])
-@jwt_required
+@jwt_required()
 def api_iati_search():
     args = request.get_json()
     title = args["title"]
@@ -108,7 +108,7 @@ def api_iati_search():
 
 
 @blueprint.route("/search/<iati_identifier>/", methods=["POST","GET"])
-#@jwt_required
+#@jwt_required()
 def api_iati_search_iati_identifier(iati_identifier):
     #FIXME
     def clean_data(doc):
@@ -131,7 +131,7 @@ def api_iati_search_iati_identifier(iati_identifier):
 
 
 @blueprint.route("/fetch_data/<activity_id>/")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def api_iati_fetch_data(activity_id, methods=["POST"]):
     iati_identifier = request.args["iati_identifier"]

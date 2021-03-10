@@ -14,7 +14,7 @@ blueprint = Blueprint('codelists', __name__, url_prefix='/api/codelists')
 
 
 @blueprint.route("/")
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def codelists_management():
     return jsonify(
@@ -45,7 +45,7 @@ def import_locations():
 
 
 @blueprint.route("/update/", methods=["POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def api_codelists_update():
     # FIXME check for admin status
@@ -59,7 +59,7 @@ def api_codelists_update():
         return "ERROR"
 
 @blueprint.route("/delete/", methods=["POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def api_codelists_delete():
     # FIXME check for admin status
@@ -73,7 +73,7 @@ def api_codelists_delete():
         return "ERROR"
 
 @blueprint.route("/new/", methods=["POST"])
-@jwt_required
+@jwt_required()
 @quser.administrator_required
 def api_codelists_new():
     # FIXME check for admin status

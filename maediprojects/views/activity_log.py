@@ -9,7 +9,7 @@ from maediprojects import models
 blueprint = Blueprint('activity_log', __name__, url_prefix='/api/activity-log')
 
 @blueprint.route("/")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def activity_log():
     offset = (int(request.args.get("page", 1))-1)*10
@@ -44,7 +44,7 @@ def activity_log():
 
 
 @blueprint.route("/<int:activitylog_id>.json")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def activity_log_detail(activitylog_id):
     al = quser.activitylog_detail(activitylog_id)

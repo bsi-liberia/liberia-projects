@@ -4,7 +4,7 @@ import datetime
 from flask import Blueprint, request, \
     url_for, Response, send_file, redirect, flash, make_response, jsonify
 from flask_login import login_required, current_user
-from flask_jwt_extended import jwt_required, jwt_optional
+from flask_jwt_extended import jwt_required
 from maediprojects.query import activity as qactivity
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate_csv as qgenerate_csv
@@ -30,7 +30,7 @@ def allowed_file(filename):
 
 
 @blueprint.route("/api/project-brief/<activity_id>.docx")
-@jwt_required
+@jwt_required()
 def export_project_brief(activity_id):
     brief = qgenerate_docx.make_doc(activity_id)
     brief.seek(0)
@@ -38,7 +38,7 @@ def export_project_brief(activity_id):
 
 
 @blueprint.route("/api/project-brief/donor/<reporting_org_id>.zip")
-@jwt_required
+@jwt_required()
 def export_project_brief_donor(reporting_org_id):
     zip_buffer = io.BytesIO()
     activities = qactivity.get_activities_by_reporting_org_id(reporting_org_id)
@@ -57,14 +57,14 @@ def export_project_brief_donor(reporting_org_id):
 
 
 @blueprint.route("/api/client-connection/")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit", "external")
 def wb_client_connection():
     return qimport_client_connection.import_transactions_from_file()
 
 
 @blueprint.route("/api/exports/import_psip/", methods=["POST"])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit", "domestic")
 def import_psip_transactions(fiscal_year=None):
     if 'file' not in request.files:
@@ -87,7 +87,7 @@ def import_psip_transactions(fiscal_year=None):
 
 
 @blueprint.route("/api/exports/import/", methods=["POST"])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit", "external")
 def import_template():
     if 'file' not in request.files:
@@ -134,7 +134,7 @@ def import_template():
     return make_response(jsonify({'msg': "Sorry, but that file cannot be imported. It must be of type xls or xlsx."}), 400)
 
 @blueprint.route("/api/exports/activities.csv")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def activities_csv():
     data = qgenerate_csv.generate_csv()
@@ -142,7 +142,7 @@ def activities_csv():
     return Response(data, mimetype="text/csv")
 
 @blueprint.route("/api/exports/activities_external_transactions.xlsx")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def activities_xlsx_transactions():
     data = qgenerate_xlsx.generate_xlsx_transactions(u"domestic_external", u"external")
@@ -150,7 +150,7 @@ def activities_xlsx_transactions():
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @blueprint.route("/api/exports/activities_<domestic_external>.xlsx")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def activities_xlsx(domestic_external="external"):
     data = qgenerate_xlsx.generate_xlsx_filtered({"domestic_external": domestic_external})
@@ -158,7 +158,7 @@ def activities_xlsx(domestic_external="external"):
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @blueprint.route("/api/exports/activities_all.xlsx")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def all_activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx_filtered()
@@ -166,7 +166,7 @@ def all_activities_xlsx():
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @blueprint.route("/api/exports/activities_filtered.xlsx")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def all_activities_xlsx_filtered():
     arguments = request.args.to_dict()
@@ -176,7 +176,7 @@ def all_activities_xlsx_filtered():
 
 @blueprint.route("/api/exports/export_template.xlsx")
 @blueprint.route("/api/exports/export_template/<organisation_id>.xlsx")
-@jwt_optional
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def export_donor_template(organisation_id=None, mtef=False, currency=u"USD", headers=None):
     if request.args.get('template') == 'mtef':

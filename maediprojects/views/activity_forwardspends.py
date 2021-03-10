@@ -7,7 +7,7 @@ from flask import Blueprint, request, abort
 from flask_login import current_user
 
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 from maediprojects.lib import util
 from maediprojects import models
@@ -19,7 +19,7 @@ blueprint = Blueprint('activity_forwardspends', __name__, url_prefix='/api/activ
 
 @blueprint.route("/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
 @blueprint.route("/<activity_id>/", methods=["GET", "POST"])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def api_activity_forwardspends(activity_id, fiscal_year=True):
     activity = qactivity.get_activity(activity_id)
@@ -79,7 +79,7 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
         return "error"
 
 @blueprint.route("/<activity_id>/update_forwardspends/", methods=['POST'])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def forwardspends_edit_attr(activity_id):
     data = {

@@ -8,7 +8,7 @@ from flask import Blueprint, request, abort
 from flask_login import current_user
 
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 from maediprojects.lib import util
 from maediprojects import models
@@ -18,7 +18,7 @@ blueprint = Blueprint('activity_finances', __name__, url_prefix='/api/activity_f
 
 
 @blueprint.route("/<activity_id>/", methods=["POST", "GET"])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id.
@@ -66,7 +66,7 @@ def api_activity_finances(activity_id):
 
 
 @blueprint.route("/<activity_id>/update_finances/", methods=['POST'])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def finances_edit_attr(activity_id):
     request_data = request.get_json()

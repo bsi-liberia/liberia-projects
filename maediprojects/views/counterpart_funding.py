@@ -7,7 +7,7 @@ from flask import Blueprint, request, abort
 from flask_login import current_user
 
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 from maediprojects.lib import util
 from maediprojects import models
@@ -16,7 +16,7 @@ from maediprojects import models
 blueprint = Blueprint('counterpart_funding', __name__, url_prefix='/api/counterpart_funding')
 
 @blueprint.route("/<activity_id>/", methods=["POST", "GET"])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("edit")
 def api_activity_counterpart_funding(activity_id):
     activity = qactivity.get_activity(activity_id)

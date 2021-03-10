@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql import func
 import requests
 from flask_jwt_extended import (
-    jwt_required, jwt_optional
+    jwt_required
 )
 
 from maediprojects.query import activity as qactivity
@@ -116,7 +116,7 @@ def filters_reporting_organisation():
 
 
 @blueprint.route("/api/user-results/")
-@jwt_required
+@jwt_required()
 @quser.permissions_required("view")
 def api_activities_user_results():
     activities = qactivity.list_activities_by_filters({'result_indicator_periods': True}, "results-data-entry")
@@ -135,7 +135,7 @@ def api_activities_user_results():
 
 
 @blueprint.route("/api/codelists.json", methods=["GET", "POST"])
-@jwt_required
+@jwt_required()
 @quser.permissions_required("view")
 def api_codelists():
     if (request.method == "GET"):
@@ -165,6 +165,7 @@ def api_locations(country_code):
 
 
 @blueprint.route("/api/sectors.json")
+@jwt_required(optional=True)
 def api_sectors():
     sector_totals = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_disbursement"),
@@ -192,6 +193,7 @@ def api_sectors():
 
 
 @blueprint.route("/api/sectors_C_D.json")
+@jwt_required(optional=True)
 def api_sectors_C_D():
     query = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label("total_value"),
