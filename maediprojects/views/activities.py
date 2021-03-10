@@ -196,6 +196,8 @@ def api_new_activity():
         return jsonify(activity=activity)
     elif request.method=="POST":
         data = request.get_json()
+        if data.get('reporting_org_id') == None:
+            return abort(400)
         for codelist, codelist_data in data["classifications"].items():
             data["classification_id_{}".format(codelist)] = codelist_data["entries"][0]["code"]
             data["classification_percentage_{}".format(codelist)] = codelist_data["entries"][0]["percentage"]

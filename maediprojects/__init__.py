@@ -80,7 +80,7 @@ def register_errorhandlers(app):
     def render_error(error):
         error_code = getattr(error, 'code', 500)
         return make_response(jsonify({'msg': 'Error {}'.format(error_code)}), error_code)
-    for errcode in [401, 403, 404, 500, 405]:
+    for errcode in [400, 401, 403, 404, 500, 405]:
         app.errorhandler(errcode)(render_error)
     return None
 
