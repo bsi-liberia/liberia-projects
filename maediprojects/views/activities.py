@@ -363,9 +363,9 @@ def api_activities_results_design(activity_id):
 def activity_delete(activity_id):
     result = qactivity.delete_activity(activity_id)
     if result:
-        return jsonify({'msg': "Successfully deleted that activity"}, 200)
+        return jsonify({'msg': "Successfully deleted that activity"}), 200
     else:
-        return jsonify({'msg': "Sorry, unable to delete that activity"}, 500)
+        return jsonify({'msg': "Sorry, unable to delete that activity"}), 500
 
 """
 I think all of this is unused
