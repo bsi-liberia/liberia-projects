@@ -28,12 +28,11 @@ def api_activity_finances(activity_id):
     if request.method == "POST":
         request_data = request.get_json()
         if request_data["action"] == "add":
-            # Fallbak to activity data
-            print('classification_data', activity.classification_data)
+            print(request_data)
             data = {
                 "transaction_type": request_data["transaction_type"],
                 "transaction_date": request_data["transaction_date"],
-                "transaction_value": request_data["transaction_value"],
+                "transaction_value_original": request_data["transaction_value_original"],
                 "aid_type": request_data.get("aid_type", activity.aid_type),
                 "finance_type": request_data.get("finance_type", activity.finance_type),
                 "provider_org_id": request_data.get("provider_org_id", activity.funding_organisations[0].id),
