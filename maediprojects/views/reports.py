@@ -155,7 +155,7 @@ def results():
             'title': activity.title,
             'reporting_org_name': activity.reporting_org.name,
             'implementer_name': ", ".join(list(map(lambda org: org.name, activity.implementing_organisations))),
-            'results_average': activity.results_average,
+            'results_average': round(activity.results_average) if activity.results_average is not None else None,
             'results_average_status': activity.results_average_status
         }
 
