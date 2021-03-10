@@ -1,6 +1,6 @@
 import datetime
 from lxml import etree as et
-
+from six import u as unicode
 from flask import current_app
 
 from maediprojects.query import activity as qactivity
@@ -242,7 +242,7 @@ def build_transaction_103(transaction):
 
     tvalue = et.Element("value")
     t.append(tvalue)
-    tvalue.text = unicode(transaction_value)
+    tvalue.text = unicode(str(transaction_value))
     tvalue.set("value-date", transaction_date)
 
     if transaction_description:
@@ -273,7 +273,7 @@ def build_transaction(transaction):
 
     tvalue = et.Element("value")
     t.append(tvalue)
-    tvalue.text = unicode(transaction_value)
+    tvalue.text = unicode(str(transaction_value))
     tvalue.set("value-date", transaction_date)
 
     if transaction_description:
@@ -364,8 +364,8 @@ def build_activity_103(doc, activity):
                                cl_lookups["TiedStatus"].get(activity.tied_status)))
 
     # Transactions
-    activity_commitments = filter(valid_transaction, activity.commitments)
-    activity_disbursements = filter(valid_transaction, activity.disbursements)
+    activity_commitments = list(filter(valid_transaction, activity.commitments))
+    activity_disbursements = list(filter(valid_transaction, activity.disbursements))
 
     # Output commitments
     for transaction in activity_commitments:
@@ -456,8 +456,8 @@ def build_activity(doc, activity):
     ia.append(el_with_code("default-tied-status", activity.tied_status))
 
     # Transactions
-    activity_commitments = filter(valid_transaction, activity.commitments)
-    activity_disbursements = filter(valid_transaction, activity.disbursements)
+    activity_commitments = list(filter(valid_transaction, activity.commitments))
+    activity_disbursements = list(filter(valid_transaction, activity.disbursements))
 
     # Output commitments
     for transaction in activity_commitments:

@@ -11,7 +11,14 @@ from maediprojects.query import location as qlocations
 from maediprojects.query import finances as qfinances
 from maediprojects.query import organisations as qorganisations
 basedir = os.path.abspath(os.path.dirname(__file__))
+from six import u as unicode
+import sys
 
+
+def clean_string(_string):
+    if sys.version_info.major == 2:
+        return unicode(_string.decode("utf-8"))
+    return _string
 
 def read_file(FILENAME=os.path.join(basedir, "..", "lib/import_files/", "AMCU_Master_Database.xlsx")):
     f = open(FILENAME, "rb")
@@ -19,7 +26,7 @@ def read_file(FILENAME=os.path.join(basedir, "..", "lib/import_files/", "AMCU_Ma
 
 def nonempty_from_list(some_list):
     for item in some_list:
-        if item.strip() != "": return item 
+        if item.strip() != "": return item
     return ""
 
 def get_date(date_value):
@@ -33,7 +40,7 @@ def get_date(date_value):
     if date_value == "":
         return dt.datetime.utcnow().date()
     raise Exception ## Warn of strangely formatted dates
-    
+
 CODES = {
     "collaboration_type": {
         "Multilateral": u"4",
@@ -81,7 +88,7 @@ def tidy_amount(amount_value):
 def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
     provider = clean_get_create_organisation(activity["Funding agency"])
     receiver = clean_get_create_organisation(activity["Implementing Agency"])
-    
+
     transactions = []
     commitment_cols = ["Cost"]
     for col in commitment_cols:
@@ -103,15 +110,15 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
         ]
         commitment.classifications = process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME)
         transactions.append(commitment)
-    disbursement_cols = ['Actual Disbursements Q1 FY13/14', 
-    'Actual Disbursements Q2 FY13/14', 'Actual Disbursements Q3 FY13/14', 
-    'Actual Disbursements Q4 FY13/14', 'Actual Disbursement Q1 FY14/15', 
-    'Actual Disbursement Q2 FY14/15', 'Actual Disbursement Q3 FY14/15', 
-    'Actual Disbursement Q4 FY14/15', 'Actual Disbursement Q1 FY15/16', 
-    'Actual Disbursement Q2 FY15/16', 'Actual Disbursement Q3 FY15/16', 
-    'Actual Disbursement Q4 FY15/16', 'Actual Disbursement Q1 FY16/17', 
-    'Actual Disbursement Q2 FY16/17', 'Actual Disbursement Q3 FY16/17', 
-    'Actual Disbursement Q4 FY16/17', 'Actual Disbursement Q 1', 
+    disbursement_cols = ['Actual Disbursements Q1 FY13/14',
+    'Actual Disbursements Q2 FY13/14', 'Actual Disbursements Q3 FY13/14',
+    'Actual Disbursements Q4 FY13/14', 'Actual Disbursement Q1 FY14/15',
+    'Actual Disbursement Q2 FY14/15', 'Actual Disbursement Q3 FY14/15',
+    'Actual Disbursement Q4 FY14/15', 'Actual Disbursement Q1 FY15/16',
+    'Actual Disbursement Q2 FY15/16', 'Actual Disbursement Q3 FY15/16',
+    'Actual Disbursement Q4 FY15/16', 'Actual Disbursement Q1 FY16/17',
+    'Actual Disbursement Q2 FY16/17', 'Actual Disbursement Q3 FY16/17',
+    'Actual Disbursement Q4 FY16/17', 'Actual Disbursement Q 1',
     'Actual Disbursement Q 2', 'Actual Disbursement Q 3']
 
     def get_data_from_header(column_name):
@@ -140,11 +147,11 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
         col_name = col.strip()
         fq, fy = get_data_from_header(col)
         end_fq_date = get_fy_fq_date(fq, fy)
-        
+
         if activity[col].strip() in ("", "-", "0"): continue
         amount, currency = tidy_amount(activity[col])
         disbursement = models.ActivityFinances()
-        disbursement.transaction_date = dt.datetime.strptime(end_fq_date, 
+        disbursement.transaction_date = dt.datetime.strptime(end_fq_date,
             "%Y-%m-%d")
         disbursement.transaction_type = u"D"
         disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU data".format(
@@ -170,9 +177,9 @@ def process_forward_spends(activity, start_date, end_date):
     From then until latest of end_date or last forward spend date, add
     either a value or 0.
     Return list of forward spends, start_date and end_date."""
-    mtef_cols = ['MTEF 2013/2014', 'MTEF 2014/2015', 'MTEF 2015/2016', 
+    mtef_cols = ['MTEF 2013/2014', 'MTEF 2014/2015', 'MTEF 2015/2016',
     'MTEF 2016/2017', 'MTEF 2017/2018', 'MTEF 2018/2019', 'MTEF 2019/2020']
-    
+
     def get_activity_mtefs(activity):
         activity_mtefs = {}
         for col in mtef_cols:
@@ -180,31 +187,31 @@ def process_forward_spends(activity, start_date, end_date):
             mtef_year = int(re.match("MTEF (\d{4})/\d{4}", col).groups()[0])
             activity_mtefs[mtef_year] = tidy_amount(activity[col])[0]
         return activity_mtefs
-    
+
     activity_mtefs = get_activity_mtefs(activity)
     # If there is no MTEF data, set everything to 0
     if len(activity_mtefs) == 0:
         forwardspends = (
             qfinances.create_forward_spends(
-                start_date, 
+                start_date,
                 end_date
             )
         )
         return start_date, end_date, forwardspends
-    
+
     first_mtef = min(activity_mtefs)
     last_mtef = max(activity_mtefs)
-    
+
     start_date_fy, start_date_fq = util.date_to_fy_fq(start_date)
     end_date_fy, end_date_fq = util.date_to_fy_fq(end_date)
     if start_date_fy < first_mtef:
         forwardspends += (
             qfinances.create_forward_spends(
-                start_date, 
+                start_date,
                 util.fq_fy_to_date(1, first_mtef, 'start')-dt.timedelta(days=1)
             )
         )
-    
+
     for mtef_year, mtef_value in activity_mtefs.items():
         forwardspends += (
             qfinances.create_forward_spends(
@@ -213,7 +220,7 @@ def process_forward_spends(activity, start_date, end_date):
                 mtef_value
             )
         )
-    
+
     # create 0-value quarters up to first mtef
     if end_date_fy > last_mtef:
         forwardspends += (
@@ -222,7 +229,7 @@ def process_forward_spends(activity, start_date, end_date):
                 end_date
             )
         )
-    
+
     #FIXME decide whether to do this…
     # Make adjustments to start/end dates if there are MTEFs found
     #  outside of these dates
@@ -230,7 +237,7 @@ def process_forward_spends(activity, start_date, end_date):
     #    first = util.fq_fy_to_date(1, first_mtef, "start")
     #if last_mtef > end_date_fy:
     #    end_date = util.fq_fy_to_date(4, last_mtef, "end")
-    
+
     return start_date, end_date, forwardspends
 
 def get_locations_as_lookup():
@@ -242,7 +249,7 @@ def get_locations_as_lookup():
 
 def process_locations(activity, LOCATIONS):
     activity_locations = []
-    
+
     counties_string = activity["County"].lower()
     for location_name, location_id in LOCATIONS.items():
         if location_name in counties_string:
@@ -260,7 +267,7 @@ def process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME):
     return classifications
 
 def process_classifications(activity, CODELISTS_IDS_BY_NAME):
-    
+
     classifications = []
     cl = models.ActivityCodelistCode()
     cl.codelist_code_id = CODELISTS_IDS_BY_NAME["mtef-sector"][activity["Secondary Sector"].strip()]
@@ -289,7 +296,7 @@ def process_classifications(activity, CODELISTS_IDS_BY_NAME):
     return classifications
 
 def clean_get_create_organisation(_name):
-    name = unicode(_name.decode("utf-8")).strip()
+    name = clean_string(_name).strip()
     return qorganisations.get_or_create_organisation(name)
 
 def make_organisation(name, role):
@@ -303,12 +310,12 @@ def import_file():
     qlocations.import_locations("LR")
     data = read_file()
     print("There are {} projects found".format(len(data)))
-    
+
     # Get location data and codelists for lookup
     LOCATIONS = get_locations_as_lookup()
     CODELISTS_BY_NAME = codelists.get_codelists_lookups_by_name()
     CODELISTS_IDS_BY_NAME = codelists.get_codelists_ids_by_name()
-    
+
     for activity in data:
         start_date = get_date(nonempty_from_list([
                 activity["Ratification Date"],
@@ -324,25 +331,25 @@ def import_file():
         start_date, end_date, forwardspends = process_forward_spends(
             activity, start_date, end_date
         )
-        
+
         d = {
             "user_id": 1, #FIXME
             "domestic_external": u"external",
             "code": "", #FIXME
-            "title": unicode(activity["Project Name"].decode("utf-8")),
+            "title": clean_string(activity["Project Name"]),
             "description": nonempty_from_list([
-                unicode(activity["Project Description"].decode("utf-8")),
-                unicode(activity["Objective"].decode("utf-8")),
+                clean_string(activity["Project Description"]),
+                clean_string(activity["Objective"]),
             ]),
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "reporting_org_id": qorganisations.get_or_create_organisation(
-                unicode(activity["Funding agency"].decode("utf-8").strip())),
+                clean_string(activity["Funding agency"].strip())),
             "organisations": [
                 make_organisation(activity["Implementing Agency"], 4),
                 make_organisation(activity["Funding agency"], 1)
             ],
-            "implementing_org": unicode(activity["Implementing Agency"].decode("utf-8")),
+            "implementing_org": clean_string(activity["Implementing Agency"]),
             "recipient_country_code": "LR",
             "classifications": process_classifications(activity, CODELISTS_IDS_BY_NAME),
             "collaboration_type": CODES["collaboration_type"][

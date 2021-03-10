@@ -4,7 +4,7 @@ import datetime
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-
+SQLALCHEMY_DATABASE_URI="sqlite:///:memory:"
 TESTING = True
 SECRET_KEY = 'not-so-secret-in-tests'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -50,7 +50,7 @@ USER_2 = {
 }
 # The earliest date shown in many interfaces.
 # Used to filter out partial data from a long / messy dataset.
-EARLIEST_DATE = datetime.date(2013,07,01)
+EARLIEST_DATE = datetime.date(2013,7,1)
 MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
 LIVESERVER_PORT=8943

@@ -2,9 +2,9 @@ from collections import defaultdict
 import datetime
 
 from flask import Blueprint, request, \
-    url_for, Response, send_file, render_template, redirect, flash
+    url_for, Response, send_file, redirect, flash, make_response, jsonify
 from flask_login import login_required, current_user
-
+from flask_jwt_extended import jwt_required
 from maediprojects.query import activity as qactivity
 from maediprojects.query import organisations as qorganisations
 from maediprojects.query import generate_csv as qgenerate_csv
@@ -13,7 +13,12 @@ from maediprojects.query import exchangerates as qexchangerates
 from maediprojects.query import import_psip_transactions as qimport_psip_transactions
 from maediprojects.query import import_client_connection as qimport_client_connection
 from maediprojects.query import user as quser
+from maediprojects.query import generate_docx as qgenerate_docx
 from maediprojects.lib import util
+import io
+import sys
+import re
+import zipfile
 
 
 blueprint = Blueprint('exports', __name__, url_prefix='/', static_folder='../static')
@@ -24,75 +29,87 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@blueprint.route("/client-connection/")
-@login_required
+@blueprint.route("/api/project-brief/<activity_id>.docx")
+@jwt_required()
+def export_project_brief(activity_id):
+    brief = qgenerate_docx.make_doc(activity_id)
+    brief.seek(0)
+    return Response(brief, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
+@blueprint.route("/api/project-brief/donor/<reporting_org_id>.zip")
+@jwt_required()
+def export_project_brief_donor(reporting_org_id):
+    zip_buffer = io.BytesIO()
+    activities = qactivity.get_activities_by_reporting_org_id(reporting_org_id)
+    def make_title(title):
+        if sys.version_info.major == 2:
+            return re.sub("/", "-", title.encode("utf-8"))
+        return re.sub("/", "-", title)
+
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        for activity in activities:
+            brief = qgenerate_docx.make_doc(activity.id)
+            brief.seek(0)
+            zip_file.writestr("{} - {}.docx".format(activity.id, make_title(activity.title)), brief.getvalue())
+    zip_buffer.seek(0)
+    return Response(zip_buffer, mimetype="application/zip, application/octet-stream, application/x-zip-compressed, multipart/x-zip")
+
+
+@blueprint.route("/api/client-connection/")
+@jwt_required()
+@quser.permissions_required("edit", "external")
 def wb_client_connection():
     return qimport_client_connection.import_transactions_from_file()
 
-# Legacy URL
-@blueprint.route("/export/")
-@login_required
-@quser.permissions_required("view")
-def export_redirect():
-    return redirect(url_for("exports.export"))
 
-
-@blueprint.route("/exports/")
-@login_required
-@quser.permissions_required("view")
-def export():
-    reporting_orgs = qorganisations.get_reporting_orgs()
-    available_fys_fqs = util.available_fy_fqs_as_dict()
-    previous_fy_fq = util.column_data_to_string(util.previous_fy_fq())
-    currencies = qexchangerates.get_currencies()
-    return render_template("export.html",
-                loggedinuser = current_user)
-
-@blueprint.route("/exports/import_psip/", methods=["POST", "GET"])
-@login_required
+@blueprint.route("/api/exports/import_psip/", methods=["POST"])
+@jwt_required()
 @quser.permissions_required("edit", "domestic")
 def import_psip_transactions(fiscal_year=None):
-    if request.method == "GET": return(redirect(url_for('exports.export')))
     if 'file' not in request.files:
-        flash('Please select a file.', "warning")
-        return redirect(request.url)
+        return make_response(jsonify({'msg': 'Please select a file.'}), 400)
     if 'fiscal_year' in request.form and request.form['fiscal_year'] != '':
         fiscal_year = request.form.get('fiscal_year')
     file = request.files['file']
     if file.filename == '':
-        flash('Please select a file.', "warning")
-        return redirect(request.url)
+        return make_response(jsonify({'msg': 'Please select a file.'}), 400)
     if file and allowed_file(file.filename):
         result = qimport_psip_transactions.import_transactions_from_upload(file, fiscal_year)
-        if result > 0: flash("{} activities successfully updated!".format(result), "success")
-        else: flash("""No activities were updated. Ensure that projects have the correct
-        IFMIS project code specified under the "project code" field.""", "warning")
-        return redirect(url_for('exports.export'))
-    flash("Sorry, there was an error, and that file could not be imported", "danger")
-    return redirect(url_for('exports.export'))
+        if result > 0:
+            return make_response(jsonify({
+                'msg': "{} activities successfully updated!".format(result)
+            }), 200)
+        else:
+            return make_response(jsonify({'msg': """"No activities were updated. Ensure that projects have the correct
+        IFMIS project code specified under the "project code" field."""}), 200)
+    return make_response(jsonify({'msg': "Sorry, but that file cannot be imported. It must be of type xls or xlsx."}), 400)
 
 
-@blueprint.route("/exports/import/", methods=["POST", "GET"])
-@login_required
+@blueprint.route("/api/exports/import/", methods=["POST"])
+@jwt_required()
 @quser.permissions_required("edit", "external")
 def import_template():
-    if request.method == "GET": return(redirect(url_for('exports.export')))
     if 'file' not in request.files:
-        flash('Please select a file.', "warning")
-        return redirect(request.url)
+        return make_response(jsonify({'msg': 'Please select a file.'}), 400)
     file = request.files['file']
     if file.filename == '':
-        flash('Please select a file.', "warning")
-        return redirect(request.url)
+        return make_response(jsonify({'msg': 'Please select a file.'}), 400)
     if file and allowed_file(file.filename):
         if request.form.get('template_type') == 'mtef':
-            result = qgenerate_xlsx.import_xls_mtef(file)
-            if result > 0: flash("{} activities successfully updated!".format(result), "success")
-            else: flash("""No activities were updated. No updated MTEF projections
+            result_messages, result_rows = qgenerate_xlsx.import_xls_mtef(file)
+            if result_rows > 0:
+                return make_response(jsonify({
+                    'msg': "{} activities successfully updated!".format(result_rows),
+                    'messages': result_messages
+                }), 200)
+            else:
+                return make_response(jsonify({'msg': """No activities were updated. No updated MTEF projections
             were found. Check that you selected the correct file and that it
-            contains update MTEF projections data. It must be formatted according to
+            contains updated MTEF projections data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
-            below.""", "warning")
+            on this page.""",
+            'messages': result_messages}), 200)
         elif request.form.get('template_type') == 'disbursements':
             fy_fq = util.previous_fy_fq() #FIXME request.form['fy_fq']
             # For each sheet: convert to dict
@@ -100,60 +117,66 @@ def import_template():
             # Process (financial data) import column
             # If no data in that FQ: then import
             # If there was data for that FY: then don't import
-            result = qgenerate_xlsx.import_xls(file, fy_fq)
-            if result > 0: flash("{} activities successfully updated!".format(result), "success")
-            else: flash("""No activities were updated. No updated disbursements
+            result_messages, result_rows = qgenerate_xlsx.import_xls(file, fy_fq)
+            if result_rows > 0:
+                return make_response(jsonify({
+                    'msg': "{} activities successfully updated!".format(result_rows),
+                    'messages': result_messages
+                }), 200)
+            else:
+                return make_response(jsonify({'msg': """No activities were updated. No updated disbursements
             were found. Check that you selected the correct file and that it
-            contains {} data. It must be formatted according to
+            contains updated {} data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
-            below.""".format(util.column_data_to_string(fy_fq)), "warning")
-        return redirect(url_for('exports.export'))
-    flash("Sorry, there was an error, and that file could not be imported", "danger")
-    return redirect(url_for('exports.export'))
+            on this page.""".format(util.column_data_to_string(fy_fq)),
+            'messages': result_messages
+            }), 200)
+    return make_response(jsonify({'msg': "Sorry, but that file cannot be imported. It must be of type xls or xlsx."}), 400)
 
-@blueprint.route("/exports/activities.csv")
-@login_required
+@blueprint.route("/api/exports/activities.csv")
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def activities_csv():
     data = qgenerate_csv.generate_csv()
     data.seek(0)
     return Response(data, mimetype="text/csv")
 
-@blueprint.route("/exports/activities_external_transactions.xlsx")
-@login_required
-@quser.permissions_required("view")
+@blueprint.route("/api/exports/activities_external_transactions.xlsx")
+@jwt_required(optional=True)
+@quser.permissions_required("view", "external")
 def activities_xlsx_transactions():
     data = qgenerate_xlsx.generate_xlsx_transactions(u"domestic_external", u"external")
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@blueprint.route("/exports/activities_<domestic_external>.xlsx")
-@login_required
-@quser.permissions_required("view")
+@blueprint.route("/api/exports/activities_<domestic_external>.xlsx")
+@jwt_required(optional=True)
+@quser.permissions_required("view", "external")
 def activities_xlsx(domestic_external="external"):
     data = qgenerate_xlsx.generate_xlsx_filtered({"domestic_external": domestic_external})
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@blueprint.route("/exports/activities_all.xlsx")
-@login_required
+@blueprint.route("/api/exports/activities_all.xlsx")
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def all_activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx_filtered()
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@blueprint.route("/exports/activities_filtered.xlsx")
-@login_required
+@blueprint.route("/api/exports/activities_filtered.xlsx")
+@jwt_required(optional=True)
+@quser.permissions_required("view")
 def all_activities_xlsx_filtered():
     arguments = request.args.to_dict()
     data = qgenerate_xlsx.generate_xlsx_filtered(arguments)
     data.seek(0)
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-@blueprint.route("/exports/export_template.xlsx")
-@blueprint.route("/exports/export_template/<organisation_id>.xlsx")
-@login_required
+@blueprint.route("/api/exports/export_template.xlsx")
+@blueprint.route("/api/exports/export_template/<organisation_id>.xlsx")
+@jwt_required(optional=True)
 @quser.permissions_required("view")
 def export_donor_template(organisation_id=None, mtef=False, currency=u"USD", headers=None):
     if request.args.get('template') == 'mtef':

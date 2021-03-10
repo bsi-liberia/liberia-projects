@@ -1,5 +1,6 @@
-from flask import Flask, render_template, session, request, current_app
+from flask import Flask, render_template, session, request, current_app, make_response, jsonify
 from flask_login import current_user
+from flask_cors import CORS
 
 from maediprojects import commands, views, extensions
 
@@ -11,11 +12,12 @@ def create_app(config_object='config'):
     """
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_object)
+    register_blueprints(app)
     register_extensions(app)
     register_commands(app)
-    register_blueprints(app)
+    CORS(app)
     register_errorhandlers(app)
-    register_hooks(app)
+    #register_hooks(app)
     return app
 
 
@@ -54,26 +56,31 @@ def register_extensions(app):
     extensions.migrate.init_app(app, extensions.db)
     extensions.babel.init_app(app)
     extensions.mail.init_app(app)
+    extensions.jwt.init_app(app)
     extensions.login_manager.init_app(app)
 
 
 def register_blueprints(app):
     app.register_blueprint(views.activities.blueprint)
     app.register_blueprint(views.api.blueprint)
+    app.register_blueprint(views.iati.blueprint)
     app.register_blueprint(views.codelists.blueprint)
-    app.register_blueprint(views.documentation.blueprint)
+    app.register_blueprint(views.activity_log.blueprint)
     app.register_blueprint(views.users.blueprint)
-    app.register_blueprint(views.reports.blueprint)
     app.register_blueprint(views.exports.blueprint)
+    app.register_blueprint(views.reports.blueprint)
     app.register_blueprint(views.management.blueprint)
+    app.register_blueprint(views.counterpart_funding.blueprint)
+    app.register_blueprint(views.activity_finances.blueprint)
+    app.register_blueprint(views.activity_forwardspends.blueprint)
+    app.register_blueprint(views.activity_locations.blueprint)
 
 
 def register_errorhandlers(app):
     def render_error(error):
         error_code = getattr(error, 'code', 500)
-        return render_template('{0}.html'.format(error_code),
-                               loggedinuser=current_user), error_code
-    for errcode in [404, 500]:
+        return make_response(jsonify({'msg': 'Error {}'.format(error_code)}), error_code)
+    for errcode in [400, 401, 403, 404, 500, 405]:
         app.errorhandler(errcode)(render_error)
     return None
 
@@ -87,7 +94,7 @@ def register_hooks(app):
         else:
             session["permissions"] = {}
             current_user.permissions_dict = {
-                'domestic_external': 'none',
+                'domestic_external': 'external',
                 'domestic_external_edit': 'none'
             }
             if request.headers['Host'] == "psip.liberiaprojects.org":

@@ -1,28 +1,31 @@
-from flask import Blueprint, render_template, flash, request, \
-    redirect, url_for
+from flask import Blueprint, flash, request, \
+    redirect, url_for, jsonify
 from flask_login import login_required, current_user
 
 from maediprojects.query import location as qlocation
 from maediprojects.query import organisations as qorganisations
+from maediprojects.query import codelists as qcodelists
 from maediprojects.query import user as quser
 from maediprojects.lib import codelists
+from flask_jwt_extended import jwt_required
 
 
-blueprint = Blueprint('codelists', __name__, url_prefix='/', static_folder='../static')
+blueprint = Blueprint('codelists', __name__, url_prefix='/api/codelists')
 
 
-@blueprint.route("/codelists/")
-@login_required
+@blueprint.route("/")
+@jwt_required()
 @quser.administrator_required
 def codelists_management():
-    return render_template("codelists.html",
-                loggedinuser=current_user,
-                codelist_codes = codelists.get_db_codelists(),
-                codelist_names = codelists.get_db_codelist_names(),
-                countries = codelists.get_codelists()["Country"],
-                countries_locations = qlocation.get_countries_locations(),
-                organisations = qorganisations.get_organisations()
-                          )
+    return jsonify(
+    codelist_codes = codelists.get_db_codelists(),
+    codelist_names = list(map(lambda codelist: codelist.as_dict(), codelists.get_db_codelist_names())),
+    countries = codelists.get_codelists()["Country"],
+    organisations = list(map(lambda org: org.as_dict(), qorganisations.get_organisations()))
+)
+
+"""
+This should be a command line command
 
 @blueprint.route("/codelists/import_locations/", methods=["POST"])
 @login_required
@@ -37,3 +40,48 @@ def import_locations():
     else:
         flash("Locations for that country were not imported, because they have already been imported!", "danger")
     return redirect(url_for("codelists.codelists_management"))
+"""
+
+
+
+@blueprint.route("/update/", methods=["POST"])
+@jwt_required()
+@quser.administrator_required
+def api_codelists_update():
+    # FIXME check for admin status
+    if request.json["codelist_code"] == "organisation":
+        result = qorganisations.update_attr(request.json)
+    else:
+        result = qcodelists.update_attr(request.json)
+    if result:
+        return "OK"
+    else:
+        return "ERROR"
+
+@blueprint.route("/delete/", methods=["POST"])
+@jwt_required()
+@quser.administrator_required
+def api_codelists_delete():
+    # FIXME check for admin status
+    if request.json["codelist_code"] == "organisation":
+        result = qorganisations.delete_org(request.json)
+    else:
+        result = qcodelists.delete_code(request.json)
+    if result:
+        return "OK"
+    else:
+        return "ERROR"
+
+@blueprint.route("/new/", methods=["POST"])
+@jwt_required()
+@quser.administrator_required
+def api_codelists_new():
+    # FIXME check for admin status
+    if request.json["codelist_code"] == "organisation":
+        result = qorganisations.create_organisation(request.json)
+    else:
+        result = qcodelists.create_code(request.json)
+    if result:
+        return str(result.id)
+    else:
+        return "ERROR"

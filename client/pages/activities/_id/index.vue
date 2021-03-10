@@ -1,0 +1,603 @@
+<template>
+  <div>
+    <template v-if="isBusy">
+      <div class="text-center my-2">
+        <b-spinner class="align-middle" label="Loading..." variant="secondary"></b-spinner>
+        <strong>Loading...</strong>
+      </div>
+    </template>
+    <template v-else>
+      <b-row>
+        <b-col :md="this.showTools ? 8 : false">
+          <b-row>
+            <b-col>
+              <h1>{{ activity.title }}</h1>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col>
+              <p class="lead">{{ activity.description }}</p>
+              <template v-if="activity.objectives">
+                <h3>Objectives</h3>
+                <p>{{ activity.objectives }}</p>
+              </template>
+              <template v-if="activity.deliverables">
+                <h3>Deliverables</h3>
+                <p>{{ activity.deliverables }}</p>
+              </template>
+              <template v-if="activity.papd_alignment">
+                <h3>PAPD Alignment</h3>
+                <p>{{ activity.papd_alignment }}</p>
+              </template>
+            </b-col>
+          </b-row>
+        </b-col>
+        <b-col md="4" v-if="showTools" class="text-right">
+          <b-btn :to="{ name: 'activities-id-edit', params: {id: activity.id }}" variant="warning" v-if="activity.permissions.edit" class="mb-1">
+            <font-awesome-icon :icon="['fas', 'edit']" />
+            Edit project
+          </b-btn>
+          <template v-if="preparingFile">
+            <b-btn variant="secondary" class="float-md-right mb-1" id="download_excel" style="margin-left:4px;" @click="getProjectBrief">
+              <b-spinner label="Preparing" small></b-spinner> Preparing file...
+            </b-btn>
+          </template>
+          <template v-else>
+            <b-btn variant="primary" class="float-md-right mb-1" id="download_excel" href="#" style="margin-left:4px;" @click="getProjectBrief">
+              <font-awesome-icon :icon="['fas', 'download']" /> Project Brief
+            </b-btn>
+          </template>
+          <b-btn variant="primary" :to="{ name: 'activities-id-results-design', params: {id: activity.id}}"
+          v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-design'))">
+            <font-awesome-icon :icon="['fa', 'magic']" /> Results designer
+          </b-btn>
+          <b-btn variant="primary" :to="{ name: 'activities-id-results-data-entry', params: {id: activity.id}}"
+          v-if="(activity.permissions.edit == true) || (loggedInUser.roles_list.includes('results-data-entry')) || (loggedInUser.roles_list.includes('results-data-design'))">
+            <font-awesome-icon :icon="['fa', 'clipboard-list']" /> Results data entry
+          </b-btn>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col md="6">
+          <h3>Basic data</h3>
+          <table class="table table-hover table-sm" responsive>
+            <tbody>
+              <tr>
+                <td><b>Dashboard ID</b></td>
+                <td>{{ activity.id }}</td>
+              </tr>
+              <tr>
+                <td><b>Donor project code</b></td>
+                <td>{{ activity.iati_identifier }}</td>
+              </tr>
+              <tr>
+                <td><b>GoL budget code</b></td>
+                <td>{{ activity.code }}</td>
+              </tr>
+              <tr>
+                <td><b>Project status</b></td>
+                <td><!-- codelist_lookups["ActivityStatus"] -->
+                  <span class="badge badge-secondary">{{ activity.activity_status }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><b>Funded by</b></td>
+                <td>{{ activity.reporting_org.name }}</td>
+              </tr>
+              <tr>
+                <td><b>Implemented by</b></td>
+                <td>
+                  <b-badge v-for="organisation in activity.implementing_organisations" v-bind:key="organisation.id">{{ organisation.name }}</b-badge>
+                </td>
+              </tr>
+              <tr>
+                <td><b>Start date</b></td>
+                <td>{{ activity.start_date }}</td>
+              </tr>
+              <tr>
+                <td><b>End date</b></td>
+                <td>{{ activity.end_date }}</td>
+              </tr>
+              <tr>
+                <td><b>Last updated</b></td>
+                <td>{{ activity.updated_date }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <h3>Sectors</h3>
+          <table class="table table-hover table-sm" responsive>
+            <tbody>
+              <tr v-for="(classification, cl_id) in activity.classifications_data" v-bind:key="classification.code">
+                <td><b>{{ classification.name }}</b></td>
+                <td>
+                  <span :class="`badge badge-secondary ${classification.code}`"
+                  v-for="entry in classification.entries" v-bind:key="entry.id">{{ entry.codelist_code.name }}</span>
+                </td>
+              </tr>
+              <template v-if="activity.domestic_external == 'external'">
+                  <tr>
+                    <td><b>Finance Type</b></td>
+                    <td>
+                      <span v-for="(pct, ft) in activity.disb_finance_types">
+                        {{ ft }}: {{ pct }}% <br />
+                      </span>
+                    </td>
+                  </tr>
+                  <tr v-if="activity.disb_fund_sources.length > 1">
+                    <td><b>Fund Sources</b></td>
+                    <td>
+                      <span v-for="(data, fs) in activity.disb_fund_sources">
+                        {{ fs }} ({{ data.finance_type }}): {{ data.value }}% <br />
+                      </span>
+                    </td>
+                  </tr>
+              </template>
+            </tbody>
+          </table>
+          <template v-if="activity.milestones_data">
+          <h3>Project Development and Appraisal</h3>
+            <table class="table table-hover table-sm" responsive>
+              <tbody>
+                <tr v-for="milestone in activity.milestones_data" v-bind:key="milestone.id">
+                  <td><b>{{milestone.name }}</b></td>
+                  <td><span :class="`badge badge-${milestone.achieved.colour}`">
+                    <i :class="`fa ${milestone.achieved.icon}`"></i> ${milestone.achieved.name}
+                  </span></td>
+                </tr>
+              </tbody>
+            </table>
+          </template>
+        </b-col>
+        <b-col md="6" class="activity-profile-location-map-container">
+          <h3 id="locations">Locations</h3>
+          <div id="locationMap">
+            <client-only>
+              <l-map :zoom=7 :center="[6.5,-9.2]" :options="{scrollWheelZoom: false}">
+                <l-tile-layer url="https://api.mapbox.com/styles/v1/markbrough/ckhe9jol304hs19pd9xkkswsf/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFya2Jyb3VnaCIsImEiOiJUZXFjRHowIn0.8e3Fq018PP1x5QMTxa8n_A"></l-tile-layer>
+                <l-marker :lat-lng="location.latLng" v-for="location in locations" v-bind:key="location.id">
+                  <l-popup>{{ location.name }}</l-popup>
+                </l-marker>
+              </l-map>
+           </client-only>
+          </div>
+        </b-col>
+      </b-row>
+      <template v-if="years.length>0">
+        <b-row>
+          <b-col>
+            <hr />
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <h2>Financial summary</h2>
+            <p class="text-muted">Showing cumulative amounts over time.</p>
+            <client-only>
+              <LineChart
+                :data="financesChartData"
+                :options="chartOptions"
+                class="line-chart"></LineChart>
+            </client-only>
+          </b-col>
+        </b-row>
+      </template>
+      <b-row>
+        <b-col>
+          <hr />
+        </b-col>
+      </b-row>
+      <b-row id="financialdata">
+        <b-col lg="9">
+          <h2>Financial data</h2>
+        </b-col>
+        <b-col lg="3" v-if="(activity.domestic_external == 'external') && (activity.disb_fund_sources.length > 1)">
+          <b-form-group class="text-right"
+          label="Display:">
+            <b-form-radio-group
+              id="btn-radios-1"
+              v-model="showFundSource"
+              :options="showFundSourceOptions"
+              buttons
+              button-variant="outline-dark"
+            ></b-form-radio-group>
+          </b-form-group>
+        </b-col>
+      </b-row>
+      <template v-if="showFundSource">
+        <template v-for="finance in financesFundSources">
+          <b-row>
+            <template v-for="fundSourceData, fundSource in fundSources">
+              <b-col v-if="fundSource in finance.data">
+                <h3>
+                  <template v-if="fundSource != 'null'">{{ fundSource }}</template>
+                  <b-badge>{{ fundSourceData.finance_type }}</b-badge>
+                  <br />{{ finance.title }}</h3>
+                <b-table class="table financial-table table-sm"
+                :fields="fiscal_fields" :items="Object.values(finance.data[fundSource])"
+                sort-by="period"
+                :sort-desc="true"
+                :busy="isBusy"
+                responsive>
+                  <template v-slot:table-busy class="text-center text-muted my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong>Loading...</strong>
+                  </template>
+                </b-table>
+              </b-col>
+            </template>
+          </b-row>
+        </template>
+      </template>
+      <template v-else>
+        <b-row>
+          <template v-for="(finance, fkey) in finances">
+            <b-col>
+              <h3>{{ finance.title }}</h3>
+              <b-table class="table financial-table table-sm"
+              :id="`${fkey}-table`"
+              :fields="fiscal_fields" :items="finance.data"
+              sort-by="period"
+              :sort-desc="true"
+              :busy="isBusy"
+              responsive>
+              <div slot:table-busy class="text-center text-muted my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </b-table>
+            </b-col>
+          </template>
+        </b-row>
+      </template>
+      <b-row v-if="results.length > 0">
+        <b-col>
+          <hr />
+        </b-col>
+      </b-row>
+      <div class="row" id="results" v-if="results.length > 0">
+        <div class="col-md-12">
+          <h2>Results</h2>
+          <b-alert variant="info" :show="activity.domestic_external == 'external'">
+            These results were automatically captured from <a :href="`http://d-portal.org/q.html?aid=${activity.code}`">this donor's IATI data</a>.
+          </b-alert>
+          <b-table
+          responsive
+          :fields="resultsFields"
+          :items="results">
+            <template v-slot:cell(title)="data">
+              {{ data.item.indicator_title }}
+              <span v-if="data.item.measurement_unit_type">
+                ({{ data.item.measurement_unit_type }})
+              </span>
+            </template>
+            <template v-slot:cell(from)="data">
+              {{ data.item.period_start }}
+            </template>
+            <template v-slot:cell(to)="data">
+              {{ data.item.period_end }}
+            </template>
+            <template v-slot:cell(target)="data">
+              {{ data.item.target_value }}
+            </template>
+            <template v-slot:cell(actual)="data">
+              {{ data.item.actual_value }}
+            </template>
+            <template v-slot:cell(%)="data">
+              <b-progress
+                :value="data.item.percent_complete" max="100"
+                :variant="data.item.percent_complete_category"
+                show-progress
+                v-if="data.item.percent_complete">
+              </b-progress>
+            </template>
+          </b-table>
+        </div>
+      </div>
+      <div class="row" v-if="documents.length > 0">
+        <div class="col">
+          <hr />
+        </div>
+      </div>
+      <div class="row" id="documents" v-if="documents.length > 0">
+        <div class="col-md-12">
+          <h2>Documents</h2>
+          <b-alert variant="info" :show="activity.domestic_external == 'external'">
+            These documents were automatically captured from <a :href="`http://d-portal.org/q.html?aid=${activity.code}`">this donor's IATI data</a>.
+          </b-alert>
+          <b-table responsive fixed
+            :fields="['title', 'type', 'date']"
+            :items="documents">
+            <template v-slot:cell(title)="data">
+              <a :href="data.item.url">{{ data.item.title }}</a>
+            </template>
+            <template v-slot:cell(type)="data">
+              <span class="badge badge-secondary"
+                  v-for="category in data.item.categories" v-bind:key="category">{{ category }}</span>
+            </template>
+            <template v-slot:cell(date)="data">
+              {{ data.item.document_date || '' }}
+            </template>
+          </b-table>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+<style scoped>
+.line-chart {
+  width: 100%;
+  height: 300px;
+}
+#locationMap {
+  height: 400px;
+}
+</style>
+<script>
+import { mapGetters } from 'vuex'
+import LineChart from '~/components/charts/line-chart'
+
+export default {
+  components: {
+    LineChart
+  },
+  head() {
+    return {
+      title: this.activity.title ? `${this.activity.title} | ${this.$config.title}` : this.$config.title
+    }
+  },
+  data() {
+    return {
+      activityID: this.$route.params.id,
+      activity: {},
+      fiscal_fields: [
+        {
+          key: 'period',
+          sortable: true
+        },
+        {
+          key: 'value',
+          sortable: true,
+          class: "number",
+          formatter: value => {
+            return value.toLocaleString(undefined, {minimumFractionDigits: 2})
+          }}],
+      locations: [],
+      results: [],
+      documents: [],
+      finances: {},
+      financesFundSources: {},
+      showFinancesChart: true,
+      showFundSource: false,
+      fundSources: [],
+      showFundSourceOptions: [{
+          'value': false,
+          'text': 'Summary'
+        },
+        {
+          'value': true,
+          'text': 'By Fund Source'
+        },
+      ],
+      preparingFile: false
+    }
+  },
+  mounted: function() {
+    this.getActivity()
+    this.getLocations()
+    this.getFinances()
+    this.getFinancesFundSources()
+    this.getResults()
+    this.getDocuments()
+    /*
+    if (window.location.hash && window.location.hash.split("#").length>0) {
+      console.log("scrollto", window.location.hash.split("#")[1])
+      VueScrollTo.scrollTo(document.getElementById(window.location.hash.split("#")[1]), 500, {offset:-60})
+    }
+    */
+  },
+  computed: {
+    showTools() {
+      return this.activity.permissions.edit || this.loggedInUser.roles_list.includes('desk-officer') || this.loggedInUser.roles_list.includes('management') || this.loggedInUser.roles_list.includes('results-data-entry') || this.loggedInUser.roles_list.includes('results-data-design')
+    },
+    isBusy() {
+      return Object.keys(this.activity).length == 0
+    },
+    resultsFields() {
+      return ['title', 'from', 'to', 'target', 'actual'].concat({key: '%', thStyle: 'width: 30%'})
+    },
+    years() {
+      const _years = Object.values(this.finances).reduce((years, finance) => {
+        years = years.concat(finance.data.map(item => Number(item.fiscal_year)))
+        return years
+      }, [])
+      if (_years.length == 0) { return [] }
+      if (this.activity.start_date) {
+        _years.push(new Date(this.activity.start_date).getFullYear())
+      }
+      _years.push(new Date(this.activity.end_date).getFullYear()+1)
+      if (this.activity.end_date) {
+        _years.push(new Date(this.activity.end_date).getFullYear())
+      }
+      return this.getRange(Math.min.apply(Math, _years), Math.max.apply(Math, _years)+1)
+    },
+    chartData() {
+      const data = Object.keys(this.finances).reduce((out, key) => {
+        const entries = (key in this.finances) ? this.finances[key].data : []
+        out[key] = Object.entries(entries.reduce((keyItems, entry) => {
+          /* For each allowed year, add the value for this entry */
+          if (Number(entry.fiscal_year) in keyItems) {
+            keyItems[Number(entry.fiscal_year)] += entry.value
+          }
+          return keyItems
+        }, /* Pass in list of available years with default amount 0.0 */
+          this.years.reduce((yearObj, year) => {
+            yearObj[year] = 0.0; return yearObj
+          }, {}))
+        ).reduce((_keyItems, entry, index) => {
+          /* Cumulative: add previous year's amount to current year's */
+          if (index == 0) { _keyItems.push(entry[1]) }
+          else { _keyItems.push(entry[1] + _keyItems[index-1]) }
+          return _keyItems
+        }, [])
+        return out
+      }, {})
+      return data
+    },
+    chartOptions() {
+      return {
+        maintainAspectRatio: false,
+        tooltips: {
+          callbacks: {
+            label: ((tooltipItem, data) => {
+              const datasetLabel = data.datasets[tooltipItem.datasetIndex].label
+              const value = tooltipItem.yLabel.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0
+              })
+              return `${datasetLabel}: USD ${value}`;
+            })
+          }
+        },
+        scales: {
+          yAxes: [
+            {
+              ticks: {
+                beginAtZero: true,
+                callback: function(tick) {
+                  return tick.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0
+                  })
+                }
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Amount (USD)'
+              }
+            }
+          ],
+          xAxes: [
+            {
+              ticks: {
+                callback: function(tick) {
+                  return `FY${tick}`
+                }
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Fiscal Year'
+              }
+            }
+          ]
+        }
+      }
+    },
+    financesChartData() {
+      const colours = [ '#CF3D1E', '#F15623', '#F68B1F', '#FFC60B', '#DFCE21',
+      '#BCD631', '#95C93D', '#48B85C', '#00833D', '#00B48D', '#60C4B1', '#27C4F4',
+      '#478DCB', '#3E67B1', '#4251A3', '#59449B', '#6E3F7C', '#6A246D', '#8A4873',
+      '#EB0080', '#EF58A0', '#C05A89']
+      const transactionTypes = {
+        'disbursement': {'label': 'Disbursements', 'colour': colours[3]},
+        'forwardspend': {'label': 'MTEF Projections', 'colour': colours[6]},
+        'commitments': {'label': 'Commitments', 'colour': colours[12]},
+        'allotment': {'label': 'Allotments', 'colour': colours[18]}
+      }
+      if (Object.keys(this.chartData).length == 0) { return null }
+      return {
+        "labels": this.years,
+        "datasets": Object.entries(this.chartData).reduce((datasets, item, index) => {
+          const key = item[0]; const data = item[1];
+          datasets.push({
+            label: transactionTypes[key].label,
+            fill: false,
+            data: data,
+            backgroundColor: transactionTypes[key].colour,
+            borderColor: transactionTypes[key].colour,
+            lineTension: 0.1
+          })
+          return datasets
+        }, [])
+      }
+    },
+    ...mapGetters(['isAuthenticated', 'loggedInUser'])
+  },
+  methods: {
+    getRange: function(start, stop, step = 1) {
+      return Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * step)
+    },
+    async getActivity() {
+      await this.$axios
+        .get(`activities/${this.activityID}.json`)
+        .then((response) => {
+          this.activity = response.data.activity
+        })
+    },
+    async getLocations() {
+      this.$axios
+        .get(`activity_locations/${this.activityID}/`)
+        .then((response) => {
+          this.locations = response.data.locations.map(l => {
+            return {
+              id: l.id,
+              latLng: [l.locations.latitude, l.locations.longitude],
+              name: l.locations.name
+            }
+          });
+        });
+    },
+    async getResults() {
+      this.$axios
+        .get(`activities/${this.activityID}/results.json`)
+        .then((response) => {
+          this.results = response.data.results.reduce((results, result) => {
+            result.periods.forEach(period => {
+              results.push({...period, ...result})
+            })
+            return results
+          }, [])
+        })
+    },
+    async getDocuments() {
+      this.$axios
+        .get(`activities/${this.activityID}/documents.json`)
+        .then((response) => {
+          this.documents = response.data.documents
+        })
+    },
+    async getFinances() {
+      await this.$axios
+        .get(`activities/${this.activityID}/finances.json`)
+        .then((response) => {
+          this.finances = response.data.finances
+        });
+    },
+    async getFinancesFundSources() {
+      await this.$axios
+        .get(`activities/${this.activityID}/finances/fund_sources.json`)
+        .then((response) => {
+          this.financesFundSources = response.data.finances
+          this.fundSources = response.data.fund_sources
+        });
+    },
+    async getProjectBrief() {
+      this.preparingFile = true
+      await this.$axios({url: `project-brief/${this.activityID}.docx`,
+        method: 'GET',
+        responseType: 'blob'}).then(response => {
+        if (response.status === 200) {
+          saveAs(
+            new Blob([response.data]),
+            `${this.activityID} - ${this.activity.title}.docx`
+          )
+        } else if (response.status === 500) {
+          alert(
+            'Sorry, there was an error, and the project brief could not be downloaded.'
+          )
+        }
+      })
+      this.preparingFile = false
+    }
+  }
+}
+</script>

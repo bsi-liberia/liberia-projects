@@ -1,14 +1,18 @@
-from StringIO import StringIO
+from io import StringIO
 from zipfile import ZipFile
 
 from flask_login import current_user
 from sqlalchemy import *
 import requests
-import unicodecsv
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
 
 from maediprojects import models
 from maediprojects.extensions import db
-import activity as qactivity
+from maediprojects.query.activity_log import activity_updated
 
 
 GEONAMES_URL="http://download.geonames.org/export/dump/%s.zip"
@@ -45,7 +49,7 @@ def add_location(activity_id, location_id):
         db.session.add(aL)
         db.session.commit()
 
-        qactivity.activity_updated(activity_id,
+        activity_updated(activity_id,
             {
             "user_id": current_user.id,
             "mode": "add",
@@ -68,7 +72,7 @@ def delete_location(activity_id, location_id):
         db.session.commit()
 
 
-        qactivity.activity_updated(activity_id,
+        activity_updated(activity_id,
             {
             "user_id": current_user.id,
             "mode": "delete",
@@ -83,32 +87,34 @@ def delete_location(activity_id, location_id):
 
 
 def _process_locations_import(zipfile, country_code):
-    csv = unicodecsv.DictReader(zipfile.open("%s.txt" % country_code),
-                                fieldnames=GEONAMES_FIELDNAMES,
-                                dialect='excel-tab',
-                                quoting=unicodecsv.QUOTE_NONE)
-    for row in csv:
-        if row["feature_code"] in ALLOWED_FEATURE_CODES:
-            location = models.Location()
-            location.geonames_id = row["geonameid"]
-            location.country_code = country_code
-            location.name = row["name"]
-            location.latitude = row["latitude"]
-            location.longitude = row["longitude"]
-            location.feature_code = row["feature_code"]
-            location.admin1_code = row["admin1_code"]
-            location.admin2_code = row["admin2_code"]
-            location.admin3_code = row["admin3_code"]
-            db.session.add(location)
-    db.session.commit()
+    with zipfile.open("{}.txt".format(country_code), 'r') as country_csv:
+        csv_text = country_csv.read().decode("UTF-8")
+        csv = unicodecsv.DictReader(csv_text,
+                                    fieldnames=GEONAMES_FIELDNAMES,
+                                    dialect='excel-tab',
+                                    quoting=unicodecsv.QUOTE_NONE)
+        for row in csv:
+            if row["feature_code"] in ALLOWED_FEATURE_CODES:
+                location = models.Location()
+                location.geonames_id = row["geonameid"]
+                location.country_code = country_code
+                location.name = row["name"]
+                location.latitude = row["latitude"]
+                location.longitude = row["longitude"]
+                location.feature_code = row["feature_code"]
+                location.admin1_code = row["admin1_code"]
+                location.admin2_code = row["admin2_code"]
+                location.admin3_code = row["admin3_code"]
+                db.session.add(location)
+        db.session.commit()
 
 
 # Called when setting up individual countries
 def import_locations_from_file(file_path, country_code):
     """Downloads geolocations from Geonames."""
     #fn = open(file_path, "rb")
-    zipfile = ZipFile(file_path)
-    _process_locations_import(zipfile, country_code)
+    with ZipFile(file_path) as zipfile:
+        _process_locations_import(zipfile, country_code)
 
 
 # Called when setting up individual countries

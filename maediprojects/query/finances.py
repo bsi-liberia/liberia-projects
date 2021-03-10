@@ -8,7 +8,7 @@ from maediprojects.extensions import db
 from maediprojects.lib import util
 from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
 from maediprojects.query import exchangerates as qexchangerates
-import activity as qactivity
+from maediprojects.query.activity_log import activity_updated
 
 
 def isostring_date(value):
@@ -50,7 +50,7 @@ def add_finances(activity_id, data):
     db.session.add(aF)
     db.session.commit()
 
-    qactivity.activity_updated(activity_id,
+    activity_updated(activity_id,
         {
         "user_id": current_user.id,
         "mode": "add",
@@ -73,7 +73,7 @@ def update_finances_classification(data):
     db.session.add(checkF)
     db.session.commit()
 
-    qactivity.activity_updated(data["activity_id"],
+    activity_updated(data["activity_id"],
         {
         "user_id": current_user.id,
         "mode": "update",
@@ -86,7 +86,7 @@ def update_finances_classification(data):
     return models.ActivityFinances.query.filter_by(id=data["finances_id"]).first()
 
 def delete_finances(activity_id, finances_id):
-    print "Delete activity id {} finances id {}".format(activity_id, finances_id)
+    print("Delete activity id {} finances id {}".format(activity_id, finances_id))
     checkF = models.ActivityFinances.query.filter_by(
         activity_id = activity_id,
         id = finances_id
@@ -95,9 +95,8 @@ def delete_finances(activity_id, finances_id):
         old_value = checkF.as_dict()
         db.session.delete(checkF)
         db.session.commit()
-        print "Return True"
 
-        qactivity.activity_updated(checkF.activity_id,
+        activity_updated(checkF.activity_id,
             {
             "user_id": current_user.id,
             "mode": "delete",
@@ -129,7 +128,7 @@ def update_attr(data):
     db.session.add(finance)
     db.session.commit()
 
-    qactivity.activity_updated(finance.activity_id,
+    activity_updated(finance.activity_id,
         {
         "user_id": current_user.id,
         "mode": "update",
@@ -192,7 +191,7 @@ def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
         fs.value = value
         db.session.add(fs)
         db.session.commit()
-        qactivity.activity_updated(fs.activity_id,
+        activity_updated(fs.activity_id,
             {
             "user_id": current_user.id,
             "mode": "update",
@@ -213,7 +212,7 @@ def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
         fs.period_end_date = end_date
         db.session.add(fs)
         db.session.commit()
-        qactivity.activity_updated(fs.activity_id,
+        activity_updated(fs.activity_id,
             {
             "user_id": current_user.id,
             "mode": "add",
@@ -263,7 +262,7 @@ def update_fs_attr(data):
     db.session.add(fs)
     db.session.commit()
 
-    qactivity.activity_updated(fs.activity_id,
+    activity_updated(fs.activity_id,
         {
         "user_id": current_user.id,
         "mode": "update",

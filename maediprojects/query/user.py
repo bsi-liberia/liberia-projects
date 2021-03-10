@@ -1,14 +1,14 @@
 from functools import wraps
 
 from werkzeug.security import generate_password_hash
-from flask import flash, redirect, url_for, request
+from flask import flash, redirect, url_for, request, make_response, jsonify
 from flask_login import current_user
 
 from maediprojects import models
 from maediprojects.extensions import db
-import organisations as qorganisations
-import activity as qactivity
-import send_email as qsend_email
+from maediprojects.query import organisations as qorganisations
+from maediprojects.query import activity as qactivity
+from maediprojects.query import send_email as qsend_email
 from smtplib import SMTPRecipientsRefused
 
 import datetime
@@ -18,12 +18,11 @@ def administrator_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "admin" not in current_user.roles_list:
-            flash("You must be an administrator to access that page.", "danger")
-            return redirect(url_for("activities.dashboard"))
+            return make_response(jsonify({'msg': 'You must be an administrator to access that page.'}), 403)
         return f(*args, **kwargs)
     return decorated_function
 
-def check_permissions(permission_name, permission_value=None):
+def check_permissions(permission_name, permission_value=None, activity_id=None):
     if "admin" in current_user.roles_list: return True
     if permission_name in ("results-data-entry", "results-data-design"):
         if "edit" in current_user.roles_list: return True
@@ -35,6 +34,10 @@ def check_permissions(permission_name, permission_value=None):
     if permission_name in ("new"):
         if current_user.permissions_dict.get("edit", "none") != "none":
             return True
+        if "desk-officer" in current_user.roles_list: return True
+    if activity_id:
+        check = (check_activity_permissions(permission_name, activity_id))
+        if check: return True
     return False
 
 def check_activity_permissions(permission_name, activity_id):
@@ -47,6 +50,9 @@ def check_activity_permissions(permission_name, activity_id):
     act = qactivity.get_activity(activity_id)
     if permission_name in ('edit', 'results-data-entry', 'results-data-design'):
         if edit_rights(act, current_user.permissions_dict): return True
+        # For now, we allow all users with results design / data entry roles
+        # to add results data for all projects
+        if permission_name in current_user.roles_list: return True
     if act and current_user.permissions_dict.get("organisations"):
         if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
             # If the user is attached to an organisation, then they should always
@@ -76,15 +82,14 @@ def permissions_required(permission_name, permission_value=None):
                 activity_id = kwargs.get('activity_id')
                 check = (check_activity_permissions(permission_name, activity_id)
                     or check_permissions(permission_name, permission_value))
+            elif permission_name == "new":
+                check = (check_new_activity_permission() or check_permissions(permission_name, permission_value))
             elif permission_name == "edit":
                 check = (check_new_activity_permission() or check_permissions(permission_name, permission_value))
             else:
                 check = (check_permissions(permission_name, permission_value))
             if check is False:
-                flash("You do not have sufficient permissions to access that page.", "danger")
-                if request.referrer != None:
-                    return redirect(request.referrer)
-                return redirect(url_for("activities.dashboard"))
+                return make_response(jsonify({'msg': 'You do not have sufficient permissions to access that page.'}), 403)
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
@@ -140,7 +145,6 @@ def add_user_role(username, role_slug):
 def list_user_role_by_username(username):
     user = user_by_username(username)
     if not user: return False
-    print user.roles_list
     return user.roles_list
 
 
@@ -238,8 +242,8 @@ def updateUser(data):
 
     # This should be done more nicely on the model...
     if "admin" in current_user.roles_list:
-        current_user_roles = list(map(lambda ur: str(ur.role_id), checkU.userroles))
-        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []).split(","))
+        current_user_roles = list(map(lambda ur: ur.role_id, checkU.userroles))
+        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []))
         roles_to_add = filter(lambda r: r not in current_user_roles, new_user_roles)
         roles_to_delete = filter(lambda r: r not in new_user_roles, current_user_roles)
         for role_id in roles_to_delete:
@@ -276,6 +280,13 @@ def addUser(data):
 
         if data.get("administrator") == True:
             add_user_role(data["username"], "admin")
+        new_user_roles = filter(lambda r: r != '', data.get("user_roles", []))
+        for role_id in new_user_roles:
+            ur = models.UserRole()
+            ur.user_id = newU.id
+            ur.role_id = role_id
+            db.session.add(ur)
+        db.session.commit()
 
         return newU
     return checkU
@@ -404,12 +415,15 @@ And copy/paste the following password reset key into the box:
 {}
     """.format(
         user.username,
-        url_for('users.reset_password_with_key',
-                email_address=email_address,
-                reset_password_key=user.reset_password_key,
-                _external=True),
-        url_for('users.reset_password_with_key',
-                _external=True),
+        "{}users/reset-password/key/?email_address={}&reset_password_key={}".format(
+            request.url_root,
+            email_address,
+            user.reset_password_key
+        ),
+        "{}users/reset-password/key/?email_address={}".format(
+            request.url_root,
+            email_address
+        ),
         user.reset_password_key
     )
     qsend_email.send_async_email(
@@ -420,7 +434,7 @@ And copy/paste the following password reset key into the box:
 
 def make_password_reset_key(email_address):
     try:
-        user = user_by_email_address(request.form["email_address"])
+        user = user_by_email_address(email_address)
         if not user:
             send_unknown_user_password_reset_email(email_address)
         else:

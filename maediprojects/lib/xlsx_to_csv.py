@@ -1,46 +1,37 @@
-import xlrd
+from openpyxl import load_workbook
 import datetime
+import sys
+from io import BytesIO
 
 
-def getDataFromFile(f, file_contents, sheet, by_id=False, headers_row=0):
+def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
+    headers_row += 1
 
-    book = xlrd.open_workbook(filename=f, file_contents=file_contents)
+    if file_contents:
+        f = BytesIO(file_contents)
+    book = load_workbook(filename=f)
 
-    def getData(book, sheet, by_id, headers_row):
+    def getData(book, sheetname, by_id, headers_row):
         if by_id:
-            sheet = book.sheet_by_index(sheet)
+            sheet = book[book.sheetnames[sheetname]]
         else:
-            sheet = book.sheet_by_name(sheet)
-        headers = dict( (i, sheet.cell_value(headers_row, i).strip() ) for i in range(sheet.ncols) )
+            sheet = book[sheetname]
 
-        def makeNiceNumber(val):
-            valint = int(val)
-            if float(valint) == val:
-                return str(valint)
-            return str(val)
+        headers = dict(map(lambda cell: (cell[0], cell[1].value), enumerate(sheet[headers_row])))
 
-        def item(i, j):
-            val = sheet.cell_value(i,j)
-            cell_type = sheet.cell_type(i,j)
-            if cell_type == xlrd.XL_CELL_NUMBER:
-                val = makeNiceNumber(val)
-            elif cell_type == xlrd.XL_CELL_DATE:
-                val = datetime.datetime(*xlrd.xldate_as_tuple(val, book.datemode))
-                val = val.strftime("%d/%m/%Y")
-            elif cell_type == xlrd.XL_CELL_BOOLEAN:
-                val = ('FALSE', 'TRUE')[val]
-            return (sheet.cell_value(headers_row,j).strip(), val.encode("utf8"))
+        def item(row, col):
+            return headers[col-1], sheet.cell(row,col).value
 
-        out = [ dict(item(i,j) for j in range(sheet.ncols)) \
-            for i in range(headers_row+1, sheet.nrows) ]
+        out = [ dict(item(row,col) for col in range(1, sheet.max_column+1)) \
+            for row in range(headers_row+1, sheet.max_row+1) ]
         return out
-    if sheet == "all":
+    if sheetname == "all":
         data = []
-        for sheet in range(0,100):
+        for _sheetname in book.sheetnames:
             try:
-                data += getData(book, sheet, by_id, headers_row)
+                data += getData(book, _sheetname, False, headers_row)
             except IndexError:
                 break
         return data
     else:
-        return getData(book, sheet, by_id, headers_row)
+        return getData(book, sheetname, by_id, headers_row)

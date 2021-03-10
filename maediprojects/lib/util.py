@@ -195,6 +195,12 @@ def available_fy_fqs_as_dict():
               } for fyfqstring in available_fy_fqs()]
 
 
+def available_fys_as_dict():
+    return [{'value': fy_fy_to_fy(fyfqstring),
+             'text': fyfqstring
+              } for fyfqstring in available_fys()]
+
+
 def get_data_from_fy_fq_string(fy_fq_string):
     pattern = r"FY(\d*) Q(\d)"
     result = re.match(pattern, column_name).groups()

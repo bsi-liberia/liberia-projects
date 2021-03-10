@@ -4,7 +4,12 @@ import os
 
 from flask import current_app
 import normality
-import unicodecsv
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
+from six import u as unicode
 
 from maediprojects import models
 from maediprojects.lib import codelists
@@ -20,32 +25,42 @@ def import_responses():
     responses = [
     {
         'name': 'Data requested',
-        'icon': 'fa fa-check-circle text-muted',
+        'icon': 'fa-check-circle',
+        'icon_class': 'fa',
         'slug': 'data-requested',
+        'colour': 'text-muted',
         'order': 1
     },
     {
         'name': 'Donor responded, but has no spending in this period',
-        'icon': 'far fa-check-circle text-success',
+        'icon': 'fa-check-circle text-success',
+        'icon_class': 'far',
         'slug': 'donor-responded-no-spending',
+        'colour': 'text-success',
         'order': 2
     },
     {
         'name': 'Donor responded with data',
         'icon': 'fa fa-check-circle text-success',
+        'icon_class': 'fa',
         'slug': 'donor-responded-with-data',
+        'colour': 'text-success',
         'order': 3
     },
     {
         'name': 'Donor refused request',
         'icon': 'fa fa-exclamation-circle text-danger',
+        'icon_class': 'fa',
         'slug': 'donor-refused-request',
+        'colour': 'text-danger',
         'order': 4
     }]
     for response in responses:
         r = models.Response()
         r.name = unicode(response['name'])
         r.icon = unicode(response['icon'])
+        r.icon_class = unicode(response['icon_class'])
+        r.colour = unicode(response['colour'])
         db.session.add(r)
     db.session.commit()
 
@@ -143,13 +158,13 @@ def create_codes_codelists():
          }]
 
     for codelist_file in local_codelist_files:
-        f = open(os.path.join(basedir, "../lib/data/local/", codelist_file["filename"]), "rb")
+        f = open(os.path.join(basedir, "../lib/data/local/", codelist_file["filename"]), "r")
         csv = unicodecsv.DictReader(f)
         add_codelist(codelist_file["name"], csv)
         f.close()
 
     # Add organisations
-    f = open(os.path.join(basedir, "../lib/data/local/", "organisation.csv"), "rb")
+    f = open(os.path.join(basedir, "../lib/data/local/", "organisation.csv"), "r")
     csv = unicodecsv.DictReader(f)
     add_organisation(csv)
     f.close()

@@ -1,4 +1,8 @@
-import unicodecsv
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
 import os
 
 import flask_babel as babel
@@ -34,7 +38,7 @@ def get_db_codelists():
 
 def get_codelists(LANG=None):
     if not LANG:
-        LANG = babel.get_locale()
+        LANG = babel.get_locale() or "en"
 
     current_dir = os.path.join(os.path.dirname(__file__))
 
@@ -52,7 +56,8 @@ def get_codelists(LANG=None):
         for row in csv:
             out[cl_name].append({"code": row["code"],
                 "id": row.get("id", row.get("code")),
-                "name": row["name_%s" % LANG]})
+                "name": row["name_{}".format(LANG)],
+                "description": row.get("description_{}".format(LANG))})
     out.update(get_db_codelists())
     out['domestic_external'] = [
         {'code': 'domestic', 'id': 'domestic', 'name': 'Domestic / PSIP (PIU)'},

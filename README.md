@@ -2,9 +2,12 @@
 
 Simple project database to collect information about aid projects in Liberia and publish it in IATI format (both v1.03 and v2.01).
 
+[![Build Status](https://travis-ci.com/bsi-liberia/liberia-projects.svg?branch=master&status=passed)](https://travis-ci.com/github/bsi-liberia/liberia-projects)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPLv3-blue.svg)](https://github.com/bsi-liberia/liberia-projects/blob/main/LICENSE.txt)
+
 ## License: AGPL v3.0
 
-Copyright (c) 2016-2018 Mark Brough, Ministère des Affaires étrangères et du Développement international, Overseas Development Institute Liberia
+Copyright (c) 2016-2021 Mark Brough, Overseas Development Institute
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -138,7 +141,7 @@ apt install yarn
    application=create_app()
    ```
 
-3. Edit the Apache config file (in `/etc/apache2/sites-available/liberiaprojects.conf`) to point to the new .wsgi file. In this example, 
+3. Edit the Apache config file (in `/etc/apache2/sites-available/liberiaprojects.conf`) to point to the new .wsgi file. In this example,
    ```
     <VirtualHost *:80>
             #ServerName www.example.com
@@ -174,7 +177,7 @@ apt install yarn
 
 ## Setup `certbot` to allow for HTTPS
 
-1. Setup certbot following [these instructions](https://certbot.eff.org/lets-encrypt/ubuntubionic-apache). 
+1. Setup certbot following [these instructions](https://certbot.eff.org/lets-encrypt/ubuntubionic-apache).
 2. Opt to redirect all requests to HTTPS when prompted.
 3. At some point, you will probably stumble across an error similar to this:
    ```

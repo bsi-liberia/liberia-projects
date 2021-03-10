@@ -1,8 +1,12 @@
 # -*- coding: UTF-8 -*-
 
 import datetime
-import unicodecsv
-import StringIO
+import sys
+if sys.version_info.major == 2:
+    import unicodecsv
+else:
+    import csv as unicodecsv
+import io
 import re
 
 from maediprojects.query import activity as qactivity
@@ -49,8 +53,8 @@ def activity_to_json(activity, cl_lookups):
         u'ID': activity.id,
         u'Project code': activity.code,
         u'Domestic/External': activity.domestic_external,
-        u'Activity Title': re.sub("\t|\n|\r", "", activity.title),
-        u'Activity Description': re.sub("\t|\n|\r", "", activity.description),
+        u'Activity Title': re.sub("\t|\n|\r", "", activity.title if activity.title is not None else ''),
+        u'Activity Description': re.sub("\t|\n|\r", "", activity.description if activity.description is not None else ''),
         u'Activity Status': cl_lookups["ActivityStatus"].get(activity.activity_status),
         u'Activity Dates (Start Date)': activity.start_date.isoformat() if activity.start_date else "",
         u'Activity Dates (End Date)': activity.end_date.isoformat() if activity.end_date else "",
@@ -90,17 +94,17 @@ def disb_fy_fqs(start=2013):
 
 
 def disb_fy_fqs_with_mtefs(start=2013):
-    disbFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
-                     "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy),
-                     "{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
-                     "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
+    disbFYs_QTRs = [(u"{} Q1 (MTEF)".format(fy), u"{} Q2 (MTEF)".format(fy),
+                     u"{} Q3 (MTEF)".format(fy), u"{} Q4 (MTEF)".format(fy),
+                     u"{} Q1 (D)".format(fy), u"{} Q2 (D)".format(fy),
+                     u"{} Q3 (D)".format(fy), u"{} Q4 (D)".format(fy)
              ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
     return [item for sublist in disbFYs_QTRs for item in sublist]
 
 
 def mtef_fy_fqs(start=datetime.datetime.utcnow().year+1, end=False):
-    MTEFFYs_QTRs = [("{} Q1 (MTEF)".format(fy), "{} Q2 (MTEF)".format(fy),
-                     "{} Q3 (MTEF)".format(fy), "{} Q4 (MTEF)".format(fy)
+    MTEFFYs_QTRs = [(u"{} Q1 (MTEF)".format(fy), u"{} Q2 (MTEF)".format(fy),
+                     u"{} Q3 (MTEF)".format(fy), u"{} Q4 (MTEF)".format(fy)
                      ) for fy in range(start, {False: start+3, True: end}[bool(end)])]
     return [item for sublist in MTEFFYs_QTRs for item in sublist]
 
@@ -122,7 +126,7 @@ def generate_disb_fys():
     return disbFYs_QTRs+MTEFFYs_QTRs
 
 def generate_csv():
-    csv_file = StringIO.StringIO()
+    csv_file = io.StringIO()
     cl_lookups = get_codelists_lookups()
     disb_fys = generate_disb_fys()
     _headers = headers + disb_fys
@@ -148,8 +152,8 @@ def activity_to_transactions_list(activity, cl_lookups):
             u'ID': activity.id,
             u'Project code': activity.code,
             u'Domestic/External': activity.domestic_external,
-            u'Activity Title': re.sub("\t|\n|\r", "", activity.title),
-            u'Activity Description': re.sub("\t|\n|\r", "", activity.description),
+            u'Activity Title': re.sub("\t|\n|\r", "", activity.title if activity.title is not None else ''),
+            u'Activity Description': re.sub("\t|\n|\r", "", activity.description if activity.description is not None else ''),
             u'Activity Status': cl_lookups["ActivityStatus"].get(activity.activity_status),
             u'Activity Dates (Start Date)': activity.start_date.isoformat() if activity.start_date else "",
             u'Activity Dates (End Date)': activity.end_date.isoformat() if activity.end_date else "",

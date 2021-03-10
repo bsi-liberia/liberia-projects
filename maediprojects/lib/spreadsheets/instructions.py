@@ -1,7 +1,7 @@
 from maediprojects.lib import util
 from openpyxl.styles import Color, PatternFill, Font, Border, Protection, Alignment
 from openpyxl.styles.borders import Border, Side
-from formatting import yellowFill, orangeFill
+from maediprojects.lib.spreadsheets.formatting import yellowFill, orangeFill
 
 def cover_sheet(_self):
     ws = _self.wb.create_sheet(u"Instructions")

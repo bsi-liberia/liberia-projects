@@ -10,7 +10,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 from maediprojects.lib import util, codelist_helpers
-from flask import url_for
 
 from maediprojects.extensions import db
 
@@ -203,7 +202,9 @@ class ActivityDocumentLink(db.Model):
     document_date = sa.Column(sa.Date)
 
     def as_dict(self):
-        return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
+        ret = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        ret['categories'] = list(map(lambda category: category.code, self.categories))
+        return ret
 
 
 class ActivityDocumentLinkCategory(db.Model):
@@ -223,13 +224,18 @@ class Activity(db.Model):
             nullable=False,
             index=True)
     user = sa.orm.relationship("User")
+    iati_identifier = sa.Column(sa.UnicodeText)
     code = sa.Column(sa.UnicodeText)
     title = sa.Column(sa.UnicodeText)
     description = sa.Column(sa.UnicodeText)
+    objectives = sa.Column(sa.UnicodeText)
+    deliverables = sa.Column(sa.UnicodeText)
+    papd_alignment = sa.Column(sa.UnicodeText)
     start_date = sa.Column(sa.Date)
     end_date = sa.Column(sa.Date)
     organisations = sa.orm.relationship("ActivityOrganisation",
-            cascade="all, delete-orphan")
+            cascade="all, delete-orphan",
+            backref="activity")
     reporting_org_id = sa.Column(
             act_ForeignKey('organisation.id'),
             nullable=False,
@@ -278,6 +284,9 @@ class Activity(db.Model):
     activity_logs = cascade_relationship(
         "ActivityLog",
         backref="activity")
+    policy_markers = sa.orm.relationship("ActivityPolicyMarker",
+            cascade="all, delete-orphan",
+            backref="activity")
 
     @hybrid_property
     def permissions(self):
@@ -303,13 +312,15 @@ class Activity(db.Model):
     implementing_organisations = sa.orm.relationship("Organisation",
         secondary="activityorganisation",
         secondaryjoin="""and_(ActivityOrganisation.role==4,
-            ActivityOrganisation.organisation_id==Organisation.id)"""
+            ActivityOrganisation.organisation_id==Organisation.id)""",
+        viewonly=True
         )
 
     funding_organisations = sa.orm.relationship("Organisation",
         secondary="activityorganisation",
         secondaryjoin="""and_(ActivityOrganisation.role==1,
-            ActivityOrganisation.organisation_id==Organisation.id)"""
+            ActivityOrganisation.organisation_id==Organisation.id)""",
+        viewonly=True
         )
 
     @hybrid_property
@@ -381,13 +392,12 @@ class Activity(db.Model):
 
     @hybrid_property
     def results_average(self):
-        numerical_periods = filter(lambda ip: ip.percent_complete != None, self.result_indicator_periods)
+        numerical_periods = list(filter(lambda ip: ip.percent_complete != None, self.result_indicator_periods))
         if not numerical_periods: return None
         return sum(list(map(lambda ip: ip.percent_complete, numerical_periods)))/len(numerical_periods)
 
     @hybrid_property
     def results_average_status(self):
-        return "primary"
         if self.results_average is not None:
             if self.results_average >= 80:
                 return "success"
@@ -548,6 +558,7 @@ class Activity(db.Model):
         return {
             None: {
                 "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -563,6 +574,7 @@ class Activity(db.Model):
         fydata = fwddata_query(self, fiscalyear_modifier)
         return {
                     "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
                     "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
@@ -571,8 +583,7 @@ class Activity(db.Model):
                     for fyval in fydata
                 }
 
-    @hybrid_property
-    def classification_data(self):
+    def make_classification_data(self, as_dict=False):
         def append_path(root, classification):
             if classification:
                 sector = root.setdefault("{}".format(classification.codelist_code.codelist.code),
@@ -582,10 +593,40 @@ class Activity(db.Model):
                       "id": classification.id
                     }
                 )
-                sector["entries"].append(classification)
+                if as_dict == True:
+                    sector["entries"].append(classification.as_dict())
+                else:
+                    sector["entries"].append(classification)
         root = {}
         for s in self.classifications: append_path(root, s)
         return root
+
+    @hybrid_property
+    def classification_data_dict(self):
+        return self.make_classification_data(as_dict=True)
+
+    @hybrid_property
+    def classification_data(self):
+        return self.make_classification_data(as_dict=False)
+
+    @hybrid_property
+    def policy_markers_data(self):
+        all_markers = PolicyMarker.query.all()
+        activity_policy_markers = dict(map(lambda pm: (pm.policy_marker_code, {
+                    'code': pm.policy_marker_code,
+                    'name': pm.policy_marker.name,
+                    'significance': pm.significance
+                }), self.policy_markers))
+        for policy_marker in all_markers:
+            if policy_marker.code not in activity_policy_markers:
+                activity_policy_markers[policy_marker.code] = {
+                    'code': policy_marker.code,
+                    'name': policy_marker.name,
+                    'significance': None
+                }
+
+        print('pms', activity_policy_markers)
+        return activity_policy_markers.values()
 
     @hybrid_property
     def milestones_data(self):
@@ -602,8 +643,8 @@ class Activity(db.Model):
             "id": ms.id,
             "notes": ms_achieved_notes.get(ms.id, ""),
             "achieved": {
-                True: {"status": True, "name": "Completed", "icon": "fa-check-circle", "colour": "success"},
-                False: {"status": False, "name": "Pending", "icon": "fa-times-circle", "colour": "warning"},
+                True: {"status": True, "name": "Completed", "icon": "check-circle", "colour": "success"},
+                False: {"status": False, "name": "Pending", "icon": "times-circle", "colour": "warning"},
                 }[bool(ms_achieved.get(ms.id, False))]}, all_milestones))
         return ms
 
@@ -611,15 +652,19 @@ class Activity(db.Model):
         return ({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
     def as_jsonable_dict(self):
-        role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").iteritems())
+        role_names = dict((v,k) for k,v in codelist_helpers.codelists("OrganisationRole").items())
         ret_data = {
             'classifications': collections.defaultdict(dict),
+            'reporting_org': self.reporting_org.as_dict(),
             'organisations': collections.defaultdict(dict),
-            'url': url_for("activities.activity", activity_id=self.id),
-            'url_edit': url_for("activities.activity_edit", activity_id=self.id),
             'results': len(self.results),
             'documents': len(self.documents),
-            'milestones': len(self.milestones)
+            'milestones': len(self.milestones),
+            'permissions': self.permissions,
+            'disb_fund_sources': self.disb_fund_sources,
+            'policy_markers': self.policy_markers_data,
+            'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
+            'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values()))
         }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         for cc in self.classifications:
@@ -806,7 +851,11 @@ class Location(db.Model):
             backref="locations")
 
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        #FIXME
+        l_dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        l_dict['latitude'] = float(l_dict['latitude'])
+        l_dict['longitude'] = float(l_dict['longitude'])
+        return l_dict
 
 class ActivityLocation(db.Model):
     __tablename__ = 'activitylocation'
@@ -945,6 +994,35 @@ class ActivityFinancesCodelistCode(db.Model):
        ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
        ret_data.update({key: getattr(self, key).as_dict() for key in ['codelist_code']})
        return ret_data
+
+class PolicyMarker(db.Model):
+    __tablename__ = 'policy_marker'
+    code = sa.Column(sa.UnicodeText, primary_key=True)
+    name = sa.Column(sa.UnicodeText)
+    activity_policy_markers = sa.orm.relationship("ActivityPolicyMarker",
+            cascade="all, delete-orphan",
+            backref="policy_marker")
+    __table_args__ = (sa.UniqueConstraint('code',),)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ActivityPolicyMarker(db.Model):
+    __tablename__ = 'activity_policy_marker'
+    id = sa.Column(sa.Integer, primary_key=True)
+    significance = sa.Column(sa.Integer, nullable=True)
+    activity_id = sa.Column(sa.Integer,
+            sa.ForeignKey('activity.id'),
+            nullable=False)
+    policy_marker_code = sa.Column(sa.UnicodeText,
+            sa.ForeignKey('policy_marker.code'),
+            nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint('activity_id', 'policy_marker_code', name='unique_activity_policy_marker_code'),
+    )
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class Milestone(db.Model):
     __tablename__ = 'milestone'
@@ -1086,7 +1164,8 @@ class ActivityResultIndicatorPeriod(db.Model):
 
     def as_dict(self):
         ret_data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
-        ret_data.update({key: getattr(self, key) for key in ['open']})
+        ret_data.update({key: getattr(self, key) for key in ['open', 'percent_complete',
+            'percent_complete_category']})
         return ret_data
 
 
@@ -1221,7 +1300,12 @@ class User(db.Model):
         return permissions
 
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def as_simple_dict(self):
+        visible_columns = ['username', 'name', 'email_address',
+        'administrator', 'permissions_list', 'permissions_dict', 'roles_list']
+        return {c: getattr(self, c) for c in visible_columns}
 
 class UserPermission(db.Model):
     __tablename__ = 'userpermission'
@@ -1348,7 +1432,9 @@ class Response(db.Model):
     __tablename__ = 'response'
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.UnicodeText, nullable=False)
+    icon_class = sa.Column(sa.UnicodeText, nullable=False)
     icon = sa.Column(sa.UnicodeText, nullable=False)
+    colour = sa.Column(sa.UnicodeText, nullable=False)
     organisationresponse = sa.orm.relationship("OrganisationResponse",
             cascade="all, delete-orphan",
             backref="response")

@@ -5,21 +5,15 @@ from collections import OrderedDict
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
+from six import u as unicode
+
 from maediprojects.lib.util import isostring_date, isostring_year
 from maediprojects.lib import codelists, util
-from maediprojects.query import finances as qfinances
+from . import finances as qfinances
 from maediprojects.query import organisations as qorganisations
 from maediprojects import models
 from maediprojects.extensions import db
-
-import json
-
-
-class JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if (isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date)):
-            return obj.isoformat()
-        return json.JSONEncoder.default(self, obj)
+from maediprojects.query.activity_log import activity_updated
 
 
 def force_earliest_latest(earliest, latest):
@@ -75,7 +69,7 @@ def activity_C_D_FSs():
     return commitments, disbursements, forward_disbursements
 
 def filter_activities_for_permissions(query, permission_name="view"):
-    permissions = session.get("permissions", {})
+    permissions = current_user.permissions_dict
     if permissions.get(permission_name) == "both":
         return query
     elif permissions.get(permission_name) == "domestic":
@@ -102,11 +96,11 @@ def get_iati_list():
           {
               "country": x.recipient_country.as_dict(),
               "urls":
-                  {"1.03": url_for('api.generate_iati_xml',
+                  {"1.03": url_for('iati.generate_iati_xml',
                                    version="1.03",
                                    country_code=x.recipient_country_code,
                                    _external=True),
-                   "2.01": url_for('api.generate_iati_xml',
+                   "2.01": url_for('iati.generate_iati_xml',
                                    version="2.01",
                                    country_code=x.recipient_country_code,
                                    _external=True),
@@ -130,32 +124,6 @@ def get_updates():
 
     updated = filter(filterout, updated)
     return created, updated
-
-def activity_add_log(activity_id, user_id, mode=None, target=None, target_id=None, old_value=None, value=None):
-    activity_log = models.ActivityLog()
-    activity_log.activity_id = activity_id
-    activity_log.user_id = user_id
-    activity_log.mode = unicode(mode)
-    activity_log.target = unicode(target)
-    activity_log.target_id = target_id
-    activity_log.old_value = json.dumps(old_value, cls=JSONEncoder) if old_value != None else None
-    activity_log.value = json.dumps(value, cls=JSONEncoder) if value != None else None
-    db.session.add(activity_log)
-    db.session.commit()
-    return activity_log
-
-def activity_updated(activity_id, update_data=False):
-    activity = models.Activity.query.filter_by(id=activity_id).first()
-    if not activity:
-        flash("Could not update last updated date for activity ID {}: activity not found".format(
-            activity_id), "danger")
-        return False
-    activity.updated_date = datetime.datetime.utcnow()
-    db.session.add(activity)
-    db.session.commit()
-    if update_data:
-        activity_add_log(activity_id, **update_data)
-    return True
 
 def create_activity_for_test(data, user_id):
     act = models.Activity()
@@ -275,12 +243,17 @@ def getISODate(value):
 def getJSONDate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
+
+def get_activities_by_reporting_org_id(reporting_org_id):
+    return models.Activity.query.filter_by(reporting_org_id=reporting_org_id).all()
+
+
 def list_activities_by_filters(filters, permission_name="view"):
     query = models.Activity.query.outerjoin(
                     models.ActivityFinances,
                     models.ActivityFinancesCodelistCode
                 )
-    codelist_names = codelists.get_db_codelists().keys()
+    codelist_names = list(codelists.get_db_codelists().keys())
     if "organisation" in codelist_names:
         codelist_names.remove("organisation")
     codelist_vals = []
@@ -388,6 +361,37 @@ def update_attr(data):
 
 
 
+def update_activity_policy_marker(activity_id, policy_marker_code, data):
+    activity_policy_marker = models.ActivityPolicyMarker.query.filter_by(
+        activity_id = activity_id,
+        policy_marker_code = policy_marker_code
+    ).first()
+    if activity_policy_marker:
+        old_value = getattr(activity_policy_marker, data['attr'])
+        mode = "update"
+    else:
+        activity_policy_marker = models.ActivityPolicyMarker()
+        activity_policy_marker.activity_id = activity_id
+        activity_policy_marker.policy_marker_code = policy_marker_code
+        old_value = {}
+        mode = "add"
+    setattr(activity_policy_marker, data['attr'], data['value'])
+    db.session.add(activity_policy_marker)
+    db.session.commit()
+    activity_updated(activity_id,
+        {
+        "user_id": current_user.id,
+        "mode": mode,
+        "target": "ActivityPolicyMarker",
+        "target_id": activity_policy_marker.id,
+        "old_value": old_value,
+        "value": {data['attr']: data['value']}
+        }
+    )
+    return True
+
+
+
 def update_activity_codelist(activitycodelistcode_id, data):
     activity_codelist = models.ActivityCodelistCode.query.filter_by(
         id = activitycodelistcode_id
@@ -424,7 +428,7 @@ def save_period_data(indicator_id, periods_data):
         else:
             # Update period
             for k, v in period.items():
-                if k in ['open']: continue
+                if k in ['open', 'percent_complete', 'percent_complete_category']: continue
                 update_indicator_period_attr({'id': period['id'], 'attr': k, 'value': v})
 
 def save_indicator_data(result_id, data):

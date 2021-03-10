@@ -5,7 +5,9 @@ pyenv
 static/vendor/jquery/1.7.1
 /config.py
 *.db
+db
 *.sqlite
 ~*.xlsx
 test_*.png
 maediprojects/static/packages/
+client/nuxt.config.js

@@ -1,7 +1,6 @@
 from maediprojects import models
 from maediprojects.extensions import db
 from maediprojects.lib import util
-from flask import url_for
 import sqlalchemy as sa
 from sqlalchemy import func, case
 import datetime
@@ -24,7 +23,6 @@ def _make_activity_data(denominator_list, numerator_dict, denominator_label, num
     out = []
     for activity in denominator_list:
         act = dict(zip(activity.keys(), activity))
-        act["url"] = url_for('activities.activity', activity_id=activity.id)
         if numerator_dict.get(activity.id):
             act[numerator_label] = numerator_dict[activity.id]
             act["pct"] = make_pct(act[numerator_label], getattr(activity, denominator_label))

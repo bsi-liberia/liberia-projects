@@ -2,25 +2,10 @@ language: python
 cache:
   - pip
 python:
-  - 2.7
+  - 3.9
 env:
   - FLASK_ENV=development
-before_install:
-  - wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-  - echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/apt/sources.list.d/google-chrome.list
-  - sudo apt-get update -qqy
-  - sudo apt-get -qqy install google-chrome-stable
-  - sudo rm /etc/apt/sources.list.d/google-chrome.list
-  - whereis google-chrome-stable
-  - google-chrome-stable --version
-  - export CHROMEDRIVER_VERSION=`curl -s http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
-  - curl -L -O "http://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-  - unzip chromedriver_linux64.zip && chmod +x chromedriver && sudo mv chromedriver /usr/local/bin
-  - google-chrome-stable --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &
-  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.16.0
-  - export PATH=$HOME/.yarn/bin:$PATH
 install:
   - pip install -r requirements_dev.txt
-  - yarn install
 script:
-  - pytest --driver Chrome --driver-path /usr/local/bin/chromedriver
+  - pytest
