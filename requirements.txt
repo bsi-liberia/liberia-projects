@@ -20,6 +20,7 @@ Flask-Mail==0.9.1
 Flask-Migrate==2.5.2
 Flask-SQLAlchemy==2.4.1
 funcsigs==1.0.2
+iatiflattener==0.1.5b5
 idna==2.7
 importlib-metadata==0.18
 iniconfig==1.1.1
