@@ -24,27 +24,36 @@ Copyright (c) 2016-2021 Mark Brough, Overseas Development Institute
 
 ## Screenshots
 
-**NB this section is very out of date and will be updated soon.**
+### Front Page
+![Projects](/img/liberia-project-dashboard.png "Front page of Project Dashboard")
 
-### Projects
-![Projects](/img/projects.png "Projects")
+The landing page of the Liberia Project Dashboard contains a map of project locations.
 
-Landing page shows list of projects that have been added so far. Most users can see only their own projects; administrators can see all projects.
+### Front Page - visualisations of spend over time
+![Projects](/img/liberia-project-dashboard-2.png "Visualisations of spend over time")
 
-### Activity editor
-![Activity editor](/img/basic-data.png "Activity editor")
+On the front page, there are also simple visualisations of spend over time
 
-Simple form to edit basic activity data. Data is automatically saved as you move through the form.
+### Project profiles
+![Project profiles](/img/liberia-project-dashboard-3.png "Project profiles")
 
-### Simple geocoder
-![Simple geocoder](/img/geocoder.png "Simple geocoder")
+Project profiles contain a simple summary of data
 
-The geocoder retrieves locations automatically from [Geonames.org](http://geonames.org) and providers a list of locations that can be selected by clicking on them on the left hand side. They appear as markers on the map and are instantly saved to the database.
+### Project profiles - financial data
+![Project profiles](/img/liberia-project-dashboard-4.png "Summary of financial data on project profile")
 
-### Financial data
-![Financial data](/img/financial-data.png "Financial data")
+Project profiles contain a simple summary of project financial data
 
-New financial data (commiments and disbursements) can easily be added. The data is saved as you move through the form.
+### Project profiles - results data
+![Project profiles](/img/liberia-project-dashboard-6.png "Summary of results data on project profile")
+
+Results data is also displayed on the Dashboard, where available.
+
+### Export data
+![Project profiles](/img/liberia-project-dashboard-5.png "Export data")
+
+Data can be exported into Excel and imported again using Excel templates.
+
 
 ## Features
 
