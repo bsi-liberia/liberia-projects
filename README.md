@@ -1,6 +1,6 @@
-# Liberia Projects Database
+# Liberia Projects Dashboard
 
-Simple project database to collect information about aid projects in Liberia and publish it in IATI format (both v1.03 and v2.01).
+Simple project database to collect information about aid projects in Liberia and publish it in IATI format (both v1.03 and v2.01). View it at https://liberiaprojects.org
 
 [![Build Status](https://travis-ci.com/bsi-liberia/liberia-projects.svg?branch=master&status=passed)](https://travis-ci.com/github/bsi-liberia/liberia-projects)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPLv3-blue.svg)](https://github.com/bsi-liberia/liberia-projects/blob/main/LICENSE.txt)
@@ -24,6 +24,8 @@ Copyright (c) 2016-2021 Mark Brough, Overseas Development Institute
 
 ## Screenshots
 
+**NB this section is very out of date and will be updated soon.**
+
 ### Projects
 ![Projects](/img/projects.png "Projects")
 
@@ -46,6 +48,8 @@ New financial data (commiments and disbursements) can easily be added. The data 
 
 ## Features
 
+**NB this section is very out of date and will be updated soon.**
+
 1. Internationalisation has been added using [Flask-Babel](https://pythonhosted.org/Flask-Babel/) - you can specify the country in config.py and then add new translations as outlined in Flask-Babel's documentation. Translation strings are stored in `maediprojects/translations`
 2. Editing projects is fast and fields are saved as the user moves through the form to avoid loss of data. Fields are constrained as much as possible to ensure the correct format of data - for example, [bootstraper-datetimepicker](https://github.com/smalot/bootstrap-datetimepicker) is used to constrain dates and provide a nice UI.
 3. Locations are retrieved from [Geonames.org](http://download.geonames.org/export/dump/) upon request, to populate a simple geocoder. The user can click on regions (ADM1) or choose to see locations within a particular region (ADM2).
@@ -55,27 +59,20 @@ New financial data (commiments and disbursements) can easily be added. The data 
 
 ## Limitations
 
+**NB this section is very out of date and will be updated soon.**
+
 The current software has a few limitations which could be improved upon:
 
 * it does not generate organisation files at all. You can use something like [AidStream.org](http://aidstream.org/) for this
 * it does not generate results data for activities.  [Sage2IATI](https://github.com/markbrough/sage-iati) has some relevant code for this, but the user interface could be simplified and it was not currently necessary for this project database.
 * project documents cannot be attached to activities.
 
-## Deployment and getting up and running
+## Installation (back-end)
 
-Some basic server setup stuff, if you don't have all of this already:
-
-```
-apt-get install python2.7 python-pip python-dev libxml2-dev libxslt-dev build-essential libssl-dev zlib1g-dev git
-```
-
-Install yarn:
+Install required packages, if these are not already installed:
 
 ```
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-apt update
-apt install yarn
+apt-get install python python3-pip python3-dev libxml2-dev libxslt-dev build-essential libssl-dev zlib1g-dev git
 ```
 
 1. Clone the repository:
@@ -96,7 +93,6 @@ apt install yarn
 4. Install the requirements:
    ```
    pip install -r requirements.txt
-   yarn install
    ```
 
 5. Copy and edit the config.py.tmpl:
@@ -121,7 +117,25 @@ apt install yarn
 
 9. You can log in using the admin username and password defined in your `config.py`
 
-10. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists" / "Gérer les listes de codes". Click on the "Locations" / "Localisations" tab, then choose a country to import.
+10. Before using the geocoding feature, you need to import locations from Geonames. When logged in as an administrator, you can click on the username in the top right, then "Manage codelists". Click on the "Locations" tab, then choose a country to import.
+
+## Installation (front-end)
+
+1. Switch to the `client` directory and install dependencies.
+   ```
+   cd client
+   npm i
+   ```
+
+3. Copy and edit as required nuxt configuration:
+   ```
+   cp nuxt.config.tmpl.js nuxt.config.js
+   ```
+
+4. Run in development mode:
+   ```
+   npm run dev
+   ```
 
 ## Running with Apache
 
@@ -177,17 +191,5 @@ apt install yarn
 
 ## Setup `certbot` to allow for HTTPS
 
-1. Setup certbot following [these instructions](https://certbot.eff.org/lets-encrypt/ubuntubionic-apache).
+1. Setup certbot following [these instructions](https://certbot.eff.org/).
 2. Opt to redirect all requests to HTTPS when prompted.
-3. At some point, you will probably stumble across an error similar to this:
-   ```
-   AH00526: Syntax error on line 12 of /etc/apache2/sites-enabled/000-default.conf:
-   Name duplicates previous WSGI daemon definition.
-   ```
-   * In `/etc/apache2/sites-enabled/000-default.conf`, comment out the line beginning `WSGIDaemonProcess`.
-   * Run `sudo certbot --apache` again (opting for `1: Attempt to reinstall this existing certificate`).
-   * Go back to `000-default.conf` and uncomment the line beginning `WSGIDaemonProcess` (the same line in `000-default-le-ssl.conf` remains commented out)
-   * Reload the configuration and restart the server:
-   ```
-   a2dissite 000-default 000-default-le-ssl && a2ensite 000-default 000-default-le-ssl && systemctl reload apache2
-   ```

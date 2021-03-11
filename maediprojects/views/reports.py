@@ -13,6 +13,7 @@ from flask_jwt_extended import (
 from maediprojects.lib import util
 from maediprojects import models
 import datetime
+from collections import OrderedDict
 
 
 blueprint = Blueprint('reports', __name__, url_prefix='/api/reports')
@@ -120,7 +121,8 @@ def counterpart_funding():
     fiscal_year = int(request.args.get("fiscal_year", next_fy))
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'external'})
-    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    next_fy_end_date = util.FY("next").date("end").date()
+    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, max(end_date, next_fy_end_date))))
 
     def annotate_activity(activity):
         return {
@@ -153,7 +155,7 @@ def results():
             'title': activity.title,
             'reporting_org_name': activity.reporting_org.name,
             'implementer_name': ", ".join(list(map(lambda org: org.name, activity.implementing_organisations))),
-            'results_average': activity.results_average,
+            'results_average': round(activity.results_average) if activity.results_average is not None else None,
             'results_average_status': activity.results_average_status
         }
 
