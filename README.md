@@ -35,22 +35,22 @@ The landing page of the Liberia Project Dashboard contains a map of project loca
 On the front page, there are also simple visualisations of spend over time
 
 ### Project profiles
-![Project profiles](/assets/img/liberia-project-dashboard-3.png "Project profiles")
+![Project profiles](/img/liberia-project-dashboard-3.png "Project profiles")
 
 Project profiles contain a simple summary of data
 
 ### Project profiles - financial data
-![Project profiles](/assets/img/liberia-project-dashboard-4.png "Summary of financial data on project profile")
+![Project profiles](/img/liberia-project-dashboard-4.png "Summary of financial data on project profile")
 
 Project profiles contain a simple summary of project financial data
 
 ### Project profiles - results data
-![Project profiles](/assets/img/liberia-project-dashboard-6.png "Summary of results data on project profile")
+![Project profiles](/img/liberia-project-dashboard-6.png "Summary of results data on project profile")
 
 Results data is also displayed on the Dashboard, where available.
 
 ### Export data
-![Project profiles](/assets/img/liberia-project-dashboard-5.png "Export data")
+![Project profiles](/img/liberia-project-dashboard-5.png "Export data")
 
 Data can be exported into Excel and imported again using Excel templates.
 
