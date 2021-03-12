@@ -572,8 +572,6 @@ class Activity(db.Model):
                     'name': policy_marker.name,
                     'significance': None
                 }
-
-        print('pms', activity_policy_markers)
         return activity_policy_markers.values()
 
     @hybrid_property
