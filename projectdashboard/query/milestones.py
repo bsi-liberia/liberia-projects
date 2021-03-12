@@ -2,8 +2,8 @@ import datetime
 
 from sqlalchemy import *
 
-from maediprojects import models
-from maediprojects.extensions import db
+from projectdashboard import models
+from projectdashboard.extensions import db
 
 
 def isostring_date(value):

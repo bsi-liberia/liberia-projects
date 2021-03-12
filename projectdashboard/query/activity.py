@@ -7,13 +7,13 @@ from sqlalchemy.orm import aliased
 
 from six import u as unicode
 
-from maediprojects.lib.util import isostring_date, isostring_year
-from maediprojects.lib import codelists, util
+from projectdashboard.lib.util import isostring_date, isostring_year
+from projectdashboard.lib import codelists, util
 from . import finances as qfinances
-from maediprojects.query import organisations as qorganisations
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.query.activity_log import activity_updated
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.query.activity_log import activity_updated
 
 
 def force_earliest_latest(earliest, latest):

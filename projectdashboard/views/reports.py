@@ -1,8 +1,8 @@
-from maediprojects.views.api import jsonify
-from maediprojects.query import activity as qactivity
-from maediprojects.query import user as quser
-from maediprojects.query import reports as qreports
-from maediprojects.query import counterpart_funding as qcounterpart_funding
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import user as quser
+from projectdashboard.query import reports as qreports
+from projectdashboard.query import counterpart_funding as qcounterpart_funding
 
 from flask import Blueprint, request, \
     url_for, Response, current_app, abort
@@ -10,8 +10,8 @@ from flask import Blueprint, request, \
 from flask_jwt_extended import (
     jwt_required
 )
-from maediprojects.lib import util
-from maediprojects import models
+from projectdashboard.lib import util
+from projectdashboard import models
 import datetime
 from collections import OrderedDict
 

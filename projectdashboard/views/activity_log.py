@@ -1,9 +1,9 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 
-from maediprojects.views.api import jsonify
-from maediprojects.query import user as quser
-from maediprojects import models
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import user as quser
+from projectdashboard import models
 
 
 blueprint = Blueprint('activity_log', __name__, url_prefix='/api/activity-log')

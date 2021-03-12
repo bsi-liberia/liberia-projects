@@ -1,4 +1,4 @@
-from maediprojects import create_app
+from projectdashboard import create_app
 
 
 create_app()

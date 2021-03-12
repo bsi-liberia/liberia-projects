@@ -3,12 +3,12 @@ import datetime
 from flask_login import current_user
 from sqlalchemy import *
 
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.lib import util
-from maediprojects.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
-from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.query.activity_log import activity_updated
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.lib import util
+from projectdashboard.lib.util import MONTHS_QUARTERS, QUARTERS_MONTH_DAY
+from projectdashboard.query import exchangerates as qexchangerates
+from projectdashboard.query.activity_log import activity_updated
 
 
 def isostring_date(value):

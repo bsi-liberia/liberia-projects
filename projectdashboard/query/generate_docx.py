@@ -1,7 +1,7 @@
 from io import BytesIO
-from maediprojects.lib import docx_helpers as docx
-from maediprojects.query import activity as qactivity
-from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
+from projectdashboard.lib import docx_helpers as docx
+from projectdashboard.query import activity as qactivity
+from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
 
 def make_doc(activity_id):
     project_brief_file = BytesIO()

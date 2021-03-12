@@ -1,7 +1,7 @@
 import datetime
 import json
-from maediprojects.extensions import db
-from maediprojects import models
+from projectdashboard.extensions import db
+from projectdashboard import models
 from six import u as unicode
 
 

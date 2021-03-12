@@ -1,7 +1,7 @@
 import normality
 
-from maediprojects import models
-from maediprojects.extensions import db
+from projectdashboard import models
+from projectdashboard.extensions import db
 
 
 def get_organisations():

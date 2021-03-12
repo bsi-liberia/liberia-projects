@@ -1,7 +1,7 @@
 from openpyxl.utils import get_column_letter, column_index_from_string
-from maediprojects.lib.codelists import get_codelists_lookups_by_name
-from maediprojects.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
-from maediprojects.lib.spreadsheets.formatting import yellowFill, orangeFill
+from projectdashboard.lib.codelists import get_codelists_lookups_by_name
+from projectdashboard.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
+from projectdashboard.lib.spreadsheets.formatting import yellowFill, orangeFill
 
 def formatting_validation(writer, num_activities, _headers, counterpart_funding_cols, mtef_cols, disb_cols):
     statuses = get_codelists_lookups_by_name()["ActivityStatus"].keys()

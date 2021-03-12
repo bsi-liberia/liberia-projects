@@ -9,5 +9,4 @@ db
 *.sqlite
 ~*.xlsx
 test_*.png
-maediprojects/static/packages/
 client/nuxt.config.js

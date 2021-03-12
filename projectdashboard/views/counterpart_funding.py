@@ -1,7 +1,7 @@
-from maediprojects.views.api import jsonify
-from maediprojects.query import user as quser
-from maediprojects.query import activity as qactivity
-from maediprojects.query import counterpart_funding as qcounterpart_funding
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import user as quser
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import counterpart_funding as qcounterpart_funding
 
 from flask import Blueprint, request, abort
 from flask_login import current_user
@@ -9,8 +9,8 @@ from flask_login import current_user
 from flask_jwt_extended import (
     jwt_required
 )
-from maediprojects.lib import util
-from maediprojects import models
+from projectdashboard.lib import util
+from projectdashboard import models
 
 
 blueprint = Blueprint('counterpart_funding', __name__, url_prefix='/api/counterpart_funding')

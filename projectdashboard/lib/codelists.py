@@ -7,7 +7,7 @@ import os
 
 import flask_babel as babel
 
-from maediprojects import models
+from projectdashboard import models
 
 
 def get_db_codelist_names():

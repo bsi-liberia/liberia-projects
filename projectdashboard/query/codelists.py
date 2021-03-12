@@ -3,8 +3,8 @@ import datetime
 from flask_login import current_user
 import normality
 
-from maediprojects import models
-from maediprojects.extensions import db
+from projectdashboard import models
+from projectdashboard.extensions import db
 
 
 def get_code_by_name(codelist, name):

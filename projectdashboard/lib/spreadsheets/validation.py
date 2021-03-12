@@ -1,5 +1,5 @@
 from openpyxl.worksheet.datavalidation import DataValidation
-from maediprojects.lib.codelists import get_codelists_lookups_by_name
+from projectdashboard.lib.codelists import get_codelists_lookups_by_name
 
 # Activity Status validation
 v_status = DataValidation(type="list", allow_blank=False)

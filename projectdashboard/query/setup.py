@@ -11,11 +11,11 @@ else:
     import csv as unicodecsv
 from six import u as unicode
 
-from maediprojects import models
-from maediprojects.lib import codelists
-from maediprojects.query import user as quser
-from maediprojects.query import organisations as qorganisations
-from maediprojects.extensions import db
+from projectdashboard import models
+from projectdashboard.lib import codelists
+from projectdashboard.query import user as quser
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.extensions import db
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))

@@ -2,7 +2,7 @@ from flask import Flask, render_template, session, request, current_app, make_re
 from flask_login import current_user
 from flask_cors import CORS
 
-from maediprojects import commands, views, extensions
+from projectdashboard import commands, views, extensions
 
 
 def create_app(config_object='config'):

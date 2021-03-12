@@ -3,9 +3,9 @@ from lxml import etree as et
 from six import u as unicode
 from flask import current_app
 
-from maediprojects.query import activity as qactivity
-from maediprojects.lib.codelist_helpers import codelists
-from maediprojects.lib.codelists import get_codelists_lookups
+from projectdashboard.query import activity as qactivity
+from projectdashboard.lib.codelist_helpers import codelists
+from projectdashboard.lib.codelists import get_codelists_lookups
 
 
 def isostring_date(value):

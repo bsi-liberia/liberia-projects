@@ -1,6 +1,6 @@
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.lib import util
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.lib import util
 import unicodecsv
 import requests
 from flask import current_app
@@ -52,7 +52,7 @@ def automatic_currency_conversion(finances_id, force_update=False):
 
 
 def add_names_to_currencies():
-    _currencynamesf = open("maediprojects/lib/data/Currency.csv", "r")
+    _currencynamesf = open("projectdashboard/lib/data/Currency.csv", "r")
     _currencynamescsv = unicodecsv.DictReader(_currencynamesf)
     _currencies_names = dict(map(lambda c: (c["code"], c["name_en"]), _currencynamescsv))
     for currency in models.Currency.query.all():

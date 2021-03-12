@@ -1,5 +1,5 @@
-from maediprojects.query import generate_csv as qgenerate_csv
-from maediprojects.lib import xlsx_to_csv, util, spreadsheet_headers
+from projectdashboard.query import generate_csv as qgenerate_csv
+from projectdashboard.lib import xlsx_to_csv, util, spreadsheet_headers
 import re
 
 def get_column_information(mtef, _headers):

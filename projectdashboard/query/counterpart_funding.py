@@ -1,9 +1,9 @@
 from flask_login import current_user
 import datetime
-from maediprojects import models
-from maediprojects.lib import util
-from maediprojects.extensions import db
-from maediprojects.query import activity as qactivity
+from projectdashboard import models
+from projectdashboard.lib import util
+from projectdashboard.extensions import db
+from projectdashboard.query import activity as qactivity
 from sqlalchemy import func
 
 

@@ -10,22 +10,22 @@ import sys
 from six import u as unicode
 from io import BytesIO
 
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.query import activity as qactivity
-from maediprojects.query import finances as qfinances
-from maediprojects.query import counterpart_funding as qcounterpart_funding
-from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.query import organisations as qorganisations
-from maediprojects.query.activity_log import activity_updated
-from maediprojects.lib import xlsx_to_csv, util
-from maediprojects.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
-from maediprojects.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
-from maediprojects.lib.spreadsheets.formatting import yellowFill, orangeFill
-from maediprojects.lib.spreadsheets import apply_formatting, helpers, xlsx_writer
-from maediprojects.lib.codelist_helpers import codelists
-from maediprojects.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
-from maediprojects.query.generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import finances as qfinances
+from projectdashboard.query import counterpart_funding as qcounterpart_funding
+from projectdashboard.query import exchangerates as qexchangerates
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.query.activity_log import activity_updated
+from projectdashboard.lib import xlsx_to_csv, util
+from projectdashboard.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
+from projectdashboard.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
+from projectdashboard.lib.spreadsheets.formatting import yellowFill, orangeFill
+from projectdashboard.lib.spreadsheets import apply_formatting, helpers, xlsx_writer
+from projectdashboard.lib.codelist_helpers import codelists
+from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
+from projectdashboard.query.generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
 
 
 def tidy_amount(amount_value):

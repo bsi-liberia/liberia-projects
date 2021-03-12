@@ -5,16 +5,16 @@ from flask import Blueprint, request, \
     url_for, Response, send_file, redirect, flash, make_response, jsonify
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required
-from maediprojects.query import activity as qactivity
-from maediprojects.query import organisations as qorganisations
-from maediprojects.query import generate_csv as qgenerate_csv
-from maediprojects.query import generate_xlsx as qgenerate_xlsx
-from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.query import import_psip_transactions as qimport_psip_transactions
-from maediprojects.query import import_client_connection as qimport_client_connection
-from maediprojects.query import user as quser
-from maediprojects.query import generate_docx as qgenerate_docx
-from maediprojects.lib import util
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.query import generate_csv as qgenerate_csv
+from projectdashboard.query import generate_xlsx as qgenerate_xlsx
+from projectdashboard.query import exchangerates as qexchangerates
+from projectdashboard.query import import_psip_transactions as qimport_psip_transactions
+from projectdashboard.query import import_client_connection as qimport_client_connection
+from projectdashboard.query import user as quser
+from projectdashboard.query import generate_docx as qgenerate_docx
+from projectdashboard.lib import util
 import io
 import sys
 import re

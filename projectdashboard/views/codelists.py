@@ -2,11 +2,11 @@ from flask import Blueprint, flash, request, \
     redirect, url_for, jsonify
 from flask_login import login_required, current_user
 
-from maediprojects.query import location as qlocation
-from maediprojects.query import organisations as qorganisations
-from maediprojects.query import codelists as qcodelists
-from maediprojects.query import user as quser
-from maediprojects.lib import codelists
+from projectdashboard.query import location as qlocation
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.query import codelists as qcodelists
+from projectdashboard.query import user as quser
+from projectdashboard.lib import codelists
 from flask_jwt_extended import jwt_required
 
 

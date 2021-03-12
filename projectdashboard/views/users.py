@@ -6,11 +6,11 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-from maediprojects import models
-from maediprojects.query import user as quser
-from maediprojects.query import organisations as qorganisations
-from maediprojects.views.api import jsonify
-from maediprojects.extensions import login_manager, UnauthenticatedUser
+from projectdashboard import models
+from projectdashboard.query import user as quser
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.views.api import jsonify
+from projectdashboard.extensions import login_manager, UnauthenticatedUser
 
 
 blueprint = Blueprint('users', __name__, url_prefix='/', static_folder='../static')

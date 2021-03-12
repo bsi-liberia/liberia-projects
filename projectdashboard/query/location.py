@@ -10,9 +10,9 @@ if sys.version_info.major == 2:
 else:
     import csv as unicodecsv
 
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.query.activity_log import activity_updated
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.query.activity_log import activity_updated
 
 
 GEONAMES_URL="http://download.geonames.org/export/dump/%s.zip"

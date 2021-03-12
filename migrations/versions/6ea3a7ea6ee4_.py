@@ -7,7 +7,7 @@ Create Date: 2019-08-22 20:16:28.770483
 """
 from alembic import op
 import sqlalchemy as sa
-from maediprojects.query import setup
+from projectdashboard.query import setup
 
 
 # revision identifiers, used by Alembic.

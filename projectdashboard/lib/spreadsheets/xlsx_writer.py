@@ -1,4 +1,4 @@
-from maediprojects.lib.spreadsheets import instructions
+from projectdashboard.lib.spreadsheets import instructions
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter

@@ -4,11 +4,11 @@ from werkzeug.security import generate_password_hash
 from flask import flash, redirect, url_for, request, make_response, jsonify
 from flask_login import current_user
 
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.query import organisations as qorganisations
-from maediprojects.query import activity as qactivity
-from maediprojects.query import send_email as qsend_email
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import send_email as qsend_email
 from smtplib import SMTPRecipientsRefused
 
 import datetime

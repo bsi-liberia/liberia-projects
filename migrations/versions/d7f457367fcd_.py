@@ -7,8 +7,8 @@ Create Date: 2019-03-28 19:51:16.879603
 """
 from alembic import op
 import sqlalchemy as sa
-from maediprojects.extensions import db
-from maediprojects import models
+from projectdashboard.extensions import db
+from projectdashboard import models
 from sqlalchemy import func
 
 # revision identifiers, used by Alembic.
@@ -81,7 +81,7 @@ def resolve_duplicates():
             activity_id=row.activity_id,
             period_start_date=row.period_start_date
         ).all()
-        if not len(duplicate_entries)>1: 
+        if not len(duplicate_entries)>1:
             print "SKIPPING"
             continue
         for entry in duplicate_entries:

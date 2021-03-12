@@ -9,9 +9,9 @@ from sqlalchemy.sql.expression import case
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
-from maediprojects.lib import util, codelist_helpers
+from projectdashboard.lib import util, codelist_helpers
 
-from maediprojects.extensions import db
+from projectdashboard.extensions import db
 
 
 cascade_relationship = ft.partial(

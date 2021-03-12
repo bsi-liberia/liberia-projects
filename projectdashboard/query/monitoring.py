@@ -1,6 +1,6 @@
-from maediprojects import models
-from maediprojects.extensions import db
-from maediprojects.lib import util
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.lib import util
 import sqlalchemy as sa
 from sqlalchemy import func, case
 import datetime

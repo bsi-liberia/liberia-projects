@@ -1,7 +1,7 @@
-from maediprojects.views.api import jsonify
-from maediprojects.query import user as quser
-from maediprojects.query import monitoring as qmonitoring
-from maediprojects.query import organisations as qorganisations
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import user as quser
+from projectdashboard.query import monitoring as qmonitoring
+from projectdashboard.query import organisations as qorganisations
 
 from flask import Blueprint, request
 from flask_login import current_user
@@ -9,8 +9,8 @@ from flask_login import current_user
 from flask_jwt_extended import (
     jwt_required
 )
-from maediprojects.lib import util
-from maediprojects import models
+from projectdashboard.lib import util
+from projectdashboard import models
 
 
 blueprint = Blueprint('management', __name__, url_prefix='/api/management')

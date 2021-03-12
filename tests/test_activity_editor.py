@@ -1,7 +1,7 @@
 from flask import url_for
 import pytest
 import json
-from maediprojects.query.activity import delete_activity
+from projectdashboard.query.activity import delete_activity
 
 @pytest.mark.usefixtures('client_class')
 class TestActivity:

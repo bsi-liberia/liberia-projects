@@ -13,18 +13,18 @@ from flask_jwt_extended import (
     jwt_required
 )
 
-from maediprojects.query import activity as qactivity
-from maediprojects.query import location as qlocation
-from maediprojects.query import finances as qfinances
-from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.query import organisations as qorganisations
-from maediprojects.query import generate_csv as qgenerate_csv
-from maediprojects.query import user as quser
-from maediprojects.lib import util, spreadsheet_headers
-from maediprojects.lib.codelists import get_codelists_lookups, get_codelists
-from maediprojects.lib.util import MONTHS_QUARTERS
-from maediprojects import models
-from maediprojects.extensions import db
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import location as qlocation
+from projectdashboard.query import finances as qfinances
+from projectdashboard.query import exchangerates as qexchangerates
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.query import generate_csv as qgenerate_csv
+from projectdashboard.query import user as quser
+from projectdashboard.lib import util, spreadsheet_headers
+from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
+from projectdashboard.lib.util import MONTHS_QUARTERS
+from projectdashboard import models
+from projectdashboard.extensions import db
 
 
 blueprint = Blueprint('api', __name__, url_prefix='/', static_folder='../static')

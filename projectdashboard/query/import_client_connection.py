@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 from flask import flash
-from maediprojects import models
-from maediprojects.lib import codelists, util, xlsx_to_csv
-from maediprojects.query import finances as qfinances
-from maediprojects.extensions import db
+from projectdashboard import models
+from projectdashboard.lib import codelists, util, xlsx_to_csv
+from projectdashboard.query import finances as qfinances
+from projectdashboard.extensions import db
 import openpyxl
 import os
 from collections import defaultdict

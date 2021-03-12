@@ -1,7 +1,7 @@
 from flask import request, current_app
 
 from flask_mail import Message
-from maediprojects.extensions import mail
+from projectdashboard.extensions import mail
 
 
 def send_async_email(message_recipient, message_subject, message_body):

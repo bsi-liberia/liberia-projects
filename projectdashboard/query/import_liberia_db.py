@@ -4,12 +4,12 @@ import os
 import re
 import datetime as dt
 
-from maediprojects import models
-from maediprojects.lib import codelists, xlsx_to_csv, util
-from maediprojects.query import activity as qactivity
-from maediprojects.query import location as qlocations
-from maediprojects.query import finances as qfinances
-from maediprojects.query import organisations as qorganisations
+from projectdashboard import models
+from projectdashboard.lib import codelists, xlsx_to_csv, util
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import location as qlocations
+from projectdashboard.query import finances as qfinances
+from projectdashboard.query import organisations as qorganisations
 basedir = os.path.abspath(os.path.dirname(__file__))
 from six import u as unicode
 import sys

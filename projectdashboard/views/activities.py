@@ -3,17 +3,17 @@ from flask import Blueprint, flash, request, \
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required
 
-from maediprojects.query import codelists as qcodelists
-from maediprojects.query import activity as qactivity
-from maediprojects.query import location as qlocation
-from maediprojects.query import organisations as qorganisations
-from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.query import milestones as qmilestones
-from maediprojects.query import user as quser
-from maediprojects.lib import codelists
-from maediprojects.lib.codelists import get_codelists
-from maediprojects.views.api import jsonify
-from maediprojects import models
+from projectdashboard.query import codelists as qcodelists
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import location as qlocation
+from projectdashboard.query import organisations as qorganisations
+from projectdashboard.query import exchangerates as qexchangerates
+from projectdashboard.query import milestones as qmilestones
+from projectdashboard.query import user as quser
+from projectdashboard.lib import codelists
+from projectdashboard.lib.codelists import get_codelists
+from projectdashboard.views.api import jsonify
+from projectdashboard import models
 
 from collections import OrderedDict
 import datetime

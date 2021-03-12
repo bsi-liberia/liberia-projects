@@ -3,13 +3,13 @@ from lxml import etree as et
 
 from flask import current_app
 
-from maediprojects.query import activity as qactivity
-from maediprojects.query import finances as qfinances
-from maediprojects.query import exchangerates as qexchangerates
-from maediprojects.lib.codelist_helpers import codelists
-from maediprojects.lib.codelists import get_codelists_lookups
-from maediprojects import models
-from maediprojects.extensions import db
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import finances as qfinances
+from projectdashboard.query import exchangerates as qexchangerates
+from projectdashboard.lib.codelist_helpers import codelists
+from projectdashboard.lib.codelists import get_codelists_lookups
+from projectdashboard import models
+from projectdashboard.extensions import db
 import requests
 from six import u as unicode
 from iatiflattener.transaction import FlatIATITransaction
