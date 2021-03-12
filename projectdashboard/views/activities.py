@@ -359,7 +359,7 @@ def api_activities_results_design(activity_id):
 
 @blueprint.route("/<activity_id>/delete/", methods=['POST'])
 @jwt_required()
-@quser.permissions_required("edit")
+@quser.administrator_required
 def activity_delete(activity_id):
     result = qactivity.delete_activity(activity_id)
     if result:

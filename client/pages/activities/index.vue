@@ -126,7 +126,7 @@
               <template v-slot:cell(delete)="data">
                 <b-link href="#" variant="link" class="text-danger"
                   @click="confirmDelete(data.item.id, data)"
-                  v-if="data.item.permissions.edit">
+                  v-if="loggedInUser.roles_list.includes('admin')">
                   <font-awesome-icon :icon="['fa', 'trash-alt']" />
                 </b-link>
               </template>
@@ -281,6 +281,8 @@ export default {
             key: 'edit',
             sortable: false
           })
+      }
+      if (this.loggedInUser.roles_list.includes('admin')){
         _fields.push({
             key: 'delete',
             sortable: false
