@@ -187,10 +187,10 @@
         </b-col>
       </b-row>
       <b-row id="financialdata">
-        <b-col lg="9">
+        <b-col lg="6">
           <h2>Financial data</h2>
         </b-col>
-        <b-col lg="3" v-if="(activity.domestic_external == 'external') && (activity.disb_fund_sources.length > 1)">
+        <b-col lg="6" v-if="(activity.domestic_external == 'external') && (Object.keys(activity.disb_fund_sources).length > 1)">
           <b-form-group class="text-right"
           label="Display:">
             <b-form-radio-group
