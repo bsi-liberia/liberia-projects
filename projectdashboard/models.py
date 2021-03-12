@@ -416,6 +416,7 @@ class Activity(db.Model):
             fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
         return {
             "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
+            # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
             "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
             "fiscal_year": fyval.fiscal_year,
             "fiscal_quarter": fyval.fiscal_quarter,
@@ -435,6 +436,7 @@ class Activity(db.Model):
         for fyval in fydata:
             out[fyval.fund_source_name].update({
                 "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
+                    # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
                     "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
