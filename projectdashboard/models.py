@@ -407,8 +407,37 @@ class Activity(db.Model):
                 return "danger"
         return None
 
-    def FY_disbursements_for_FY(self, FY):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def transaction_type_dict(self, fiscalyear_modifier,
+            transaction_types, transaction_type_label):
+        fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
+        return {
+            "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
+            "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+            "fiscal_year": fyval.fiscal_year,
+            "fiscal_quarter": fyval.fiscal_quarter,
+            "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+            "value": round(fyval.value, 4)
+            }
+            for fyval in fydata
+        }
+
+    def transaction_type_dict_fund_sources(self, fiscalyear_modifier,
+        transaction_types, transaction_type_label):
+        fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
+        out = collections.defaultdict(dict)
+        for fyval in fydata:
+            out[fyval.fund_source_name].update({
+                "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
+                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+                    "fiscal_year": fyval.fiscal_year,
+                    "fiscal_quarter": fyval.fiscal_quarter,
+                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+                    "value": round(fyval.value, 4)
+                }}
+            )
+        return out
+
+    def FY_disbursements_for_FY(self, FY, fiscalyear_modifier=6):
         result = db.session.query(
                 func.sum(ActivityFinances.transaction_value).label("value")
             ).filter(
@@ -422,8 +451,7 @@ class Activity(db.Model):
         if result is None: return 0.00
         return result
 
-    def FY_forwardspends_for_FY(self, FY):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def FY_forwardspends_for_FY(self, FY, fiscalyear_modifier=6):
         result = db.session.query(
                 func.sum(ActivityForwardSpend.value).label("value")
             ).filter(
@@ -436,8 +464,7 @@ class Activity(db.Model):
         if result is None: return 0.00
         return result
 
-    def FY_counterpart_funding_for_FY(self, FY):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def FY_counterpart_funding_for_FY(self, FY, fiscalyear_modifier=6):
         result = db.session.query(
                 func.sum(ActivityCounterpartFunding.required_value).label("value")
             ).filter(
@@ -452,108 +479,30 @@ class Activity(db.Model):
 
     @hybrid_property
     def FY_disbursements_dict(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, [u'D', u'E'])
-
-        return {
-                    "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                    }
-                    for fyval in fydata
-                }
+        return self.transaction_type_dict(6, ['D', 'E'], 'D')
 
     @hybrid_property
-    def FY_disbursements_dict_fund_sources(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, [u'D', u'E'], True)
-
-        out = collections.defaultdict(dict)
-        for fyval in fydata:
-            out[fyval.fund_source_name].update({
-                "{} {} (D)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                }}
-            )
-        return out
+    def FY_disbursements_dict_fund_sources(self, fiscalyear_modifier=6):
+        return self.transaction_type_dict_fund_sources(6, ['D', 'E'], 'D')
 
     @hybrid_property
     def FY_allotments_dict(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, [u'99-A'])
-
-        return {
-                    "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                    }
-                    for fyval in fydata
-                }
+        return self.transaction_type_dict(6, ['99-A'], '99-A')
 
     @hybrid_property
-    def FY_allotments_dict_fund_sources(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, [u'99-A'], True)
-
-        out = collections.defaultdict(dict)
-        for fyval in fydata:
-            out[fyval.fund_source_name].update({
-                "{} {} (99-A)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                }}
-            )
-        return out
+    def FY_allotments_dict_fund_sources(self, fiscalyear_modifier=6):
+        return self.transaction_type_dict_fund_sources(6, ['99-A'], '99-A')
 
     @hybrid_property
     def FY_commitments_dict(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, [u'C'])
-        return {
-                    "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                    }
-                    for fyval in fydata
-                }
+        return self.transaction_type_dict(6, ['C'], 'C')
 
     @hybrid_property
-    def FY_commitments_dict_fund_sources(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
-        fydata = fydata_query(self, fiscalyear_modifier, [u'C'], True)
-
-        out = collections.defaultdict(dict)
-        for fyval in fydata:
-            out[fyval.fund_source_name].update({
-                "{} {} (C)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                }}
-            )
-        return out
+    def FY_commitments_dict_fund_sources(self, fiscalyear_modifier=6):
+        return self.transaction_type_dict_fund_sources(6, ['C'], 'C')
 
     @hybrid_property
-    def FY_forward_spend_dict_fund_sources(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def FY_forward_spend_dict_fund_sources(self, fiscalyear_modifier=6):
         fydata = fwddata_query(self, fiscalyear_modifier)
         return {
             None: {
@@ -569,8 +518,7 @@ class Activity(db.Model):
         }
 
     @hybrid_property
-    def FY_forward_spend_dict(self):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def FY_forward_spend_dict(self, fiscalyear_modifier=6):
         fydata = fwddata_query(self, fiscalyear_modifier)
         return {
                     "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
