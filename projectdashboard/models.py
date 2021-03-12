@@ -88,7 +88,8 @@ def fwddata_query(_self, fiscalyear_modifier):
                           'start of month', '-{} month'.format(fiscalyear_modifier))
                             ).in_(('10','11','12')), 'Q4'),
                     ]
-                ).label("fiscal_quarter"))
+                ).label("fiscal_quarter"),
+                sa.sql.expression.literal(None).label('fund_source_name'))
     return db.session.query(
             *QUERY_COLS
         ).filter(
@@ -409,7 +410,10 @@ class Activity(db.Model):
 
     def transaction_type_dict(self, fiscalyear_modifier,
             transaction_types, transaction_type_label):
-        fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
+        if transaction_types == ['MTEF']:
+            fydata = fwddata_query(self, fiscalyear_modifier)
+        else:
+            fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
         return {
             "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
             "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
@@ -423,7 +427,10 @@ class Activity(db.Model):
 
     def transaction_type_dict_fund_sources(self, fiscalyear_modifier,
         transaction_types, transaction_type_label):
-        fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
+        if transaction_types == ['MTEF']:
+            fydata = fwddata_query(self, fiscalyear_modifier)
+        else:
+            fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
         out = collections.defaultdict(dict)
         for fyval in fydata:
             out[fyval.fund_source_name].update({
@@ -503,33 +510,11 @@ class Activity(db.Model):
 
     @hybrid_property
     def FY_forward_spend_dict_fund_sources(self, fiscalyear_modifier=6):
-        fydata = fwddata_query(self, fiscalyear_modifier)
-        return {
-            None: {
-                "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                }
-                for fyval in fydata
-            }
-        }
+        return self.transaction_type_dict_fund_sources(6, ['MTEF'], 'MTEF')
 
     @hybrid_property
     def FY_forward_spend_dict(self, fiscalyear_modifier=6):
-        fydata = fwddata_query(self, fiscalyear_modifier)
-        return {
-                    "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                    }
-                    for fyval in fydata
-                }
+        return self.transaction_type_dict(6, ['MTEF'], 'MTEF')
 
     def make_classification_data(self, as_dict=False):
         def append_path(root, classification):
