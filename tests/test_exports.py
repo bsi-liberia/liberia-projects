@@ -1,5 +1,6 @@
 from flask import url_for
 import pytest
+import re
 
 @pytest.mark.usefixtures('client_class')
 class TestExports:
@@ -26,3 +27,14 @@ class TestExports:
         for route, status_code in routes:
             res = client.get(route, headers=headers_user)
             assert res.status_code == status_code
+
+
+@pytest.mark.usefixtures('client_class')
+class TestExportFiles:
+    def test_activities_csv(self, client):
+        route = url_for('exports.activities_csv')
+        res = client.get(route)
+        # NB https://docs.python.org/3/library/csv.html#csv.Dialect.lineterminator
+        with open('tests/artefacts/exports/exports.activities_csv.csv', 'r') as csvfile:
+            in_csv = re.sub("\r\n", "\n", res.data.decode("utf-8"))
+            assert in_csv == csvfile.read()
