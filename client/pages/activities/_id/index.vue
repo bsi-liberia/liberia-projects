@@ -204,14 +204,19 @@
         </b-col>
       </b-row>
       <template v-if="showFundSource">
-        <template v-for="finance in financesFundSources">
+        <template v-for="fundSourceData, fundSource in fundSources">
           <b-row>
-            <template v-for="fundSourceData, fundSource in fundSources">
+            <b-col>
+              <h4 class="text-muted">
+                <template v-if="fundSource != 'null'">{{ fundSource }}</template>
+                <b-badge pill variant="light" class="text-muted">{{ fundSourceData.finance_type }}</b-badge>
+              </h4>
+            </b-col>
+          </b-row>
+          <b-row>
+            <template v-for="finance in financesFundSources">
               <b-col v-if="fundSource in finance.data">
-                <h3>
-                  <template v-if="fundSource != 'null'">{{ fundSource }}</template>
-                  <b-badge>{{ fundSourceData.finance_type }}</b-badge>
-                  <br />{{ finance.title }}</h3>
+                <h3>{{ finance.title }}</h3>
                 <b-table class="table financial-table table-sm"
                 :fields="fiscal_fields" :items="Object.values(finance.data[fundSource])"
                 sort-by="period"
