@@ -1,6 +1,6 @@
 from flask_mail import Message
-from maediprojects import app, mail
-from maediprojects.query import activity as qactivity
+from projectdashboard import app, mail
+from projectdashboard.query import activity as qactivity
 
 
 def send_async_email():
@@ -13,14 +13,14 @@ def send_async_email():
 
         if len(created):
             message_body += "\n\nCreated projects\n - "
-            message_body += "\n - ".join(list(map(lambda p: "%s (%s, %s)" % 
-                (p.title, p.user.username, p.recipient_country.name), 
+            message_body += "\n - ".join(list(map(lambda p: "%s (%s, %s)" %
+                (p.title, p.user.username, p.recipient_country.name),
             created)))
 
         if len(updated):
             message_body += "\n\nUpdated projects\n - "
-            message_body += "\n - ".join(list(map(lambda p: "%s (%s, %s)" % 
-                (p.title, p.user.username, p.recipient_country.name), 
+            message_body += "\n - ".join(list(map(lambda p: "%s (%s, %s)" %
+                (p.title, p.user.username, p.recipient_country.name),
             updated)))
 
         msg = Message(

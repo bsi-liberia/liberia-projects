@@ -59,7 +59,7 @@ Data can be exported into Excel and imported again using Excel templates.
 
 **NB this section is very out of date and will be updated soon.**
 
-1. Internationalisation has been added using [Flask-Babel](https://pythonhosted.org/Flask-Babel/) - you can specify the country in config.py and then add new translations as outlined in Flask-Babel's documentation. Translation strings are stored in `maediprojects/translations`
+1. Internationalisation has been added using [Flask-Babel](https://pythonhosted.org/Flask-Babel/) - you can specify the country in config.py and then add new translations as outlined in Flask-Babel's documentation. Translation strings are stored in `projectdashboard/translations`
 2. Editing projects is fast and fields are saved as the user moves through the form to avoid loss of data. Fields are constrained as much as possible to ensure the correct format of data - for example, [bootstraper-datetimepicker](https://github.com/smalot/bootstrap-datetimepicker) is used to constrain dates and provide a nice UI.
 3. Locations are retrieved from [Geonames.org](http://download.geonames.org/export/dump/) upon request, to populate a simple geocoder. The user can click on regions (ADM1) or choose to see locations within a particular region (ADM2).
 4. Financial data can either be provided as a single total amount (as it is currently stored in the original source spreadsheets) or as individual financial transactions (as IATI encourages). If individual financial transactions are specified then these will be published in the IATI data; otherwise the total figures will be.

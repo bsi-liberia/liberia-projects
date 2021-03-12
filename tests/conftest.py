@@ -3,14 +3,14 @@ import os
 from flask import url_for
 import pytest
 
-from maediprojects import create_app, models
-from maediprojects.extensions import db as _db
-from maediprojects.query.user import addUser, deleteUser
-from maediprojects.query.setup import create_codes_codelists, import_countries, import_responses, import_roles
+from projectdashboard import create_app, models
+from projectdashboard.extensions import db as _db
+from projectdashboard.query.user import addUser, deleteUser
+from projectdashboard.query.setup import create_codes_codelists, import_countries, import_responses, import_roles
 from werkzeug.datastructures import FileStorage
-from maediprojects.query.generate_xlsx import xlsx_to_csv, import_xls
-from maediprojects.query import activity as qactivity
-from maediprojects.query.location import import_locations_from_file
+from projectdashboard.query.generate_xlsx import xlsx_to_csv, import_xls
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query.location import import_locations_from_file
 from flask_jwt_extended import (
     create_access_token
 )
