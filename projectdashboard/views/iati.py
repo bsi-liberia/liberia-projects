@@ -96,12 +96,14 @@ def api_iati_search():
             if len(data['results'])>0:
                 return jsonify(data)
 
+    return jsonify({'msg': 'No results found', 'results': []})
+
+    # Disable searching by title for now
     print("DS URL IS {}".format(DSV1_TITLE_URL.format(urlencode_text(title), reporting_org_code)))
     r = requests.get(DSV1_TITLE_URL.format(title.encode("utf-8"), reporting_org_code))
     if r.status_code==200:
         data = clean_data(etree.fromstring(r.text))
         return jsonify(data)
-    return jsonify({'msg': 'No results found', 'results': []})
 
 
 #FIXME
