@@ -1,7 +1,7 @@
 <template>
   <b-card no-body class="mb-1">
     <b-card-header header-tag="header" role="tab">
-      <b v-b-toggle="'collapse-'+transactionType">{{ title }}</b>
+      <b v-b-toggle="'collapse-'+transactionType" :class="disabled ? 'text-muted' : ''">{{ title }}</b>
     </b-card-header>
     <b-collapse :id="'collapse-'+transactionType" visible role="tabpanel">
       <b-card-body>
@@ -13,6 +13,7 @@
                 :items="finances[transactionTypeLong]">
                 <template v-slot:cell(transaction_date)="data">
                   <finances-input
+                    :disabled="disabled"
                     :transaction="data"
                     type="date"
                     name="transaction_date"
@@ -22,6 +23,7 @@
                 </template>
                 <template v-slot:cell(transaction_value_original)="data">
                   <finances-input-currency-append
+                    :disabled="disabled"
                     :transaction="data"
                     type="number"
                     name="transaction_value_original"
@@ -30,13 +32,14 @@
                 </template>
                 <template v-slot:cell(transaction_value)="data">
                   <b-form-group>
-                    <b-input type="text" plaintext
+                    <b-input type="text" plaintext class="number"
                       name="transaction_value_original"
                       :value="(data.item.transaction_value_original * data.item.currency_rate).toLocaleString(undefined, {maximumFractionDigits:2, minimumFractionDigits: 2})"></b-input>
                   </b-form-group>
                 </template>
                 <template v-slot:cell(transaction_description)="data">
                   <finances-input
+                    :disabled="disabled"
                     :transaction="data"
                     type="text"
                     name="transaction_description"
@@ -47,6 +50,7 @@
                 </template>
                 <template v-slot:cell(provider_org_id)="data">
                   <finances-select
+                    :disabled="disabled"
                     :transaction="data"
                     name="provider_org_id"
                     :options="codelists.organisation"
@@ -55,6 +59,7 @@
                 </template>
                 <template v-slot:cell(receiver_org_id)="data">
                   <finances-select
+                    :disabled="disabled"
                     :transaction="data"
                     name="receiver_org_id"
                     :options="codelists.organisation"
@@ -63,6 +68,7 @@
                 </template>
                 <template v-slot:cell(aid_type)="data">
                   <finances-select
+                    :disabled="disabled"
                     :transaction="data"
                     name="aid_type"
                     :options="codelists.AidType"
@@ -71,6 +77,7 @@
                 </template>
                 <template v-slot:cell(finance_type)="data">
                   <finances-select
+                    :disabled="disabled"
                     :transaction="data"
                     name="finance_type"
                     :options="codelists.FinanceType"
@@ -79,6 +86,7 @@
                 </template>
                 <template v-slot:cell(mtef_sector)="data">
                   <finances-select
+                    :disabled="disabled"
                     :transaction="data"
                     name="mtef_sector"
                     :options="codelists['mtef-sector']"
@@ -88,13 +96,15 @@
                 <template v-slot:cell(fund_source_id)="data">
                   <b-input-group class="nowrap no-margin">
                     <finances-select
+                      :disabled="disabled"
                       :transaction="data"
                       name="fund_source_id"
                       :options="fundSources"
                       :value.sync="data.item.fund_source_id">
                     </finances-select>
                     <b-input-group-append>
-                      <b-btn size="sm" @click="addFundSource(transactionTypeLong, data.index)">
+                      <b-btn size="sm" @click="addFundSource(transactionTypeLong, data.index)"
+                        :disabled="disabled">
                         <font-awesome-icon :icon="['fa', 'plus']" />
                       </b-btn>
                     </b-input-group-append>
@@ -102,7 +112,8 @@
                 </template>
                 <template v-slot:cell(delete)="data">
                   <b-button variant="link" class="text-danger"
-                    size="sm" @click="deleteFinances(transactionType, data)">
+                    size="sm" @click="deleteFinances(transactionType, data)"
+                    :disabled="disabled">
                     <font-awesome-icon :icon="['fa', 'trash-alt']" />
                   </b-button>
                 </template>
@@ -112,7 +123,7 @@
           <div class="row">
             <div class="col-sm-12 text-center">
               <b-btn variant="primary" @click="addFinances(transactionType)"
-              class="addFinancial">
+              class="addFinancial" :disabled="disabled">
                 <font-awesome-icon :icon="['fa', 'plus']" />
                 {{ addLabel }}
               </b-btn>
@@ -130,6 +141,9 @@
 .no-margin .form-group {
   margin-bottom: 0px;
 }
+.number {
+  text-align: right;
+}
 </style>
 <script>
 import FinancesSelect from './subcomponents/finances-select.vue'
@@ -145,7 +159,7 @@ export default {
     FinancesInputCurrencyAppend
   },
   props: ["transactionType", "transactionTypeLong", "title", "addLabel",
-    "financesFields", "fundSources", "api_routes", "codelists"],
+    "financesFields", "fundSources", "api_routes", "codelists", "disabled"],
   inject: ['finances', 'addFinances',
     'updateFinances', 'deleteFinances',
     'currencyDetailPopup', 'addFundSource'],
