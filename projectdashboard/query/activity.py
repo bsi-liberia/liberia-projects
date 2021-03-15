@@ -14,6 +14,7 @@ from projectdashboard.query import organisations as qorganisations
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.query.activity_log import activity_updated
+import difflib
 
 
 def force_earliest_latest(earliest, latest):
@@ -226,6 +227,60 @@ def get_activity(activity_id):
         id = activity_id
     ).first()
     return act
+
+
+def closest_to_activity(activity_id):
+    activity = get_activity(activity_id)
+    activities = models.Activity.query.filter_by(
+        reporting_org_id=activity.reporting_org_id
+    ).with_entities(models.Activity.id, models.Activity.title
+    ).all()
+    activity_titles = list(map(lambda activity: activity.title, activities))
+    title_orders = difflib.get_close_matches(
+        activity.title, activity_titles, len(activity_titles), 0)
+    return sorted([{
+        'id': activity.id,
+        'title': activity.title,
+        'order': title_orders.index(activity.title),
+        'selected': activity.id==activity_id
+
+    } for activity in activities], key=lambda k: k['order'])
+
+
+def get_finances_by_activity_id(activity_id, by_year=False):
+    activity = get_activity(activity_id)
+    if activity == None: return abort(404)
+
+    if by_year:
+        commitments = activity.transaction_type_dict(0, ['C'], 'C')
+        allotments = activity.transaction_type_dict(0, ['99-A'], '99-A')
+        disbursements = activity.transaction_type_dict(0, ['D', 'E'], 'D')
+        forward_spends = activity.transaction_type_dict(0, ['MTEF'], 'MTEF')
+    else:
+        commitments = activity.FY_commitments_dict
+        allotments = activity.FY_allotments_dict
+        disbursements = activity.FY_disbursements_dict
+        forward_spends = activity.FY_forward_spend_dict
+
+    finances = list()
+    if commitments: finances.append(('commitments', {
+        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+        "data": commitments.values()
+        }))
+    if allotments: finances.append(('allotment', {
+        "title": 'Allotments',
+        "data": allotments.values()
+        }))
+    if disbursements: finances.append(('disbursement', {
+        "title": 'Disbursements',
+        "data": disbursements.values()
+        }))
+    if forward_spends: finances.append(('forwardspend', {
+        "title": 'MTEF Projections',
+        "data": forward_spends.values()
+        }))
+    return finances
+
 
 def list_activities():
     acts = models.Activity.query.all()
