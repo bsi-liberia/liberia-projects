@@ -288,6 +288,9 @@ class Activity(db.Model):
     policy_markers = sa.orm.relationship("ActivityPolicyMarker",
             cascade="all, delete-orphan",
             backref="activity")
+    iati_preferences = sa.orm.relationship("ActivityIATIPreference",
+            cascade="all, delete-orphan",
+            backref="activity")
 
     @hybrid_property
     def permissions(self):
@@ -603,7 +606,8 @@ class Activity(db.Model):
             'disb_fund_sources': self.disb_fund_sources,
             'policy_markers': self.policy_markers_data,
             'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
-            'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values()))
+            'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values())),
+            'iati_preferences': list(map(lambda pref: pref.field, self.iati_preferences))
         }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         for cc in self.classifications:
@@ -759,6 +763,23 @@ class FundSource(db.Model):
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class ActivityIATIPreference(db.Model):
+    __tablename__ = 'activity_iati_preference'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(
+        sa.ForeignKey('activity.id'),
+        nullable=False)
+    field = sa.Column(sa.UnicodeText, index=True)
+
+    def __init__(self, field):
+        self.field = field
+
+    __table_args__ = (
+        sa.UniqueConstraint('activity_id','field', name='activity_id_field_constraint'),
+    )
+
 
 class Country(db.Model):
     __tablename__ = 'country'

@@ -82,7 +82,7 @@ def resolve_duplicates():
             period_start_date=row.period_start_date
         ).all()
         if not len(duplicate_entries)>1:
-            print "SKIPPING"
+            print ("SKIPPING")
             continue
         for entry in duplicate_entries:
             if entry.value==0:
