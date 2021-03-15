@@ -89,7 +89,7 @@ def fwddata_query(_self, fiscalyear_modifier):
                             ).in_(('10','11','12')), 'Q4'),
                     ]
                 ).label("fiscal_quarter"),
-                sa.sql.expression.literal(None).label('fund_source_name'))
+                sa.sql.expression.literal(None).label('fund_source_id'))
     return db.session.query(
             *QUERY_COLS
         ).filter(
@@ -124,8 +124,8 @@ def fydata_query(_self, fiscalyear_modifier, _transaction_types, fund_sources=Fa
             ).label("fiscal_quarter"))
     GROUP_BYS = ("fiscal_quarter", "fiscal_year")
     if fund_sources:
-        QUERY_COLS += (FundSource.name.label("fund_source_name"),)
-        GROUP_BYS += ("fund_source_name",)
+        QUERY_COLS += (FundSource.id.label("fund_source_id"),)
+        GROUP_BYS += ("fund_source_id",)
 
     query = db.session.query(
             *QUERY_COLS
@@ -336,31 +336,33 @@ class Activity(db.Model):
             ).all()
         data = dict(map(lambda ft: (ft.finance_type, ft.sum_value), query))
         total = sum(map(lambda ft: ft.sum_value, query))
-        if total == 0: return { "Grant": 0.0, "Loan": 0.0 }
         return {
-            "Grant": int(round((data.get(u"110", 0) / total)*100)),
-            "Loan": int(round((data.get("410", 0) / total)*100)),
+            "Grant": int(round((data.get(u"110", 0) / total)*100)) if total > 0 else 0.0,
+            "Loan": int(round((data.get("410", 0) / total)*100)) if total > 0 else 0.0,
         }
 
     @hybrid_property
     def disb_fund_sources(self):
         query = db.session.query(
             sa.func.sum(ActivityFinances.transaction_value).label("sum_value"),
-                FundSource.name,
+                FundSource.id.label("fund_source_id"),
+                FundSource.name.label("fund_source_name"),
+                FundSource.code.label("fund_source_code"),
                 ActivityFinances.finance_type
             ).outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
-            ).group_by(FundSource.name, FundSource.finance_type
+            ).group_by(FundSource.id, FundSource.code, FundSource.name, FundSource.finance_type
             ).filter(ActivityFinances.transaction_type==u"D"
             ).filter(ActivityFinances.activity_id==self.id
             ).all()
         total = sum(map(lambda ft: ft.sum_value, query))
-        if total == 0: return { "": { "value": 0.0}}
-        return dict(map(lambda ft: (ft.name, {
-                "value": int(round((ft.sum_value / total)*100)),
+        return dict(map(lambda ft: (ft.fund_source_id, {
+                "value": int(round((ft.sum_value / total)*100)) if total > 0 else 0,
                 "finance_type": {
                     "110": "Grant",
                     "410": "Loan",
-                }.get(ft.finance_type)
+                }.get(ft.finance_type),
+                "code": ft.fund_source_code,
+                "name": ft.fund_source_name
             }), query))
 
     @hybrid_property
@@ -434,7 +436,7 @@ class Activity(db.Model):
             fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
         out = collections.defaultdict(dict)
         for fyval in fydata:
-            out[fyval.fund_source_name].update({
+            out[fyval.fund_source_id].update({
                 "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
                     # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
                     "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
@@ -594,6 +596,7 @@ class Activity(db.Model):
             'documents': len(self.documents),
             'milestones': len(self.milestones),
             'permissions': self.permissions,
+            'disb_finance_types': self.disb_finance_types,
             'disb_fund_sources': self.disb_fund_sources,
             'policy_markers': self.policy_markers_data,
             'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
