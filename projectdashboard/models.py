@@ -378,13 +378,16 @@ class Activity(db.Model):
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'C')""")
+        ActivityFinances.transaction_type==u'C')""",
+        viewonly=True)
     allotments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'99-A')""")
+        ActivityFinances.transaction_type==u'99-A')""",
+        viewonly=True)
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'D')""")
+        ActivityFinances.transaction_type==u'D')""",
+        viewonly=True)
 
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
         secondary="join(ActivityResultIndicator, ActivityResult, ActivityResult.id == ActivityResultIndicator.result_id)",
@@ -729,8 +732,9 @@ class ActivityForwardSpend(db.Model):
     __tablename__ = 'forwardspend' # 'activityforwardspend'
     id = sa.Column(sa.Integer, primary_key=True)
     activity_id = sa.Column(
-        act_ForeignKey("activity.id"),
+        sa.ForeignKey('activity.id'),
         nullable=False)
+    activity = sa.orm.relationship("Activity")
     value = sa.Column(sa.Float(precision=2))
     value_date = sa.Column(sa.Date)
     value_currency = sa.Column(sa.UnicodeText)
