@@ -121,7 +121,7 @@ def api_iati_search_iati_identifier(iati_identifier):
                 'iati_identifier': activity.find("iati-identifier").text,
                 'title': title,
                 'description': description,
-                'transactions': qimport_iati.get_transactions_summary(activity),
+                'finances': qimport_iati.get_transactions_summary(activity),
             }
         return {
             "activity": clean_activity(doc.xpath("//iati-activity")[0]),
@@ -132,10 +132,16 @@ def api_iati_search_iati_identifier(iati_identifier):
     return data
 
 
-@blueprint.route("/fetch_data/<activity_id>/")
+@blueprint.route("/fetch_data/<int:activity_id>/", methods=["POST"])
 @jwt_required()
 @quser.permissions_required("edit")
-def api_iati_fetch_data(activity_id, methods=["POST"]):
-    iati_identifier = request.args["iati_identifier"]
+def api_iati_fetch_data(activity_id):
+    iati_identifier = request.json.get("iatiIdentifier")
+    activity_ids = request.json.get("activityIDs")
+    import_options = request.json.get("importOptions")
+    activities_fields_options = request.json.get("activitiesFieldsOptions")
+    return jsonify(status=qimport_iati.import_data(activity_id, iati_identifier,
+        activity_ids, import_options, activities_fields_options))
+
     #iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
-    return str(iati_document_result)
+    #return str(iati_document_result)
