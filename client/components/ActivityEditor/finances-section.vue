@@ -3,6 +3,12 @@
     <b-row>
       <b-col sm="9">
         <h2>Financial data</h2>
+        <b-alert :show="activity.iati_preferences.length > 0" variant="warning">
+          IATI data is being used to automatically update the following sections:
+          {{ activity.iati_preferences.join(', ') }}. As a result, those sections
+          are disabled below. If you want to edit these sections, you must reconfigure
+          your IATI import.
+        </b-alert>
       </b-col>
       <b-col sm="3" class="text-right">
         <b-dropdown id="dropdown-form" text="Show/hide columns" ref="dropdown" right size="sm">
@@ -19,6 +25,7 @@
     </b-row>
     <div role="tablist">
       <finances-subsection
+        :disabled="activity.iati_preferences.includes('commitments')"
         :finances-fields="financesFields"
         transaction-type="C"
         transaction-type-long="commitments"
@@ -40,6 +47,7 @@
         :codelists="codelists"
       ></finances-subsection>
       <finances-subsection
+        :disabled="activity.iati_preferences.includes('disbursement')"
         :finances-fields="financesFields"
         transaction-type="D"
         transaction-type-long="disbursements"
@@ -50,7 +58,8 @@
         :codelists="codelists"
       ></finances-subsection>
       <b-card no-body class="mb-1">
-        <b-card-header header-tag="header" role="tab">
+        <b-card-header header-tag="header" role="tab"
+        :class="activity.iati_preferences.includes('forwardspend') ? 'text-muted' : ''">
           <b v-b-toggle.collapse-forwardspends>Forward spending plans</b>
         </b-card-header>
         <b-collapse id="collapse-forwardspends" visible role="tabpanel">
@@ -73,25 +82,29 @@
                     <template v-slot:cell(Q1)="data">
                       <forwardspends-quarter
                         quarter="Q1" :data="data"
-                        :api_routes="api_routes">
+                        :api_routes="api_routes"
+                        :disabled="activity.iati_preferences.includes('forwardspend')">
                       </forwardspends-quarter>
                     </template>
                     <template v-slot:cell(Q2)="data">
                       <forwardspends-quarter
                         quarter="Q2" :data="data"
-                        :api_routes="api_routes">
+                        :api_routes="api_routes"
+                        :disabled="activity.iati_preferences.includes('forwardspend')">
                       </forwardspends-quarter>
                     </template>
                     <template v-slot:cell(Q3)="data">
                       <forwardspends-quarter
                         quarter="Q3" :data="data"
-                        :api_routes="api_routes">
+                        :api_routes="api_routes"
+                        :disabled="activity.iati_preferences.includes('forwardspend')">
                       </forwardspends-quarter>
                     </template>
                     <template v-slot:cell(Q4)="data">
                       <forwardspends-quarter
                         quarter="Q4" :data="data"
-                        :api_routes="api_routes">
+                        :api_routes="api_routes"
+                        :disabled="activity.iati_preferences.includes('forwardspend')">
                       </forwardspends-quarter>
                     </template>
                     <!--
