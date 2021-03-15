@@ -22,10 +22,10 @@ LR_MONTHS_QUARTERS = {
 }
 
 LR_QUARTERS_MONTH_DAY = {
-    3: {"start": (1, 1), "end": (31, 3)},
-    4: {"start": (1, 4), "end": (30, 6)},
     1: {"start": (1, 7), "end": (30, 9)},
-    2: {"start": (1, 10), "end": (31, 12)}
+    2: {"start": (1, 10), "end": (31, 12)},
+    3: {"start": (1, 1), "end": (31, 3)},
+    4: {"start": (1, 4), "end": (30, 6)}
 }
 
 LR_PERIODS_MONTH_DAY = {
