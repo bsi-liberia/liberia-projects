@@ -5,6 +5,7 @@
       step="0.01"
       :value="_value"
       @change="updateForwardSpends"
+      :disabled="disabled"
       :state="validation"></b-input>
   </b-form-group>
   <b-form-group v-else>
@@ -16,7 +17,7 @@ export default {
   data() {
     return { validation: null }
   },
-  props: ["quarter", "data", "api_routes"],
+  props: ["quarter", "data", "api_routes", "disabled"],
   methods: {
     updateForwardSpends: function(newValue) {
       var _id = this.data.item[this.quarter].id
