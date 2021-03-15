@@ -69,13 +69,22 @@ def fp_fy_to_date(fp, fy, start_end='start'):
     day, month = LR_PERIODS_MONTH_DAY[fp][start_end]
     return datetime.datetime(year, month, day)
 
-def fq_fy_to_date(fq, fy, start_end='start'):
-    """Convert from LR FQ, FY to real date."""
-    if fq in (3,4):
-        year = fy+1
-    else:
+def fq_fy_to_date(fq, fy, start_end='start', calendar_year=False):
+    """
+    Convert from Liberian FQ, FY (default) or calendar
+    FQ, FY to real date
+    """
+    if calendar_year:
+        """Convert from calendar year FQ, FY to real data."""
+        day, month = QUARTERS_MONTH_DAY[fq][start_end]
         year = fy
-    day, month = LR_QUARTERS_MONTH_DAY[fq][start_end]
+    else:
+        """Convert from LR FQ, FY to real date."""
+        if fq in (3,4):
+            year = fy+1
+        else:
+            year = fy
+        day, month = LR_QUARTERS_MONTH_DAY[fq][start_end]
     return datetime.datetime(year, month, day)
 
 def date_to_fy_fq(date):
