@@ -334,11 +334,13 @@ def generate_xlsx_filtered(arguments={}):
         arguments)
     for activity in activities:
         for fundsource, fundsource_data in activity.disb_fund_sources.items():
+            fund_source_code = fundsource_data['code']
+            fund_source_name = fundsource_data['name']
             activity_data = activity_to_json(activity, cl_lookups)
             activity_data.update(dict(map(lambda d: (d, 0.00), list(generate_disb_fys()))))
-            activity_data["Fund Source"] = fundsource
+            activity_data["Fund Source"] = "{} - {}".format(fund_source_code,
+                fund_source_name) if fund_source_name != fund_source_code else fund_source_name
             # Add Disbursements data
-            activity_data[u'Fund Source'] = fundsource
             if fundsource is not None and fundsource_data.get('finance_type'):
                 activity_data[u'Finance Type (Type of Assistance)'] = fundsource_data.get('finance_type')
             if fundsource in activity.FY_disbursements_dict_fund_sources:
