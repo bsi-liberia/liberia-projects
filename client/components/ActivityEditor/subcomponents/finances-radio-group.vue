@@ -4,6 +4,7 @@
     v-model="_value"
     :options="options"
     :name="name"
+    :disabled="disabled"
   ></b-form-radio-group>
 </template>
 <script>
@@ -11,7 +12,7 @@ export default {
   data() {
     return { validation: null }
   },
-  props: ["transaction", "name", "options", "value"],
+  props: ["transaction", "name", "options", "value", "disabled"],
   inject: ['updateFinances'],
   computed: {
     _value: {
