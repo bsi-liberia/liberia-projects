@@ -208,8 +208,9 @@
           <b-row>
             <b-col>
               <h4 class="text-muted">
-                <template v-if="fundSource != 'null'">{{ fundSource }}</template>
+                <template v-if="fundSourceData.name != 'null'">{{ fundSourceData.name }}</template>
                 <b-badge pill variant="light" class="text-muted">{{ fundSourceData.finance_type }}</b-badge>
+                <small><code>{{ fundSourceData.code }}</code></small>
               </h4>
             </b-col>
           </b-row>
