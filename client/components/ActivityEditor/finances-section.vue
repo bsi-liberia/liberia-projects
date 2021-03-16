@@ -60,7 +60,7 @@
       <b-card no-body class="mb-1">
         <b-card-header header-tag="header" role="tab"
         :class="activity.iati_preferences.includes('forwardspend') ? 'text-muted' : ''">
-          <b v-b-toggle.collapse-forwardspends>Forward spending plans</b>
+          <b v-b-toggle.collapse-forwardspends>MTEF Projections</b>
         </b-card-header>
         <b-collapse id="collapse-forwardspends" visible role="tabpanel">
           <b-card-body>
@@ -69,8 +69,8 @@
                 <div class="col-sm-12">
                   <p class="lead">This project starts on <em>{{ activity.start_date }}</em>
                   and ends on <em>{{ activity.end_date }}</em>. Please provide
-                  forward spend projections by quarter for the lifetime of this project.</p>
-                  <p class="lead">To provide forward spend projections for earlier or later dates,
+                  MTEF projections by quarter for the lifetime of this project.</p>
+                  <p class="lead">To provide MTEF projections for earlier or later dates,
                   adjust the project start and end dates and new rows will automatically be created below.</p>
                   <p class="lead">Currency: <b>USD</b></p>
                   <b-table :fields="forwardspendFields" :items="forwardspends">
