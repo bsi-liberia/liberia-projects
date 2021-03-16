@@ -24,7 +24,7 @@
             :value="activity.updated_date" v-if="activity.updated_date"></b-input>
           </b-form-group>
         </b-col>
-        <b-col md="4">
+        <b-col md="4" v-if="activity.id">
           <IATISearch
             :activity="activity"
             :api_routes="api_routes" />
