@@ -59,20 +59,20 @@
         </b-row>
         <b-table id="reportingOrgs" :fields="fields" :items="items"
           :busy="isBusy" sort-by="name" show-empty responsive>
-          <template v-slot:table-busy>
+          <template #table-busy>
             <div class="text-center">
               <b-spinner class="align-middle" label="Loading..."></b-spinner>
               <strong>Loading...</strong>
             </div>
           </template>
-          <template slot:thead-top slot-scope="data">
+          <template #thead-top="data">
             <b-tr>
               <b-th>&nbsp;</b-th>
-              <b-th variant="light" colspan="3" class="text-center">MTEF Projections</b-th>
+              <b-th variant="light" colspan="3" class="text-center table-forwardspends">MTEF Projections</b-th>
               <b-th colspan="4" class="text-center">Disbursements</b-th>
             </b-tr>
           </template>
-          <template v-slot:cell(name)="data">
+          <template #cell(name)="data">
             <nuxt-link :to="{ name: 'activities', query: {reporting_org_id: data.item.id}}"
               title="View this organisation's projects"
               v-b-tooltip.hover>
@@ -112,6 +112,11 @@
     </template>
   </div>
 </template>
+<style>
+.table-forwardspends {
+    background-color: #eeeeee;
+}
+</style>
 <script>
 export default {
   data() {
@@ -164,19 +169,19 @@ export default {
           {
             key: 'forwardspends_previousyear',
             label: data.previous_year,
-            class: "number",
+            class: "number table-forwardspends",
             variant: "light"
           },
           {
             key: 'forwardspends_currentyear',
             label: data.current_year,
-            class: "number",
+            class: "number table-forwardspends",
             variant: "light"
           },
           {
             key: 'forwardspends_nextyear',
             label: data.next_year,
-            class: "number",
+            class: "number table-forwardspends",
             variant: "light"
           }]
       return Object.entries(data.list_of_quarters).reduce(
