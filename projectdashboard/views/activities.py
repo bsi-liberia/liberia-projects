@@ -17,6 +17,7 @@ from projectdashboard import models
 
 from collections import OrderedDict
 import datetime
+import difflib
 
 
 blueprint = Blueprint('activities', __name__, url_prefix='/api/activities')
@@ -213,35 +214,64 @@ def api_new_activity():
             return abort(500)
 
 
-@blueprint.route("/<activity_id>/finances.json")
+@blueprint.route("/activity_summaries.json", methods=['POST'])
+@jwt_required(optional=True)
+@quser.permissions_required("view")
+def api_activity_summaries():
+    activity_ids = request.json.get('activity_ids')
+    fields = ['id', 'title', 'description', 'objectives', 'deliverables',
+        'papd_alignment', 'start_date', 'end_date', 'activity_status']
+    fields_special = ['implementing_organisations', 'funding_organisations', #'classifications',
+    ]
+    fields_len = ['results', 'documents', 'policy_markers', 'locations', 'counterpart_funding'
+        ]
+    all_fields = fields + fields_special + fields_len
+
+    def get_activity_summary(activity_id):
+        activity = qactivity.get_activity(activity_id)
+        f = dict([(field, getattr(activity, field)) for field in fields])
+        flen = dict([(field, len(getattr(activity, field))) for field in fields_len])
+        f.update(flen)
+        f['implementing_organisations'] = list(map(lambda org: org.as_dict(), activity.implementing_organisations))
+        f['funding_organisations'] = list(map(lambda org: org.as_dict(), activity.funding_organisations))
+        #f['classifications'] = dict(filter(lambda clsf: clsf[0]!='mtef-sector', activity.classification_data_dict.items()))
+        return f
+
+    activity_summaries = [get_activity_summary(activity_id) for activity_id in activity_ids]
+    all_fields.pop(0) # Delete ID
+    # Group results by field
+    summaries_by_field = dict([(field, {}) for field in all_fields])
+    for activity in activity_summaries:
+        for field in all_fields:
+            summaries_by_field[field][activity['id']] = activity[field]
+    # Get only fields with multiple distinct values
+    def filter_unique(field):
+        return len(set(list(map(lambda val: str(val), field[1].values()))))>1
+    unique_filters = dict(filter(filter_unique, summaries_by_field.items()))
+    return jsonify(fields=unique_filters)
+
+
+@blueprint.route("/finances.json", methods=['POST'])
+@jwt_required(optional=True)
+@quser.permissions_required("view")
+def api_activities_finances():
+    activity_ids = request.json.get('activity_ids')
+    by_year = request.args.get('by_year')
+    activities = [{
+        'id': activity_id,
+        'finances': OrderedDict(qactivity.get_finances_by_activity_id(activity_id,
+        by_year))} for activity_id in activity_ids]
+    return jsonify(activities=activities)
+
+
+@blueprint.route("/<int:activity_id>/finances.json")
 @jwt_required(optional=True)
 @quser.permissions_required("view")
 def api_activities_finances_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
     if activity == None: return abort(404)
-
-    commitments = activity.FY_commitments_dict
-    allotments = activity.FY_allotments_dict
-    disbursements = activity.FY_disbursements_dict
-    forward_spends = activity.FY_forward_spend_dict
-
-    finances = list()
-    if commitments: finances.append(('commitments', {
-        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
-        "data": commitments.values()
-        }))
-    if allotments: finances.append(('allotment', {
-        "title": 'Allotments',
-        "data": allotments.values()
-        }))
-    if disbursements: finances.append(('disbursement', {
-        "title": 'Disbursements',
-        "data": disbursements.values()
-        }))
-    if forward_spends: finances.append(('forwardspend', {
-        "title": 'MTEF Projections',
-        "data": forward_spends.values()
-        }))
+    finances = qactivity.get_finances_by_activity_id(activity_id,
+        request.args.get('by_year'))
     return jsonify(
         finances=OrderedDict(finances)
         )
@@ -359,7 +389,7 @@ def api_activities_results_design(activity_id):
 
 @blueprint.route("/<activity_id>/delete/", methods=['POST'])
 @jwt_required()
-@quser.permissions_required("edit")
+@quser.administrator_required
 def activity_delete(activity_id):
     result = qactivity.delete_activity(activity_id)
     if result:
@@ -502,3 +532,11 @@ def api_activity_milestones(activity_id):
         activity = qactivity.get_activity(activity_id)
         if activity == None: return abort(404)
         return jsonify(milestones=activity.milestones_data)
+
+
+@blueprint.route("/<int:activity_id>/similar/")
+@jwt_required(optional=True)
+def similar_activities(activity_id):
+    return jsonify(
+        activities=qactivity.closest_to_activity(activity_id)
+    )

@@ -289,6 +289,7 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
             for row in data: # each row is one ID
                 activity_id = int(row[u"ID"])
                 activity = qactivity.get_activity(activity_id)
+                activity_iati_preferences = [pref.field for pref in activity.iati_preferences]
                 if not activity:
                     messages.append("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
                         and was not imported! Please create this activity in the \
@@ -296,6 +297,8 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
                 if _type == 'mtef':
+                    # FIXME quick fix for now
+                    if 'forwardspend' in activity_iati_preferences: continue
                     updated = {
                         'activity': update_activity_data(activity, existing_activity, row, cl_lookups_by_name),
                         # Parse MTEF projections columns
@@ -304,6 +307,8 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                         'counterpart_years': parse_counterpart_cols(counterpart_funding_cols, activity, row, activity_id),
                     }
                 elif _type == 'disbursements':
+                    # FIXME quick fix for now
+                    if 'disbursement' in activity_iati_preferences: continue
                     updated = {
                         'activity': update_activity_data(activity, existing_activity, row, cl_lookups_by_name),
                         'disbursements': parse_disbursement_cols(currency, disbursement_cols, activity, existing_activity, row)
@@ -334,11 +339,13 @@ def generate_xlsx_filtered(arguments={}):
         arguments)
     for activity in activities:
         for fundsource, fundsource_data in activity.disb_fund_sources.items():
+            fund_source_code = fundsource_data['code']
+            fund_source_name = fundsource_data['name']
             activity_data = activity_to_json(activity, cl_lookups)
             activity_data.update(dict(map(lambda d: (d, 0.00), list(generate_disb_fys()))))
-            activity_data["Fund Source"] = fundsource
+            activity_data["Fund Source"] = "{} - {}".format(fund_source_code,
+                fund_source_name) if fund_source_name != fund_source_code else fund_source_name
             # Add Disbursements data
-            activity_data[u'Fund Source'] = fundsource
             if fundsource is not None and fundsource_data.get('finance_type'):
                 activity_data[u'Finance Type (Type of Assistance)'] = fundsource_data.get('finance_type')
             if fundsource in activity.FY_disbursements_dict_fund_sources:

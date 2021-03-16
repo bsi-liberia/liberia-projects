@@ -88,7 +88,8 @@ def fwddata_query(_self, fiscalyear_modifier):
                           'start of month', '-{} month'.format(fiscalyear_modifier))
                             ).in_(('10','11','12')), 'Q4'),
                     ]
-                ).label("fiscal_quarter"))
+                ).label("fiscal_quarter"),
+                sa.sql.expression.literal(None).label('fund_source_id'))
     return db.session.query(
             *QUERY_COLS
         ).filter(
@@ -123,8 +124,8 @@ def fydata_query(_self, fiscalyear_modifier, _transaction_types, fund_sources=Fa
             ).label("fiscal_quarter"))
     GROUP_BYS = ("fiscal_quarter", "fiscal_year")
     if fund_sources:
-        QUERY_COLS += (FundSource.name.label("fund_source_name"),)
-        GROUP_BYS += ("fund_source_name",)
+        QUERY_COLS += (FundSource.id.label("fund_source_id"),)
+        GROUP_BYS += ("fund_source_id",)
 
     query = db.session.query(
             *QUERY_COLS
@@ -287,6 +288,9 @@ class Activity(db.Model):
     policy_markers = sa.orm.relationship("ActivityPolicyMarker",
             cascade="all, delete-orphan",
             backref="activity")
+    iati_preferences = sa.orm.relationship("ActivityIATIPreference",
+            cascade="all, delete-orphan",
+            backref="activity")
 
     @hybrid_property
     def permissions(self):
@@ -335,31 +339,33 @@ class Activity(db.Model):
             ).all()
         data = dict(map(lambda ft: (ft.finance_type, ft.sum_value), query))
         total = sum(map(lambda ft: ft.sum_value, query))
-        if total == 0: return { "Grant": 0.0, "Loan": 0.0 }
         return {
-            "Grant": int(round((data.get(u"110", 0) / total)*100)),
-            "Loan": int(round((data.get("410", 0) / total)*100)),
+            "Grant": int(round((data.get(u"110", 0) / total)*100)) if total > 0 else 0.0,
+            "Loan": int(round((data.get("410", 0) / total)*100)) if total > 0 else 0.0,
         }
 
     @hybrid_property
     def disb_fund_sources(self):
         query = db.session.query(
             sa.func.sum(ActivityFinances.transaction_value).label("sum_value"),
-                FundSource.name,
+                FundSource.id.label("fund_source_id"),
+                FundSource.name.label("fund_source_name"),
+                FundSource.code.label("fund_source_code"),
                 ActivityFinances.finance_type
             ).outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
-            ).group_by(FundSource.name, FundSource.finance_type
+            ).group_by(FundSource.id, FundSource.code, FundSource.name, FundSource.finance_type
             ).filter(ActivityFinances.transaction_type==u"D"
             ).filter(ActivityFinances.activity_id==self.id
             ).all()
         total = sum(map(lambda ft: ft.sum_value, query))
-        if total == 0: return { "": { "value": 0.0}}
-        return dict(map(lambda ft: (ft.name, {
-                "value": int(round((ft.sum_value / total)*100)),
+        return dict(map(lambda ft: (ft.fund_source_id, {
+                "value": int(round((ft.sum_value / total)*100)) if total > 0 else 0,
                 "finance_type": {
                     "110": "Grant",
                     "410": "Loan",
-                }.get(ft.finance_type)
+                }.get(ft.finance_type),
+                "code": ft.fund_source_code,
+                "name": ft.fund_source_name
             }), query))
 
     @hybrid_property
@@ -375,13 +381,16 @@ class Activity(db.Model):
 
     commitments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'C')""")
+        ActivityFinances.transaction_type==u'C')""",
+        viewonly=True)
     allotments = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'99-A')""")
+        ActivityFinances.transaction_type==u'99-A')""",
+        viewonly=True)
     disbursements = sa.orm.relationship("ActivityFinances",
         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'D')""")
+        ActivityFinances.transaction_type==u'D')""",
+        viewonly=True)
 
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
         secondary="join(ActivityResultIndicator, ActivityResult, ActivityResult.id == ActivityResultIndicator.result_id)",
@@ -409,9 +418,13 @@ class Activity(db.Model):
 
     def transaction_type_dict(self, fiscalyear_modifier,
             transaction_types, transaction_type_label):
-        fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
+        if transaction_types == ['MTEF']:
+            fydata = fwddata_query(self, fiscalyear_modifier)
+        else:
+            fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
         return {
             "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
+            # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
             "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
             "fiscal_year": fyval.fiscal_year,
             "fiscal_quarter": fyval.fiscal_quarter,
@@ -423,11 +436,15 @@ class Activity(db.Model):
 
     def transaction_type_dict_fund_sources(self, fiscalyear_modifier,
         transaction_types, transaction_type_label):
-        fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
+        if transaction_types == ['MTEF']:
+            fydata = fwddata_query(self, fiscalyear_modifier)
+        else:
+            fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
         out = collections.defaultdict(dict)
         for fyval in fydata:
-            out[fyval.fund_source_name].update({
+            out[fyval.fund_source_id].update({
                 "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
+                    # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
                     "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
@@ -503,33 +520,11 @@ class Activity(db.Model):
 
     @hybrid_property
     def FY_forward_spend_dict_fund_sources(self, fiscalyear_modifier=6):
-        fydata = fwddata_query(self, fiscalyear_modifier)
-        return {
-            None: {
-                "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                }
-                for fyval in fydata
-            }
-        }
+        return self.transaction_type_dict_fund_sources(6, ['MTEF'], 'MTEF')
 
     @hybrid_property
     def FY_forward_spend_dict(self, fiscalyear_modifier=6):
-        fydata = fwddata_query(self, fiscalyear_modifier)
-        return {
-                    "{} {} (MTEF)".format(fyval.fiscal_year, fyval.fiscal_quarter): {
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
-                    "fiscal_year": fyval.fiscal_year,
-                    "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
-                    "value": round(fyval.value, 4)
-                    }
-                    for fyval in fydata
-                }
+        return self.transaction_type_dict(6, ['MTEF'], 'MTEF')
 
     def make_classification_data(self, as_dict=False):
         def append_path(root, classification):
@@ -607,10 +602,12 @@ class Activity(db.Model):
             'documents': len(self.documents),
             'milestones': len(self.milestones),
             'permissions': self.permissions,
+            'disb_finance_types': self.disb_finance_types,
             'disb_fund_sources': self.disb_fund_sources,
             'policy_markers': self.policy_markers_data,
             'implementing_organisations': list(map(lambda org: org.as_dict(), self.implementing_organisations)),
-            'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values()))
+            'classifications_data': list(map(lambda cl: cl, self.classification_data_dict.values())),
+            'iati_preferences': list(map(lambda pref: pref.field, self.iati_preferences))
         }
         ret_data.update({c.name: getattr(self, c.name) for c in self.__table__.columns})
         for cc in self.classifications:
@@ -739,8 +736,9 @@ class ActivityForwardSpend(db.Model):
     __tablename__ = 'forwardspend' # 'activityforwardspend'
     id = sa.Column(sa.Integer, primary_key=True)
     activity_id = sa.Column(
-        act_ForeignKey("activity.id"),
+        sa.ForeignKey('activity.id'),
         nullable=False)
+    activity = sa.orm.relationship("Activity")
     value = sa.Column(sa.Float(precision=2))
     value_date = sa.Column(sa.Date)
     value_currency = sa.Column(sa.UnicodeText)
@@ -765,6 +763,23 @@ class FundSource(db.Model):
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class ActivityIATIPreference(db.Model):
+    __tablename__ = 'activity_iati_preference'
+    id = sa.Column(sa.Integer, primary_key=True)
+    activity_id = sa.Column(
+        sa.ForeignKey('activity.id'),
+        nullable=False)
+    field = sa.Column(sa.UnicodeText, index=True)
+
+    def __init__(self, field):
+        self.field = field
+
+    __table_args__ = (
+        sa.UniqueConstraint('activity_id','field', name='activity_id_field_constraint'),
+    )
+
 
 class Country(db.Model):
     __tablename__ = 'country'

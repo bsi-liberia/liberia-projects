@@ -3,9 +3,13 @@
     <b-input-group>
       <b-input-group-prepend is-text>
         <b-link title="Adjust currency and conversion rate" href="#"
-          variant="outline-secondary" @click="currencyDetailPopup(transaction)">
+          variant="outline-secondary" @click="currencyDetailPopup(transaction)"
+          v-if="disabled!=true">
         {{ currency }}
         </b-link>
+        <template v-else>
+          {{ currency }}
+        </template>
       </b-input-group-prepend>
       <b-input :type="type" step=".01"
         :state="validation"
@@ -13,7 +17,7 @@
         v-model="_value" size="30" :disabled="disabled"
         v-on:change="update">
       </b-input>
-      <b-input-group-append is-text>
+      <b-input-group-append is-text v-if="disabled!=true">
         <b-link variant="outline-secondary" title="Adjust currency and conversion rate" href="#"
            @click="currencyDetailPopup(transaction)">
           <font-awesome-icon :icon="['fa', 'cog']" />

@@ -1,6 +1,7 @@
 <template>
   <b-form-group :state="validation">
     <b-form-checkbox :state="validation"
+      :disabled="disabled"
       v-model="_value">{{ label }}</b-form-checkbox>
   </b-form-group>
 </template>
@@ -9,7 +10,7 @@ export default {
   data() {
     return { validation: null }
   },
-  props: ["transaction", "name", "label", "value"],
+  props: ["transaction", "name", "label", "value", "disabled"],
   inject: ['updateFinances'],
   computed: {
     _value: {

@@ -4,7 +4,7 @@
       <b-row>
         <b-col md="8">
           <b-form-group
-            label="Dashboard ID" label-cols-sm="2"
+            label="Dashboard ID" label-cols-sm="3"
             for="id">
             <b-input plaintext name="id" id="id"
             :value="activity.id" v-if="activity.id"></b-input>

@@ -5,7 +5,8 @@
     :label-for="name">
     <b-select :options="options" v-model="_value"
     :name="name" value-field="id" text-field="name"
-    :state="validation" :required="required">
+    :state="validation" :required="required"
+    :disabled="disabled">
     </b-select>
   </b-form-group>
 </template>
@@ -14,7 +15,7 @@ export default {
   data() {
     return { validation: null }
   },
-  props: ["transaction", "name", "options", "value", "label", "label-cols-sm", "required"],
+  props: ["transaction", "name", "options", "value", "label", "label-cols-sm", "required", "disabled"],
   inject: ['updateFinances'],
   computed: {
     _value: {
