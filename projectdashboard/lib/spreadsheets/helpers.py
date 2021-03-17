@@ -3,9 +3,9 @@ from projectdashboard.lib import xlsx_to_csv, util, spreadsheet_headers
 import re
 
 def get_column_information(mtef, _headers):
-    mtef_cols = filter(lambda col: re.match(r"(.*) \(MTEF\)", col), _headers)
-    disb_cols = filter(lambda col: re.match(r"(.*) Q(.*) \(D\)", col), _headers)
-    counterpart_funding_cols = filter(lambda col: re.match(r"(.*) \(GoL counterpart fund request\)", col), _headers)
+    mtef_cols = list(filter(lambda col: re.match(r"(.*) \(MTEF\)", col), _headers))
+    disb_cols = list(filter(lambda col: re.match(r"(.*) Q(.*) \(D\)", col), _headers))
+    counterpart_funding_cols = list(filter(lambda col: re.match(r"(.*) \(GoL counterpart fund request\)", col), _headers))
     if mtef and _headers is None:
         mtef_cols = qgenerate_csv.mtef_fys()
         counterpart_funding_cols = qgenerate_csv.counterpart_fys()
