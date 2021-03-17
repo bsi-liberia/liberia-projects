@@ -24,40 +24,54 @@
       </b-col>
     </b-row>
     <div role="tablist">
-      <finances-subsection
-        :disabled="activity.iati_preferences.includes('commitments')"
-        :finances-fields="financesFields"
-        transaction-type="C"
-        transaction-type-long="commitments"
-        :title="commitmentsOrAppropriations"
-        :add-label="'Add ' + commitmentsOrAppropriations"
-        :fund-sources="fundSources"
-        :api_routes="api_routes"
-        :codelists="codelists"
-      ></finances-subsection>
-      <finances-subsection
-        v-if="activity.domestic_external=='domestic'"
-        :finances-fields="financesFields"
-        transaction-type="99-A"
-        transaction-type-long="allotments"
-        title="Allotments"
-        add-label="Add allotment"
-        :fund-sources="fundSources"
-        :api_routes="api_routes"
-        :codelists="codelists"
-      ></finances-subsection>
-      <finances-subsection
-        :disabled="activity.iati_preferences.includes('disbursement')"
-        :finances-fields="financesFields"
-        transaction-type="D"
-        transaction-type-long="disbursements"
-        title="Disbursements"
-        add-label="Add disbursement"
-        :fund-sources="fundSources"
-        :api_routes="api_routes"
-        :codelists="codelists"
-      ></finances-subsection>
-      <b-card no-body class="mb-1">
+      <template v-if="financesIsBusy">
+        <div class="text-center text-muted my-2 mb-5">
+          <b-spinner class="align-middle"></b-spinner>
+          <strong>Loading financial data...</strong>
+        </div>
+      </template>
+      <template v-else>
+        <finances-subsection
+          :disabled="activity.iati_preferences.includes('commitments')"
+          :finances-fields="financesFields"
+          transaction-type="C"
+          transaction-type-long="commitments"
+          :title="commitmentsOrAppropriations"
+          :add-label="'Add ' + commitmentsOrAppropriations"
+          :fund-sources="fundSources"
+          :api_routes="api_routes"
+          :codelists="codelists"
+        ></finances-subsection>
+        <finances-subsection
+          v-if="activity.domestic_external=='domestic'"
+          :finances-fields="financesFields"
+          transaction-type="99-A"
+          transaction-type-long="allotments"
+          title="Allotments"
+          add-label="Add allotment"
+          :fund-sources="fundSources"
+          :api_routes="api_routes"
+          :codelists="codelists"
+        ></finances-subsection>
+        <finances-subsection
+          :disabled="activity.iati_preferences.includes('disbursement')"
+          :finances-fields="financesFields"
+          transaction-type="D"
+          transaction-type-long="disbursements"
+          title="Disbursements"
+          add-label="Add disbursement"
+          :fund-sources="fundSources"
+          :api_routes="api_routes"
+          :codelists="codelists"
+        ></finances-subsection>
+      </template>
+      <template v-if="forwardspendsIsBusy">
+        <div class="text-center text-muted my-2">
+          <b-spinner class="align-middle"></b-spinner>
+          <strong>Loading MTEF Projections...</strong>
+        </div>
+      </template>
+      <b-card no-body class="mb-1" v-else>
         <b-card-header header-tag="header" role="tab"
         :class="activity.iati_preferences.includes('forwardspend') ? 'text-muted' : ''">
           <b v-b-toggle.collapse-forwardspends>MTEF Projections</b>
@@ -302,7 +316,9 @@ export default {
         name: null,
         finance_type: null,
         validationErrors: null
-      }
+      },
+      financesIsBusy: false,
+      forwardspendsIsBusy: false
     }
   },
   mounted: function() {
@@ -315,6 +331,7 @@ export default {
       this.$bvModal.show('adjust-currency')
     },
     setupFinances: function() {
+      this.financesIsBusy = true
       this.$axios.get(this.api_routes.finances)
         .then(res => {
           this.finances.commitments = res.data.finances.commitments
@@ -330,9 +347,11 @@ export default {
           if (availableFundSources.length >1) {
             this.defaultFields.push('fund_source_id')
           }
+          this.financesIsBusy = false
       });
     },
     setupForwardSpends: function() {
+      this.forwardspendsIsBusy = true
       this.$axios.get(this.api_routes.forwardspends)
       .then(response => {
           this.forwardspends = response.data.forwardspends
@@ -351,6 +370,7 @@ export default {
               'key': 'total', 'label': 'Total'
             }])
             */
+          this.forwardspendsIsBusy = false
       });
     },
     addFinances: function(transaction_type) {
