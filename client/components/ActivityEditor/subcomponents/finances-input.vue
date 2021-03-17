@@ -24,6 +24,8 @@ export default {
         if ((newValue > this.maxDate) || (newValue < this.minDate)) {
           this.validation = false
           return false
+        } else {
+          this.validation = null
         }
       }
       this.updateFinances(this, this.transaction, this.name, newValue, oldValue)
