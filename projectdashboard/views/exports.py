@@ -1,7 +1,7 @@
 from collections import defaultdict
 import datetime
 
-from flask import Blueprint, request, \
+from flask import Blueprint, request, abort, \
     url_for, Response, send_file, redirect, flash, make_response, jsonify
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required
@@ -205,7 +205,7 @@ def export_donor_template(organisation_id=None, mtef=False, currency=u"USD", hea
         for a in all_activities:
             activities[a.reporting_org.name].append(a)
     data = qgenerate_xlsx.generate_xlsx_export_template(activities, mtef, currency, headers)
-    if not data: return redirect(url_for('exports.export'))
+    if not data: return abort(404)
     data.seek(0)
     return send_file(data, as_attachment=True, attachment_filename=filename,
         cache_timeout=5)

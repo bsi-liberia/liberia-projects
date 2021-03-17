@@ -4,8 +4,10 @@ import re
 from io import StringIO, BytesIO
 from projectdashboard.views.api import JSONEncoder
 from projectdashboard.lib.xlsx_to_csv import getDataFromFile
+from projectdashboard.query import organisations as qorganisations
 import csv
 import json
+import openpyxl
 
 @pytest.mark.usefixtures('client_class')
 class TestExports:
@@ -57,16 +59,19 @@ def remove_last_updated_date(res, csvfile):
 
 
 def excl_last_updated(row):
-    row.pop('Last updated date')
+    try:
+        row.pop('Last updated date')
+    except KeyError:
+        pass
     return row
 
 
-def get_clean_data_from_file(xlsx_filename, sheetname='Sheet1'):
+def get_clean_data_from_file(xlsx_filename, sheetname='Sheet1', by_id=False):
     if type(xlsx_filename) == BytesIO:
-        data = getDataFromFile(xlsx_filename, xlsx_filename.read(), sheetname)
+        data = getDataFromFile(xlsx_filename, xlsx_filename.read(), sheetname, by_id)
     else:
         with open(xlsx_filename, 'rb') as xlsxfile:
-            data = getDataFromFile(xlsx_filename, xlsxfile.read(), sheetname)
+            data = getDataFromFile(xlsx_filename, xlsxfile.read(), sheetname, by_id)
     return list(map(lambda row: excl_last_updated(row), data))
 
 
@@ -90,15 +95,58 @@ class TestExportFiles:
         xlsx_file_as_json = getDataFromFile(xlsx_file, xlsx_file.read(), 'Data1')
         assert len(xlsx_file_as_json) == 10
 
-    def test_exports_xlsx(self, client):
+    def test_exports_xlsx_file(self, client):
         route = url_for('exports.activities_xlsx', domestic_external="external")
         res = client.get(route)
         #with open('tests/artefacts/api/exports/activities_xlsx.xlsx', 'wb') as f:
         #    f.write(res.get_data())
-
         xlsx_saved = get_clean_data_from_file('tests/artefacts/api/exports/activities_xlsx.xlsx', 'Data1')
-
         f = BytesIO(res.get_data())
         xlsx_res = get_clean_data_from_file(f, 'Data1')
 
         assert xlsx_res == xlsx_saved
+
+    def test_export_template(self, client, admin, headers_admin):
+        organisation_id = qorganisations.get_organisation_by_name("African Development Bank").id
+        route = url_for('exports.export_donor_template',
+            reporting_organisation_id=organisation_id,
+            currency_code="USD",
+            template="disbursements",
+            headers="ID,Project code,Activity Title,2019 Q1 (D),Activity Status,Activity Dates (Start Date),Activity Dates (End Date),County")
+        res = client.get(route, headers=headers_admin)
+        assert res.status_code == 200
+        #with open('tests/artefacts/api/exports/export_donor_template.xlsx', 'wb') as f:
+        #    f.write(res.get_data())
+        xlsx_saved = get_clean_data_from_file('tests/artefacts/api/exports/export_donor_template.xlsx', 1, True)
+        f = BytesIO(res.get_data())
+        xlsx_res = get_clean_data_from_file(f, 1, True)
+
+        assert xlsx_res == xlsx_saved
+
+    def test_export_template_formatting(self, client, admin, headers_admin):
+        organisation_id = qorganisations.get_organisation_by_name("African Development Bank").id
+        route = url_for('exports.export_donor_template',
+            reporting_organisation_id=organisation_id,
+            currency_code="USD",
+            template="disbursements",
+            headers="ID,Project code,Activity Title,2019 Q1 (D),Activity Status,Activity Dates (Start Date),Activity Dates (End Date),County")
+        res = client.get(route, headers=headers_admin)
+        assert res.status_code == 200
+        f = BytesIO(res.get_data())
+        book = openpyxl.load_workbook(f)
+        sheet = book[book.sheetnames[1]]
+
+        # Check Activity Status validation
+        activity_status_validation = list(filter(lambda validation: str(validation.ranges)=='E2:E12',
+            sheet.data_validations.dataValidation))[0]
+        assert activity_status_validation.promptTitle == "Activity Status"
+        assert activity_status_validation.prompt == "Please select from the list"
+
+        # Check Number validation
+        number_validation = list(filter(lambda validation: 'D2:D12' in str(validation.ranges),
+            sheet.data_validations.dataValidation))[0]
+        assert number_validation.type == 'decimal'
+
+        # Check formatting
+        number_fill = sheet.cell(6,4).fill
+        assert number_fill.bgColor.value == "00FFFF00"

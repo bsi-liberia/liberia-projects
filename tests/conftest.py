@@ -30,7 +30,8 @@ def app():
         create_codes_codelists()
         import_responses()
         import_countries(u"en")
-        import_locations_from_file(os.path.join(basedir, "artefacts", "LR.zip"), u"LR")
+        # This is very slow
+        #import_locations_from_file(os.path.join(basedir, "artefacts", "LR.zip"), u"LR")
         import_roles()
 
         user_dict = app.config["USER"]
