@@ -174,7 +174,7 @@ def create_missing_forward_spends(from_date, to_date, activity_id):
 
     def filter_from_existing(required_period):
         return (required_period not in existing_periods)
-    new_periods = filter(filter_from_existing, required_periods)
+    new_periods = list(filter(filter_from_existing, required_periods))
     forward_spends = create_forward_spends_from_periods(new_periods)
     return forward_spends
 
