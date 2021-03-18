@@ -115,6 +115,14 @@ def filters_reporting_organisation():
     return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
 
 
+@blueprint.route("/api/organisations/search_similar/", methods=['POST'])
+def search_similar_organisations():
+    organisation_name = request.json["organisation_name"]
+    similar_organisations = qorganisations.get_similar_organisations(organisation_name)
+    return jsonify(
+        organisations=similar_organisations
+    )
+
 @blueprint.route("/api/user-results/")
 @jwt_required()
 @quser.permissions_required("view")
