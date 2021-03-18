@@ -31,7 +31,7 @@
             sort-by="gol_requested" :sort-desc="true">
             <template v-slot:thead-top="data">
               <b-tr>
-                <b-th colspan="5" class="text-center">Financial reporting for {{ fy_text }} only</b-th>
+                <b-th colspan="6" class="text-center">Financial reporting for {{ fy_text }} only</b-th>
               </b-tr>
             </template>
             <template v-slot:cell(title)="data">
@@ -66,6 +66,11 @@ export default {
         {
           key: 'ministry_name',
           label: 'Ministry',
+          sortable: true
+        },
+        {
+          key: 'sector_name',
+          label: 'Sector',
           sortable: true
         },
         {

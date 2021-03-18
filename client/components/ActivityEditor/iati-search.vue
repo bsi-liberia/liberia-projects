@@ -80,7 +80,10 @@
                 </div>
               </template>
               <template #cell(import)="data">
-                <b-form-radio v-model="selectedIATIIdentifier" name="selected-iati-identifier" :value="data.item.iati_identifier">Select activity</b-form-radio>
+                <b-form-radio v-model="selectedIATIIdentifier" name="selected-iati-identifier" :value="data.item.iati_identifier" v-if="data.item.country_data">Select activity</b-form-radio>
+                <b-badge variant="danger" pill v-else>
+                  <font-awesome-icon :icon="['fa', 'times-circle']" /> No financial amounts for Liberia
+                </b-badge>
               </template>
             </b-table>
           </template>
@@ -293,7 +296,8 @@ export default {
       iatiSelected: {
         title: null,
         iati_identifier: null,
-        finances: {}
+        finances: {},
+        country_data: false
       },
       selectedActivities: [],
       selectedActivitiesFields: [],

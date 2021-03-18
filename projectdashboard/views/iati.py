@@ -79,7 +79,9 @@ def api_iati_search():
             return {
                 'iati_identifier': activity.find("iati-identifier").text,
                 'title': title,
-                'description': description
+                'description': description,
+                'country_data': len(activity.xpath("//iati-activity[recipient-country/@code='LR' or \
+                    transaction/recipient-country/@code='LR']")) > 0
             }
         return {
             "results": list(map(lambda activity: clean_activity(activity), doc.xpath("//iati-activity")))
