@@ -129,6 +129,7 @@ def counterpart_funding():
             'id': activity.id,
             'title': activity.title,
             'reporting_org_name': activity.reporting_org.name,
+            'sector_name': ", ".join(list(map(lambda sector: sector.codelist_code.name, activity.classification_data.get('mtef-sector', {}).get('entries', [])))),
             'ministry_name': ", ".join(list(map(lambda ministry: ministry.codelist_code.name, activity.classification_data.get('aligned-ministry-agency', {}).get('entries', [])))),
             'gol_requested': activity._fy_counterpart_funding,
             'donor_planned': activity._fy_forwardspends
