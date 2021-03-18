@@ -339,6 +339,8 @@
 }
 </style>
 <script>
+
+import { saveAs } from 'file-saver'
 import { mapGetters } from 'vuex'
 import LineChart from '~/components/charts/line-chart'
 
