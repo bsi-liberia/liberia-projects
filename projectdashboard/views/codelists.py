@@ -72,6 +72,19 @@ def api_codelists_delete():
     else:
         return "ERROR"
 
+
+# Need to adjust these permissions
+@blueprint.route("/organisations/new/", methods=["POST"])
+@jwt_required()
+@quser.permissions_required("view")
+def api_codelists_new_organisation():
+    # FIXME check for admin status
+    result = qorganisations.create_organisation(request.json)
+    if result:
+        return jsonify(organisation = result.as_dict())
+    return "ERROR"
+
+
 @blueprint.route("/new/", methods=["POST"])
 @jwt_required()
 @quser.administrator_required
