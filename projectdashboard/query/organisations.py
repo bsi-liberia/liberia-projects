@@ -1,4 +1,5 @@
 import normality
+import difflib
 
 from projectdashboard import models
 from projectdashboard.extensions import db
@@ -29,6 +30,19 @@ def get_organisation_by_name(name):
     ).first()
     if org: return org
     return False
+
+def get_similar_organisations(organisation_name):
+    organisations = get_organisations()
+    organisation_names = list(map(lambda organisation: organisation.name, organisations))
+    organisation_names_order = difflib.get_close_matches(
+        organisation_name, organisation_names, 5, 0.5)
+    print(organisation_names_order)
+    return sorted([{
+        'id': organisation.id,
+        'name': organisation.name,
+        '_type': organisation._type,
+        'order': organisation_names_order.index(organisation.name)
+    } for organisation in organisations if organisation.name in organisation_names_order], key=lambda k: k['order'])
 
 def get_organisation_types():
     types = [('gol', 'Government of Liberia'),
