@@ -26,7 +26,7 @@
         </b-input>
       </b-form-group>
       <b-form-group
-        label="Budget Code"
+        label="GoL Organisation Code"
         label-cols-sm="3"
         description="Leave blank if unknown">
         <b-input v-model="newOrganisation.budget_code">
