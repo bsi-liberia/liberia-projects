@@ -22,7 +22,7 @@ export default {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: '#fff' },
+  loading: { color: '#fff', height: '5px' },
   /*
   ** Global CSS
   */
@@ -59,7 +59,7 @@ export default {
       solid: ['faCog', 'faTrashAlt', 'faPlus', 'faExclamationCircle',
        'faMagic', 'faClipboardList', 'faSave', 'faLock', 'faLockOpen',
        'faTrash', 'faCheckCircle', 'faTimesCircle', 'faQuestionCircle',
-       'faUpload', 'faDownload' , 'faEdit', 'faFilter'],
+       'faUpload', 'faDownload' , 'faEdit', 'faFilter', 'faLink', 'faSearch'],
       regular: ['faCheckCircle', 'faTimesCircle']
     }
   },
