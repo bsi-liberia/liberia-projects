@@ -10,11 +10,12 @@
             :value="activity.id" v-if="activity.id"></b-input>
           </b-form-group>
           <finances-input
+            v-if="activity.domestic_external=='external'"
             label="Donor project code" label-cols-sm="3"
             :transaction="activity" type="text" name="iati_identifier" id="iati_identifier"
             :value.sync="activity.iati_identifier" placeholder="If known"></finances-input>
           <finances-input
-            label="GoL budget code" label-cols-sm="3"
+            label="GoL project code" label-cols-sm="3"
             :transaction="activity" type="text" name="code" id="code"
             :value.sync="activity.code" placeholder="If known"></finances-input>
           <b-form-group
@@ -24,7 +25,7 @@
             :value="activity.updated_date" v-if="activity.updated_date"></b-input>
           </b-form-group>
         </b-col>
-        <b-col md="4" v-if="activity.id">
+        <b-col md="4" v-if="activity.id && activity.domestic_external=='external'">
           <IATISearch
             :activity="activity"
             :api_routes="api_routes" />
