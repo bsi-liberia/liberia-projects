@@ -112,6 +112,7 @@
                 target="_blank">
                 {{ data.item.title }}
               </nuxt-link>
+              <code v-if="data.item.iati_identifier">{{ data.item.iati_identifier }}</code>
             </template>
             <template #cell(selected)="data">
               <b-form-checkbox
