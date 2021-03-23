@@ -233,13 +233,14 @@ def closest_to_activity(activity_id):
     activity = get_activity(activity_id)
     activities = models.Activity.query.filter_by(
         reporting_org_id=activity.reporting_org_id
-    ).with_entities(models.Activity.id, models.Activity.title
+    ).with_entities(models.Activity.id, models.Activity.title, models.Activity.iati_identifier
     ).all()
     activity_titles = list(map(lambda activity: activity.title, activities))
     title_orders = difflib.get_close_matches(
         activity.title, activity_titles, len(activity_titles), 0)
     return sorted([{
         'id': activity.id,
+        'iati_identifier': activity.iati_identifier,
         'title': activity.title,
         'order': title_orders.index(activity.title),
         'selected': activity.id==activity_id
