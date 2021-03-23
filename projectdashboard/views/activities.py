@@ -230,10 +230,11 @@ def api_activity_summaries():
     def get_activity_summary(activity_id):
         activity = qactivity.get_activity(activity_id)
         f = dict([(field, getattr(activity, field)) for field in fields])
-        flen = dict([(field, len(getattr(activity, field))) for field in fields_len])
+        flen = dict([(field, "{} {}".format(len(getattr(activity, field)), field)) for field in fields_len])
         f.update(flen)
-        f['implementing_organisations'] = list(map(lambda org: org.as_dict(), activity.implementing_organisations))
-        f['funding_organisations'] = list(map(lambda org: org.as_dict(), activity.funding_organisations))
+        f['implementing_organisations'] = "; ".join(list(map(lambda org: org.name, activity.implementing_organisations)))
+        f['funding_organisations'] = "; ".join(list(map(lambda org: org.name, activity.funding_organisations)))
+        f['locations'] = "; ".join(list(map(lambda location: location.locations.name, activity.locations)))
         #f['classifications'] = dict(filter(lambda clsf: clsf[0]!='mtef-sector', activity.classification_data_dict.items()))
         return f
 
