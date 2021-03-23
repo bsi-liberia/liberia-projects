@@ -70,6 +70,8 @@ def update_organisation_response(data):
 
 
 def fwddata_query(current_previous="current"):
+    since = util.FY(current_previous).date("start").date()
+    until = util.FY(current_previous).date("end").date()
     return db.session.query(
             func.sum(models.ActivityForwardSpend.value).label("value"),
             models.Activity.reporting_org_id
@@ -78,9 +80,9 @@ def fwddata_query(current_previous="current"):
         ).filter(
             models.ActivityForwardSpend.value != 0
         ).filter(
-            models.ActivityForwardSpend.period_start_date >= util.FY(current_previous).date("start")
+            models.ActivityForwardSpend.period_start_date >= since
         ).filter(
-            models.ActivityForwardSpend.period_end_date <= util.FY(current_previous).date("end")
+            models.ActivityForwardSpend.period_end_date <= until
         ).group_by(models.Activity.reporting_org_id
         ).order_by(models.Activity.reporting_org_id.desc()
         ).all()
@@ -88,11 +90,11 @@ def fwddata_query(current_previous="current"):
 
 def fydata_query(fiscalyear_modifier, _transaction_types=[u"D", u"E"], current_previous="current"):
     if current_previous != "todate":
-        since = util.FY(current_previous).date("start")
-        until = util.FY(current_previous).date("end")
+        since = util.FY(current_previous).date("start").date()
+        until = util.FY(current_previous).date("end").date()
     else:
-        since = util.Last4Quarters().start()
-        until = util.Last4Quarters().end()
+        since = util.Last4Quarters().start().date()
+        until = util.Last4Quarters().end().date()
     return db.session.query(
             func.sum(models.ActivityFinances.transaction_value).label("value"),
             models.Activity.reporting_org_id,
