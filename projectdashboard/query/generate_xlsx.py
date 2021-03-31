@@ -338,9 +338,23 @@ def generate_xlsx_filtered(arguments={}):
     activities = qactivity.list_activities_by_filters(
         arguments)
     for activity in activities:
+        total_commitments = activity.total_commitments
+        total_disbursements = activity.total_disbursements
         for fundsource, fundsource_data in activity.disb_fund_sources.items():
             fund_source_code = fundsource_data['code']
             fund_source_name = fundsource_data['name']
+            fund_source_commitments = sum(map(lambda item: item['value'], activity.FY_commitments_dict_fund_sources[fundsource].values()))
+            fund_source_disbursements = sum(map(lambda item: item['value'], activity.FY_disbursements_dict_fund_sources[fundsource].values()))
+            # MTEF projections don't have fund sources. So we pro-rate their value out, ideally
+            # by commitments, alternatively by disbursements.
+            # This is a bit of an ugly hack and this whole function needs to be rewritten
+            # in the near future.
+            if (total_commitments is not None) and (total_commitments > 0):
+                pct = fund_source_commitments/total_commitments
+            elif (total_disbursements is not None) and (total_disbursements > 0):
+                pct = fund_source_disbursements/total_disbursements
+            else:
+                pct = 1
             activity_data = activity_to_json(activity, cl_lookups)
             activity_data.update(dict(map(lambda d: (d, 0.00), list(generate_disb_fys()))))
             activity_data["Fund Source"] = "{} - {}".format(fund_source_code,
@@ -348,10 +362,11 @@ def generate_xlsx_filtered(arguments={}):
             # Add Disbursements data
             if fundsource is not None and fundsource_data.get('finance_type'):
                 activity_data[u'Finance Type (Type of Assistance)'] = fundsource_data.get('finance_type')
+            if fundsource in activity.FY_commitments_dict_fund_sources:
+                activity_data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_commitments_dict_fund_sources[fundsource].items())))
             if fundsource in activity.FY_disbursements_dict_fund_sources:
                 activity_data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_disbursements_dict_fund_sources[fundsource].items())))
-            if fundsource in activity.FY_forward_spend_dict_fund_sources:
-                activity_data.update(dict(map(lambda d: (d[0], d[1]["value"]), activity.FY_forward_spend_dict_fund_sources[fundsource].items())))
+            activity_data.update(dict(map(lambda d: (d[0], d[1]["value"]*pct), activity.FY_forward_spend_dict_fund_sources[None].items())))
             writer.writerow(activity_data)
     writer.delete_first_sheet()
     return writer.save()
