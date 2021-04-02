@@ -390,9 +390,13 @@ def api_activities_results_design(activity_id):
 
 @blueprint.route("/<activity_id>/delete/", methods=['POST'])
 @jwt_required()
-@quser.administrator_required
 def activity_delete(activity_id):
-    result = qactivity.delete_activity(activity_id)
+    activity = qactivity.get_activity(activity_id)
+    if ((activity.domestic_external=='domestic') and
+        ('piu-desk-officer' in current_user.roles_list)) or getattr(current_user, "administrator"):
+        result = qactivity.delete_activity(activity_id)
+    else:
+        abort(403)
     if result:
         return jsonify({'msg': "Successfully deleted that activity"}), 200
     else:
