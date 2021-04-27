@@ -30,7 +30,7 @@ class TestManagement:
         res = self.client.get(route, headers=headers_admin)
         data = json.loads(res.data)
         assert len(data.keys()) == 5
-        assert len(data['orgs']) == 1
+        assert len(data['orgs']) == 2
 
 # TODO:
 # - test adding or editing activities data leads to
