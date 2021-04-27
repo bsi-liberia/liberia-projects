@@ -33,6 +33,8 @@ class TestActivity:
         data = json.loads(res.data)
         assert len(data['finances']) == 3
         assert len(data['finances']['disbursements']) == 1
+        #with open('tests/artefacts/api/activity_finances/api_activity_finances.json', 'w') as jsonfile:
+        #    json.dump(data, jsonfile)
         with open('tests/artefacts/api/activity_finances/api_activity_finances.json', 'r') as jsonfile:
             file_data = json.load(jsonfile)
         assert data == file_data
@@ -43,7 +45,7 @@ class TestActivity:
         res = self.client.get(route, headers=headers_admin)
         assert res.status_code == 200
         data = json.loads(res.data)
-        assert list(data['finances'].keys()) == ['disbursement']
+        assert list(data['finances'].keys()) == ['disbursement', 'forwardspend']
         assert list(data['fund_sources'].keys()) == ['null']
         #with open('tests/artefacts/api/activities/api_activities_finances_fund_sources_by_id.json', 'w') as jsonfile:
         #    json.dump(data, jsonfile)
