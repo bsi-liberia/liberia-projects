@@ -9,7 +9,7 @@ def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
 
     if file_contents:
         f = BytesIO(file_contents)
-    book = load_workbook(filename=f)
+    book = load_workbook(filename=f, read_only=True)
 
     def getData(book, sheetname, by_id, headers_row):
         if by_id:
@@ -17,14 +17,18 @@ def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
         else:
             sheet = book[sheetname]
 
-        headers = dict(map(lambda cell: (cell[0], cell[1].value), enumerate(sheet[headers_row])))
-
-        def item(row, col):
-            return headers[col-1], sheet.cell(row,col).value
-
-        out = [ dict(item(row,col) for col in range(1, sheet.max_column+1)) \
-            for row in range(headers_row+1, sheet.max_row+1) ]
-        return out
+        rows = sheet.rows
+        first_row = [cell.value for cell in next(rows)]
+        data = []
+        for row in rows:
+            record = {}
+            for key, cell in zip(first_row, row):
+                if cell.data_type == 's':
+                    record[key] = cell.value.strip()
+                else:
+                    record[key] = cell.value
+            data.append(record)
+        return data
     if sheetname == "all":
         data = []
         for _sheetname in book.sheetnames:
