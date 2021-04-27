@@ -106,7 +106,7 @@ def import_transactions(data, fiscal_year):
 
     data_by_project = defaultdict(list)
     for row in data:
-        row["project_key"] = row["project_code"].zfill(4)
+        row["project_key"] = str(int(row["project_code"])).zfill(4)
         data_by_project[row["project_key"]].append(row)
 
     updated_projects = 0
