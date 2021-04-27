@@ -8,12 +8,13 @@ from projectdashboard.extensions import db as _db
 from projectdashboard.query.user import addUser, deleteUser
 from projectdashboard.query.setup import create_codes_codelists, import_countries, import_responses, import_roles
 from werkzeug.datastructures import FileStorage
-from projectdashboard.query.generate_xlsx import xlsx_to_csv, import_xls
+from projectdashboard.query.generate_xlsx import xlsx_to_csv, import_xls, import_xls_mtef
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query.location import import_locations_from_file
 from flask_jwt_extended import (
     create_access_token
 )
+from flask_login import login_user
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -41,7 +42,7 @@ def app():
         admin = addUser(admin_dict)
         assert models.User.query.get(admin.id).username == admin_dict["username"]
 
-        import_test_data(admin.id)
+        import_test_data(app, admin)
         yield app
         _db.session.close()
         _db.session.remove()
@@ -64,23 +65,35 @@ def headers_user(app, user):
     }
 
 
-def import_test_data(user_id):
-    filename = os.path.join("tests", "artefacts", "testdata.xlsx")
-    with open(filename, "rb") as _file:
-        _fakeUpload = FileStorage(
-            stream=_file,
-            filename="testdata.xlsx")
-        data = xlsx_to_csv.getDataFromFile("testdata.xlsx", _file.read(), 0, True)
-        for row in data:
-            qactivity.create_activity_for_test(row, user_id)
-    with open(filename, "rb") as _file:
-        _fakeUpload = FileStorage(
-            stream=_file,
-            filename="testdata.xlsx")
-        result = import_xls(
-            input_file=_fakeUpload,
-            column_name='2019 Q1 (D)'
-        )
+def import_test_data(app, user):
+    client = app.test_client()
+    ctx = app.test_request_context()
+    ctx.push()
+    with client:
+        login_user(user)
+        filename = os.path.join("tests", "artefacts", "testdata.xlsx")
+        with open(filename, "rb") as _file:
+            _fakeUpload = FileStorage(
+                stream=_file,
+                filename="testdata.xlsx")
+            data = xlsx_to_csv.getDataFromFile("testdata.xlsx", _file.read(), 0, True)
+            for row in data:
+                qactivity.create_activity_for_test(row, user.id)
+        with open(filename, "rb") as _file:
+            _fakeUpload = FileStorage(
+                stream=_file,
+                filename="testdata.xlsx")
+            result = import_xls(
+                input_file=_fakeUpload,
+                column_name='2019 Q1 (D)'
+            )
+        with open(filename, "rb") as _file:
+            _fakeUpload = FileStorage(
+                stream=_file,
+                filename="testdata.xlsx")
+            result = import_xls_mtef(
+                input_file=_fakeUpload
+            )
 
 
 @pytest.fixture(scope='function')
