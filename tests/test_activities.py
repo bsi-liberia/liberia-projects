@@ -43,7 +43,7 @@ class TestActivities:
         res = self.client.get(url_for('activities.api_activities_country'),
             headers=headers_admin)
         assert res.status_code == 200
-        assert len(json.loads(res.data)["activities"]) == 10
+        assert len(json.loads(res.data)["activities"]) == 11
 
 
     def test_filters_api_works(self, admin, app):
