@@ -16,7 +16,7 @@ def first_or_only(list_or_dict):
 
 
 def make_transactions(activity, project_data, fiscal_year=None):
-    flash("""Updated {} (Project ID: {})""".format(activity.title, activity.id), "success")
+    print("""Updated {} (Project ID: {})""".format(activity.title, activity.id))
     for row in project_data:
         data = {
             "activity_id": activity.id,
@@ -106,7 +106,7 @@ def import_transactions(data, fiscal_year):
 
     data_by_project = defaultdict(list)
     for row in data:
-        row["project_key"] = row["project_code"].zfill(4)
+        row["project_key"] = str(row["project_code"]).zfill(4)
         data_by_project[row["project_key"]].append(row)
 
     updated_projects = 0

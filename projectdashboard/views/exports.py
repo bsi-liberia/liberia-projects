@@ -111,7 +111,7 @@ def import_template():
             on this page.""",
             'messages': result_messages}), 200)
         elif request.form.get('template_type') == 'disbursements':
-            fy_fq = util.previous_fy_fq() #FIXME request.form['fy_fq']
+            fy_fq = request.form.get('fy_fq', util.previous_fy_fq())
             # For each sheet: convert to dict
             # For each line in each sheet:
             # Process (financial data) import column
