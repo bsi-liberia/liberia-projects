@@ -16,7 +16,7 @@ def first_or_only(list_or_dict):
 
 
 def make_transactions(activity, project_data, fiscal_year=None):
-    flash("""Updated {} (Project ID: {})""".format(activity.title, activity.id), "success")
+    print("""Updated {} (Project ID: {})""".format(activity.title, activity.id))
     for row in project_data:
         data = {
             "activity_id": activity.id,
