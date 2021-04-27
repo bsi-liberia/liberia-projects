@@ -33,6 +33,7 @@ def tidy_amount(amount_value):
         return float(amount_value)
     if type(amount_value) == float:
         return amount_value
+    if amount_value is None: return 0.00
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
     if re.match(r'^-?\d*\.?\d*$', amount_value):  # 2000 or -2000
@@ -50,6 +51,7 @@ def clean_value(amount_value):
         return float(amount_value)
     if type(amount_value) == float:
         return amount_value
+    if amount_value is None: return 0
     if amount_value.strip() in ("", "-"): return 0
     return float(amount_value.strip())
 
@@ -93,16 +95,8 @@ def clean_string(_string):
 
 def update_activity_data(activity, existing_activity, row, codelists):
     updated = False
-    start_date = row[u"Activity Dates (Start Date)"].date()
-    end_date = row[u"Activity Dates (End Date)"].date()
 
-    # The older templates did not contain these columns, so we return here if these
-    # columns are not present, in order to avoid a key error
-    if ((row.get(u"Activity Status") == None) or
-        (row.get(u"Activity Dates (Start Date)") == None) or
-        (row.get(u"Activity Dates (End Date)") == None)):
-        return False
-    if existing_activity[u"Activity Title"] != clean_string(row[u"Activity Title"]):
+    if ("Activity Title" in row) and (existing_activity[u"Activity Title"] != clean_string(row[u"Activity Title"])):
         activity.title = clean_string(row[u"Activity Title"])
         updated = True
     if ("Activity Description" in row) and (existing_activity[u"Activity Description"] != clean_string(row[u"Activity Description"])):
@@ -115,16 +109,20 @@ def update_activity_data(activity, existing_activity, row, codelists):
         activity.organisations.append(qorganisations.make_organisation(
             clean_string(row[u"Implemented by"]), 4))
         updated = True
-    if existing_activity[u"Activity Status"] != row[u"Activity Status"]:
+    if ("Activity Status" in row) and (existing_activity[u"Activity Status"] != row[u"Activity Status"]):
         activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
         updated = True
-    if existing_activity[u"Activity Dates (Start Date)"] != start_date.isoformat():
-        activity.start_date = start_date
-        updated = True
-    if existing_activity[u"Activity Dates (End Date)"] != end_date.isoformat():
-        activity.end_date = end_date
-        updated = True
-    activity.forwardspends += qfinances.create_missing_forward_spends(start_date, end_date, activity.id)
+    if ("Activity Dates (Start Date)" in row):
+        start_date = row[u"Activity Dates (Start Date)"].date()
+        if (existing_activity["Activity Dates (Start Date)"] != start_date.isoformat()):
+            activity.start_date = start_date
+            updated = True
+    if ("Activity Dates (End Date)" in row):
+        end_date = row[u"Activity Dates (End Date)"].date()
+        if (existing_activity[u"Activity Dates (End Date)"] != end_date.isoformat()):
+            activity.end_date = end_date
+            updated = True
+    activity.forwardspends += qfinances.create_missing_forward_spends(activity.start_date, activity.end_date, activity.id)
     return updated
 
 def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
