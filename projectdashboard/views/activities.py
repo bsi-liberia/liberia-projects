@@ -392,8 +392,10 @@ def api_activities_results_design(activity_id):
 @jwt_required()
 def activity_delete(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if ((activity.domestic_external=='domestic') and
-        ('piu-desk-officer' in current_user.roles_list)) or getattr(current_user, "administrator"):
+    if (((activity.domestic_external=='domestic') and
+        ('piu-desk-officer' in current_user.roles_list)) or
+        (getattr(current_user, "administrator")) or
+        ('admin' in current_user.roles_list)):
         result = qactivity.delete_activity(activity_id)
     else:
         abort(403)
