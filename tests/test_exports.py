@@ -7,7 +7,11 @@ from projectdashboard.lib.xlsx_to_csv import getDataFromFile
 from projectdashboard.query import organisations as qorganisations
 import csv
 import json
+import os
 import openpyxl
+from werkzeug.datastructures import FileStorage
+from projectdashboard.query.generate_xlsx import xlsx_to_csv
+from projectdashboard.query import activity as qactivity
 
 @pytest.mark.usefixtures('client_class')
 class TestExports:
@@ -150,3 +154,30 @@ class TestExportFiles:
         # Check formatting
         number_fill = sheet.cell(6,4).fill
         assert number_fill.bgColor.value == "00FFFF00"
+
+    def test_zero_spend_activity(self, client, admin, headers_admin):
+        # Check there are 10 (external) activities
+        route = url_for('exports.activities_xlsx', domestic_external="external")
+        res = client.get(route)
+        f = BytesIO(res.get_data())
+        xlsx_res = get_clean_data_from_file(f, 0, True)
+        assert len(xlsx_res) == 10
+        # Add an activity with 0 spend
+        filename = os.path.join("tests", "artefacts", "testdata_0spend.xlsx")
+        with open(filename, "rb") as _file:
+            _fakeUpload = FileStorage(
+                stream=_file,
+                filename="testdata_0spend.xlsx")
+            data = xlsx_to_csv.getDataFromFile("testdata.xlsx", _file.read(), 0, True)
+            for row in data:
+                qactivity.create_activity_for_test(row, admin.id)
+        # Check there are now 11 (external) activities
+        route = url_for('exports.activities_xlsx', domestic_external="external")
+        res = client.get(route)
+        f = BytesIO(res.get_data())
+        xlsx_res = get_clean_data_from_file(f, 0, True)
+        assert len(xlsx_res) == 11
+        # Now delete that activity
+        route = url_for('activities.activity_delete', activity_id=12)
+        res = client.post(route, headers=headers_admin)
+        assert res.status_code == 200
