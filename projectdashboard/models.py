@@ -358,6 +358,18 @@ class Activity(db.Model):
             ).filter(ActivityFinances.activity_id==self.id
             ).all()
         total = sum(map(lambda ft: ft.sum_value, query))
+        if len(query) == 0:
+            return {
+                None: {
+                    "value": 0,
+                    "finance_type": {
+                        "110": "Grant",
+                        "410": "Loan",
+                    }.get(self.finance_type),
+                    "code": "",
+                    "name": ""
+                }
+            }
         return dict(map(lambda ft: (ft.fund_source_id, {
                 "value": int(round((ft.sum_value / total)*100)) if total > 0 else 0,
                 "finance_type": {
