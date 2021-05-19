@@ -380,6 +380,7 @@ class Activity(db.Model):
                 "name": ft.fund_source_name
             }), query))
 
+    # NB this can return a number or None, which is not so nice
     @hybrid_property
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
