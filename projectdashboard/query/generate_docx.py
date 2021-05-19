@@ -1,13 +1,201 @@
 from io import BytesIO
 from projectdashboard.lib import docx_helpers as docx
 from projectdashboard.query import activity as qactivity
+from projectdashboard.query import aggregates as qaggregates
+from projectdashboard.query import codelists as qcodelists
 from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
+from projectdashboard.extensions import db
+from projectdashboard import models
+
+import sqlalchemy as sa
+from sqlalchemy.sql import func
+from collections import defaultdict
+
+def make_sector_doc(sector_code):
+    sector_brief_file = BytesIO()
+    sector = qcodelists.get_code_by_id('mtef-sector', sector_code)
+    sector_totals = qaggregates.aggregate('reporting-org',
+        req_filters=[
+            models.CodelistCode.codelist_code=='mtef-sector',
+            models.CodelistCode.code==sector_code
+        ],
+        req_finances_joins=[
+            models.ActivityFinancesCodelistCode,
+            models.CodelistCode
+        ],
+        req_forwardspends_joins=[
+            models.ActivityCodelistCode,
+            models.CodelistCode
+        ]
+    )
+    filtered_current_fy = list(filter(lambda entry: entry.fiscal_year=='2020', sector_totals))
+
+    donors = {}
+    for item in filtered_current_fy:
+        if item.code not in donors:
+            donors[item.code] = {
+                'code': item.code,
+                'name': item.name,
+                'disbursements': 0.00,
+                'forwardspends': 0.00
+            }
+        if item.transaction_type == 'D':
+            donors[item.code]['disbursements'] = round(item.total_value/1000000)
+        if item.transaction_type == 'FS':
+            donors[item.code]['forwardspends'] = round(item.total_value/1000000)
+
+
+    ongoing_query = db.session.query(
+            func.sum(models.ActivityFinances.transaction_value).label("total_value")
+        ).join(models.Activity
+        ).join(models.ActivityFinancesCodelistCode
+        ).join(models.CodelistCode
+        ).filter(
+            models.ActivityFinances.transaction_type=='D',
+            models.Activity.activity_status==2,
+            models.CodelistCode.codelist_code == 'mtef-sector',
+            models.CodelistCode.code == sector_code
+        ).scalar()
+    ongoing = round(ongoing_query/1000000)
+
+    filtered_current_fy_disb = list(filter(lambda item: item.transaction_type=='D', filtered_current_fy))
+    current_fy_disb = round(sum(map(lambda item: item.total_value, filtered_current_fy_disb))/1000000)
+
+    filtered_current_fy_fs = list(filter(lambda item: item.transaction_type=='FS', filtered_current_fy))
+    current_fy_fs = round(sum(map(lambda item: item.total_value, filtered_current_fy_fs))/1000000)
+
+    filtered_cumulative_d = list(filter(lambda item: item.transaction_type=='D', sector_totals))
+    cumulative_d = round(sum(map(lambda item: item.total_value, filtered_cumulative_d))/1000000)
+
+
+    document = docx.Document("projectdashboard/lib/docx/template.docx")
+    document.add_heading('{} Sector Brief'.format(sector.name), 1)
+    document.add_heading("General Information", 2)
+
+    # Sector donors
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Sector donors: ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes current fiscal year projected and actual disbursement information for donors operating in the sector (FY 2020/2021) July 1 2020 to June 30, 2021")
+    font = run.font
+    font.italic = True
+    sector_donors = [(
+        donor['name'],
+        "USD {:,}m".format(donor['forwardspends']),
+        "USD {:,}m".format(donor['disbursements'])
+        ) for donor in donors.values()]
+    docx.rows_to_table(sector_donors, document, ['Donor', 'Amount Projected', 'Amount Disbursed'])
+
+    # Sector portfolio value
+    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Sector portfolio value: ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes cumulative financial information about the sector")
+    font = run.font
+    font.italic = True
+    sector_portfolio = [(
+        "",
+        "USD {:,}m".format(ongoing),
+        "",
+        "",
+        "USD {:,}m".format(current_fy_disb),
+        "USD {:,}m".format(current_fy_fs),
+        "USD {:,}m".format(cumulative_d))
+    ]
+    docx.rows_to_table(sector_portfolio, document, ['Total PAPD Financing Cost', 'Total value of all ongoing projects', 'GOL budget allocation', 'PAPD financing Gap', 'Current Fiscal year projection', 'Current fiscal year disbursement', 'Cumulative Disbursement from FY12/13'])
+
+    # Sector thematic
+    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Key Sector Thematic Areas (PAPD): ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes area of focus in the PAPD")
+    font = run.font
+    font.italic = True
+    sector_thematic = [
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ]
+    docx.rows_to_table(sector_thematic, document, ['Thematic area', 'Comment'])
+
+    # Sector deliverables
+    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Key Expected deliverables: ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes a summary of key expected deliverables ")
+    font = run.font
+    font.italic = True
+    sector_deliverables = [
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ]
+    docx.rows_to_table(sector_deliverables, document, ['Key expected deliverable', 'Comment'])
+
+    # Sector deliverables
+    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Key Results Achieved: ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes a summary of key results achieved")
+    font = run.font
+    font.italic = True
+    results_achieved = [
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ]
+    docx.rows_to_table(results_achieved, document, ['Results achieved', 'Comment'])
+
+    # Sector thematic gap
+    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Sector thematic gap: ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes PAPD thematic areas still requiring funding")
+    font = run.font
+    font.italic = True
+    thematic_gap = [
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ]
+    docx.rows_to_table(thematic_gap, document, ['Thematic area', 'Comment'])
+
+    # Issues and Challenges:
+    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run("Issues and Challenges: ")
+    font = run.font
+    font.bold = True
+    run = paragraph.add_run("Includes a summary of key issues and challenges requiring action")
+    font = run.font
+    font.italic = True
+    issues_challenges = [
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ]
+    docx.rows_to_table(issues_challenges, document, ['Issues/challenges', 'Status'])
+
+    # Save
+    document.save(sector_brief_file)
+    return sector_brief_file
 
 def make_doc(activity_id):
     project_brief_file = BytesIO()
     codelists = get_codelists_lookups()
     activity = qactivity.get_activity(activity_id)
-    document = docx.create_document()
+    document = docx.Document("projectdashboard/lib/docx/template.docx")
     document.add_heading(activity.title, 1)
     document.add_heading("General Information", 2)
     descriptive_data = [
