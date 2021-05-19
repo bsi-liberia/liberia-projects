@@ -10,7 +10,15 @@ from projectdashboard.extensions import db
 def get_code_by_name(codelist, name):
     code = models.CodelistCode.query.filter_by(
         codelist_code = codelist,
-    	name = name
+        name = name
+    ).first()
+    if code: return code
+    return False
+
+def get_code_by_id(codelist, code):
+    code = models.CodelistCode.query.filter_by(
+        codelist_code = codelist,
+        code = code
     ).first()
     if code: return code
     return False
@@ -36,7 +44,7 @@ def create_code(data):
 def update_attr(data):
     codelistcode = models.CodelistCode.query.filter_by(
         id = data['id'],
-    	codelist_code = data["codelist_code"]
+        codelist_code = data["codelist_code"]
     ).first()
     setattr(codelistcode, data['attr'], data['value'])
     db.session.add(codelistcode)
