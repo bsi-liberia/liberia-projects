@@ -12,6 +12,11 @@
             <b-nav-item :to="{name: 'index'}" exact-active-class="active">Home
             </b-nav-item>
             <b-nav-item  :to="{name: 'activities'}" active-class="active" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">Activities</b-nav-item>
+            <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
+              <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
+                {{ sector.text }}
+              </b-dropdown-item>
+            </b-nav-item-dropdown>
             <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
               <b-nav-item-dropdown text="Reports" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
                 <template v-if="['domestic', 'both'].includes(loggedInUser.permissions_dict.edit) || loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('admin')">
@@ -121,7 +126,19 @@ export default {
   data() {
     return {
       title: config.head.title,
-      description: config.description
+      description: config.description,
+      sectors: [
+        {'code': '01', 'text': 'PUBLIC ADMINISTRATION'},
+        {'code': '02', 'text': 'MUNICIPAL GOVERNMENT'},
+        {'code': '03', 'text': 'TRANSPARENCY AND ACCOUNTABILITY'},
+        {'code': '04', 'text': 'SECURITY AND RULE OF LAW'},
+        {'code': '05', 'text': 'HEALTH'},
+        {'code': '06', 'text': 'SOCIAL DEVELOPMENT SERVICES'},
+        {'code': '07', 'text': 'EDUCATION'},
+        {'code': '08', 'text': 'ENERGY AND ENVIRONMENT'},
+        {'code': '09', 'text': 'AGRICULTURE'},
+        {'code': '10', 'text': 'INFRASTRACTURE AND BASIC SERVICES'},
+        {'code': '11', 'text': 'INDUSTRY AND COMMERCE'}]
     }
   },
   computed: {
