@@ -41,7 +41,11 @@ def import_locations():
         flash("Locations for that country were not imported, because they have already been imported!", "danger")
     return redirect(url_for("codelists.codelists_management"))
 """
-
+@blueprint.route("/mtef-sector/<sector_id>.json")
+@jwt_required(optional=True)
+def api_sector(sector_id):
+    sector = qcodelists.get_code_by_id('mtef-sector', sector_id)
+    return jsonify(sector=sector.as_dict())
 
 
 @blueprint.route("/update/", methods=["POST"])
