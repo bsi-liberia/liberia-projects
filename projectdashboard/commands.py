@@ -51,31 +51,23 @@ def update_iati():
 @with_appcontext
 def import_currencies_from_file():
     """Import currency data"""
-    from query import exchangerates as qexchangerates
+    from .query import exchangerates as qexchangerates
     qexchangerates.import_exchange_rates_from_file()
 
 
 @click.command()
-@click.option('-f', '--full-download', required=False, default=True)
-@click.option('-s', '--since-date', required=False, default=None)
 @with_appcontext
-def import_currencies_from_url(full_download, since_date):
+def import_currencies_from_url():
     """Import currency data from URL"""
-    from query import exchangerates as qexchangerates
-    import datetime
-    if full_download != True:
-        full_download = False
-        if since_date == None:
-            yesterday = datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
-            since_date = yesterday.isoformat()
-    qexchangerates.import_exchange_rates_from_url(full_download, since_date)
+    from .query import exchangerates as qexchangerates
+    qexchangerates.import_exchange_rates_from_url()
 
 
 @click.command()
 @with_appcontext
 def delete_currencies():
     """Delete currency data"""
-    from query import exchangerates as qexchangerates
+    from .query import exchangerates as qexchangerates
     qexchangerates.delete_existing_exchange_rates()
     print("Deleted all existing currencies.")
 
@@ -86,7 +78,7 @@ def delete_currencies():
 @with_appcontext
 def test_closest_date(date, currency):
     """ Import currency data"""
-    from query import exchangerates as qexchangerates
+    from .query import exchangerates as qexchangerates
     from lib import util
     date = util.isostring_date(date)
     print(qexchangerates.closest_exchange_rate(date, currency))
