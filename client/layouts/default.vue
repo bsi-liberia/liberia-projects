@@ -12,11 +12,13 @@
             <b-nav-item :to="{name: 'index'}" exact-active-class="active">Home
             </b-nav-item>
             <b-nav-item  :to="{name: 'activities'}" active-class="active" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">Activities</b-nav-item>
-            <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
-              <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
-                {{ sector.text }}
-              </b-dropdown-item>
-            </b-nav-item-dropdown>
+            <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
+              <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
+                <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
+                  {{ sector.text }}
+                </b-dropdown-item>
+              </b-nav-item-dropdown>
+            </template>
             <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
               <b-nav-item-dropdown text="Reports" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
                 <template v-if="['domestic', 'both'].includes(loggedInUser.permissions_dict.edit) || loggedInUser.roles_list.includes('management') || loggedInUser.roles_list.includes('admin')">
