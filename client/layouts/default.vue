@@ -12,7 +12,7 @@
             <b-nav-item :to="{name: 'index'}" exact-active-class="active">Home
             </b-nav-item>
             <b-nav-item  :to="{name: 'activities'}" active-class="active" v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">Activities</b-nav-item>
-            <template v-if="['domestic', 'external', 'both'].includes(loggedInUser.permissions_dict.view)">
+            <template v-if="isAuthenticated">
               <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
                 <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
                   {{ sector.text }}
