@@ -33,6 +33,35 @@ def set_activity_iati_preferences(activity, iati_options):
     return preferences
 
 
+def update_imported_data():
+    activities = models.Activity.query.join(models.ActivityIATIPreference).all()
+    for activity in activities:
+        import_options = {
+            'commitments': 'dashboard',
+            'disbursement': 'dashboard',
+            'forwardspend': 'dashboard',
+        }
+        for iati_preference in activity.iati_preferences:
+            import_options[iati_preference.field] = 'IATI'
+        print("Import options are {}".format(import_options))
+
+        print("Updating data for activity ID {} and IATI Identifier {}".format(
+            activity.id,
+            activity.iati_identifier))
+        before_count_transactions = len(activity.finances)
+        before_sum_disbursements = round(activity.total_disbursements)
+        import_data(activity_id=activity.id,
+            iati_identifier=activity.iati_identifier,
+            activity_ids=[activity.id],
+            import_options=import_options,
+            activities_fields_options={})
+        after_count_transactions = len(activity.finances)
+        after_sum_disbursements = round(activity.total_disbursements)
+        print("There were {} transactions before and {} transactions afterwards".format(
+            before_count_transactions, after_count_transactions))
+        print("There were USD {} disbursements before and USD {} disbursements afterwards".format(
+            before_sum_disbursements, after_sum_disbursements))
+
 
 def import_data(activity_id, iati_identifier, activity_ids, import_options, activities_fields_options):
     """
