@@ -142,7 +142,7 @@ export default {
   data() {
     return {
       isBusy: true,
-      selectedFY: '2019',
+      selectedFY: '2020',
       fyOptions: [],
       selectedPlannedActualDisbursements: 'Disbursements',
       plannedActualDisbursementsStacked: true,

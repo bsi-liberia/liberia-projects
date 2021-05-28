@@ -20,6 +20,8 @@ from projectdashboard.query import exchangerates as qexchangerates
 from projectdashboard.query import organisations as qorganisations
 from projectdashboard.query import generate_csv as qgenerate_csv
 from projectdashboard.query import user as quser
+from projectdashboard.query import aggregates as qaggregates
+
 from projectdashboard.lib import util, spreadsheet_headers
 from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
 from projectdashboard.lib.util import MONTHS_QUARTERS
@@ -203,56 +205,7 @@ def api_sectors():
 @blueprint.route("/api/sectors_C_D.json")
 @jwt_required(optional=True)
 def api_sectors_C_D():
-    query = db.session.query(
-        func.sum(models.ActivityFinances.transaction_value).label("total_value"),
-        models.ActivityFinances.transaction_type,
-        models.CodelistCode.code,
-        models.CodelistCode.name,
-        models.Activity.domestic_external,
-        func.strftime('%Y', func.date(models.ActivityFinances.transaction_date, 'start of month', '-6 month')).label("fiscal_year")
-    ).join(
-        models.Activity,
-        models.ActivityFinancesCodelistCode,
-        models.CodelistCode
-    ).filter(
-        models.CodelistCode.codelist_code == u"mtef-sector",
-        models.CodelistCode.name != u"",
-        models.Activity.domestic_external == 'external'
-    ).group_by(
-        models.CodelistCode.name,
-        models.CodelistCode.code,
-        models.ActivityFinances.transaction_type,
-        models.Activity.domestic_external,
-        "fiscal_year"
-    )
-    query = qactivity.filter_activities_for_permissions(query)
-    sector_totals = query.all()
-
-    fy_query = db.session.query(
-        func.sum(models.ActivityForwardSpend.value).label("total_value"),
-        sa.sql.expression.literal("FS").label("transaction_type"),
-        models.CodelistCode.code,
-        models.CodelistCode.name,
-        models.Activity.domestic_external,
-        func.strftime('%Y', func.date(models.ActivityForwardSpend.period_start_date, 'start of month', '-6 month')).label("fiscal_year")
-    ).join(
-        models.Activity,
-        models.ActivityCodelistCode,
-        models.CodelistCode
-    ).filter(
-        models.CodelistCode.codelist_code == u"mtef-sector",
-        models.CodelistCode.name != u"",
-        models.Activity.domestic_external == 'external'
-    ).group_by(
-        models.CodelistCode.name,
-        models.CodelistCode.code,
-        "transaction_type",
-        models.Activity.domestic_external,
-        "fiscal_year"
-    )
-    fy_query = qactivity.filter_activities_for_permissions(fy_query)
-    fy_sector_totals = fy_query.all()
-
+    sector_totals = qaggregates.aggregate("mtef-sector")
 
     def append_path(root, paths):
         if paths:
@@ -264,6 +217,41 @@ def api_sectors_C_D():
             sector["fy"] = paths.fiscal_year
     root = {}
     for s in sector_totals: append_path(root, s)
-    for s in fy_sector_totals: append_path(root, s)
     return jsonify(sectors = list(root.values()))
 
+
+@blueprint.route("/api/aggregates.json")
+@jwt_required(optional=True)
+def api_aggregates():
+    dimension = request.args.get("dimension")
+    if dimension not in ['mtef-sector', 'reporting-org', 'papd-pillar', 'sdg-goals']: abort(405)
+    if request.args.get("filter") == 'mtef-sector':
+        filter_value = request.args.get("filter-value")
+        sector_totals = qaggregates.aggregate(dimension,
+            req_filters=[
+                models.CodelistCode.codelist_code=='mtef-sector',
+                models.CodelistCode.code==filter_value
+            ],
+            req_finances_joins=[
+                models.ActivityFinancesCodelistCode,
+                models.CodelistCode
+            ],
+            req_forwardspends_joins=[
+                models.ActivityCodelistCode,
+                models.CodelistCode
+            ]
+        )
+    else:
+        sector_totals = qaggregates.aggregate(dimension)
+
+    def append_path(root, paths):
+        if paths:
+            sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {'Commitments': 0.0, 'Disbursements': 0.0, 'Allotments': 0.0, 'Disbursement Projection': 0.0})
+            sector[{"C": "Commitments", "D": "Disbursements", "99-A": "Allotments", "FS": "Disbursement Projection"}[paths.transaction_type]] = paths.total_value
+            sector["name"] = paths.name
+            sector["code"] = str(paths.code)
+            sector["domestic_external"] = paths.domestic_external
+            sector["fy"] = paths.fiscal_year
+    root = {}
+    for s in sector_totals: append_path(root, s)
+    return jsonify(sectors = list(root.values()))

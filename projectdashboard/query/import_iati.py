@@ -19,7 +19,7 @@ from collections import namedtuple
 import exchangerates
 
 
-DATASTORE_URL = "http://datastore.iatistandard.org/api/1/access/activity.xml?iati-identifier={}"
+DATASTORE_URL = "https://datastore.codeforiati.org/api/1/access/activity.xml?iati-identifier={}"
 DPORTAL_URL = "http://d-portal.org/q.xml?aid={}"
 DSV1_IATI_IDENTIFIER_URL = "https://datastore.codeforiati.org/api/1/access/activity.xml?iati-identifier={}&limit=10"
 
@@ -32,6 +32,35 @@ def set_activity_iati_preferences(activity, iati_options):
     preferences += [models.ActivityIATIPreference(field) for field in iati_options if field not in preferences_found]
     return preferences
 
+
+def update_imported_data():
+    activities = models.Activity.query.join(models.ActivityIATIPreference).all()
+    for activity in activities:
+        import_options = {
+            'commitments': 'dashboard',
+            'disbursement': 'dashboard',
+            'forwardspend': 'dashboard',
+        }
+        for iati_preference in activity.iati_preferences:
+            import_options[iati_preference.field] = 'IATI'
+        print("Import options are {}".format(import_options))
+
+        print("Updating data for activity ID {} and IATI Identifier {}".format(
+            activity.id,
+            activity.iati_identifier))
+        before_count_transactions = len(activity.finances)
+        before_sum_disbursements = round(activity.total_disbursements)
+        import_data(activity_id=activity.id,
+            iati_identifier=activity.iati_identifier,
+            activity_ids=[activity.id],
+            import_options=import_options,
+            activities_fields_options={})
+        after_count_transactions = len(activity.finances)
+        after_sum_disbursements = round(activity.total_disbursements)
+        print("There were {} transactions before and {} transactions afterwards".format(
+            before_count_transactions, after_count_transactions))
+        print("There were USD {} disbursements before and USD {} disbursements afterwards".format(
+            before_sum_disbursements, after_sum_disbursements))
 
 
 def import_data(activity_id, iati_identifier, activity_ids, import_options, activities_fields_options):
@@ -370,8 +399,8 @@ def process_results(iati_results, activity_results, activity_xml):
             else:
                 i = models.ActivityResultIndicator()
                 i.indicator_title = unicode(indicator.find("title/narrative").text)
-                i.baseline_year = datetime.date(year=int(indicator.find("baseline").get("year")), month=1, day=1)
-                i.baseline_value = unicode(indicator.find("baseline").get("value"))
+                i.baseline_year = datetime.date(year=int(indicator.find("baseline").get("year")), month=1, day=1) if indicator.find("baseline") else None
+                i.baseline_value = unicode(indicator.find("baseline").get("value")) if indicator.find("baseline") else None
                 i.measurement_type = {
                     "1": u"Number",
                     "2": u"Percentage",
@@ -396,19 +425,19 @@ def process_activity(doc, activity, activity_code):
         code = activity.code
     iati_documents = doc.xpath("//iati-activity[iati-identifier='{}']/document-link".format(code))
     print("Found {} documents for activity {} with project code {}".format(len(iati_documents), activity.id, code))
-    activity.documents = process_documents(iati_documents, activity.documents)
+    activity.documents = process_documents(iati_documents, [])
 
     iati_results = doc.xpath("//iati-activity[iati-identifier='{}']/result".format(code))
     print("Found {} results for activity {} with project code {}".format(len(iati_results), activity.id, code))
-    activity.results = process_results(iati_results, activity.results, doc.xpath("//iati-activity[iati-identifier='{}']".format(code))[0])
+    activity.results = process_results(iati_results, [], doc.xpath("//iati-activity[iati-identifier='{}']".format(code))[0])
 
-    iati_transactions = doc.xpath("//iati-activity[iati-identifier='{}']/transaction".format(code))
-    print("Found {} transactions for activity {} with project code {}".format(len(iati_transactions), activity.id, code))
+    #iati_transactions = doc.xpath("//iati-activity[iati-identifier='{}']/transaction".format(code))
+    #print("Found {} transactions for activity {} with project code {}".format(len(iati_transactions), activity.id, code))
 
-    for activity_transaction in activity.finances:
-        db.session.delete(activity_transaction)
-    db.session.commit()
-    activity.finances = process_transactions(iati_transactions, activity.finances, doc.xpath("//iati-activity[iati-identifier='{}']".format(code))[0], activity)
+    #for activity_transaction in activity.finances:
+    #    db.session.delete(activity_transaction)
+    #db.session.commit()
+    #activity.finances = process_transactions(iati_transactions, activity.finances, doc.xpath("//iati-activity[iati-identifier='{}']".format(code))[0], activity)
 
     db.session.add(activity)
     return len(iati_documents)

@@ -37,6 +37,14 @@ def export_project_brief(activity_id):
     return Response(brief, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
+@blueprint.route("/api/sector-brief/<sector_id>.docx")
+@jwt_required()
+def export_sector_brief(sector_id):
+    brief = qgenerate_docx.make_sector_doc(sector_id)
+    brief.seek(0)
+    return Response(brief, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
 @blueprint.route("/api/project-brief/donor/<reporting_org_id>.zip")
 @jwt_required()
 def export_project_brief_donor(reporting_org_id):

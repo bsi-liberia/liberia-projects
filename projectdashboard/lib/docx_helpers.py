@@ -71,7 +71,7 @@ class RowsTableDoc(object):
 
         self.table = self.document.add_table(rows=0, cols=row_cols)
         self.table.autofit=True
-        self.table.style = 'Table Grid'
+        self.table.style = 'Grid Table 4 - Accent 11'
         self.rowspans = {}
 
         if headers:
