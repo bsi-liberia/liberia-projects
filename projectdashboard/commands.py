@@ -41,6 +41,14 @@ def import_psip():
 
 @click.command()
 @with_appcontext
+def update_iati():
+    """Update activities linked to IATI"""
+    from .query import import_iati as qimport_iati
+    qimport_iati.update_imported_data()
+
+
+@click.command()
+@with_appcontext
 def import_currencies_from_file():
     """Import currency data"""
     from query import exchangerates as qexchangerates
