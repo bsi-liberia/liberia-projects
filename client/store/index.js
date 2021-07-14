@@ -14,13 +14,17 @@ export const state = () => ({
         "organisations": {},
         "view": "none"
     }
-  }
+  },
+  sectors: [],
 })
 
 export const mutations = {
   setUnauthenticatedUserDefaults(state, data) {
     state.unathenticatedUserDefaults = data
-  }
+  },
+  setMtefSectors(state, data) {
+    state.sectors = data.codelists.filter((sector) => {return sector.name != ''})
+  },
 }
 
 export const actions = {
@@ -28,6 +32,9 @@ export const actions = {
     const userData = await $axios
       .$get(`unauthenticated_user/`)
     commit('setUnauthenticatedUserDefaults', userData.user)
+    const mtefSectors = await $axios
+      .$get(`codelists/mtef-sector/`)
+    commit('setMtefSectors', mtefSectors)
   }
 }
 
