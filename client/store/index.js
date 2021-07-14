@@ -16,6 +16,7 @@ export const state = () => ({
     }
   },
   sectors: [],
+  donors: [],
 })
 
 export const mutations = {
@@ -24,6 +25,9 @@ export const mutations = {
   },
   setMtefSectors(state, data) {
     state.sectors = data.codelists.filter((sector) => {return sector.name != ''})
+  },
+  setDonors(state, data) {
+    state.donors = data.organisations.filter((donor) => {return donor.name != ''})
   },
 }
 
@@ -35,6 +39,9 @@ export const actions = {
     const mtefSectors = await $axios
       .$get(`codelists/mtef-sector/`)
     commit('setMtefSectors', mtefSectors)
+    const donors = await $axios
+      .$get(`codelists/organisations/donor/`)
+    commit('setDonors', donors)
   }
 }
 
