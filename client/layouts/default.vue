@@ -15,7 +15,7 @@
             <template v-if="isAuthenticated">
               <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
                 <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
-                  {{ sector.text }}
+                  {{ sector.name }}
                 </b-dropdown-item>
               </b-nav-item-dropdown>
             </template>
@@ -105,7 +105,7 @@
 }
 </style>
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 import config from '../nuxt.config'
 
 export default {
@@ -113,18 +113,6 @@ export default {
     return {
       title: config.head.title,
       description: config.description,
-      sectors: [
-        {'code': '01', 'text': 'PUBLIC ADMINISTRATION'},
-        {'code': '02', 'text': 'MUNICIPAL GOVERNMENT'},
-        {'code': '03', 'text': 'TRANSPARENCY AND ACCOUNTABILITY'},
-        {'code': '04', 'text': 'SECURITY AND RULE OF LAW'},
-        {'code': '05', 'text': 'HEALTH'},
-        {'code': '06', 'text': 'SOCIAL DEVELOPMENT SERVICES'},
-        {'code': '07', 'text': 'EDUCATION'},
-        {'code': '08', 'text': 'ENERGY AND ENVIRONMENT'},
-        {'code': '09', 'text': 'AGRICULTURE'},
-        {'code': '10', 'text': 'INFRASTRACTURE AND BASIC SERVICES'},
-        {'code': '11', 'text': 'INDUSTRY AND COMMERCE'}]
     }
   },
   computed: {
@@ -134,7 +122,8 @@ export default {
       }
       return 'margin-top: 20px; margin-bottom: 30px;';
     },
-    ...mapGetters(['isAuthenticated', 'loggedInUser'])
+    ...mapGetters(['isAuthenticated', 'loggedInUser']),
+    ...mapState(['sectors'])
   },
   methods: {
     async logout() {
