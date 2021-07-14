@@ -10,6 +10,17 @@ def get_organisations():
         models.Organisation.name
     ).all()
 
+
+def get_organisation_types():
+    return db.session.query(models.Organisation._type
+        ).distinct().all()
+
+
+def get_organisations_by_type(organisation_type):
+    return models.Organisation.query.filter_by(
+        _type=organisation_type
+    ).order_by(models.Organisation.name).all()
+
 def get_organisation_by_id(id):
     org = models.Organisation.query.filter_by(
     	id = id
