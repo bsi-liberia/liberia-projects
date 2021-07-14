@@ -18,6 +18,13 @@
                   {{ sector.name }}
                 </b-dropdown-item>
               </b-nav-item-dropdown>
+              <b-nav-item-dropdown text="Donors" active-class="active" :class="this.$route.name=='donors-id' ?'active' : ''">
+                <div class="scrollable-menu">
+                  <b-dropdown-item :to="{name: 'donors-id', params: { id: donor.id }}" v-for="donor in donors" :key="donor.id" active-class="active">
+                    {{ donor.name }}
+                  </b-dropdown-item>
+                </div>
+              </b-nav-item-dropdown>
             </template>
             <template v-if="loggedInUser.new_permissions_list.includes('reports')">
               <b-nav-item-dropdown text="Reports">
@@ -80,6 +87,21 @@
 </template>
 
 <style>
+@media (min-width: 768px) {
+  .scrollable-menu {
+      height: auto;
+      max-height: calc(100vh - 80px);
+      overflow-x: hidden;
+  }
+}
+
+@media (max-width: 767px) {
+  .scrollable-menu {
+    height: auto;
+    max-height: calc(100vh - 260px);
+    overflow-x: hidden;
+  }
+}
 .number {
   text-align: right;
 }
@@ -123,7 +145,7 @@ export default {
       return 'margin-top: 20px; margin-bottom: 30px;';
     },
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
-    ...mapState(['sectors'])
+    ...mapState(['sectors', 'donors'])
   },
   methods: {
     async logout() {
