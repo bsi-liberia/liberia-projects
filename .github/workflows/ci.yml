@@ -23,3 +23,5 @@ jobs:
         pip install -r requirements_dev.txt
     - name: Run tests
       run: pytest
+      env:
+        MORPHIO_API_KEY: ${{ secrets.MORPHIO_API_KEY }}
