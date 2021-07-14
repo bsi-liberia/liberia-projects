@@ -9,17 +9,17 @@
       </b-row>
     </template>
     <template v-else>
-      <LineChart
+      <BarChart
         :data="chartData"
-        :options="lineChartOptions"
-        class="line-chart"
+        :options="barChartOptions"
+        class="bar-chart"
         v-if="isBusy==false"
-        ></LineChart>
+        ></BarChart>
     </template>
   </div>
 </template>
 <style scoped>
-.line-chart {
+.bar-chart {
   width: 100%;
   height: 400px;
 }
@@ -28,20 +28,21 @@
 }
 </style>
 <script>
-import LineChart from '~/components/charts/line-chart'
+import BarChart from '~/components/charts/bar-chart'
 
 export default {
   data() {
     return {
       isBusy: true,
       data: [],
+      valueField: "Disbursements",
       labelField: "Sector",
       valueLabel: "Amount (USD mn)"
     }
   },
-  props: ['fyOptions', 'valueField', 'stacked', 'dimension', 'agg-filter', 'agg-filter-value'],
+  props: ['selected-fy', 'dimension', 'agg-filter', 'agg-filter-value'],
   components: {
-    LineChart
+    BarChart
   },
   mounted: function() {
     this.loadData()
@@ -49,19 +50,20 @@ export default {
   watch: {
   },
   computed: {
-    lineChartOptions() {
+    barChartOptions(){
       return {
         maintainAspectRatio: false,
         tooltips: {
           callbacks: {
             title: ((tooltipItem, data) => {
-              return data.datasets[tooltipItem[0].datasetIndex].label
-            }),
-            footer: ((tooltipItem, data) => {
               return this.chartData.labels[tooltipItem[0].index]
             }),
             label: ((tooltipItem, data) => {
-              var label = this.valueLabel + ': ' || '';
+              var label = this.valueLabel || '';
+
+              if (label) {
+                  label += ': ';
+              }
               label += tooltipItem.yLabel.toLocaleString(undefined, {
                 maximumFractionDigits: 1,
                 minimumFractionDigits: 1
@@ -73,7 +75,6 @@ export default {
         scales: {
           yAxes: [
             {
-              stacked: this.stacked,
               ticks: {
                 beginAtZero: true,
                 callback: function(tick) {
@@ -94,6 +95,7 @@ export default {
               ticks: {
                 callback: function(tick) {
                   const characterLimit = 20
+                  if (tick == undefined) { return "UNDEFINED" }
                   if (tick.length >= characterLimit) {
                     return (
                       tick
@@ -110,66 +112,61 @@ export default {
         }
       }
     },
-    years() {
-      return this.fyOptions.filter(option => {
-        return option.value != null
-      }).map(option => {
-        return String(option.value)
-      })
-    },
-    yearsLabels() {
-      return this.fyOptions.filter(option => {
-        return option.value != null
-      }).map(option => {
-        return option.text
+    filteredData() {
+      if (this.selectedFy == null) {
+        return this.data
+      }
+      return this.data.filter(item => {
+        return item.fy == this.selectedFy
       })
     },
     summaryData() {
-      /* Roll up by sector, with a list of years */
-      const obj = this.data.reduce((summary, item) => {
-        if (!(item.name in summary)) {
-          summary[item.name] = this.years.reduce((yearsObj, year) => {
-            yearsObj[year] = 0.0
-            return yearsObj
-          }, {})
+      return Object.values(this.filteredData.reduce((summary, item) => {
+        if (!(summary[item.name])) {
+          summary[item.name] = {
+            'Sector': item.name,
+            'Disbursements': 0.0,
+            'Disbursement Projection': 0.0
+          }
         }
-        /* We add the amount to the sector list */
-        if (this.years.includes(item.fy)) {
-          summary[item.name][item.fy] += item[this.valueField] / 1000000
-        }
+        summary[item.name].Disbursements += (item.Disbursements / 1000000)
+        summary[item.name]['Disbursement Projection'] += (item['Disbursement Projection'] / 1000000)
         return summary
-      }, {})
-      /* Sort by name of sector */
-      return Object.keys(obj).sort().reduce((out, key) => {
-        out[key] = obj[key]
-        return out
-      }, {})
+      }, {}))
+      .sort((a,b) => a[this.labelField] > b[this.labelField] ? 1 : -1)
     },
     chartData() {
-      const colours = [ '#CF3D1E', '#F15623', '#F68B1F', '#FFC60B', '#DFCE21',
-      '#BCD631', '#95C93D', '#48B85C', '#00833D', '#00B48D', '#60C4B1', '#27C4F4',
-      '#478DCB', '#3E67B1', '#4251A3', '#59449B', '#6E3F7C', '#6A246D', '#8A4873',
-      '#EB0080', '#EF58A0', '#C05A89']
+      const colours = [
+        "#6e40aa", "#6849b9", "#6153c7", "#585fd2", "#4e6cda", "#4479df", "#3988e1", "#2f96e0", "#26a5db", "#1fb3d3", "#1bc1c8", "#19cdbb", "#1bd9ac", "#20e29d", "#28ea8d", "#34f07e", "#44f470", "#56f665", "#6bf75c", "#81f558",
+        "#98f357", "#aff05b"
+      ]
       return {
-        datasets: Object.entries(this.summaryData).map((sector, i) => {
-          return {
-            label: sector[0],
-            fill: this.stacked,
-            data: Object.values(sector[1]).map((ds) => { return ds }),
-            backgroundColor: colours[i],
-            borderColor: colours[i]
-          }
-        }),
-        labels: this.yearsLabels,
+        datasets: [{
+          label: 'Planned Disbursements',
+          fill: true,
+          data: this.summaryData.map((ds) => { return ds['Disbursement Projection'] }).slice(0,20),
+          backgroundColor: colours[10]
+        },
+        {
+          label: 'Actual Disbursements',
+          fill: true,
+          data: this.summaryData.map((ds) => { return ds['Disbursements'] }).slice(0,20),
+          backgroundColor: colours[0]
+        }],
+        labels: this.summaryData.map((ds) => { return ds[this.labelField] }).slice(0,20),
       }
     }
   },
   methods: {
     async loadData() {
+      const data = {
+        filter: this.aggFilter,
+        'filter-value': this.aggFilterValue
+      }
       const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter-value=${this.aggFilterValue}`
       await this.$axios.get(apiURL)
       .then(response => {
-        this.data = response.data.sectors
+        this.data = response.data.entries
       })
       .finally(f=> {
         this.isBusy = false

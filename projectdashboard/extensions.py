@@ -5,6 +5,7 @@ from flask_mail import Mail
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager, AnonymousUserMixin
 from flask_babel import gettext
+from projectdashboard.query.roles_permissions import make_permissions_list
 
 
 db = SQLAlchemy()
@@ -24,7 +25,8 @@ class UnauthenticatedUser(AnonymousUserMixin):
             {c: getattr(self, c) for c in [
                 'username', 'administrator', 'name',
                 'permissions_list', 'roles_list',
-                'email_address', 'permissions_dict'
+                'email_address', 'permissions_dict',
+                'new_permissions_list'
             ]}
         )
     def __init__(self):
@@ -36,12 +38,13 @@ class UnauthenticatedUser(AnonymousUserMixin):
             "organisations": {},
             "view": "external"
         }
-        self.roles_list = []
+        self.roles_list = ['public']
         self.email_address = None
         self.permissions_dict = {
             "edit": "none",
             "organisations": {},
             "view": "external"
         }
+        self.new_permissions_list = make_permissions_list(self)
 
 login_manager.anonymous_user = UnauthenticatedUser

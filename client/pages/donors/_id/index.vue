@@ -1,5 +1,5 @@
 <template>
-  <Aggregates type="sectors" label="Sector" />
+  <Aggregates type="donors" label="Donor" />
 </template>
 <script>
 import Aggregates from '~/components/Aggregates.vue'

@@ -241,6 +241,17 @@ def api_aggregates():
                 models.CodelistCode
             ]
         )
+    elif request.args.get("filter") == 'reporting-org':
+        filter_value = request.args.get("filter-value")
+        sector_totals = qaggregates.aggregate(dimension,
+            req_filters=[
+                models.Activity.reporting_org_id==filter_value
+            ],
+            req_finances_joins=[
+            ],
+            req_forwardspends_joins=[
+            ]
+        )
     else:
         sector_totals = qaggregates.aggregate(dimension)
 
@@ -254,4 +265,4 @@ def api_aggregates():
             sector["fy"] = paths.fiscal_year
     root = {}
     for s in sector_totals: append_path(root, s)
-    return jsonify(sectors = list(root.values()))
+    return jsonify(entries = list(root.values()))

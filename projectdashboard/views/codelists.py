@@ -41,11 +41,41 @@ def import_locations():
         flash("Locations for that country were not imported, because they have already been imported!", "danger")
     return redirect(url_for("codelists.codelists_management"))
 """
-@blueprint.route("/mtef-sector/<sector_id>.json")
+@blueprint.route("/<codelist>/<code_id>.json")
 @jwt_required(optional=True)
-def api_sector(sector_id):
-    sector = qcodelists.get_code_by_id('mtef-sector', sector_id)
-    return jsonify(sector=sector.as_dict())
+def api_codelist_code(codelist, code_id):
+    code = qcodelists.get_code_by_id(codelist, code_id)
+    return jsonify(code=code.as_dict())
+
+
+@blueprint.route("/<codelist>/")
+@jwt_required(optional=True)
+def list_codelist(codelist):
+    db_codes = qcodelists.get_codelist(codelist)
+    codes = list(map(lambda code: code.as_dict(), db_codes))
+    return jsonify(codelists=codes)
+
+
+@blueprint.route("/organisations/")
+@jwt_required(optional=True)
+def list_organisation_types():
+    db_types = qorganisations.get_organisation_types()
+    return jsonify(organisation_types=db_types)
+
+
+@blueprint.route("/organisations/<organisation_type>/")
+@jwt_required(optional=True)
+def list_organisations_by_type(organisation_type):
+    db_codes = qorganisations.get_organisations_by_type(organisation_type)
+    codes = list(map(lambda org: org.as_dict(), db_codes))
+    return jsonify(organisations=codes)
+
+
+@blueprint.route("/organisations/<organisation_type>/<organisation_id>.json")
+@jwt_required(optional=True)
+def get_organisation(organisation_type, organisation_id):
+    code = qorganisations.get_organisation_by_id(organisation_id)
+    return jsonify(organisation=code.as_dict())
 
 
 @blueprint.route("/update/", methods=["POST"])

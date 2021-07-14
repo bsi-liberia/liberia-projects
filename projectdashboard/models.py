@@ -12,6 +12,7 @@ from flask_login import current_user
 from projectdashboard.lib import util, codelist_helpers
 
 from projectdashboard.extensions import db
+from projectdashboard.query.roles_permissions import make_permissions_list
 
 
 cascade_relationship = ft.partial(
@@ -1255,6 +1256,12 @@ class User(db.Model):
     def is_authenticated(self):
         return True
 
+
+    @hybrid_property
+    def new_permissions_list(self):
+        return make_permissions_list(self)
+
+
     @hybrid_property
     def permissions_list(self):
         if not self.permissions:
@@ -1278,7 +1285,8 @@ class User(db.Model):
 
     def as_simple_dict(self):
         visible_columns = ['username', 'name', 'email_address',
-        'administrator', 'permissions_list', 'permissions_dict', 'roles_list']
+        'administrator', 'permissions_list', 'permissions_dict',
+        'roles_list', 'new_permissions_list']
         return {c: getattr(self, c) for c in visible_columns}
 
 class UserPermission(db.Model):

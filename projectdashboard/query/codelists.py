@@ -7,6 +7,14 @@ from projectdashboard import models
 from projectdashboard.extensions import db
 
 
+def get_codelist(codelist):
+    codes = models.CodelistCode.query.filter_by(
+        codelist_code=codelist
+    ).all()
+    if codes:
+        return codes
+    return False
+
 def get_code_by_name(codelist, name):
     code = models.CodelistCode.query.filter_by(
         codelist_code = codelist,
