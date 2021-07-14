@@ -15,7 +15,9 @@ ADMIN_USER = {
     "email_address": u"YOUR_EMAIL",
     "organisation": u"YOUR_ORG",
     "recipient_country_code": u"LR",
-    "administrator": True
+    "administrator": True,
+    "view": u"both",
+    "edit": u"both"
 }
 ADMIN_USER_2 = {
     "username": u"admin2",
@@ -24,7 +26,9 @@ ADMIN_USER_2 = {
     "email_address": u"YOUR_EMAIL2",
     "organisation": u"YOUR_ORG2",
     "recipient_country_code": u"LR",
-    "administrator": True
+    "administrator": True,
+    "view": u"both",
+    "edit": u"both"
 }
 USER = {
     "username": u"user",
