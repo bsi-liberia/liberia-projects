@@ -58,16 +58,15 @@ def api():
     )
 
 
-
 @blueprint.route("/api/spreadsheet_headers.json")
 def spreadsheet_field_names():
     headers = spreadsheet_headers.headers
-    selected_mtef_headers = qgenerate_csv.mtef_fys()
-    mtef_headers = qgenerate_csv.mtef_fys(start=2013, end=2025)
+    selected_mtef_headers = qgenerate_csv.mtef_fys(num_years=3, forward=True)
+    mtef_headers = qgenerate_csv.mtef_fys()
     selected_disb_headers = [util.previous_fy_fq()]
     disb_headers = qgenerate_csv.disb_fy_fqs()
-    selected_counterpart_headers = qgenerate_csv.counterpart_fys()
-    counterpart_headers = qgenerate_csv.counterpart_fys(start=2013, end=2025)
+    selected_counterpart_headers = qgenerate_csv.counterpart_fys(num_years=2, forward=True)
+    counterpart_headers = qgenerate_csv.counterpart_fys(num_years=3)
     return jsonify(headers=headers,
         mtef_headers=mtef_headers,
         disbursement_headers=disb_headers,
@@ -89,7 +88,7 @@ def filters_currency():
 
 @blueprint.route("/api/filters/available_fys.json")
 def available_fys():
-    fy, _ = util.FY("previous").numeric()
+    fy = util.FY("previous").fiscal_year.name
     return jsonify(fys=util.available_fys_as_dict(),
         current_fy=fy)
 
