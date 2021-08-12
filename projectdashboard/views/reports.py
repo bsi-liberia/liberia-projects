@@ -23,10 +23,11 @@ blueprint = Blueprint('reports', __name__, url_prefix='/api/reports')
 @jwt_required()
 @quser.permissions_required("view", "domestic")
 def psip_disbursements_api():
-    current_fy, _ = util.FY("previous").numeric()
-    fiscal_year = int(request.args.get("fiscal_year", current_fy))
-    start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
-    days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
+    _current_fy = util.FY("previous")
+    current_fy = _current_fy.fiscal_year.name
+    fiscal_year = request.args.get("fiscal_year", current_fy)
+    start_of_fy = _current_fy.fiscal_year.start
+    days_since_fy_began = ((datetime.datetime.utcnow().date()-start_of_fy).days)
     progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'domestic'})
@@ -46,10 +47,11 @@ def psip_disbursements_api():
 @jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def aid_disbursements_api():
-    current_fy, _ = util.FY("previous").numeric()
-    fiscal_year = int(request.args.get("fiscal_year", current_fy))
-    start_of_fy = util.fq_fy_to_date(1, fiscal_year, start_end='start')
-    days_since_fy_began = ((datetime.datetime.utcnow()-start_of_fy).days)
+    _current_fy = util.FY("previous")
+    current_fy = _current_fy.fiscal_year.name
+    fiscal_year = request.args.get("fiscal_year", current_fy)
+    start_of_fy = _current_fy.fiscal_year.start
+    days_since_fy_began = ((datetime.datetime.utcnow().date()-start_of_fy).days)
     progress_time = min(round(days_since_fy_began/365.0*100.0, 2), 100.0)
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'external'})
@@ -67,8 +69,8 @@ def aid_disbursements_api():
 @jwt_required()
 @quser.permissions_required("view", "domestic")
 def project_development_tracking():
-    current_fy, _ = util.FY("previous").numeric()
-    fiscal_year = int(request.args.get("fiscal_year", current_fy))
+    current_fy = util.FY("previous").fiscal_year.name
+    fiscal_year = request.args.get("fiscal_year", current_fy)
     activities = models.Activity.query.filter_by(
             domestic_external=u"domestic"
         ).all()
@@ -114,14 +116,11 @@ def project_development_tracking():
 @jwt_required(optional=True)
 @quser.permissions_required("view", "external")
 def counterpart_funding():
-    if datetime.datetime.utcnow().month > 6:
-        next_fy, _ = util.FY("previous").numeric()
-    else:
-        next_fy, _ = util.FY("next").numeric()
-    fiscal_year = int(request.args.get("fiscal_year", next_fy))
+    next_fy = util.FY("current").fiscal_year.name
+    fiscal_year = request.args.get("fiscal_year", next_fy)
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'external'})
-    next_fy_end_date = util.FY("next").date("end").date()
+    next_fy_end_date = util.FY("next").date("end")
     fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, max(end_date, next_fy_end_date))))
 
     def annotate_activity(activity):
