@@ -69,7 +69,7 @@ def process_transaction(activity, amount, currency, column_name):
     provider = activity.funding_organisations[0].id
     receiver = activity.implementing_organisations[0].id
     fq, fy = util.get_data_from_header(column_name)
-    end_fq_date = util.fq_fy_to_date(int(fq), int(fy), "end")
+    end_fq_date = util.fq_fy_to_date(fq, fy, "end")
     disbursement = models.ActivityFinances()
     disbursement.transaction_date = end_fq_date
     disbursement.transaction_type = u"D"
@@ -130,8 +130,8 @@ def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
     for mtef_year in mtef_cols:
         new_fy_value = clean_value(row[mtef_year])
         if u'Q' in mtef_year: # Quarterly MTEF projections
-            _mtef_year_year, _mtef_year_quarter = re.match(r"(\d*) Q(\d*) \(MTEF\)", mtef_year).groups()
-            existing_fy_value = float(existing_activity["{} Q{} (MTEF)".format(
+            _mtef_year_year, _mtef_year_quarter = re.match(r"FY(\S*) Q(\d*) \(MTEF\)", mtef_year).groups()
+            existing_fy_value = float(existing_activity["FY{} Q{} (MTEF)".format(
                 _mtef_year_year, _mtef_year_quarter)])
 
             new_fy_value_in_usd = qexchangerates.convert_from_currency(
@@ -146,13 +146,13 @@ def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
             value = new_fy_value_in_usd
             year, quarter = util.lr_quarter_to_cal_quarter(int("{}".format(_mtef_year_year)), int(_mtef_year_quarter))
             inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
-            updated_years.append(u"FY{} Q{}".format(_mtef_year_year, _mtef_year_quarter))
+            updated_years.append("FY{} Q{}".format(_mtef_year_year, _mtef_year_quarter))
         else: # Annual MTEF projections
-            fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
-            existing_fy_value = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
-                float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
-                float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
-                float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+
+            fy_start = re.match(r"FY(\S*) \(MTEF\)", mtef_year).groups()[0]
+            fy = models.FiscalYear.query.filter_by(id='FY{}'.format(fy_start)).first()
+
+            existing_fy_value = sum([float(existing_activity["FY{} Q{} (MTEF)".format(fy_start, quarter)]) for quarter in range(1, fy.num_quarters+1)])
 
             new_fy_value_in_usd = qexchangerates.convert_from_currency(
                 currency = currency,
@@ -164,25 +164,25 @@ def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
             if round(difference) == 0:
                 continue
             # Create 1/4 of new_fy_value for each quarter in this FY
-            value = round(new_fy_value_in_usd/4.0, 4)
-            for _fq in [1,2,3,4]:
-                year, quarter = util.lr_quarter_to_cal_quarter(int("20{}".format(fy_start)), _fq)
+            value = round(new_fy_value_in_usd/float(fy.num_quarters), 4)
+            for fp in fy.fiscal_year_periods:
+                year, quarter = util.date_to_fy_fq_calendar_year(fp.start)
                 inserted = qfinances.create_or_update_forwardspend(activity_id, quarter, year, value, u"USD")
-            updated_years.append(u"FY{}/{}".format(fy_start, fy_end))
+            updated_years.append("FY{}".format(fy_start))
     return updated_years
 
 def parse_counterpart_cols(counterpart_funding_cols, activity, row, activity_id):
     updated_counterpart_years = []
     for counterpart_year in counterpart_funding_cols:
         new_fy_value = clean_value(row[counterpart_year])
-        cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
-        existing_cfy_value = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
+        cfy_start = re.match(r"FY(\S*) \(GoL counterpart fund request\)", counterpart_year).groups()[0]
+        fy = models.FiscalYear.query.filter_by(id='FY{}'.format(cfy_start)).first()
+        existing_cfy_value = activity.FY_counterpart_funding_for_FY("FY{}".format(cfy_start))
         difference = new_fy_value-existing_cfy_value
         if difference == 0:
             continue
-        cf_date = util.fq_fy_to_date(1, int("20{}".format(cfy_start))).date()
-        inserted = qcounterpart_funding.create_or_update_counterpart_funding(activity_id, cf_date, new_fy_value)
-        updated_counterpart_years.append(u"FY{}/{}".format(cfy_start, cfy_end))
+        inserted = qcounterpart_funding.create_or_update_counterpart_funding(activity_id, fy.start, new_fy_value)
+        updated_counterpart_years.append("FY{}".format(cfy_start))
     return updated_counterpart_years
 
 def parse_disbursement_cols(currency, disbursement_cols, activity, existing_activity, row):
@@ -190,7 +190,7 @@ def parse_disbursement_cols(currency, disbursement_cols, activity, existing_acti
     for column_name in disbursement_cols:
         row_value = clean_value(row[column_name])
         fq, fy = util.get_data_from_header(column_name)
-        column_date = util.fq_fy_to_date(int(fq), int(fy), "end")
+        column_date = util.fq_fy_to_date(fq, fy, "end")
         existing_value = float(existing_activity.get(column_name, 0))
         existing_value_same_currency = qexchangerates.convert_to_currency(
             currency = currency,
@@ -256,10 +256,10 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
     def filter_mtef(column):
-        pattern = r"(.*) \(MTEF\)$"
+        pattern = r"(\S*) \(MTEF\)$"
         return re.match(pattern, column)
     def filter_counterpart(column):
-        pattern = r"(.*) \(GoL counterpart fund request\)$"
+        pattern = r"(\S*) \(GoL counterpart fund request\)$"
         return re.match(pattern, column)
     if u"Instructions" in xl_workbook.sheetnames:
         currency = xl_workbook["Instructions"].cell(6,3).value
@@ -314,7 +314,7 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                 # Mark activity as updated and inform user
                 update_message, num_updated_activities = make_updated_info(updated, activity, num_updated_activities)
                 if update_message is not None: messages.append(update_message)
-    except Exception as e:
+    except UnicodeEncodeError as e: #Exception as e:
         if activity_id is not None:
             messages.append("""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
@@ -391,11 +391,12 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=No
         for activity in activities:
             existing_activity = activity_to_json(activity, cl_lookups)
             for mtef_year in mtef_cols:
-                fy_start, fy_end = re.match(r"FY(\d*)/(\d*) \(MTEF\)", mtef_year).groups()
-                existing_activity[mtef_year] = sum([float(existing_activity["20{} Q1 (MTEF)".format(fy_start)]),
-                    float(existing_activity["20{} Q2 (MTEF)".format(fy_start)]),
-                    float(existing_activity["20{} Q3 (MTEF)".format(fy_start)]),
-                    float(existing_activity["20{} Q4 (MTEF)".format(fy_start)])])
+                fy_start = re.match(r"FY(\S*) \(MTEF\)", mtef_year).groups()[0]
+                # Every FY has at least one quarter, but may not have more than one quarter.
+                existing_activity[mtef_year] = sum([float(existing_activity["FY{} Q1 (MTEF)".format(fy_start)]),
+                    float(existing_activity.get("FY{} Q2 (MTEF)".format(fy_start), 0)),
+                    float(existing_activity.get("FY{} Q3 (MTEF)".format(fy_start), 0)),
+                    float(existing_activity.get("FY{} Q4 (MTEF)".format(fy_start), 0))])
                 if writer.template_currency != u"USD":
                     # N.B.: we convert at (close to) today's date,
                     # because these are *projections* and we store in USD
@@ -412,8 +413,8 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=No
                         value = existing_activity[disb_year])
             # Leave in USD always
             for counterpart_year in counterpart_funding_cols:
-                cfy_start, cfy_end = re.match(r"FY(\d*)/(\d*) \(GoL counterpart fund request\)", counterpart_year).groups()
-                existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("20{}".format(cfy_start))
+                cfy = re.match(r"FY(\S*) \(GoL counterpart fund request\)", counterpart_year).groups()[0]
+                existing_activity[counterpart_year] = activity.FY_counterpart_funding_for_FY("FY{}".format(cfy))
             writer.writerow(existing_activity)
         # Formatting
         apply_formatting.formatting_validation(writer, len(activities), _headers, counterpart_funding_cols, mtef_cols, disb_cols)
