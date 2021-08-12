@@ -451,7 +451,7 @@ export default {
       })[0].name
     },
     templateDownloadFilename() {
-      return `AMCU ${this.currentFY} Q${this.quarter} Disbursements Template ${this.selectedReportingOrganisationName}.xlsx`
+      return `AMCU ${this.selectedQuarter} Disbursements Template ${this.selectedReportingOrganisationName}.xlsx`
     },
     templateDownloadURL() {
       var params = {
