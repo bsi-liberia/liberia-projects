@@ -70,60 +70,28 @@ def get_closest_date(the_date, the_currency):
 
 def fwddata_query(_self, fiscalyear_modifier):
     QUERY_COLS = (func.sum(ActivityForwardSpend.value).label("value"),
-                func.STRFTIME('%Y',
-                    func.DATE(ActivityForwardSpend.period_start_date,
-                        'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ).label("fiscal_year"),
-                case(
-                    [
-                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                          'start of month', '-{} month'.format(fiscalyear_modifier))
-                            ).in_(('01','02','03')), 'Q1'),
-                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                          'start of month', '-{} month'.format(fiscalyear_modifier))
-                            ).in_(('04','05','06')), 'Q2'),
-                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                          'start of month', '-{} month'.format(fiscalyear_modifier))
-                            ).in_(('07','08','09')), 'Q3'),
-                        (func.STRFTIME('%m', func.DATE(ActivityForwardSpend.period_start_date,
-                          'start of month', '-{} month'.format(fiscalyear_modifier))
-                            ).in_(('10','11','12')), 'Q4'),
-                    ]
-                ).label("fiscal_quarter"),
+                FiscalPeriod.name.label("fiscal_quarter"),
+                FiscalPeriod.end.label("fiscal_period_end"),
+                FiscalYear.name.label("fiscal_year"),
                 sa.sql.expression.literal(None).label('fund_source_id'))
     return db.session.query(
             *QUERY_COLS
+        ).join(FiscalPeriod, ActivityForwardSpend.fiscal_period_id == FiscalPeriod.id
+        ).join(FiscalYear
         ).filter(
             ActivityForwardSpend.activity_id == _self.id,
             ActivityForwardSpend.value != 0
-        ).group_by("fiscal_quarter", "fiscal_year"
+        ).group_by("fiscal_quarter", "fiscal_year", "fiscal_period_end"
         ).order_by(ActivityForwardSpend.period_start_date.desc()
         ).all()
 
 
 def fydata_query(_self, fiscalyear_modifier, _transaction_types, fund_sources=False):
     QUERY_COLS = (func.sum(ActivityFinances.transaction_value).label("value"),
-            func.STRFTIME('%Y',
-                func.DATE(ActivityFinances.transaction_date,
-                    'start of month', '-{} month'.format(fiscalyear_modifier))
-                ).label("fiscal_year"),
-            case(
-                [
-                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('01','02','03')), 'Q1'),
-                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('04','05','06')), 'Q2'),
-                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('07','08','09')), 'Q3'),
-                    (func.STRFTIME('%m', func.DATE(ActivityFinances.transaction_date,
-                      'start of month', '-{} month'.format(fiscalyear_modifier))
-                        ).in_(('10','11','12')), 'Q4'),
-                ]
-            ).label("fiscal_quarter"))
-    GROUP_BYS = ("fiscal_quarter", "fiscal_year")
+            FiscalPeriod.name.label("fiscal_quarter"),
+            FiscalPeriod.end.label("fiscal_period_end"),
+            FiscalYear.name.label("fiscal_year"))
+    GROUP_BYS = ("fiscal_quarter", "fiscal_year", "fiscal_period_end")
     if fund_sources:
         QUERY_COLS += (FundSource.id.label("fund_source_id"),)
         GROUP_BYS += ("fund_source_id",)
@@ -134,7 +102,9 @@ def fydata_query(_self, fiscalyear_modifier, _transaction_types, fund_sources=Fa
     if fund_sources:
         query = query.outerjoin(FundSource, ActivityFinances.fund_source_id==FundSource.id
         )
-    return query.filter(
+    return query.join(FiscalPeriod, ActivityFinances.fiscal_period_id == FiscalPeriod.id
+        ).join(FiscalYear
+        ).filter(
             ActivityFinances.activity_id == _self.id,
             ActivityFinances.transaction_value != 0,
             ActivityFinances.transaction_type.in_(_transaction_types)
@@ -438,11 +408,10 @@ class Activity(db.Model):
             fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
         return {
             "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
-            # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
-            "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+            "date": fyval.fiscal_period_end,
             "fiscal_year": fyval.fiscal_year,
             "fiscal_quarter": fyval.fiscal_quarter,
-            "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+            "period": "{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
             "value": round(fyval.value, 4)
             }
             for fyval in fydata
@@ -458,11 +427,10 @@ class Activity(db.Model):
         for fyval in fydata:
             out[fyval.fund_source_id].update({
                 "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
-                    # FIXME this is not correct when the fiscalyear_modifier is not 6 (Liberia FY)
-                    "date": util.fq_fy_to_date(int(fyval.fiscal_quarter[1:]), int(fyval.fiscal_year), 'end'),
+                    "date": fyval.fiscal_period_end,
                     "fiscal_year": fyval.fiscal_year,
                     "fiscal_quarter": fyval.fiscal_quarter,
-                    "period": "FY{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
+                    "period": "{} {}".format(fyval.fiscal_year, fyval.fiscal_quarter),
                     "value": round(fyval.value, 4)
                 }}
             )
@@ -500,10 +468,11 @@ class Activity(db.Model):
                 func.sum(ActivityCounterpartFunding.required_value).label("value")
             ).filter(
                 ActivityCounterpartFunding.activity_id == self.id,
-                func.STRFTIME('%Y',
-                    func.DATE(ActivityCounterpartFunding.required_date,
-                        'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == FY
+                FiscalYear.id == FY
+            ).join(
+                FiscalPeriod, ActivityCounterpartFunding.fiscal_period_id==FiscalPeriod.id
+            ).join(
+            FiscalYear
             ).scalar()
         if result is None: return 0.00
         return result
