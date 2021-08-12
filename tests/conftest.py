@@ -92,7 +92,7 @@ def import_test_data(app, user):
                 filename="testdata.xlsx")
             result = import_xls(
                 input_file=_fakeUpload,
-                column_name='2019 Q1 (D)'
+                column_name='FY2019 Q1 (D)'
             )
         with open(filename, "rb") as _file:
             _fakeUpload = FileStorage(
