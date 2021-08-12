@@ -6,12 +6,6 @@ from sqlalchemy import func, case
 import datetime
 
 
-def make_start_end_from_fy(fiscal_year):
-    year_end = util.fq_fy_to_date(4, fiscal_year, "end").date()
-    year_start = util.fq_fy_to_date(1, fiscal_year, "start").date()
-    return year_start, year_end
-
-
 def make_pct(value1, value2):
     try:
         return round((float(value1)/float(value2))*100.0)
@@ -34,7 +28,6 @@ def _make_activity_data(denominator_list, numerator_dict, denominator_label, num
 
 
 def sum_forwardspends(fiscal_year, forwardspends_over, domestic_external, activity_detail=True):
-    year_start, year_end = make_start_end_from_fy(fiscal_year)
     forwardspends = db.session.query(
         func.sum(models.ActivityForwardSpend.value).label("sum_forwardspends"),
         models.Activity.id,
@@ -43,12 +36,11 @@ def sum_forwardspends(fiscal_year, forwardspends_over, domestic_external, activi
         models.Organisation.name.label("reporting_org_name")
         ).join(models.Activity, models.Activity.id == models.ActivityForwardSpend.activity_id
         ).join(models.Organisation, models.Activity.reporting_org
+        ).join(models.FiscalPeriod
+        ).join(models.FiscalYear
+        ).filter(models.FiscalYear.id == fiscal_year
         ).filter(
             models.Activity.domestic_external == domestic_external
-        ).filter(
-            models.ActivityForwardSpend.period_end_date <= year_end
-        ).filter(
-            models.ActivityForwardSpend.period_end_date >= year_start
         ).having(
             func.sum(models.ActivityForwardSpend.value) > forwardspends_over
         ).group_by(
@@ -62,15 +54,13 @@ def sum_forwardspends(fiscal_year, forwardspends_over, domestic_external, activi
 
 
 def sum_transactions(fiscal_year, sum_over, domestic_external, label, transaction_type):
-    year_start, year_end = make_start_end_from_fy(fiscal_year)
     disbursements = dict(map(lambda a: (a.id, getattr(a, label)), db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label(label),
         models.Activity.id
         ).join(models.Activity, models.Activity.id == models.ActivityFinances.activity_id
-        ).filter(
-            models.ActivityFinances.transaction_date <= year_end
-        ).filter(
-            models.ActivityFinances.transaction_date >= year_start
+        ).join(models.FiscalPeriod
+        ).join(models.FiscalYear
+        ).filter(models.FiscalYear.id == fiscal_year
         ).filter(
             models.ActivityFinances.transaction_type == transaction_type
         ).filter(
@@ -82,7 +72,6 @@ def sum_transactions(fiscal_year, sum_over, domestic_external, label, transactio
 
 
 def sum_transactions_detail(fiscal_year, sum_over, domestic_external, label, transaction_type):
-    year_start, year_end = make_start_end_from_fy(fiscal_year)
     appropriations = db.session.query(
         func.sum(models.ActivityFinances.transaction_value).label(label),
         models.Activity.id,
@@ -91,12 +80,11 @@ def sum_transactions_detail(fiscal_year, sum_over, domestic_external, label, tra
         models.Organisation.name.label("reporting_org_name")
         ).join(models.Activity, models.Activity.id == models.ActivityFinances.activity_id
         ).join(models.Organisation, models.Activity.reporting_org
+        ).join(models.FiscalPeriod
+        ).join(models.FiscalYear
+        ).filter(models.FiscalYear.id == fiscal_year
         ).filter(
             models.Activity.domestic_external == domestic_external
-        ).filter(
-            models.ActivityFinances.transaction_date >= year_start
-        ).filter(
-            models.ActivityFinances.transaction_date <= year_end
         ).filter(
             models.ActivityFinances.transaction_type == transaction_type
         ).group_by(
