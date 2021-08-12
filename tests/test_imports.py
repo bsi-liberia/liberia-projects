@@ -23,7 +23,7 @@ class TestImportFiles:
         data = {
             'file': (open('tests/artefacts/api/exports/import_template_disbursements.xlsx', 'rb'), 'disbursements.xlsx'),
             'template_type': 'disbursements',
-            'fy_fq': '2019 Q2 (D)'
+            'fy_fq': 'FY2019 Q2 (D)'
         }
         res = client.post(route, data=data, headers=headers_admin)
         data = json.loads(res.data)
@@ -51,7 +51,7 @@ class TestImportFiles:
         res_activity2 = self.client.get(route_activity, headers=headers_admin)
         data = json.loads(res_activity2.data)
         assert data['forwardspends'][6]['year'] == 'FY2021'
-        assert data['forwardspends'][6]['total_value'] == 1000
+        assert data['forwardspends'][6]['total_value'] == 500.0
 
 
     def test_import_psip_xlsx_file(self, client, admin, headers_admin):
@@ -63,7 +63,7 @@ class TestImportFiles:
         route = url_for('exports.import_psip_transactions')
         data = {
             'file': (open('tests/artefacts/api/exports/import_psip_transactions.xlsx', 'rb'), 'psip.xlsx'),
-            'fiscal_year': 'FY2019/20'
+            'fiscal_year': 'FY2019'
         }
         res = client.post(route, data=data, headers=headers_admin)
         data = json.loads(res.data)
