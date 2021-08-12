@@ -415,7 +415,7 @@ export default {
     },
     years() {
       const _years = Object.values(this.finances).reduce((years, finance) => {
-        years = years.concat(finance.data.map(item => Number(item.fiscal_year)))
+        years = years.concat(finance.data.map(item => Number(new Date(item.date).getFullYear())))
         return years
       }, [])
       if (_years.length == 0) { return [] }
@@ -433,8 +433,8 @@ export default {
         const entries = (key in this.finances) ? this.finances[key].data : []
         out[key] = Object.entries(entries.reduce((keyItems, entry) => {
           /* For each allowed year, add the value for this entry */
-          if (Number(entry.fiscal_year) in keyItems) {
-            keyItems[Number(entry.fiscal_year)] += entry.value
+          if (Number(new Date(entry.date).getFullYear()) in keyItems) {
+            keyItems[Number(new Date(entry.date).getFullYear())] += entry.value
           }
           return keyItems
         }, /* Pass in list of available years with default amount 0.0 */
@@ -488,12 +488,12 @@ export default {
             {
               ticks: {
                 callback: function(tick) {
-                  return `FY${tick}`
+                  return `${tick}`
                 }
               },
               scaleLabel: {
                 display: true,
-                labelString: 'Fiscal Year'
+                labelString: 'Year'
               }
             }
           ]
