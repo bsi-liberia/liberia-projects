@@ -10,14 +10,14 @@ def aggregate(dimension, req_filters=[], req_finances_joins=[], req_forwardspend
     query_finances = [func.sum(models.ActivityFinances.transaction_value).label("total_value"),
         models.ActivityFinances.transaction_type,
         models.Activity.domestic_external,
-        func.strftime('%Y', func.date(models.ActivityFinances.transaction_date, 'start of month', '-6 month')).label("fiscal_year")]
+        models.FiscalYear.name.label("fiscal_year")]
 
     query_forwardspends = [func.sum(models.ActivityForwardSpend.value).label("total_value"),
             sa.sql.expression.literal("FS").label("transaction_type"),
             models.Activity.domestic_external,
-            func.strftime('%Y', func.date(models.ActivityForwardSpend.period_start_date, 'start of month', '-6 month')).label("fiscal_year"),]
+            models.FiscalYear.name.label("fiscal_year")]
 
-    query_join = [models.Activity]
+    query_join = [models.Activity, models.FiscalPeriod, models.FiscalYear]
 
     query_finances_filters = [models.Activity.domestic_external == 'external',] + req_filters
 
@@ -39,26 +39,24 @@ def aggregate(dimension, req_filters=[], req_finances_joins=[], req_forwardspend
         query_finances_filters += [models.CodelistCode.codelist_code == dimension]
         query_forwardspends_filters = query_finances_filters
         group_by = [models.CodelistCode.name,
-            models.CodelistCode.code]
+            models.CodelistCode.code, models.FiscalYear.name]
 
     elif dimension in ['reporting-org']:
         query_finances += [models.Activity.reporting_org_id.label("code"),
             models.Organisation.name]
         query_forwardspends += [models.Activity.reporting_org_id.label("code"),
             models.Organisation.name]
-        query_finances_join = [(models.Activity, models.ActivityFinances.activity_id==models.Activity.id),(models.Organisation, models.Activity.reporting_org_id==models.Organisation.id)] + req_finances_joins
+        query_finances_join = [(models.Activity, models.ActivityFinances.activity_id==models.Activity.id),(models.Organisation, models.Activity.reporting_org_id==models.Organisation.id), models.FiscalPeriod, models.FiscalYear] + req_finances_joins
         query_forwardspends_join = [(models.Activity, models.ActivityForwardSpend.activity_id==models.Activity.id),(models.Organisation, models.Activity.reporting_org_id==models.Organisation.id)] + req_forwardspends_joins
         query_forwardspends_filters = query_finances_filters
-        group_by = [models.Activity.reporting_org_id, models.Organisation.name]
+        group_by = [models.Activity.reporting_org_id, models.Organisation.name, models.FiscalYear]
 
 
     query_finances_groupby = group_by + [models.ActivityFinances.transaction_type,
-        models.Activity.domestic_external,
-        "fiscal_year"]
+        models.Activity.domestic_external]
 
     query_forwardspends_groupby = group_by + ["transaction_type",
-        models.Activity.domestic_external,
-        "fiscal_year"]
+        models.Activity.domestic_external]
 
     query = db.session.query(
         *query_finances
