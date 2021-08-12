@@ -54,7 +54,9 @@ USER_2 = {
 }
 # The earliest date shown in many interfaces.
 # Used to filter out partial data from a long / messy dataset.
-EARLIEST_DATE = datetime.date(2013,7,1)
+EARLIEST_DATE = datetime.date(2013,1,1)
+LATEST_DATE = datetime.date(2049,12,31)
+
 MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
 LIVESERVER_PORT=8943
