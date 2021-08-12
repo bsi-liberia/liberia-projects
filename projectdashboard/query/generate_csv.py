@@ -13,6 +13,7 @@ from projectdashboard.query import activity as qactivity
 from projectdashboard.lib import util
 from projectdashboard.lib.codelists import get_codelists_lookups
 from projectdashboard.lib.spreadsheet_headers import headers
+from projectdashboard import models
 
 
 def isostring_date(value):
@@ -86,44 +87,55 @@ def activity_to_json(activity, cl_lookups):
     return data
 
 
-def disb_fy_fqs(start=2013):
-    disbFYs_QTRs = [("{} Q1 (D)".format(fy), "{} Q2 (D)".format(fy),
-             "{} Q3 (D)".format(fy), "{} Q4 (D)".format(fy)
-             ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
-    return [item for sublist in disbFYs_QTRs for item in sublist]
+def disb_fy_fqs():
+    available_fys = util.available_fys()
+    fps = models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.fiscal_year_id.in_(available_fys)
+        ).order_by(models.FiscalPeriod.start).all()
+    return [("{} {} (D)".format(fp.fiscal_year_id, fp.name)
+         ) for fp in fps]
 
 
-def disb_fy_fqs_with_mtefs(start=2013):
-    disbFYs_QTRs = [(u"{} Q1 (MTEF)".format(fy), u"{} Q2 (MTEF)".format(fy),
-                     u"{} Q3 (MTEF)".format(fy), u"{} Q4 (MTEF)".format(fy),
-                     u"{} Q1 (D)".format(fy), u"{} Q2 (D)".format(fy),
-                     u"{} Q3 (D)".format(fy), u"{} Q4 (D)".format(fy)
-             ) for fy in range(2013, datetime.datetime.utcnow().year+1)]
-    return [item for sublist in disbFYs_QTRs for item in sublist]
+def disb_fy_fqs_with_mtefs():
+    available_fys = util.available_fys()
+    fps = models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.fiscal_year_id.in_(available_fys)
+        ).order_by(models.FiscalPeriod.start).all()
+    MTEF_QTRS = [("{} {} (MTEF)".format(fp.fiscal_year_id, fp.name)
+             ) for fp in fps]
+    DISB_QTRS = [("{} {} (D)".format(fp.fiscal_year_id, fp.name)
+         ) for fp in fps]
+    return MTEF_QTRS + DISB_QTRS
 
 
 def mtef_fy_fqs(start=datetime.datetime.utcnow().year+1, end=False):
-    MTEFFYs_QTRs = [(u"{} Q1 (MTEF)".format(fy), u"{} Q2 (MTEF)".format(fy),
-                     u"{} Q3 (MTEF)".format(fy), u"{} Q4 (MTEF)".format(fy)
-                     ) for fy in range(start, {False: start+3, True: end}[bool(end)])]
-    return [item for sublist in MTEFFYs_QTRs for item in sublist]
+    available_fys = util.available_fys()
+    fps = models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.fiscal_year_id.in_(available_fys)
+        ).order_by(models.FiscalPeriod.start).all()
+    MTEF_QTRS = [("{} {} (MTEF)".format(fp.fiscal_year_id, fp.name)
+             ) for fp in fps]
+    return MTEF_QTRS
 
 
-def mtef_fys(start=datetime.datetime.utcnow().date().year,
-        end=datetime.datetime.utcnow().date().year+3):
-    return [u"FY{}/{} (MTEF)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(start, end)]
+def mtef_fys(num_years=3, forward=False):
+    if forward:
+        mtef_fys = util.available_fys_forward()
+    else:
+        mtef_fys = util.available_fys()
+    return ["{} (MTEF)".format(mtef_fy) for mtef_fy in mtef_fys]
 
 
-def counterpart_fys(start=datetime.datetime.utcnow().date().year,
-        end=datetime.datetime.utcnow().date().year+1):
-    return [u"FY{}/{} (GoL counterpart fund request)".format(str(year)[2:4], str(year+1)[2:4]) for year in range(start, end)]
+def counterpart_fys(num_years=1, forward=False):
+    if forward:
+        counterpart_fys = util.available_fys_forward(num_years)
+    else:
+        counterpart_fys = util.available_fys(num_years)
+    return ["{} (GoL counterpart fund request)".format(counterpart_fy) for counterpart_fy in counterpart_fys]
 
 
 def generate_disb_fys():
-    #FIXME don't hard code start year
-    disbFYs_QTRs = disb_fy_fqs_with_mtefs()
-    MTEFFYs_QTRs = mtef_fy_fqs()
-    return disbFYs_QTRs+MTEFFYs_QTRs
+    return disb_fy_fqs_with_mtefs()
 
 def generate_csv():
     csv_file = io.StringIO()
@@ -147,7 +159,7 @@ def activity_to_transactions_list(activity, cl_lookups):
             return ",".join(list(map(lambda x: x.codelist_code.name, activity.classification_data[codelist]["entries"])))
         return ""
 
-    def make_transaction(activity, tr, transaction_type):
+    def make_transaction(activity, tr, transaction_type, fiscal_periods):
         return {u'Reported by': activity.reporting_org.name,
             u'ID': activity.id,
             u'Project code': activity.code,
@@ -171,17 +183,19 @@ def activity_to_transactions_list(activity, cl_lookups):
             u'Last updated date': activity.updated_date.date().isoformat(),
             u"Fiscal Year": tr["fiscal_year"],
             u"Fiscal Quarter": tr["fiscal_quarter"],
-            u"Transaction Date": util.fq_fy_to_date(int(tr["fiscal_quarter"][1]),
-                int(tr["fiscal_year"]), start_end='start').date().isoformat(),
+            u"Transaction Date": fiscal_periods.get((tr["fiscal_year"], tr["fiscal_quarter"])).isoformat(),
             u"Transaction Value": tr["value"],
             u"Transaction Type": transaction_type
         }
 
+    db_fiscal_periods = models.FiscalPeriod.query.all()
+    fiscal_periods = dict(map(lambda fp: ((fp.fiscal_year_id, fp.name), fp.start), db_fiscal_periods))
+
     transactions = []
     for tr in activity.FY_commitments_dict.values():
-        transactions.append(make_transaction(activity, tr, u"Commitment"))
+        transactions.append(make_transaction(activity, tr, u"Commitment", fiscal_periods))
     for tr in activity.FY_disbursements_dict.values():
-        transactions.append(make_transaction(activity, tr, u"Disbursement"))
+        transactions.append(make_transaction(activity, tr, u"Disbursement", fiscal_periods))
     for tr in activity.FY_forward_spend_dict.values():
-        transactions.append(make_transaction(activity, tr, u"MTEF Projection"))
+        transactions.append(make_transaction(activity, tr, u"MTEF Projection", fiscal_periods))
     return transactions
