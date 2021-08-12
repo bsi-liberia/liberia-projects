@@ -23,6 +23,5 @@ class TestActivityFinances:
             assert res.status_code == status_code
             data = json.loads(res.data)
             assert len(data['forwardspends']) == 7
-            print(data)
             assert data['forwardspends'][4]['year'] == 'FY1819'
-            assert data['forwardspends'][4]['total_value'] == 1000
+            assert data['forwardspends'][4]['total_value'] == 500.0
