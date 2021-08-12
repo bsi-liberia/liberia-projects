@@ -156,16 +156,13 @@ def create_or_update_counterpart_funding(activity_id, required_date, value):
     return True
 
 def annotate_activities_with_aggregates(fiscal_year):
-    def FY_forwardspends_for_FY(FY):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def FY_forwardspends_for_FY():
         result = db.session.query(
                 models.ActivityForwardSpend.activity_id,
                 func.sum(models.ActivityForwardSpend.value).label("value")
-            ).filter(
-                func.STRFTIME('%Y',
-                    func.DATE(models.ActivityForwardSpend.period_start_date,
-                        'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == str(FY)
+            ).join(models.FiscalPeriod
+            ).join(models.FiscalYear
+            ).filter(models.FiscalYear.id==fiscal_year
             ).group_by(
                 models.ActivityForwardSpend.activity_id
             ).all()
@@ -174,16 +171,13 @@ def annotate_activities_with_aggregates(fiscal_year):
             return row.value > 0
         return filter(filter_blank, result)
 
-    def FY_counterpart_funding_for_FY(FY):
-        fiscalyear_modifier = 6 #FIXME this is just for Liberia
+    def FY_counterpart_funding_for_FY():
         result = db.session.query(
                 models.ActivityCounterpartFunding.activity_id,
                 func.sum(models.ActivityCounterpartFunding.required_value).label("value")
-            ).filter(
-                func.STRFTIME('%Y',
-                    func.DATE(models.ActivityCounterpartFunding.required_date,
-                        'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == str(FY)
+            ).join(models.FiscalPeriod
+            ).join(models.FiscalYear
+            ).filter(models.FiscalYear.id==fiscal_year
             ).group_by(
                 models.ActivityCounterpartFunding.activity_id
             ).all()
@@ -192,8 +186,8 @@ def annotate_activities_with_aggregates(fiscal_year):
             return row.value > 0
         return filter(filter_blank, result)
 
-    fy_forwardspends = dict(FY_forwardspends_for_FY(fiscal_year))
-    fy_counterpart_funding = dict(FY_counterpart_funding_for_FY(fiscal_year))
+    fy_forwardspends = dict(FY_forwardspends_for_FY())
+    fy_counterpart_funding = dict(FY_counterpart_funding_for_FY())
 
     activities = models.Activity.query.filter(
         models.Activity.id.in_(list(fy_forwardspends.keys())+list(fy_counterpart_funding.keys()))
