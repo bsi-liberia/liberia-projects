@@ -26,7 +26,7 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
     ros_fiscal_years = qmonitoring.forwardspends_ros("current")
     ros_fiscal_years_previous = qmonitoring.forwardspends_ros("previous")
     ros_fiscal_years_next = qmonitoring.forwardspends_ros("next")
-    ros_disbursements = qmonitoring.fydata_ros("todate")
+    ros_disbursements = qmonitoring.fydata_ros()
     def make_status(ro, qtr, disb_value):
         if disb_value:
             return response_statuses.get(3) #FIXME this is the database ID for donor responded with data
@@ -34,6 +34,8 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
         if ro.responses_fys.get(quarters.get(qtr)):
             return response_statuses.get(ro.responses_fys.get(quarters.get(qtr)))
         return response_statuses.get(0)
+
+    list_of_quarters = util.Last4Quarters().list_of_quarters()
 
     def annotate_ro(ro):
         _ro = ro.as_dict()
@@ -55,9 +57,9 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
         }
         _ro["disbursements"] = dict([
             (qtr, {
-                'value': ros_disbursements.get((ro.id, qtr), 0.00),
-                'status': make_status(ro, qtr, ros_disbursements.get((ro.id, qtr)))
-            }) for qtr in [u"Q1", u"Q2", u"Q3", u"Q4"]])
+                'value': ros_disbursements.get((ro.id, qtr_key), 0.00),
+                'status': make_status(ro, qtr, ros_disbursements.get((ro.id, qtr_key)))
+            }) for qtr, qtr_key in list_of_quarters.items()])
         return _ro
     return list(map(lambda ro: annotate_ro(ro), reporting_orgs))
 
