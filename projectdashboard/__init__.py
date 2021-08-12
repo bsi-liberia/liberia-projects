@@ -75,6 +75,7 @@ def register_blueprints(app):
     app.register_blueprint(views.activity_finances.blueprint)
     app.register_blueprint(views.activity_forwardspends.blueprint)
     app.register_blueprint(views.activity_locations.blueprint)
+    app.register_blueprint(views.admin.blueprint)
 
 
 def register_errorhandlers(app):
