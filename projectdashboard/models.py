@@ -694,6 +694,9 @@ class ActivityFinances(db.Model):
     currency_rate = sa.Column(sa.Float,
         default=1.0, nullable=False)
     currency_value_date = sa.Column(sa.Date)
+    fiscal_period_id = sa.Column(sa.UnicodeText,
+            sa.ForeignKey('fiscal_period.id'),
+            nullable=True)
 
     @validates("currency_rate")
     def update_transaction_value_rate(self, key, currency_rate):
@@ -706,6 +709,16 @@ class ActivityFinances(db.Model):
         if self.currency_rate and transaction_value_original:
             self.transaction_value = float(self.currency_rate)*float(transaction_value_original)
         return transaction_value_original
+
+    @validates("transaction_date")
+    def update_fiscal_period_id(self, key, transaction_date):
+        if transaction_date:
+            fiscal_period = FiscalPeriod.query.filter(
+                FiscalPeriod.start <= transaction_date,
+                FiscalPeriod.end >= transaction_date).first()
+            if fiscal_period:
+                self.fiscal_period_id = fiscal_period.id
+        return transaction_date
 
     @hybrid_property
     def disaggregated_transactions(self):
@@ -758,6 +771,19 @@ class ActivityForwardSpend(db.Model):
     value_currency = sa.Column(sa.UnicodeText)
     period_start_date = sa.Column(sa.Date)
     period_end_date = sa.Column(sa.Date)
+    fiscal_period_id = sa.Column(sa.UnicodeText,
+            sa.ForeignKey('fiscal_period.id'),
+            nullable=True)
+
+    @validates("period_start_date")
+    def update_fiscal_period_id(self, key, period_start_date):
+        if period_start_date:
+            fiscal_period = FiscalPeriod.query.filter(
+                FiscalPeriod.start <= period_start_date,
+                FiscalPeriod.end >= period_start_date).first()
+            if fiscal_period:
+                self.fiscal_period_id = fiscal_period.id
+        return period_start_date
 
     __table_args__ = (
         sa.UniqueConstraint('activity_id','period_start_date', name='forward_spend_constraint'),
@@ -1043,6 +1069,19 @@ class ActivityCounterpartFunding(db.Model):
     budgeted = sa.Column(sa.Boolean, default=False)
     allotted = sa.Column(sa.Boolean, default=False)
     disbursed = sa.Column(sa.Boolean, default=False)
+    fiscal_period_id = sa.Column(sa.UnicodeText,
+            sa.ForeignKey('fiscal_period.id'),
+            nullable=True)
+
+    @validates("required_date")
+    def update_fiscal_period_id(self, key, required_date):
+        if required_date:
+            fiscal_period = FiscalPeriod.query.filter(
+                FiscalPeriod.start <= required_date,
+                FiscalPeriod.end >= required_date).first()
+            if fiscal_period:
+                self.fiscal_period_id = fiscal_period.id
+        return required_date
 
     __table_args__ = (sa.UniqueConstraint('activity_id','required_date'),)
 
@@ -1443,6 +1482,65 @@ class UserOrganisation(db.Model):
     organisation_id = sa.Column(sa.Integer,
             sa.ForeignKey('organisation.id'),
             nullable=False)
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class FiscalYearChoice(db.Model):
+    __tablename__ = 'fiscal_year_choice'
+    id = sa.Column(sa.Integer, primary_key=True)
+    start_date = sa.Column(sa.Date,
+            nullable=False)
+    end_date = sa.Column(sa.Date,
+            nullable=False)
+    num_quarters = sa.Column(sa.Integer,
+            nullable=False)
+
+    def __init__(self, start_date, end_date, num_quarters):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.num_quarters = num_quarters
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class FiscalYear(db.Model):
+    __tablename__ = 'fiscal_year'
+    id = sa.Column(sa.UnicodeText, primary_key=True)
+    start = sa.Column(sa.Date,
+            nullable=False)
+    end = sa.Column(sa.Date,
+            nullable=False)
+    name = sa.Column(sa.UnicodeText,
+            nullable=False)
+    num_quarters = sa.Column(sa.Integer,
+            nullable=False)
+    fiscal_year_periods = db.relationship("FiscalPeriod",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        backref="fiscal_year")
+
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class FiscalPeriod(db.Model):
+    __tablename__ = 'fiscal_period'
+    id = sa.Column(sa.UnicodeText, primary_key=True)
+    fiscal_year_id = sa.Column(sa.Integer,
+                        sa.ForeignKey('fiscal_year.id',
+                        ondelete='CASCADE'),
+                        passive_deletes=True,
+                        nullable=False)
+    order = sa.Column(sa.Integer)
+    name = sa.Column(sa.UnicodeText,
+        nullable=False)
+    start = sa.Column(sa.Date,
+        nullable=False)
+    end = sa.Column(sa.Date,
+        nullable=False)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
