@@ -92,8 +92,9 @@ def import_transactions_from_file(fiscal_year=None):
 
 def import_transactions(data, fiscal_year):
     if fiscal_year:
-        fy_start_date = util.fq_fy_to_date(1, util.fy_fy_to_fy(fiscal_year), "start").date()
-        fy_end_date = util.fq_fy_to_date(4, util.fy_fy_to_fy(fiscal_year), "end").date()
+        fy = models.FiscalYear.query.filter_by(id=fiscal_year).first()
+        fy_start_date = fy.start
+        fy_end_date = fy.end
         ifmis_fiscal_year = util.fy_fy_to_fyfy_ifmis(fiscal_year)
     else:
         fy_start_date, fy_end_date, ifmis_fiscal_year = None, None, None
