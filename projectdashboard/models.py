@@ -68,7 +68,7 @@ def get_closest_date(the_date, the_currency):
         ).order_by(abs_score.asc()
         ).first()
 
-def fwddata_query(_self, fiscalyear_modifier):
+def fwddata_query(_self):
     QUERY_COLS = (func.sum(ActivityForwardSpend.value).label("value"),
                 FiscalPeriod.name.label("fiscal_quarter"),
                 FiscalPeriod.end.label("fiscal_period_end"),
@@ -86,7 +86,7 @@ def fwddata_query(_self, fiscalyear_modifier):
         ).all()
 
 
-def fydata_query(_self, fiscalyear_modifier, _transaction_types, fund_sources=False):
+def fydata_query(_self, _transaction_types, fund_sources=False):
     QUERY_COLS = (func.sum(ActivityFinances.transaction_value).label("value"),
             FiscalPeriod.name.label("fiscal_quarter"),
             FiscalPeriod.end.label("fiscal_period_end"),
@@ -400,12 +400,12 @@ class Activity(db.Model):
                 return "danger"
         return None
 
-    def transaction_type_dict(self, fiscalyear_modifier,
+    def transaction_type_dict(self,
             transaction_types, transaction_type_label):
         if transaction_types == ['MTEF']:
-            fydata = fwddata_query(self, fiscalyear_modifier)
+            fydata = fwddata_query(self)
         else:
-            fydata = fydata_query(self, fiscalyear_modifier, transaction_types)
+            fydata = fydata_query(self, transaction_types)
         return {
             "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
             "date": fyval.fiscal_period_end,
@@ -417,12 +417,12 @@ class Activity(db.Model):
             for fyval in fydata
         }
 
-    def transaction_type_dict_fund_sources(self, fiscalyear_modifier,
+    def transaction_type_dict_fund_sources(self,
         transaction_types, transaction_type_label):
         if transaction_types == ['MTEF']:
-            fydata = fwddata_query(self, fiscalyear_modifier)
+            fydata = fwddata_query(self)
         else:
-            fydata = fydata_query(self, fiscalyear_modifier, transaction_types, True)
+            fydata = fydata_query(self, transaction_types, True)
         out = collections.defaultdict(dict)
         for fyval in fydata:
             out[fyval.fund_source_id].update({
@@ -436,34 +436,34 @@ class Activity(db.Model):
             )
         return out
 
-    def FY_disbursements_for_FY(self, FY, fiscalyear_modifier=6):
+    def FY_disbursements_for_FY(self, FY):
         result = db.session.query(
                 func.sum(ActivityFinances.transaction_value).label("value")
+            ).join(
+                ActivityFinances.fiscal_period_id == FiscalPeriod.id,
+                FiscalPeriod.fiscal_year_id == FiscalYear.id
             ).filter(
+                FiscalYear.id == FY,
                 ActivityFinances.activity_id == self.id,
-                ActivityFinances.transaction_type.in_((u'D', u'E')),
-                func.STRFTIME('%Y',
-                    func.DATE(ActivityFinances.transaction_date,
-                        'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == FY
+                ActivityFinances.transaction_type.in_((u'D', u'E'))
             ).scalar()
         if result is None: return 0.00
         return result
 
-    def FY_forwardspends_for_FY(self, FY, fiscalyear_modifier=6):
+    def FY_forwardspends_for_FY(self, FY):
         result = db.session.query(
                 func.sum(ActivityForwardSpend.value).label("value")
+            ).join(
+                ActivityForwardSpend.fiscal_period_id == FiscalPeriod.id,
+                FiscalPeriod.fiscal_year_id == FiscalYear.id
             ).filter(
-                ActivityForwardSpend.activity_id == self.id,
-                func.STRFTIME('%Y',
-                    func.DATE(ActivityForwardSpend.period_start_date,
-                        'start of month', '-{} month'.format(fiscalyear_modifier))
-                    ) == FY
+                FiscalYear.id == FY,
+                ActivityForwardSpend.activity_id == self.id
             ).scalar()
         if result is None: return 0.00
         return result
 
-    def FY_counterpart_funding_for_FY(self, FY, fiscalyear_modifier=6):
+    def FY_counterpart_funding_for_FY(self, FY):
         result = db.session.query(
                 func.sum(ActivityCounterpartFunding.required_value).label("value")
             ).filter(
@@ -479,35 +479,35 @@ class Activity(db.Model):
 
     @hybrid_property
     def FY_disbursements_dict(self):
-        return self.transaction_type_dict(6, ['D', 'E'], 'D')
+        return self.transaction_type_dict(['D', 'E'], 'D')
 
     @hybrid_property
-    def FY_disbursements_dict_fund_sources(self, fiscalyear_modifier=6):
-        return self.transaction_type_dict_fund_sources(6, ['D', 'E'], 'D')
+    def FY_disbursements_dict_fund_sources(self):
+        return self.transaction_type_dict_fund_sources(['D', 'E'], 'D')
 
     @hybrid_property
     def FY_allotments_dict(self):
-        return self.transaction_type_dict(6, ['99-A'], '99-A')
+        return self.transaction_type_dict(['99-A'], '99-A')
 
     @hybrid_property
-    def FY_allotments_dict_fund_sources(self, fiscalyear_modifier=6):
-        return self.transaction_type_dict_fund_sources(6, ['99-A'], '99-A')
+    def FY_allotments_dict_fund_sources(self):
+        return self.transaction_type_dict_fund_sources(['99-A'], '99-A')
 
     @hybrid_property
     def FY_commitments_dict(self):
-        return self.transaction_type_dict(6, ['C'], 'C')
+        return self.transaction_type_dict(['C'], 'C')
 
     @hybrid_property
-    def FY_commitments_dict_fund_sources(self, fiscalyear_modifier=6):
-        return self.transaction_type_dict_fund_sources(6, ['C'], 'C')
+    def FY_commitments_dict_fund_sources(self):
+        return self.transaction_type_dict_fund_sources(['C'], 'C')
 
     @hybrid_property
-    def FY_forward_spend_dict_fund_sources(self, fiscalyear_modifier=6):
-        return self.transaction_type_dict_fund_sources(6, ['MTEF'], 'MTEF')
+    def FY_forward_spend_dict_fund_sources(self):
+        return self.transaction_type_dict_fund_sources(['MTEF'], 'MTEF')
 
     @hybrid_property
-    def FY_forward_spend_dict(self, fiscalyear_modifier=6):
-        return self.transaction_type_dict(6, ['MTEF'], 'MTEF')
+    def FY_forward_spend_dict(self):
+        return self.transaction_type_dict(['MTEF'], 'MTEF')
 
     def make_classification_data(self, as_dict=False):
         def append_path(root, classification):
