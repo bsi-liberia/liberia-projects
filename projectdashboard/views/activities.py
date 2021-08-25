@@ -38,13 +38,14 @@ def api_activities_filters():
         ("Reported by", "reporting_org_id", reporting_orgs),
         ("Type of Implementer", "implementing_org_type", organisation_types),
         ("Sector", "mtef-sector", cl["mtef-sector"]),
-        ("Aligned Ministry / Agency", "aligned-ministry-agency", cl["aligned-ministry-agency"]),
+        ("Aligned Ministry / Agency", "aligned-ministry-agency",
+         cl["aligned-ministry-agency"]),
         ("PAPD Pillar", "papd-pillar", cl["papd-pillar"]),
         ("SDG Goals", "sdg-goals", cl["sdg-goals"]),
         ("Activity Status", "activity_status", cl["ActivityStatus"]),
         ("Aid Type", "aid_type", cl["AidType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
-        ]
+    ]
     earliest, latest = qactivity.get_earliest_latest_dates(force=True)
     activity_dates = {
         "earliest": earliest,
@@ -54,7 +55,7 @@ def api_activities_filters():
         "label": f[0],
         "name": f[1],
         "codes": list(map(lambda fo: fo.as_dict() if type(fo) != dict else fo, f[2])),
-        }, filters_codelists)),
+    }, filters_codelists)),
         activity_dates=activity_dates
     )
 
@@ -68,12 +69,15 @@ def api_activities_country():
     activity_commitments, activity_disbursements, activity_projected_disbursements = qactivity.activity_C_D_FSs()
 
     def round_or_zero(value):
-        if not value: return 0
+        if not value:
+            return 0
         return round(value)
+
     def make_pct(value1, value2):
-        if value2 == 0: return None
+        if value2 == 0:
+            return None
         return (value1/value2)*100
-    return jsonify(activities = [{
+    return jsonify(activities=[{
         'title': activity.title,
         'reporting_org': activity.reporting_org.name,
         'id': activity.id,
@@ -95,7 +99,8 @@ def api_activities_country():
 @quser.permissions_required("view")
 def api_activities_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     return jsonify(activity=activity.as_jsonable_dict())
 
 
@@ -103,9 +108,10 @@ def api_activities_by_id(activity_id):
 @jwt_required()
 @quser.permissions_required("new")
 def api_new_activity():
-    if request.method=="GET":
+    if request.method == "GET":
         today = datetime.datetime.now().date()
-        domestic_external = current_user.permissions_dict.get("edit") or current_user.permissions_dict.get("view")
+        domestic_external = current_user.permissions_dict.get(
+            "edit") or current_user.permissions_dict.get("view")
         if domestic_external == "both":
             domestic_external = "external"
         activity = {
@@ -121,23 +127,23 @@ def api_new_activity():
             "end_date": today,
             "recipient_country_code": current_user.recipient_country_code,
             "domestic_external": domestic_external,
-            "organisations": [ # Here we use the role as the ID so it gets submitted but this is a bad hack
+            "organisations": [  # Here we use the role as the ID so it gets submitted but this is a bad hack
                 {
-                "role": 1,
-                "name": "Funding",
-                "entries": [{
-                    'percentage': 100,
-                    'role': 1,
-                    'id': qorganisations.get_organisation_by_name("").id
+                    "role": 1,
+                    "name": "Funding",
+                    "entries": [{
+                        'percentage': 100,
+                        'role': 1,
+                        'id': qorganisations.get_organisation_by_name("").id
                     }]
                 },
                 {
-                "role": 4,
-                "name": "Implementing",
-                "entries": [{
-                    'percentage': 100,
-                    'role': 4,
-                    'id': qorganisations.get_organisation_by_name("").id
+                    "role": 4,
+                    "name": "Implementing",
+                    "entries": [{
+                        'percentage': 100,
+                        'role': 4,
+                        'id': qorganisations.get_organisation_by_name("").id
                     }]
                 }
             ],
@@ -195,16 +201,19 @@ def api_new_activity():
             },
         }
         return jsonify(activity=activity)
-    elif request.method=="POST":
+    elif request.method == "POST":
         data = request.get_json()
         if data.get('reporting_org_id') == None:
             return abort(400)
         for codelist, codelist_data in data["classifications"].items():
-            data["classification_id_{}".format(codelist)] = codelist_data["entries"][0]["code"]
-            data["classification_percentage_{}".format(codelist)] = codelist_data["entries"][0]["percentage"]
+            data["classification_id_{}".format(
+                codelist)] = codelist_data["entries"][0]["code"]
+            data["classification_percentage_{}".format(
+                codelist)] = codelist_data["entries"][0]["percentage"]
         data.pop("classifications")
         for org_role in data["organisations"]:
-            data["org_{}".format(org_role["role"])] = org_role["entries"][0]["id"]
+            data["org_{}".format(org_role["role"])
+                 ] = org_role["entries"][0]["id"]
         data.pop("organisations")
         data["user_id"] = current_user.id
         a = qactivity.create_activity(data)
@@ -220,34 +229,40 @@ def api_new_activity():
 def api_activity_summaries():
     activity_ids = request.json.get('activity_ids')
     fields = ['id', 'title', 'description', 'objectives', 'deliverables',
-        'papd_alignment', 'start_date', 'end_date', 'activity_status']
-    fields_special = ['implementing_organisations', 'funding_organisations', #'classifications',
-    ]
+              'papd_alignment', 'start_date', 'end_date', 'activity_status']
+    fields_special = ['implementing_organisations', 'funding_organisations',  # 'classifications',
+                      ]
     fields_len = ['results', 'documents', 'policy_markers', 'locations', 'counterpart_funding'
-        ]
+                  ]
     all_fields = fields + fields_special + fields_len
 
     def get_activity_summary(activity_id):
         activity = qactivity.get_activity(activity_id)
         f = dict([(field, getattr(activity, field)) for field in fields])
-        flen = dict([(field, "{} {}".format(len(getattr(activity, field)), field)) for field in fields_len])
+        flen = dict([(field, "{} {}".format(len(getattr(activity, field)), field))
+                    for field in fields_len])
         f.update(flen)
-        f['implementing_organisations'] = "; ".join(list(map(lambda org: org.name, activity.implementing_organisations)))
-        f['funding_organisations'] = "; ".join(list(map(lambda org: org.name, activity.funding_organisations)))
-        f['locations'] = "; ".join(list(map(lambda location: location.locations.name, activity.locations)))
+        f['implementing_organisations'] = "; ".join(
+            list(map(lambda org: org.name, activity.implementing_organisations)))
+        f['funding_organisations'] = "; ".join(
+            list(map(lambda org: org.name, activity.funding_organisations)))
+        f['locations'] = "; ".join(
+            list(map(lambda location: location.locations.name, activity.locations)))
         #f['classifications'] = dict(filter(lambda clsf: clsf[0]!='mtef-sector', activity.classification_data_dict.items()))
         return f
 
-    activity_summaries = [get_activity_summary(activity_id) for activity_id in activity_ids]
-    all_fields.pop(0) # Delete ID
+    activity_summaries = [get_activity_summary(
+        activity_id) for activity_id in activity_ids]
+    all_fields.pop(0)  # Delete ID
     # Group results by field
     summaries_by_field = dict([(field, {}) for field in all_fields])
     for activity in activity_summaries:
         for field in all_fields:
             summaries_by_field[field][activity['id']] = activity[field]
     # Get only fields with multiple distinct values
+
     def filter_unique(field):
-        return len(set(list(map(lambda val: str(val), field[1].values()))))>1
+        return len(set(list(map(lambda val: str(val), field[1].values())))) > 1
     unique_filters = dict(filter(filter_unique, summaries_by_field.items()))
     return jsonify(fields=unique_filters)
 
@@ -261,7 +276,7 @@ def api_activities_finances():
     activities = [{
         'id': activity_id,
         'finances': OrderedDict(qactivity.get_finances_by_activity_id(activity_id,
-        by_year))} for activity_id in activity_ids]
+                                                                      by_year))} for activity_id in activity_ids]
     return jsonify(activities=activities)
 
 
@@ -270,19 +285,22 @@ def api_activities_finances():
 @quser.permissions_required("view")
 def api_activities_finances_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     finances = qactivity.get_finances_by_activity_id(activity_id,
-        request.args.get('by_year'))
+                                                     request.args.get('by_year'))
     return jsonify(
         finances=OrderedDict(finances)
-        )
+    )
+
 
 @blueprint.route("/<activity_id>/finances/fund_sources.json")
 @jwt_required(optional=True)
 @quser.permissions_required("view")
 def api_activities_finances_fund_sources_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
 
     commitments = activity.FY_commitments_dict_fund_sources
     allotments = activity.FY_allotments_dict_fund_sources
@@ -290,26 +308,31 @@ def api_activities_finances_fund_sources_by_id(activity_id):
     forwardspends = activity.FY_forward_spend_dict_fund_sources
 
     finances = list()
-    if commitments: finances.append(('commitments', {
-        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
-        "data": commitments
+    if commitments:
+        finances.append(('commitments', {
+            "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+            "data": commitments
         }))
-    if allotments: finances.append(('allotment', {
-        "title": 'Allotments',
-        "data": allotments
+    if allotments:
+        finances.append(('allotment', {
+            "title": 'Allotments',
+            "data": allotments
         }))
-    if disbursements: finances.append(('disbursement', {
-        "title": 'Disbursements',
-        "data": disbursements
+    if disbursements:
+        finances.append(('disbursement', {
+            "title": 'Disbursements',
+            "data": disbursements
         }))
-    if forwardspends: finances.append(('forwardspend', {
-        "title": 'MTEF Projections',
-        "data": forwardspends
+    if forwardspends:
+        finances.append(('forwardspend', {
+            "title": 'MTEF Projections',
+            "data": forwardspends
         }))
     return jsonify(
         finances=OrderedDict(finances),
         fund_sources=activity.disb_fund_sources
     )
+
 
 def jsonify_results_design(results):
     out = []
@@ -317,7 +340,7 @@ def jsonify_results_design(results):
         _result = result.as_dict()
         _result["result_type"] = {
             1: "Output", 2: "Outcome", 3: "Impact"
-            }.get(result.result_type)
+        }.get(result.result_type)
         if result.indicators:
             _result["indicator_id"] = result.indicators[0].id
             _result["indicator_title"] = result.indicators[0].indicator_title
@@ -326,7 +349,8 @@ def jsonify_results_design(results):
             _result["baseline_value"] = result.indicators[0].baseline_value
             if result.indicators[0].baseline_year:
                 _result["baseline_year"] = result.indicators[0].baseline_year.year
-            _result["periods"] = list(map(lambda p: p.as_dict(), result.indicators[0].periods))
+            _result["periods"] = list(
+                map(lambda p: p.as_dict(), result.indicators[0].periods))
         else:
             _result["periods"] = []
         out.append(_result)
@@ -338,9 +362,10 @@ def jsonify_results_design(results):
 @quser.permissions_required("view")
 def api_activities_results(activity_id):
     activity = models.Activity.query.get(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     results = activity.results
-    return jsonify(results = jsonify_results_design(results))
+    return jsonify(results=jsonify_results_design(results))
 
 
 @blueprint.route("/<activity_id>/documents.json")
@@ -348,9 +373,10 @@ def api_activities_results(activity_id):
 @quser.permissions_required("view")
 def api_activities_documents(activity_id):
     activity = models.Activity.query.get(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     documents = list(map(lambda d: d.as_dict(), activity.documents))
-    return jsonify(documents = documents)
+    return jsonify(documents=documents)
 
 
 @blueprint.route("/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])
@@ -359,16 +385,18 @@ def api_activities_documents(activity_id):
 def api_activities_results_data_entry(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data_entry(activity_id,
-            request.json.get("results"), request.json.get("saveType"))
-        if not result: return jsonify(error="Error, could not save data."), 500
+                                                   request.json.get("results"), request.json.get("saveType"))
+        if not result:
+            return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     results = activity.results
     return jsonify(
-            activity_id = activity.id,
-            activity_title = activity.title,
-            results = jsonify_results_design(results)
-        )
+        activity_id=activity.id,
+        activity_title=activity.title,
+        results=jsonify_results_design(results)
+    )
 
 
 @blueprint.route("/<activity_id>/results/design.json", methods=['GET', 'POST'])
@@ -376,26 +404,29 @@ def api_activities_results_data_entry(activity_id):
 @quser.permissions_required("results-data-design")
 def api_activities_results_design(activity_id):
     if request.method == "POST":
-        result = qactivity.save_results_data(activity_id, request.json.get("results"))
-        if not result: return jsonify(error="Error, could not save data."), 500
+        result = qactivity.save_results_data(
+            activity_id, request.json.get("results"))
+        if not result:
+            return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     results = activity.results
     return jsonify(
-            activity_id = activity.id,
-            activity_title = activity.title,
-            results=jsonify_results_design(results)
-        )
+        activity_id=activity.id,
+        activity_title=activity.title,
+        results=jsonify_results_design(results)
+    )
 
 
 @blueprint.route("/<activity_id>/delete/", methods=['POST'])
 @jwt_required()
 def activity_delete(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if (((activity.domestic_external=='domestic') and
+    if (((activity.domestic_external == 'domestic') and
         ('piu-desk-officer' in current_user.roles_list)) or
         (getattr(current_user, "administrator")) or
-        ('admin' in current_user.roles_list)):
+            ('admin' in current_user.roles_list)):
         result = qactivity.delete_activity(activity_id)
     else:
         abort(403)
@@ -403,6 +434,7 @@ def activity_delete(activity_id):
         return jsonify({'msg': "Successfully deleted that activity"}), 200
     else:
         return jsonify({'msg': "Sorry, unable to delete that activity"}), 500
+
 
 """
 I think all of this is unused
@@ -488,25 +520,32 @@ def activity_edit_attr(activity_id):
     if request_data['type'] == 'classification':
         activitycodelist_id = request_data['activitycodelist_id']
         update_status = qactivity.update_activity_codelist(
-            activitycodelist_id, {"attr": request_data['attr'], "value": request_data['value']}
-            )
-        if update_status: return "success"
-        else: return "error"
+            activitycodelist_id, {
+                "attr": request_data['attr'], "value": request_data['value']}
+        )
+        if update_status:
+            return "success"
+        else:
+            return "error"
     elif request_data['type'] == 'policy_marker':
         policy_marker_code = request_data['code']
         update_status = qactivity.update_activity_policy_marker(
             activity_id,
             int(policy_marker_code),
             {"attr": request_data['attr'], "value": request_data['value']}
-            )
-        if update_status: return "success"
-        else: return "error"
+        )
+        if update_status:
+            return "success"
+        else:
+            return "error"
     elif request_data['type'] == 'organisation':
         update_status = qorganisations.update_activity_organisation(
             request_data['activityorganisation_id'],
             request_data['value'])
-        if update_status: return "success"
-        else: return "error"
+        if update_status:
+            return "success"
+        else:
+            return "error"
     data = {
         'attr': request_data['attr'],
         'value': request_data['value'],
@@ -528,16 +567,17 @@ def api_activity_milestones(activity_id):
         attribute = request_data["attr"]
         value = request_data["value"]
         update_status = qmilestones.add_or_update_activity_milestone({
-                    "activity_id": activity_id,
-                    "milestone_id": milestone_id,
-                    "attribute": attribute,
-                    "value": value})
+            "activity_id": activity_id,
+            "milestone_id": milestone_id,
+            "attribute": attribute,
+            "value": value})
         if update_status == True:
             return "success"
         return "error"
     else:
         activity = qactivity.get_activity(activity_id)
-        if activity == None: return abort(404)
+        if activity == None:
+            return abort(404)
         return jsonify(milestones=activity.milestones_data)
 
 

@@ -15,9 +15,11 @@ def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
     return datetime.datetime.strptime(value, "%Y-%m-%d")
 
+
 def isostring_year(value):
     # Returns a date object from a string of format YYYY
     return datetime.datetime.strptime(value, "%Y")
+
 
 def add_fund_source(data):
     fS = models.FundSource()
@@ -35,7 +37,7 @@ def add_finances(activity_id, data):
     classifications = data.get("classifications")
     data.pop("classifications")
     data["transaction_date"] = isostring_date(data["transaction_date"])
-    aF.currency_automatic=True
+    aF.currency_automatic = True
     aF.currency_source, aF.currency_rate, aF.currency_value_date = qexchangerates.get_exchange_rate(
         data["transaction_date"], data.get("currency", u"USD"))
     for key, value in data.items():
@@ -51,45 +53,48 @@ def add_finances(activity_id, data):
     db.session.commit()
 
     activity_updated(activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "add",
-        "target": "ActivityFinances",
-        "target_id": aF.id,
-        "old_value": None,
-        "value": aF.as_dict()
-        }
-        )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "add",
+                         "target": "ActivityFinances",
+                         "target_id": aF.id,
+                         "old_value": None,
+                         "value": aF.as_dict()
+                     }
+                     )
     return aF
+
 
 def update_finances_classification(data):
     checkF = models.ActivityFinancesCodelistCode.query.filter_by(
-        activityfinance_id = data["finances_id"],
-        codelist_id = data["attr"]
+        activityfinance_id=data["finances_id"],
+        codelist_id=data["attr"]
     ).first()
-    if not checkF: return False
+    if not checkF:
+        return False
     old_value = checkF.codelist_code_id
     checkF.codelist_code_id = data["value"]
     db.session.add(checkF)
     db.session.commit()
 
     activity_updated(data["activity_id"],
-        {
+                     {
         "user_id": current_user.id,
         "mode": "update",
         "target": "ActivityFinancesCodelistCode",
         "target_id": checkF.id,
         "old_value": {data["attr"]: old_value},
         "value": {data["attr"]: data["value"]}
-        }
-        )
+    }
+    )
     return models.ActivityFinances.query.filter_by(id=data["finances_id"]).first()
+
 
 def delete_finances(activity_id, finances_id):
     print("Delete activity id {} finances id {}".format(activity_id, finances_id))
     checkF = models.ActivityFinances.query.filter_by(
-        activity_id = activity_id,
-        id = finances_id
+        activity_id=activity_id,
+        id=finances_id
     ).first()
     if checkF:
         old_value = checkF.as_dict()
@@ -97,21 +102,22 @@ def delete_finances(activity_id, finances_id):
         db.session.commit()
 
         activity_updated(checkF.activity_id,
-            {
-            "user_id": current_user.id,
-            "mode": "delete",
-            "target": "ActivityFinances",
-            "target_id": old_value["id"],
-            "old_value": old_value,
-            "value": None
-            }
-            )
+                         {
+                             "user_id": current_user.id,
+                             "mode": "delete",
+                             "target": "ActivityFinances",
+                             "target_id": old_value["id"],
+                             "old_value": old_value,
+                             "value": None
+                         }
+                         )
         return {"result": True}
     return False
 
+
 def update_attr(data):
     finance = models.ActivityFinances.query.filter_by(
-        id = data['finances_id']
+        id=data['finances_id']
     ).first()
 
     old_value = getattr(finance, data['attr'])
@@ -129,37 +135,39 @@ def update_attr(data):
     db.session.commit()
 
     activity_updated(finance.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityFinances",
-        "target_id": finance.id,
-        "old_value": {data['attr']: old_value},
-        "value": {data['attr']: data['value']}
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "ActivityFinances",
+                         "target_id": finance.id,
+                         "old_value": {data['attr']: old_value},
+                         "value": {data['attr']: data['value']}
+                     }
+                     )
 
     return finance
 
 # Forward spend data
 
+
 def create_periods(start_date, end_date):
     periods = []
-    if start_date.year == end_date.year:  ## They are the same
+    if start_date.year == end_date.year:  # They are the same
         for quarter in range(MONTHS_QUARTERS[start_date.month], MONTHS_QUARTERS[end_date.month]+1):
             periods.append((quarter, start_date.year))
-    else: ## They are different
+    else:  # They are different
         # Do start year
         for quarter in range(MONTHS_QUARTERS[start_date.month], 5):
             periods.append((quarter, start_date.year))
         # Do in between year
         for year in range(start_date.year+1, end_date.year):
-            for quarter in range(1,5):
+            for quarter in range(1, 5):
                 periods.append((quarter, year))
         # Do end year
         for quarter in range(1, MONTHS_QUARTERS[end_date.month]+1):
             periods.append((quarter, end_date.year))
     return periods
+
 
 def create_missing_forward_spends(from_date, to_date, activity_id):
     # NB quarters here are in calendar quarters, not Liberian fiscal quarters
@@ -167,7 +175,8 @@ def create_missing_forward_spends(from_date, to_date, activity_id):
         return year_quarter[1], year_quarter[0]
 
     required_periods = create_periods(from_date, to_date)
-    fs = models.ActivityForwardSpend.query.filter_by(activity_id=activity_id).all()
+    fs = models.ActivityForwardSpend.query.filter_by(
+        activity_id=activity_id).all()
     existing_periods = list(map(lambda f: (
         util.MONTHS_QUARTERS[f.period_start_date.month],
         f.period_start_date.year), fs))
@@ -178,6 +187,7 @@ def create_missing_forward_spends(from_date, to_date, activity_id):
     forward_spends = create_forward_spends_from_periods(new_periods)
     return forward_spends
 
+
 def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
     # NB quarters are in calendar quarters, not Liberian fiscal quarters
     start_day, start_month = QUARTERS_MONTH_DAY[quarter]["start"]
@@ -185,22 +195,22 @@ def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
     start_date = datetime.datetime(year, start_month, start_day).date()
     end_date = datetime.datetime(year, end_month, end_day).date()
     fs = models.ActivityForwardSpend.query.filter_by(activity_id=activity_id,
-        period_start_date=start_date).first()
+                                                     period_start_date=start_date).first()
     if fs:
         old_value = fs.value
         fs.value = value
         db.session.add(fs)
         db.session.commit()
         activity_updated(fs.activity_id,
-            {
-            "user_id": current_user.id,
-            "mode": "update",
-            "target": "ActivityForwardSpend",
-            "target_id": fs.id,
-            "old_value": {"value": old_value },
-            "value": {"value": value }
-            }
-        )
+                         {
+                             "user_id": current_user.id,
+                             "mode": "update",
+                             "target": "ActivityForwardSpend",
+                             "target_id": fs.id,
+                             "old_value": {"value": old_value},
+                             "value": {"value": value}
+                         }
+                         )
         return fs
     else:
         fs = models.ActivityForwardSpend()
@@ -213,16 +223,17 @@ def create_or_update_forwardspend(activity_id, quarter, year, value, currency):
         db.session.add(fs)
         db.session.commit()
         activity_updated(fs.activity_id,
-            {
-            "user_id": current_user.id,
-            "mode": "add",
-            "target": "ActivityForwardSpend",
-            "target_id": fs.id,
-            "old_value": None,
-            "value": fs.as_dict()
-            }
-        )
+                         {
+                             "user_id": current_user.id,
+                             "mode": "add",
+                             "target": "ActivityForwardSpend",
+                             "target_id": fs.id,
+                             "old_value": None,
+                             "value": fs.as_dict()
+                         }
+                         )
         return fs
+
 
 def create_forward_spend(quarter, year, value, currency):
     # NB quarters are in calendar quarters, not Liberian fiscal quarters
@@ -236,26 +247,31 @@ def create_forward_spend(quarter, year, value, currency):
     fs.period_end_date = datetime.datetime(year, end_month, end_day)
     return fs
 
+
 def create_forward_spends_from_periods(periods, value=0, currency=u"USD"):
     forwardspends = []
-    if value>0: value = round(value/len(periods), 2)
+    if value > 0:
+        value = round(value/len(periods), 2)
     for quarter, year in periods:
         fs = create_forward_spend(quarter, year, value, currency)
         forwardspends.append(fs)
     return forwardspends
+
 
 def create_forward_spends(start_date, end_date, value=0, currency=u"USD"):
     forwardspends = []
     periods = create_periods(start_date, end_date)
-    if value>0: value = round(value/len(periods), 2)
+    if value > 0:
+        value = round(value/len(periods), 2)
     for quarter, year in periods:
         fs = create_forward_spend(quarter, year, value, currency)
         forwardspends.append(fs)
     return forwardspends
 
+
 def update_fs_attr(data):
     fs = models.ActivityForwardSpend.query.filter_by(
-        id = data['id']
+        id=data['id']
     ).first()
     old_value = fs.value
     fs.value = data['value']
@@ -263,13 +279,13 @@ def update_fs_attr(data):
     db.session.commit()
 
     activity_updated(fs.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityForwardSpend",
-        "target_id": fs.id,
-        "old_value": {"value": old_value },
-        "value": {"value": data['value'] }
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "ActivityForwardSpend",
+                         "target_id": fs.id,
+                         "old_value": {"value": old_value},
+                         "value": {"value": data['value']}
+                     }
+                     )
     return True

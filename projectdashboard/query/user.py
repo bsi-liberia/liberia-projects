@@ -14,6 +14,7 @@ from smtplib import SMTPRecipientsRefused
 import datetime
 import uuid
 
+
 def administrator_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -22,10 +23,13 @@ def administrator_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 def check_permissions(permission_name, permission_value=None, activity_id=None):
-    if "admin" in current_user.roles_list: return True
+    if "admin" in current_user.roles_list:
+        return True
     if permission_name in ("results-data-entry", "results-data-design"):
-        if "edit" in current_user.roles_list: return True
+        if "edit" in current_user.roles_list:
+            return True
     if permission_name in ("view") and "view" in current_user.permissions_list:
         return True
     if permission_name in ("view", "edit"):
@@ -34,32 +38,42 @@ def check_permissions(permission_name, permission_value=None, activity_id=None):
     if permission_name in ("new"):
         if current_user.permissions_dict.get("edit", "none") != "none":
             return True
-        if "desk-officer" in current_user.roles_list: return True
+        if "desk-officer" in current_user.roles_list:
+            return True
     if activity_id:
         check = (check_activity_permissions(permission_name, activity_id))
-        if check: return True
+        if check:
+            return True
     return False
+
 
 def check_activity_permissions(permission_name, activity_id):
     def edit_rights(activity, permissions_search):
         edit_permissions = permissions_search.get("edit", "none")
-        if edit_permissions == "both": return True
-        if edit_permissions == activity.domestic_external: return True
+        if edit_permissions == "both":
+            return True
+        if edit_permissions == activity.domestic_external:
+            return True
         return False
-    if "admin" in current_user.roles_list: return True
+    if "admin" in current_user.roles_list:
+        return True
     act = qactivity.get_activity(activity_id)
     if permission_name in ('edit', 'results-data-entry', 'results-data-design'):
-        if edit_rights(act, current_user.permissions_dict): return True
+        if edit_rights(act, current_user.permissions_dict):
+            return True
         # For now, we allow all users with results design / data entry roles
         # to add results data for all projects
-        if permission_name in current_user.roles_list: return True
+        if permission_name in current_user.roles_list:
+            return True
     if act and current_user.permissions_dict.get("organisations"):
         if (act.reporting_org_id in current_user.permissions_dict["organisations"]):
             # If the user is attached to an organisation, then they should always
             # at least have view rights.
-            if permission_name == "view": return True
+            if permission_name == "view":
+                return True
             if permission_name == "edit":
-                if edit_rights(act, current_user.permissions_dict["organisations"][act.reporting_org_id]): return True
+                if edit_rights(act, current_user.permissions_dict["organisations"][act.reporting_org_id]):
+                    return True
             if permission_name in current_user.permissions_list["organisations"][act.reporting_org_id]:
                 return True
             elif permission_name in ("results-data-entry", "results-data-design"):
@@ -67,10 +81,13 @@ def check_activity_permissions(permission_name, activity_id):
                     return True
     return False
 
+
 def check_new_activity_permission():
     for org in current_user.permissions_dict["organisations"].values():
-        if org["permission_value"] == "edit": return True
+        if org["permission_value"] == "edit":
+            return True
     return False
+
 
 def permissions_required(permission_name, permission_value=None):
     def wrapper(f):
@@ -81,11 +98,13 @@ def permissions_required(permission_name, permission_value=None):
             elif kwargs.get('activity_id'):
                 activity_id = kwargs.get('activity_id')
                 check = (check_activity_permissions(permission_name, activity_id)
-                    or check_permissions(permission_name, permission_value))
+                         or check_permissions(permission_name, permission_value))
             elif permission_name == "new":
-                check = (check_new_activity_permission() or check_permissions(permission_name, permission_value))
+                check = (check_new_activity_permission() or check_permissions(
+                    permission_name, permission_value))
             elif permission_name == "edit":
-                check = (check_new_activity_permission() or check_permissions(permission_name, permission_value))
+                check = (check_new_activity_permission() or check_permissions(
+                    permission_name, permission_value))
             else:
                 check = (check_permissions(permission_name, permission_value))
             if check is False:
@@ -94,17 +113,18 @@ def permissions_required(permission_name, permission_value=None):
         return decorated_function
     return wrapper
 
+
 def user(user_id=None):
     if user_id:
         user = models.User.query.filter_by(id=user_id
-                    ).first()
+                                           ).first()
         return user
     else:
         users = models.User.query.all()
         return users
 
 
-def role(role_slug = None):
+def role(role_slug=None):
     if role_slug:
         role = models.Role.query.filter_by(
             slug=role_slug).first()
@@ -116,16 +136,16 @@ def role(role_slug = None):
 
 def role_by_slug(role_slug):
     role = models.Role.query.filter_by(slug=role_slug
-        ).first()
+                                       ).first()
     return role
 
 
 def users_with_role(role_slug):
     users = db.session.query(models.User
-        ).join(models.UserRole
-        ).join(models.Role
-        ).filter(models.Role.slug==role_slug
-        ).all()
+                             ).join(models.UserRole
+                                    ).join(models.Role
+                                           ).filter(models.Role.slug == role_slug
+                                                    ).all()
     return users
 
 
@@ -144,7 +164,8 @@ def add_user_role(username, role_slug):
 
 def list_user_role_by_username(username):
     user = user_by_username(username)
-    if not user: return False
+    if not user:
+        return False
     return user.roles_list
 
 
@@ -155,7 +176,8 @@ def delete_user_role(username, role_slug):
         ur = models.UserRole.query.filter_by(
             user_id=user.id,
             role_id=role.id).first()
-        if not ur: return False
+        if not ur:
+            return False
         db.session.delete(ur)
         db.session.commit()
         return True
@@ -180,10 +202,11 @@ def activitylog(offset=0, user_id=None):
             user_id=user_id)
     activitylogs = activitylogs.order_by(
         models.ActivityLog.id.desc()
-        ).offset(offset
-        ).limit(10
-        ).all()
+    ).offset(offset
+             ).limit(10
+                     ).all()
     return activitylogs
+
 
 def activitylog_detail(activitylog_id):
     activitylog = models.ActivityLog.query.filter_by(
@@ -194,33 +217,36 @@ def activitylog_detail(activitylog_id):
 def user_by_username(username=None):
     if username:
         user = models.User.query.filter_by(username=username
-                    ).first()
+                                           ).first()
         return user
     return None
+
 
 def user_by_email_address(email_address=None):
     if email_address:
         user = models.User.query.filter_by(email_address=email_address
-                    ).first()
+                                           ).first()
         return user
     return None
 
+
 def setPermission(user, permission_name, permission_value):
     checkPermission = models.UserPermission.query.filter_by(
-        user_id = user.id,
-        permission_name = permission_name).first()
+        user_id=user.id,
+        permission_name=permission_name).first()
     if not checkPermission:
         checkPermission = models.UserPermission()
-        checkPermission.user_id=user.id
+        checkPermission.user_id = user.id
         checkPermission.permission_name = permission_name
     checkPermission.permission_value = permission_value
     db.session.add(checkPermission)
     db.session.commit()
     return checkPermission
 
+
 def updateUser(data):
     checkU = models.User.query.filter_by(id=data["id"]
-                ).first()
+                                         ).first()
     assert checkU
     checkU.username = data["username"]
     checkU.name = data["name"]
@@ -244,10 +270,13 @@ def updateUser(data):
     if "admin" in current_user.roles_list:
         current_user_roles = list(map(lambda ur: ur.role_id, checkU.userroles))
         new_user_roles = filter(lambda r: r != '', data.get("user_roles", []))
-        roles_to_add = filter(lambda r: r not in current_user_roles, new_user_roles)
-        roles_to_delete = filter(lambda r: r not in new_user_roles, current_user_roles)
+        roles_to_add = filter(
+            lambda r: r not in current_user_roles, new_user_roles)
+        roles_to_delete = filter(
+            lambda r: r not in new_user_roles, current_user_roles)
         for role_id in roles_to_delete:
-            ur = models.UserRole.query.filter_by(user_id=checkU.id, role_id=int(role_id)).first()
+            ur = models.UserRole.query.filter_by(
+                user_id=checkU.id, role_id=int(role_id)).first()
             if (current_user.id == ur.id) and (ur.role.slug == "admin"):
                 flash("As an administrator, you cannot remove administrative privileges from yourself. If you would like to remove administrative privileges from this account then you must log in as another user.", "danger")
                 continue
@@ -260,19 +289,20 @@ def updateUser(data):
     db.session.commit()
     return checkU
 
+
 def addUser(data):
     checkU = models.User.query.filter_by(username=data["username"]
-                ).first()
+                                         ).first()
     if not checkU:
         newU = models.User()
         newU.setup(
-            username = data["username"],
-            password = data.get('password'),
-            name = data.get('name'),
-            email_address = data.get('email_address'),
-            organisation = data.get('organisation'),
-            recipient_country_code = data.get('recipient_country_code')
-            )
+            username=data["username"],
+            password=data.get('password'),
+            name=data.get('name'),
+            email_address=data.get('email_address'),
+            organisation=data.get('organisation'),
+            recipient_country_code=data.get('recipient_country_code')
+        )
         db.session.add(newU)
         db.session.commit()
         setPermission(newU, u"view", data.get("view"))
@@ -291,23 +321,25 @@ def addUser(data):
         return newU
     return checkU
 
+
 def addUserPermission(data):
     checkP = models.UserPermission.query.filter_by(
-                user_id=data["user_id"],
-                permission_name=data.get("permission_name"),
-                organisation_slug=data["organisation_slug"],
-                ).first()
+        user_id=data["user_id"],
+        permission_name=data.get("permission_name"),
+        organisation_slug=data["organisation_slug"],
+    ).first()
     if not checkP:
         newP = models.UserPermission()
         newP.setup(
-            user_id = data["user_id"],
+            user_id=data["user_id"],
             permission_name=data.get("permission_name"),
             organisation_slug=data["organisation_slug"],
-            )
+        )
         db.session.add(newP)
         db.session.commit()
         return newP
     return None
+
 
 def deleteUserPermission(permission_id):
     checkP = models.UserPermission.query.filter_by(id=permission_id).first()
@@ -317,6 +349,7 @@ def deleteUserPermission(permission_id):
         return True
     return None
 
+
 def deleteUser(username):
     checkU = models.User.query.filter_by(username=username).first()
     if checkU:
@@ -325,10 +358,12 @@ def deleteUser(username):
         return True
     return None
 
+
 def userPermissions(user_id):
     checkP = models.UserPermission.query.filter_by(user_id=user_id
-            ).all()
+                                                   ).all()
     return checkP
+
 
 def addOrganisationPermission(data):
     checkOP = models.UserOrganisation()
@@ -340,28 +375,33 @@ def addOrganisationPermission(data):
     db.session.commit()
     return checkOP
 
+
 def deleteOrganisationPermission(data):
     checkOP = models.UserOrganisation.query.filter_by(id=data['id']).first()
     db.session.delete(checkOP)
     db.session.commit()
     return True
 
+
 def updateOrganisationPermission(data):
     checkOP = models.UserOrganisation.query.filter_by(id=data['id']).first()
-    if not checkOP: return False
+    if not checkOP:
+        return False
     setattr(checkOP, data['attr'], data['value'])
     db.session.add(checkOP)
     db.session.commit()
     return checkOP
 
+
 def check_password_reset(email_address, reset_password_key):
     user = models.User.query.filter(models.User.email_address == email_address,
-            models.User.reset_password_key == reset_password_key,
-            models.User.reset_password_expiry > datetime.datetime.now()
-        ).first()
+                                    models.User.reset_password_key == reset_password_key,
+                                    models.User.reset_password_expiry > datetime.datetime.now()
+                                    ).first()
     if user:
         return True
     return False
+
 
 def process_reset_password(email_address, reset_password_key, password):
     if not check_password_reset(email_address, reset_password_key):
@@ -445,5 +485,6 @@ def make_password_reset_key(email_address):
             send_user_password_reset_email(email_address, user)
         return True
     except SMTPRecipientsRefused:
-        flash("Could not send an email to that address. Please confirm you provided a valid email address and try again. The email address you provided was: {}".format(email_address), "danger")
+        flash("Could not send an email to that address. Please confirm you provided a valid email address and try again. The email address you provided was: {}".format(
+            email_address), "danger")
         return False

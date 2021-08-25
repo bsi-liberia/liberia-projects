@@ -3,6 +3,7 @@ from openpyxl.styles import Color, PatternFill, Font, Border, Protection, Alignm
 from openpyxl.styles.borders import Border, Side
 from projectdashboard.lib.spreadsheets.formatting import yellowFill, orangeFill
 
+
 def cover_sheet(_self):
     ws = _self.wb.create_sheet(u"Instructions")
     ws["A1"] = u"Instructions"
@@ -20,12 +21,12 @@ def cover_sheet(_self):
     ws["C6"] = _self.template_currency
     ws["C6"].font = Font(size=14)
     yellow_fill = PatternFill(start_color='FFFF00',
-                         end_color='FFFF00',
-                         fill_type = 'solid')
+                              end_color='FFFF00',
+                              fill_type='solid')
     thin_border = Border(left=Side(style='thin'),
-                 right=Side(style='thin'),
-                 top=Side(style='thin'),
-                 bottom=Side(style='thin'))
+                         right=Side(style='thin'),
+                         top=Side(style='thin'),
+                         bottom=Side(style='thin'))
 
     ws["C6"].fill = yellow_fill
     ws["C6"].border = thin_border
@@ -43,7 +44,7 @@ def mtef(_self, ws):
     ws["A16"].font = Font(size=14)
     ws["A16"].alignment = Alignment(vertical="top")
     ws["A16"].fill = orangeFill
-    ws.row_dimensions[16].height=22
+    ws.row_dimensions[16].height = 22
     ws.merge_cells("A16:C17")
     ws["D16"] = u"The amount that GoL has agreed to provide as counterpart funding for this project, for the coming Fiscal Year, in USD."
     ws["D16"].font = Font(size=14)
@@ -54,7 +55,8 @@ def mtef(_self, ws):
     ws["A18"].font = Font(size=14)
     ws["A18"].fill = yellowFill
     ws.merge_cells("A18:C18")
-    ws["D18"] = u"The amount you plan to spend in each of the next 3 Fiscal Years, in {}.".format(_self.template_currency)
+    ws["D18"] = u"The amount you plan to spend in each of the next 3 Fiscal Years, in {}.".format(
+        _self.template_currency)
     ws["D18"].font = Font(size=14)
     ws.merge_cells("D18:K18")
 
@@ -72,7 +74,7 @@ def mtef(_self, ws):
     ws["D20"] = u"For new projects, add new rows at the bottom of the sheet. Leave the ID column blank."
     ws["D20"].font = Font(size=14)
     ws["D20"].alignment = Alignment(wrap_text=True, vertical="top")
-    ws.row_dimensions[20].height=22
+    ws.row_dimensions[20].height = 22
     ws.merge_cells("D20:K21")
     return ws
 
@@ -82,7 +84,8 @@ def disbursements(_self, ws):
     ws["A16"].font = Font(size=14)
     ws["A16"].fill = yellowFill
     ws.merge_cells("A16:C16")
-    ws["D16"] = u"The amount you spent on this project in the last fiscal quarter, in {}.".format(_self.template_currency)
+    ws["D16"] = u"The amount you spent on this project in the last fiscal quarter, in {}.".format(
+        _self.template_currency)
     ws["D16"].font = Font(size=14)
     ws.merge_cells("D16:K16")
 
@@ -100,6 +103,6 @@ def disbursements(_self, ws):
     ws["D18"] = u"For new projects, add new rows at the bottom of the sheet. Leave the ID column blank."
     ws["D18"].font = Font(size=14)
     ws["D18"].alignment = Alignment(wrap_text=True, vertical="top")
-    ws.row_dimensions[18].height=22
+    ws.row_dimensions[18].height = 22
     ws.merge_cells("D18:K19")
     return ws

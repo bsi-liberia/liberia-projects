@@ -31,23 +31,27 @@ def fix_narrative(ref, text):
 
 def get_narrative(container):
     narratives = container.xpath("narrative")
-    if len(narratives) == 0: return ""
+    if len(narratives) == 0:
+        return ""
     if len(narratives) == 1:
         if narratives[0].text:
             return fix_narrative(container.get('ref'), narratives[0].text.strip())
-        else: return ""
+        else:
+            return ""
+
     def filter_lang(element):
         lang = element.get("{http://www.w3.org/XML/1998/namespace}lang")
         return lang in (None, 'en')
     filtered = list(filter(filter_lang, narratives))
-    if len(filtered) == 0: return fix_narrative(container.get('ref'), narratives[0].text.strip())
+    if len(filtered) == 0:
+        return fix_narrative(container.get('ref'), narratives[0].text.strip())
     return fix_narrative(container.get('ref'), filtered[0].text.strip())
 
 
 @blueprint.route("/iati.json")
 def api_list_iati_files():
     urls = qactivity.get_iati_list()
-    return jsonify(urls = urls)
+    return jsonify(urls=urls)
 
 
 @blueprint.route("/<version>/<country_code>.xml")
@@ -71,7 +75,9 @@ def urlencode_text(text):
 def api_iati_search():
     args = request.get_json()
     title = args["title"]
-    reporting_org_code = args["reporting_org_code"] # NB DSv2 uses "," rather than "|"
+    # NB DSv2 uses "," rather than "|"
+    reporting_org_code = args["reporting_org_code"]
+
     def clean_data(doc):
         def clean_activity(activity):
             title = get_narrative(activity.find("title"))
@@ -91,30 +97,33 @@ def api_iati_search():
         iati_identifiers = "{}|{}".format(args.get('iati_identifier'), "|".join(
             list(map(lambda ro: "{}-{}".format(ro, args.get('iati_identifier')), args['reporting_org_code'].split("|")))))
         print("iati_identifiers are", iati_identifiers)
-        print("DS URL IS {}".format(DSV1_IATI_IDENTIFIER_URL.format(iati_identifiers)))
+        print("DS URL IS {}".format(
+            DSV1_IATI_IDENTIFIER_URL.format(iati_identifiers)))
         r = requests.get(DSV1_IATI_IDENTIFIER_URL.format(iati_identifiers))
-        if r.status_code==200:
+        if r.status_code == 200:
             data = clean_data(etree.fromstring(r.text))
-            if len(data['results'])>0:
+            if len(data['results']) > 0:
                 return jsonify(data)
 
     return jsonify({'msg': 'No results found', 'results': []})
 
     # Disable searching by title for now
-    print("DS URL IS {}".format(DSV1_TITLE_URL.format(urlencode_text(title), reporting_org_code)))
-    r = requests.get(DSV1_TITLE_URL.format(title.encode("utf-8"), reporting_org_code))
-    if r.status_code==200:
+    print("DS URL IS {}".format(DSV1_TITLE_URL.format(
+        urlencode_text(title), reporting_org_code)))
+    r = requests.get(DSV1_TITLE_URL.format(
+        title.encode("utf-8"), reporting_org_code))
+    if r.status_code == 200:
         data = clean_data(etree.fromstring(r.text))
         return jsonify(data)
 
 
-#FIXME
+# FIXME
 
 
-@blueprint.route("/search/<iati_identifier>/", methods=["POST","GET"])
-#@jwt_required()
+@blueprint.route("/search/<iati_identifier>/", methods=["POST", "GET"])
+# @jwt_required()
 def api_iati_search_iati_identifier(iati_identifier):
-    #FIXME
+    # FIXME
     def clean_data(doc):
         def clean_activity(activity):
             title = get_narrative(activity.find("title"))
@@ -142,8 +151,9 @@ def api_iati_fetch_data(activity_id):
     activity_ids = request.json.get("activityIDs")
     import_options = request.json.get("importOptions")
     activities_fields_options = request.json.get("activitiesFieldsOptions")
+    #iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
     return jsonify(status=qimport_iati.import_data(activity_id, iati_identifier,
-        activity_ids, import_options, activities_fields_options))
+                                                   activity_ids, import_options, activities_fields_options))
 
     #iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
-    #return str(iati_document_result)
+    # return str(iati_document_result)

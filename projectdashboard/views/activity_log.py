@@ -8,6 +8,7 @@ from projectdashboard import models
 
 blueprint = Blueprint('activity_log', __name__, url_prefix='/api/activity-log')
 
+
 @blueprint.route("/")
 @jwt_required()
 @quser.permissions_required("edit")
@@ -16,7 +17,8 @@ def activity_log():
     count = models.ActivityLog.query.count()
     user_id = request.args.get("user_id", None)
     activitylogs = quser.activitylog(offset=offset,
-        user_id=user_id)
+                                     user_id=user_id)
+
     def simple_log(al):
         return {
             "id": al.id,
@@ -39,8 +41,8 @@ def activity_log():
             }
         }
     return jsonify(
-        count = count,
-        items = list(map(lambda al: simple_log(al), activitylogs)))
+        count=count,
+        items=list(map(lambda al: simple_log(al), activitylogs)))
 
 
 @blueprint.route("/<int:activitylog_id>.json")
@@ -48,6 +50,7 @@ def activity_log():
 @quser.permissions_required("edit")
 def activity_log_detail(activitylog_id):
     al = quser.activitylog_detail(activitylog_id)
+
     def get_object(target, target_text, id):
         if not getattr(models, target).query.get(id):
             return None, None

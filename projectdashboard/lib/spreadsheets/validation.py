@@ -3,7 +3,7 @@ from projectdashboard.lib.codelists import get_codelists_lookups_by_name
 
 # Activity Status validation
 v_status = DataValidation(type="list", allow_blank=False)
-v_status.error ='Your entry is not in the list'
+v_status.error = 'Your entry is not in the list'
 v_status.errorTitle = 'Activity Status'
 v_status.prompt = 'Please select from the list'
 v_status.promptTitle = 'Activity Status'

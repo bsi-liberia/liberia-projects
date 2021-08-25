@@ -13,21 +13,24 @@ from projectdashboard.lib import util
 from projectdashboard import models
 
 
-blueprint = Blueprint('counterpart_funding', __name__, url_prefix='/api/counterpart_funding')
+blueprint = Blueprint('counterpart_funding', __name__,
+                      url_prefix='/api/counterpart_funding')
+
 
 @blueprint.route("/<activity_id>/", methods=["POST", "GET"])
 @jwt_required()
 @quser.permissions_required("edit")
 def api_activity_counterpart_funding(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     """GET returns a list of all counterpart funding for a given activity_id.
     POST also accepts counterpart funding data to be added, deleted, updated."""
     if request.method == "POST":
         request_data = request.get_json()
         if request_data["action"] == "add":
             required_date = util.fq_fy_to_date(1,
-                int(request_data["required_fy"])).date().isoformat()
+                                               int(request_data["required_fy"])).date().isoformat()
             data = {
                 "required_value": request_data["required_value"],
                 "required_date": required_date,
@@ -40,8 +43,10 @@ def api_activity_counterpart_funding(activity_id):
             cf["required_fy"], fq = util.date_to_fy_fq(cf["required_date"])
             return jsonify(counterpart_funding=cf)
         elif request_data["action"] == "delete":
-            result = qcounterpart_funding.delete_entry(activity_id, request_data["id"])
-            if result: return jsonify(result=True)
+            result = qcounterpart_funding.delete_entry(
+                activity_id, request_data["id"])
+            if result:
+                return jsonify(result=True)
             return abort(500)
         elif request_data["action"] == "update":
             attr = request_data['attr']
@@ -53,7 +58,7 @@ def api_activity_counterpart_funding(activity_id):
             if attr == "required_fy":
                 attr = "required_date"
                 value = util.fq_fy_to_date(1,
-                    int(value)).date().isoformat()
+                                           int(value)).date().isoformat()
             data = {
                 'activity_id': activity_id,
                 'attr': attr,
@@ -68,11 +73,12 @@ def api_activity_counterpart_funding(activity_id):
     elif request.method == "GET":
         def to_fy(counterpart_funding):
             cf = counterpart_funding.as_dict()
-            cf["required_fy"], fq = util.date_to_fy_fq(counterpart_funding.required_date)
+            cf["required_fy"], fq = util.date_to_fy_fq(
+                counterpart_funding.required_date)
             return cf
         counterpart_funding = sorted(
-                        list(map(lambda cf: to_fy(cf),
-                        qactivity.get_activity(activity_id).counterpart_funding)),
+            list(map(lambda cf: to_fy(cf),
+                     qactivity.get_activity(activity_id).counterpart_funding)),
             key=lambda x: x["required_date"])
-        return jsonify(counterpart_funding = counterpart_funding,
-                       fiscal_years = range(2013,2025))
+        return jsonify(counterpart_funding=counterpart_funding,
+                       fiscal_years=range(2013, 2025))

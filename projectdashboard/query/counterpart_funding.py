@@ -64,6 +64,8 @@ def delete_entry(activity_id, counterpartfunding_id):
     return False
 
 # Counterpart funding data
+
+
 def update_entry(data):
     cf = models.ActivityCounterpartFunding.query.filter_by(
         id=data['id']
@@ -155,17 +157,18 @@ def create_or_update_counterpart_funding(activity_id, required_date, value):
     )
     return True
 
+
 def annotate_activities_with_aggregates(fiscal_year):
     def FY_forwardspends_for_FY():
         result = db.session.query(
-                models.ActivityForwardSpend.activity_id,
-                func.sum(models.ActivityForwardSpend.value).label("value")
-            ).join(models.FiscalPeriod
-            ).join(models.FiscalYear
-            ).filter(models.FiscalYear.id==fiscal_year
-            ).group_by(
-                models.ActivityForwardSpend.activity_id
-            ).all()
+            models.ActivityForwardSpend.activity_id,
+            func.sum(models.ActivityForwardSpend.value).label("value")
+        ).join(models.FiscalPeriod
+               ).join(models.FiscalYear
+                      ).filter(models.FiscalYear.id == fiscal_year
+                               ).group_by(
+            models.ActivityForwardSpend.activity_id
+        ).all()
 
         def filter_blank(row):
             return row.value > 0
@@ -173,14 +176,15 @@ def annotate_activities_with_aggregates(fiscal_year):
 
     def FY_counterpart_funding_for_FY():
         result = db.session.query(
-                models.ActivityCounterpartFunding.activity_id,
-                func.sum(models.ActivityCounterpartFunding.required_value).label("value")
-            ).join(models.FiscalPeriod
-            ).join(models.FiscalYear
-            ).filter(models.FiscalYear.id==fiscal_year
-            ).group_by(
-                models.ActivityCounterpartFunding.activity_id
-            ).all()
+            models.ActivityCounterpartFunding.activity_id,
+            func.sum(models.ActivityCounterpartFunding.required_value).label(
+                "value")
+        ).join(models.FiscalPeriod
+               ).join(models.FiscalYear
+                      ).filter(models.FiscalYear.id == fiscal_year
+                               ).group_by(
+            models.ActivityCounterpartFunding.activity_id
+        ).all()
 
         def filter_blank(row):
             return row.value > 0
@@ -190,7 +194,8 @@ def annotate_activities_with_aggregates(fiscal_year):
     fy_counterpart_funding = dict(FY_counterpart_funding_for_FY())
 
     activities = models.Activity.query.filter(
-        models.Activity.id.in_(list(fy_forwardspends.keys())+list(fy_counterpart_funding.keys()))
+        models.Activity.id.in_(
+            list(fy_forwardspends.keys())+list(fy_counterpart_funding.keys()))
     ).all()
 
     def annotate_aggs(activity):

@@ -13,7 +13,7 @@ def get_organisations():
 
 def get_organisation_types():
     return db.session.query(models.Organisation._type
-        ).distinct().all()
+                            ).distinct().all()
 
 
 def get_organisations_by_type(organisation_type):
@@ -21,30 +21,38 @@ def get_organisations_by_type(organisation_type):
         _type=organisation_type
     ).order_by(models.Organisation.name).all()
 
+
 def get_organisation_by_id(id):
     org = models.Organisation.query.filter_by(
-    	id = id
+        id=id
     ).first()
-    if org: return org
+    if org:
+        return org
     return False
+
 
 def get_organisation_by_code(code):
     org = models.Organisation.query.filter_by(
-    	code = code
+        code=code
     ).first()
-    if org: return org
+    if org:
+        return org
     return False
+
 
 def get_organisation_by_name(name):
     org = models.Organisation.query.filter_by(
-    	name = name
+        name=name
     ).first()
-    if org: return org
+    if org:
+        return org
     return False
+
 
 def get_similar_organisations(organisation_name):
     organisations = get_organisations()
-    organisation_names = list(map(lambda organisation: organisation.name, organisations))
+    organisation_names = list(
+        map(lambda organisation: organisation.name, organisations))
     organisation_names_order = difflib.get_close_matches(
         organisation_name, organisation_names, 5, 0.5)
     print(organisation_names_order)
@@ -55,10 +63,12 @@ def get_similar_organisations(organisation_name):
         'order': organisation_names_order.index(organisation.name)
     } for organisation in organisations if organisation.name in organisation_names_order], key=lambda k: k['order'])
 
+
 def get_organisation_types():
     types = [('gol', 'Government of Liberia'),
-        ('donor', 'Donor'), ('ngo', 'NGO')]
+             ('donor', 'Donor'), ('ngo', 'NGO')]
     return list(map(lambda t: {"id": t[0], "name": t[1]}, types))
+
 
 def get_reporting_orgs(user_id=None):
     if user_id:
@@ -66,20 +76,23 @@ def get_reporting_orgs(user_id=None):
         if user:
             return list(map(lambda uo: uo.organisation, user.organisations))
     return db.session.query(models.Organisation
-        ).join(models.Activity, models.Activity.reporting_org_id==models.Organisation.id
-        ).order_by(
-            models.Organisation.name
-        ).group_by(
-            models.Organisation.name
-        ).all()
+                            ).join(models.Activity, models.Activity.reporting_org_id == models.Organisation.id
+                                   ).order_by(
+        models.Organisation.name
+    ).group_by(
+        models.Organisation.name
+    ).all()
+
 
 def get_or_create_organisation(name):
     org = get_organisation_by_name(name)
-    if org: return org.id
+    if org:
+        return org.id
     return create_organisation({
         "name": name,
         "code": normality.slugify(name)
     }).id
+
 
 def make_organisation(name, role):
     organisation_id = get_or_create_organisation(name)
@@ -87,6 +100,7 @@ def make_organisation(name, role):
     activity_org.organisation_id = organisation_id
     activity_org.role = role
     return activity_org
+
 
 def create_activity_organisation(activity_id, name, role):
     organisation_id = get_or_create_organisation(name)
@@ -98,15 +112,18 @@ def create_activity_organisation(activity_id, name, role):
     db.session.commit()
     return activity_org
 
+
 def update_activity_organisation(activityorganisation_id, organisation_id):
     activity_org = models.ActivityOrganisation.query.filter_by(
-        id = activityorganisation_id
+        id=activityorganisation_id
     ).first()
-    if not activity_org: return False
+    if not activity_org:
+        return False
     activity_org.organisation_id = organisation_id
     db.session.add(activity_org)
     db.session.commit()
     return activity_org
+
 
 def create_organisation(data):
     org = models.Organisation()
@@ -117,29 +134,32 @@ def create_organisation(data):
     db.session.commit()
     return org
 
+
 def update_attr(data):
     org = models.Organisation.query.filter_by(
-        id = data['id']
+        id=data['id']
     ).first()
     setattr(org, data['attr'], data['value'])
     db.session.add(org)
     db.session.commit()
     return True
 
+
 def delete_org(data):
     # Ensure this org is not attached to any activities
     check = (models.Activity.query.filter_by(
-        reporting_org_id = data['id']
+        reporting_org_id=data['id']
     ).first() or
         models.ActivityOrganisation.query.filter_by(
-        organisation_id = data['id']
+        organisation_id=data['id']
     ).first() or
         models.ActivityFinances.query.filter((
-                models.ActivityFinances.provider_org_id == data['id']
-            ) | (models.ActivityFinances.receiver_org_id == data['id'])).first())
-    if check: return False
+            models.ActivityFinances.provider_org_id == data['id']
+        ) | (models.ActivityFinances.receiver_org_id == data['id'])).first())
+    if check:
+        return False
     org = models.Organisation.query.filter_by(
-        id = int(data['id'])
+        id=int(data['id'])
     ).first()
     db.session.delete(org)
     db.session.commit()

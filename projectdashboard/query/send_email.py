@@ -7,8 +7,8 @@ from projectdashboard.extensions import mail
 def send_async_email(message_recipient, message_subject, message_body):
     with current_app.app_context():
         msg = Message(
-            subject = message_subject,
-            recipients = [message_recipient],
-            body = message_body
+            subject=message_subject,
+            recipients=[message_recipient],
+            body=message_body
         )
         mail.send(msg)

@@ -23,38 +23,38 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 def import_responses():
     responses = [
-    {
-        'name': 'Data requested',
-        'icon': 'fa-check-circle',
-        'icon_class': 'fa',
-        'slug': 'data-requested',
-        'colour': 'text-muted',
-        'order': 1
-    },
-    {
-        'name': 'Donor responded, but has no spending in this period',
-        'icon': 'fa-check-circle text-success',
-        'icon_class': 'far',
-        'slug': 'donor-responded-no-spending',
-        'colour': 'text-success',
-        'order': 2
-    },
-    {
-        'name': 'Donor responded with data',
-        'icon': 'fa fa-check-circle text-success',
-        'icon_class': 'fa',
-        'slug': 'donor-responded-with-data',
-        'colour': 'text-success',
-        'order': 3
-    },
-    {
-        'name': 'Donor refused request',
-        'icon': 'fa fa-exclamation-circle text-danger',
-        'icon_class': 'fa',
-        'slug': 'donor-refused-request',
-        'colour': 'text-danger',
-        'order': 4
-    }]
+        {
+            'name': 'Data requested',
+            'icon': 'fa-check-circle',
+            'icon_class': 'fa',
+            'slug': 'data-requested',
+            'colour': 'text-muted',
+            'order': 1
+        },
+        {
+            'name': 'Donor responded, but has no spending in this period',
+            'icon': 'fa-check-circle text-success',
+            'icon_class': 'far',
+            'slug': 'donor-responded-no-spending',
+            'colour': 'text-success',
+            'order': 2
+        },
+        {
+            'name': 'Donor responded with data',
+            'icon': 'fa fa-check-circle text-success',
+            'icon_class': 'fa',
+            'slug': 'donor-responded-with-data',
+            'colour': 'text-success',
+            'order': 3
+        },
+        {
+            'name': 'Donor refused request',
+            'icon': 'fa fa-exclamation-circle text-danger',
+            'icon_class': 'fa',
+            'slug': 'donor-refused-request',
+            'colour': 'text-danger',
+            'order': 4
+        }]
     for response in responses:
         r = models.Response()
         r.name = unicode(response['name'])
@@ -103,7 +103,8 @@ def import_countries(language, country_code=None):
     if country_code is not None:
         countries = [c for c in countries if c["code"] == country_code]
     for country in countries:
-        if country["code"] == "": continue
+        if country["code"] == "":
+            continue
         c = models.Country()
         c.code = country["code"]
         c.name = country["name"]
@@ -139,26 +140,27 @@ def create_codes_codelists():
         {
             "name": u"Aligned Ministry / Agency",
             "filename": "aligned-ministry-agency.csv"
-         },
+        },
         {
             "name": u"MTEF Sector",
             "filename": "mtef-sector.csv"
-         },
+        },
         {
             "name": u"AfT Pillar",
             "filename": "aft-pillar.csv"
-         },
+        },
         {
             "name": u"PAPD Pillar",
             "filename": "papd-pillar.csv"
-         },
+        },
         {
             "name": u"SDG Goals",
             "filename": "sdg-goals.csv"
-         }]
+        }]
 
     for codelist_file in local_codelist_files:
-        f = open(os.path.join(basedir, "../lib/data/local/", codelist_file["filename"]), "r")
+        f = open(os.path.join(basedir, "../lib/data/local/",
+                 codelist_file["filename"]), "r")
         csv = unicodecsv.DictReader(f)
         add_codelist(codelist_file["name"], csv)
         f.close()
@@ -168,6 +170,7 @@ def create_codes_codelists():
     csv = unicodecsv.DictReader(f)
     add_organisation(csv)
     f.close()
+
 
 def create_user():
     data = current_app.config["ADMIN_USER"]

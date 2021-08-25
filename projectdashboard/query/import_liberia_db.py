@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+import sys
+from six import u as unicode
 import os
 import re
 import datetime as dt
@@ -11,8 +13,6 @@ from projectdashboard.query import location as qlocations
 from projectdashboard.query import finances as qfinances
 from projectdashboard.query import organisations as qorganisations
 basedir = os.path.abspath(os.path.dirname(__file__))
-from six import u as unicode
-import sys
 
 
 def clean_string(_string):
@@ -20,26 +20,31 @@ def clean_string(_string):
         return unicode(_string.decode("utf-8"))
     return _string
 
+
 def read_file(FILENAME=os.path.join(basedir, "..", "lib/import_files/", "AMCU_Master_Database.xlsx")):
     f = open(FILENAME, "rb")
     return xlsx_to_csv.getDataFromFile(f, f.read(), sheet="Main Database June 2017")
 
+
 def nonempty_from_list(some_list):
     for item in some_list:
-        if item.strip() != "": return item
+        if item.strip() != "":
+            return item
     return ""
+
 
 def get_date(date_value):
     date_value = date_value.strip()
-    if re.match("^\d{5}$", date_value): # Excel date like 43465
+    if re.match("^\d{5}$", date_value):  # Excel date like 43465
         temp = dt.datetime(1899, 12, 30)
         delta = dt.timedelta(days=int(date_value))
         return (temp+delta).date()
-    if re.match("^\d{2}/\d{2}/\d{4}$", date_value): # dd/mm/yyyy
+    if re.match("^\d{2}/\d{2}/\d{4}$", date_value):  # dd/mm/yyyy
         return dt.datetime.strptime(date_value, "%d/%m/%Y").date()
     if date_value == "":
         return dt.datetime.utcnow().date()
-    raise Exception ## Warn of strangely formatted dates
+    raise Exception  # Warn of strangely formatted dates
+
 
 CODES = {
     "collaboration_type": {
@@ -71,19 +76,21 @@ CODES = {
     }
 }
 
+
 def tidy_amount(amount_value):
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
-    if re.match("^\d*$", amount_value): # 2000
+    if re.match("^\d*$", amount_value):  # 2000
         return (float(amount_value), u"USD")
     elif re.match('(\d*\.\d*)', amount_value):
         return (float(amount_value), u"USD")
-    elif re.match("^(\d*)m (\D*)$", amount_value): # 20m EUR
+    elif re.match("^(\d*)m (\D*)$", amount_value):  # 20m EUR
         result = re.match("^(\d*)m (\D*)$", amount_value).groups()
         return (float(result[0])*1000000, unicode(result[1].upper()))
-    elif re.match("^(\d*) (\D*)$", amount_value): # 2000 EUR
+    elif re.match("^(\d*) (\D*)$", amount_value):  # 2000 EUR
         result = re.match("^(\d*) (\D*)$", amount_value).groups()
         return (float(result[0]), unicode(result[1].upper()))
+
 
 def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
     provider = clean_get_create_organisation(activity["Funding agency"])
@@ -92,7 +99,8 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
     transactions = []
     commitment_cols = ["Cost"]
     for col in commitment_cols:
-        if activity[col].strip() in ("", "-", "0"): continue
+        if activity[col].strip() in ("", "-", "0"):
+            continue
         amount, currency = tidy_amount(activity[col])
         commitment = models.ActivityFinances()
         commitment.transaction_date = start_date
@@ -108,24 +116,25 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
         commitment.aid_type = CODES["aid_type"][
             activity["Aid Modality"].strip()
         ]
-        commitment.classifications = process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME)
+        commitment.classifications = process_transaction_classifications(
+            activity, CODELISTS_IDS_BY_NAME)
         transactions.append(commitment)
     disbursement_cols = ['Actual Disbursements Q1 FY13/14',
-    'Actual Disbursements Q2 FY13/14', 'Actual Disbursements Q3 FY13/14',
-    'Actual Disbursements Q4 FY13/14', 'Actual Disbursement Q1 FY14/15',
-    'Actual Disbursement Q2 FY14/15', 'Actual Disbursement Q3 FY14/15',
-    'Actual Disbursement Q4 FY14/15', 'Actual Disbursement Q1 FY15/16',
-    'Actual Disbursement Q2 FY15/16', 'Actual Disbursement Q3 FY15/16',
-    'Actual Disbursement Q4 FY15/16', 'Actual Disbursement Q1 FY16/17',
-    'Actual Disbursement Q2 FY16/17', 'Actual Disbursement Q3 FY16/17',
-    'Actual Disbursement Q4 FY16/17', 'Actual Disbursement Q 1',
-    'Actual Disbursement Q 2', 'Actual Disbursement Q 3']
+                         'Actual Disbursements Q2 FY13/14', 'Actual Disbursements Q3 FY13/14',
+                         'Actual Disbursements Q4 FY13/14', 'Actual Disbursement Q1 FY14/15',
+                         'Actual Disbursement Q2 FY14/15', 'Actual Disbursement Q3 FY14/15',
+                         'Actual Disbursement Q4 FY14/15', 'Actual Disbursement Q1 FY15/16',
+                         'Actual Disbursement Q2 FY15/16', 'Actual Disbursement Q3 FY15/16',
+                         'Actual Disbursement Q4 FY15/16', 'Actual Disbursement Q1 FY16/17',
+                         'Actual Disbursement Q2 FY16/17', 'Actual Disbursement Q3 FY16/17',
+                         'Actual Disbursement Q4 FY16/17', 'Actual Disbursement Q 1',
+                         'Actual Disbursement Q 2', 'Actual Disbursement Q 3']
 
     def get_data_from_header(column_name):
         patterns = ["Actual Disbursements Q(\d) FY(\d*)/\d*",
-            "Actual Disbursement Q(\d) FY(\d*)/\d*",
-            "Actual Disbursement Q (\d)"
-        ]
+                    "Actual Disbursement Q(\d) FY(\d*)/\d*",
+                    "Actual Disbursement Q (\d)"
+                    ]
         for pattern in patterns:
             if re.match(pattern, column_name):
                 result = re.match(pattern, column_name).groups()
@@ -139,20 +148,21 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
                 "2": "12-31",
                 "3": "03-31",
                 "4": "06-30"}
-        if fq in ("3","4"):
+        if fq in ("3", "4"):
             fy = int(fy)+1
-        return "20{}-{}".format(fy,qtrs[fq])
+        return "20{}-{}".format(fy, qtrs[fq])
 
     for col in disbursement_cols:
         col_name = col.strip()
         fq, fy = get_data_from_header(col)
         end_fq_date = get_fy_fq_date(fq, fy)
 
-        if activity[col].strip() in ("", "-", "0"): continue
+        if activity[col].strip() in ("", "-", "0"):
+            continue
         amount, currency = tidy_amount(activity[col])
         disbursement = models.ActivityFinances()
         disbursement.transaction_date = dt.datetime.strptime(end_fq_date,
-            "%Y-%m-%d")
+                                                             "%Y-%m-%d")
         disbursement.transaction_type = u"D"
         disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU data".format(
             fq, fy
@@ -167,9 +177,11 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
         disbursement.aid_type = CODES["aid_type"][
             activity["Aid Modality"].strip()
         ]
-        disbursement.classifications = process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME)
+        disbursement.classifications = process_transaction_classifications(
+            activity, CODELISTS_IDS_BY_NAME)
         transactions.append(disbursement)
     return transactions
+
 
 def process_forward_spends(activity, start_date, end_date):
     forwardspends = []
@@ -178,12 +190,13 @@ def process_forward_spends(activity, start_date, end_date):
     either a value or 0.
     Return list of forward spends, start_date and end_date."""
     mtef_cols = ['MTEF 2013/2014', 'MTEF 2014/2015', 'MTEF 2015/2016',
-    'MTEF 2016/2017', 'MTEF 2017/2018', 'MTEF 2018/2019', 'MTEF 2019/2020']
+                 'MTEF 2016/2017', 'MTEF 2017/2018', 'MTEF 2018/2019', 'MTEF 2019/2020']
 
     def get_activity_mtefs(activity):
         activity_mtefs = {}
         for col in mtef_cols:
-            if activity[col].strip() in ("", "-", "0"): continue
+            if activity[col].strip() in ("", "-", "0"):
+                continue
             mtef_year = int(re.match("MTEF (\d{4})/\d{4}", col).groups()[0])
             activity_mtefs[mtef_year] = tidy_amount(activity[col])[0]
         return activity_mtefs
@@ -230,22 +243,25 @@ def process_forward_spends(activity, start_date, end_date):
             )
         )
 
-    #FIXME decide whether to do this…
+    # FIXME decide whether to do this…
     # Make adjustments to start/end dates if there are MTEFs found
     #  outside of these dates
-    #if first_mtef < start_date.fy:
+    # if first_mtef < start_date.fy:
     #    first = util.fq_fy_to_date(1, first_mtef, "start")
-    #if last_mtef > end_date_fy:
+    # if last_mtef > end_date_fy:
     #    end_date = util.fq_fy_to_date(4, last_mtef, "end")
 
     return start_date, end_date, forwardspends
 
+
 def get_locations_as_lookup():
     locations = qlocations.get_locations_country("LR")
+
     def filter_ADM1(location):
         return location.feature_code == u'ADM1'
     return dict(map(lambda l: (l.name.replace(" County", "").lower(), l.id),
-        filter(filter_ADM1, locations)))
+                    filter(filter_ADM1, locations)))
+
 
 def process_locations(activity, LOCATIONS):
     activity_locations = []
@@ -258,6 +274,7 @@ def process_locations(activity, LOCATIONS):
             activity_locations.append(l)
     return activity_locations
 
+
 def process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME):
     classifications = []
     cl = models.ActivityFinancesCodelistCode()
@@ -265,6 +282,7 @@ def process_transaction_classifications(activity, CODELISTS_IDS_BY_NAME):
     cl.codelist_code_id = CODELISTS_IDS_BY_NAME["mtef-sector"][activity["Secondary Sector"].strip()]
     classifications.append(cl)
     return classifications
+
 
 def process_classifications(activity, CODELISTS_IDS_BY_NAME):
 
@@ -274,7 +292,8 @@ def process_classifications(activity, CODELISTS_IDS_BY_NAME):
     classifications.append(cl)
 
     cl = models.ActivityCodelistCode()
-    cl.codelist_code_id = CODELISTS_IDS_BY_NAME["aligned-ministry-agency"][activity["Aligned Ministry Agency"].strip()]
+    cl.codelist_code_id = CODELISTS_IDS_BY_NAME[
+        "aligned-ministry-agency"][activity["Aligned Ministry Agency"].strip()]
     classifications.append(cl)
 
     AFT_PILLARS = {
@@ -287,7 +306,8 @@ def process_classifications(activity, CODELISTS_IDS_BY_NAME):
         "Cross-cutting - 5": "Cross-cutting"
     }
     cl = models.ActivityCodelistCode()
-    cl.codelist_code_id = CODELISTS_IDS_BY_NAME["aft-pillar"][AFT_PILLARS[activity["Agenda For Transformation Pillar"].strip()]]
+    cl.codelist_code_id = CODELISTS_IDS_BY_NAME[
+        "aft-pillar"][AFT_PILLARS[activity["Agenda For Transformation Pillar"].strip()]]
     classifications.append(cl)
 
     cl = models.ActivityCodelistCode()
@@ -295,9 +315,11 @@ def process_classifications(activity, CODELISTS_IDS_BY_NAME):
     classifications.append(cl)
     return classifications
 
+
 def clean_get_create_organisation(_name):
     name = clean_string(_name).strip()
     return qorganisations.get_or_create_organisation(name)
+
 
 def make_organisation(name, role):
     organisation_id = clean_get_create_organisation(name)
@@ -305,6 +327,7 @@ def make_organisation(name, role):
     activity_org.organisation_id = organisation_id
     activity_org.role = role
     return activity_org
+
 
 def import_file():
     qlocations.import_locations("LR")
@@ -318,24 +341,24 @@ def import_file():
 
     for activity in data:
         start_date = get_date(nonempty_from_list([
-                activity["Ratification Date"],
-                activity["Ratification date"],
-                activity["Signed Start Date"],
-                activity["Signing date"]
-            ]))
+            activity["Ratification Date"],
+            activity["Ratification date"],
+            activity["Signed Start Date"],
+            activity["Signing date"]
+        ]))
         end_date = get_date(nonempty_from_list([
-                        activity["Completion Signed Date"],
-                    ]))
+            activity["Completion Signed Date"],
+        ]))
         # We adjust start_date and end_date if there are forward spends
-        #FIXME: this is switched off currently
+        # FIXME: this is switched off currently
         start_date, end_date, forwardspends = process_forward_spends(
             activity, start_date, end_date
         )
 
         d = {
-            "user_id": 1, #FIXME
+            "user_id": 1,  # FIXME
             "domestic_external": u"external",
-            "code": "", #FIXME
+            "code": "",  # FIXME
             "title": clean_string(activity["Project Name"]),
             "description": nonempty_from_list([
                 clean_string(activity["Project Description"]),
@@ -364,8 +387,8 @@ def import_file():
             "activity_status": CODES["activity_status"][
                 activity["Status"].strip()
             ],
-            "tied_status": "5", # Assume everything is untied
-            "flow_type": "10", # Assume everything is ODA
+            "tied_status": "5",  # Assume everything is untied
+            "flow_type": "10",  # Assume everything is ODA
             "finances": process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME),
             "forwardspends": forwardspends,
             "locations": process_locations(activity, LOCATIONS)

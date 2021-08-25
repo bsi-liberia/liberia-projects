@@ -53,22 +53,25 @@ LR_QUARTERS_CAL_QUARTERS = {
     4: 2
 }
 
+
 def lr_quarter_to_cal_quarter(_fy, _fq):
-    if _fq in (3,4):
+    if _fq in (3, 4):
         year = _fy+1
     else:
         year = _fy
     quarter = LR_QUARTERS_CAL_QUARTERS[_fq]
     return year, quarter
 
+
 def fp_fy_to_date(fp, fy, start_end='start'):
     """Convert from LR FP, FY to real date."""
-    if fp in ("M7","M8","M9","M10","M11","M12","M13"):
+    if fp in ("M7", "M8", "M9", "M10", "M11", "M12", "M13"):
         year = fy+1
     else:
         year = fy
     day, month = LR_PERIODS_MONTH_DAY[fp][start_end]
     return datetime.datetime(year, month, day)
+
 
 def fq_fy_to_date(fq, fy, start_end='start', calendar_year=False):
     """
@@ -84,7 +87,7 @@ def fq_fy_to_date(fq, fy, start_end='start', calendar_year=False):
         fp = models.FiscalPeriod.query.filter_by(
             fiscal_year_id=f'FY{fy}',
             name=f'Q{fq}').first()
-        if start_end=='start':
+        if start_end == 'start':
             return fp.start
         return fp.end
 
@@ -103,14 +106,18 @@ def date_to_fy_fq(date):
         year = date.year
     return year, quarter
 
+
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
-    if value == "": return None
+    if value == "":
+        return None
     return datetime.datetime.strptime(value[0:10], "%Y-%m-%d")
+
 
 def isostring_year(value):
     # Returns a date object from a string of format YYYY
     return datetime.datetime.strptime(value, "%Y")
+
 
 def subtract_one_quarter(from_year, from_quarter):
     if from_quarter > 1:
@@ -118,11 +125,13 @@ def subtract_one_quarter(from_year, from_quarter):
     else:
         return from_year-1, 4
 
+
 def add_one_quarter(from_year, from_quarter):
     if from_quarter < 4:
         return from_year, from_quarter+1
     else:
         return from_year+1, 1
+
 
 def available_fys_forward(num_years=4):
     now = datetime.datetime.utcnow()
@@ -131,8 +140,9 @@ def available_fys_forward(num_years=4):
         models.FiscalYear.start > now,
         models.FiscalYear.end <= cutoff_date
     ).order_by(models.FiscalYear.end
-    ).all()
+               ).all()
     return [db_fy.id for db_fy in db_fys if db_fy.end <= cutoff_date]
+
 
 def available_fys(num_years=4):
     now = datetime.datetime.utcnow()
@@ -140,8 +150,9 @@ def available_fys(num_years=4):
     db_fys = models.FiscalYear.query.filter(
         models.FiscalYear.end <= cutoff_date
     ).order_by(models.FiscalYear.end
-    ).all()
+               ).all()
     return [db_fy.id for db_fy in db_fys if db_fy.end <= cutoff_date]
+
 
 def available_fy_fqs():
     now = datetime.datetime.utcnow()
@@ -153,30 +164,34 @@ def available_fy_fqs():
     ).all()
     return ["{} {} (D)".format(fp.fiscal_year_id, fp.name) for fp in db_fys_fps]
 
+
 def current_fy_fq():
     fp = models.FiscalPeriod.query.filter(
         models.FiscalPeriod.start <= datetime.datetime.utcnow(),
         models.FiscalPeriod.end >= datetime.datetime.utcnow()
-        ).first()
+    ).first()
     return "{} {} (D)".format(fp.fiscal_year_id, fp.name)
+
 
 def previous_fy_fq():
     fp = models.FiscalPeriod.query.filter(
         models.FiscalPeriod.end < datetime.datetime.utcnow()
-        ).order_by(
-            models.FiscalPeriod.end.desc()
-        ).first()
+    ).order_by(
+        models.FiscalPeriod.end.desc()
+    ).first()
     return "{} {} (D)".format(fp.fiscal_year_id, fp.name)
+
 
 def previous_fy_fq_date(start_end="end"):
     fp = models.FiscalPeriod.query.filter(
         models.FiscalPeriod.end < datetime.datetime.utcnow()
-        ).order_by(
-            models.FiscalPeriod.end.desc()
-        ).first()
+    ).order_by(
+        models.FiscalPeriod.end.desc()
+    ).first()
     if start_end == 'start':
         return fp.start
     return fp.end
+
 
 class Last4Quarters:
     def start(self):
@@ -198,8 +213,9 @@ class Last4Quarters:
         self.FY = FY("current")
         self.db_quarters = sorted(models.FiscalPeriod.query.filter(
             models.FiscalPeriod.end < datetime.datetime.utcnow()
-            ).order_by(models.FiscalPeriod.start.desc()
-            ).limit(4).all(), key=lambda item: item.start)
+        ).order_by(models.FiscalPeriod.start.desc()
+                   ).limit(4).all(), key=lambda item: item.start)
+
 
 class FP:
     def fy_to_date(self, fy, start_end):
@@ -239,6 +255,7 @@ class FP:
         else:
             raise Exception
 
+
 class FY:
     def fy_fy(self):
         return self.fiscal_year.name
@@ -267,13 +284,13 @@ def available_fy_fqs_as_dict():
     return [{'value': fyfqstring,
              'text': column_data_to_string(fyfqstring),
              'selected': previous_fy_fq() == fyfqstring
-              } for fyfqstring in available_fy_fqs()]
+             } for fyfqstring in available_fy_fqs()]
 
 
 def available_fys_as_dict():
     return [{'value': fyfqstring,
              'text': fyfqstring
-              } for fyfqstring in available_fys()]
+             } for fyfqstring in available_fys()]
 
 
 def get_data_from_fy_fq_string(fy_fq_string):
@@ -296,9 +313,9 @@ def get_data_from_header(column_name):
 def fys_in_date_range(start_date, end_date):
     """Returns all the fiscal years between the start and end dates"""
     fys = models.FiscalYear.query.filter(
-        models.FiscalYear.start>=start_date
+        models.FiscalYear.start >= start_date
     ).filter(
-        models.FiscalYear.start<=end_date
+        models.FiscalYear.start <= end_date
     ).all()
     return list(map(lambda fy: fy.id, fys))
 
@@ -307,10 +324,12 @@ def fy_to_fyfy(fy):
     """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819"""
     return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
 
+
 def fy_fy_to_fy(fy_fy):
     """Converts a fiscal year FY2019/20 to e.g. 2019"""
     result = re.match(r"FY(\d*)/.*", fy_fy).group(1)
     return int(result)
+
 
 def fy_fy_to_fyfy_ifmis(fy_fy):
     """Converts a fiscal year FY2019/20 to IFMIS-style 20192020"""
@@ -320,17 +339,20 @@ def fy_fy_to_fyfy_ifmis(fy_fy):
     result2 = re.match(r"FY(\d*)/.*", fy_fy).group(1)
     return "{}{}".format(int(result), int(result)+1)
 
+
 def column_data_to_string(column_name):
     fq, fy = get_data_from_header(column_name)
     return u"FY{} Q{} Disbursements".format(fy, fq)
+
 
 def get_real_date_from_header(column_name, start_end="start"):
     fy, fq = get_data_from_header(column_name)
     return (fq_fy_to_date(int(fy), int(fq), start_end=start_end))
 
+
 def make_quarters_text(list):
     return [{"quarter_name": "Q{}".format(k),
-        "quarter_months": "{}-{}".format(
+             "quarter_months": "{}-{}".format(
         datetime.date(2019, l["start"][1], l["start"][0]).strftime("%b"),
         datetime.date(2019, l["end"][1], l["end"][0]).strftime("%b")
     )} for k, l in list.items()]

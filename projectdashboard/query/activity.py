@@ -25,8 +25,10 @@ def force_earliest_latest(earliest, latest):
 
 
 def get_earliest_latest_dates(force=False):
-    earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)).scalar()
-    latest = db.session.query(func.max(models.ActivityFinances.transaction_date)).scalar()
+    earliest = db.session.query(
+        func.min(models.ActivityFinances.transaction_date)).scalar()
+    latest = db.session.query(
+        func.max(models.ActivityFinances.transaction_date)).scalar()
     if (not force) or ((earliest != latest) and (earliest != None)):
         return earliest, latest
     return force_earliest_latest(earliest, latest)
@@ -34,13 +36,13 @@ def get_earliest_latest_dates(force=False):
 
 def get_earliest_latest_dates_filter(filter, force=False):
     earliest = db.session.query(func.min(models.ActivityFinances.transaction_date)
-        ).filter(getattr(models.Activity, filter['key']) == filter['val']
-        ).join(models.Activity, models.ActivityFinances.activity
-        ).scalar()
+                                ).filter(getattr(models.Activity, filter['key']) == filter['val']
+                                         ).join(models.Activity, models.ActivityFinances.activity
+                                                ).scalar()
     latest = db.session.query(func.max(models.ActivityFinances.transaction_date)
-        ).filter(getattr(models.Activity, filter['key']) == filter['val']
-        ).join(models.Activity, models.ActivityFinances.activity
-        ).scalar()
+                              ).filter(getattr(models.Activity, filter['key']) == filter['val']
+                                       ).join(models.Activity, models.ActivityFinances.activity
+                                              ).scalar()
     if not force:
         return earliest, latest
     return force_earliest_latest(earliest, latest)
@@ -49,25 +51,32 @@ def get_earliest_latest_dates_filter(filter, force=False):
 def activity_C_D_FSs():
     commitments_query = db.session.query(
         models.ActivityFinances.activity_id,
-        func.sum(models.ActivityFinances.transaction_value).label("total_commitments")
-    ).filter(models.ActivityFinances.transaction_type==u'C'
-    ).group_by(models.ActivityFinances.activity_id
-    ).all()
-    commitments = dict(map(lambda c: (c.activity_id, c.total_commitments), commitments_query))
+        func.sum(models.ActivityFinances.transaction_value).label(
+            "total_commitments")
+    ).filter(models.ActivityFinances.transaction_type == u'C'
+             ).group_by(models.ActivityFinances.activity_id
+                        ).all()
+    commitments = dict(
+        map(lambda c: (c.activity_id, c.total_commitments), commitments_query))
     disbursements_query = db.session.query(
         models.ActivityFinances.activity_id,
-        func.sum(models.ActivityFinances.transaction_value).label("total_disbursements")
-    ).filter(models.ActivityFinances.transaction_type==u'D'
-    ).group_by(models.ActivityFinances.activity_id
-    ).all()
-    disbursements = dict(map(lambda d: (d.activity_id, d.total_disbursements), disbursements_query))
+        func.sum(models.ActivityFinances.transaction_value).label(
+            "total_disbursements")
+    ).filter(models.ActivityFinances.transaction_type == u'D'
+             ).group_by(models.ActivityFinances.activity_id
+                        ).all()
+    disbursements = dict(
+        map(lambda d: (d.activity_id, d.total_disbursements), disbursements_query))
     forward_disbursements_query = db.session.query(
         models.ActivityForwardSpend.activity_id,
-        func.sum(models.ActivityForwardSpend.value).label("total_forward_disbursements")
+        func.sum(models.ActivityForwardSpend.value).label(
+            "total_forward_disbursements")
     ).group_by(models.ActivityForwardSpend.activity_id
-    ).all()
-    forward_disbursements = dict(map(lambda d: (d.activity_id, d.total_forward_disbursements), forward_disbursements_query))
+               ).all()
+    forward_disbursements = dict(map(lambda d: (
+        d.activity_id, d.total_forward_disbursements), forward_disbursements_query))
     return commitments, disbursements, forward_disbursements
+
 
 def filter_activities_for_permissions(query, permission_name="view"):
     permissions = current_user.permissions_dict
@@ -83,30 +92,32 @@ def filter_activities_for_permissions(query, permission_name="view"):
         def filter_permitted(organisation):
             return organisation["permission_value"] == permission_name
         permitted_organisations = list(map(lambda o: o["organisation_id"],
-            filter(filter_permitted, permissions["organisations"].values())))
+                                           filter(filter_permitted, permissions["organisations"].values())))
         return query.filter(models.Activity.reporting_org_id.in_(permitted_organisations))
     return query
 
+
 def get_iati_list():
     countries_db = db.session.query(models.Activity
-                    ).distinct(models.Activity.recipient_country_code
-                    ).group_by(models.Activity.recipient_country_code
-                    ).order_by(models.Activity.recipient_country_code).all()
+                                    ).distinct(models.Activity.recipient_country_code
+                                               ).group_by(models.Activity.recipient_country_code
+                                                          ).order_by(models.Activity.recipient_country_code).all()
 
     return OrderedDict(map(lambda x: (x.recipient_country_code,
-          {
-              "country": x.recipient_country.as_dict(),
-              "urls":
-                  {"1.03": url_for('iati.generate_iati_xml',
-                                   version="1.03",
-                                   country_code=x.recipient_country_code,
-                                   _external=True),
-                   "2.01": url_for('iati.generate_iati_xml',
-                                   version="2.01",
-                                   country_code=x.recipient_country_code,
-                                   _external=True),
-                  }
-          }), countries_db))
+                                      {
+                                          "country": x.recipient_country.as_dict(),
+                                          "urls":
+                                          {"1.03": url_for('iati.generate_iati_xml',
+                                                           version="1.03",
+                                                           country_code=x.recipient_country_code,
+                                                           _external=True),
+                                              "2.01": url_for('iati.generate_iati_xml',
+                                                              version="2.01",
+                                                              country_code=x.recipient_country_code,
+                                                              _external=True),
+                                           }
+                                      }), countries_db))
+
 
 def get_updates():
     the24hoursago = datetime.datetime.utcnow() - datetime.timedelta(days=1)
@@ -126,18 +137,23 @@ def get_updates():
     updated = filter(filterout, updated)
     return created, updated
 
+
 def create_activity_for_test(data, user_id):
     act = models.Activity()
-    act.reporting_org_id = qorganisations.get_organisation_by_name(unicode(data.get(u"Funded by"))).id
+    act.reporting_org_id = qorganisations.get_organisation_by_name(
+        unicode(data.get(u"Funded by"))).id
     funding_org = models.ActivityOrganisation()
     funding_org.role = 1
-    funding_org.organisation_id = qorganisations.get_organisation_by_name(unicode(data.get(u"Funded by"))).id
+    funding_org.organisation_id = qorganisations.get_organisation_by_name(
+        unicode(data.get(u"Funded by"))).id
     implementing_org = models.ActivityOrganisation()
     implementing_org.role = 4
-    implementing_org.organisation_id = qorganisations.get_or_create_organisation(unicode(data.get(u"Implemented by")))
+    implementing_org.organisation_id = qorganisations.get_or_create_organisation(
+        unicode(data.get(u"Implemented by")))
     act.organisations = [implementing_org, funding_org]
     mtef_sector = models.ActivityCodelistCode()
-    mtef_sector.codelist_code_id = codelists.get_codelists_ids_by_name()['mtef-sector'][data.get(u"MTEF Sector")]
+    mtef_sector.codelist_code_id = codelists.get_codelists_ids_by_name()[
+        'mtef-sector'][data.get(u"MTEF Sector")]
     act.classifications = [mtef_sector]
     act.title = unicode(data.get(u"Activity Title"))
     act.description = u""
@@ -149,8 +165,9 @@ def create_activity_for_test(data, user_id):
     db.session.commit()
     return True
 
+
 def create_activity(data):
-    #FIXME check this org doesn't already exist?
+    # FIXME check this org doesn't already exist?
     act = models.Activity()
 
     # Dates have to be converted to date format
@@ -159,11 +176,11 @@ def create_activity(data):
 
     classifications = []
     for cl in ["sdg-goals", "mtef-sector", "aft-pillar",
-        "aligned-ministry-agency", "papd-pillar"]:
+               "aligned-ministry-agency", "papd-pillar"]:
         cl_id = 'classification_id_{}'.format(cl)
         cl_pct = 'classification_percentage_{}'.format(cl)
         classification = models.ActivityCodelistCode()
-        classification.codelist_code_id=data[cl_id]
+        classification.codelist_code_id = data[cl_id]
         classifications.append(classification)
         data.pop(cl_id)
         data.pop(cl_pct)
@@ -185,47 +202,49 @@ def create_activity(data):
         setattr(act, attr, val)
     if not "forwardspends" in data:
         act.forwardspends = qfinances.create_forward_spends(data["start_date"],
-            data["end_date"])
+                                                            data["end_date"])
     db.session.add(act)
     db.session.commit()
 
     activity_updated(act.id,
-        {
-        "user_id": current_user.id,
-        "mode": "add",
-        "target": "Activity",
-        "target_id": act.id,
-        "old_value": None,
-        "value": act.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "add",
+                         "target": "Activity",
+                         "target_id": act.id,
+                         "old_value": None,
+                         "value": act.as_dict()
+                     }
+                     )
     return act
+
 
 def delete_activity(activity_id):
     activity = models.Activity.query.filter_by(
-        id = activity_id
+        id=activity_id
     ).first()
     if ((getattr(current_user, "id") == activity.user_id) or
-        (getattr(current_user, "administrator"))):
-       # Allow this activity to be deleted
-       db.session.delete(activity)
-       db.session.commit()
-       return True
+            (getattr(current_user, "administrator"))):
+        # Allow this activity to be deleted
+        db.session.delete(activity)
+        db.session.commit()
+        return True
     activity_updated(activity.id,
-        {
-        "user_id": current_user.id,
-        "mode": "delete",
-        "target": "Activity",
-        "target_id": activity.id,
-        "old_value": activity.as_dict(),
-        "value": None
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "delete",
+                         "target": "Activity",
+                         "target_id": activity.id,
+                         "old_value": activity.as_dict(),
+                         "value": None
+                     }
+                     )
     return False
+
 
 def get_activity(activity_id):
     act = models.Activity.query.filter_by(
-        id = activity_id
+        id=activity_id
     ).first()
     return act
 
@@ -235,7 +254,7 @@ def closest_to_activity(activity_id):
     activities = models.Activity.query.filter_by(
         reporting_org_id=activity.reporting_org_id
     ).with_entities(models.Activity.id, models.Activity.title, models.Activity.iati_identifier
-    ).all()
+                    ).all()
     activity_titles = list(map(lambda activity: activity.title, activities))
     title_orders = difflib.get_close_matches(
         activity.title, activity_titles, len(activity_titles), 0)
@@ -244,14 +263,15 @@ def closest_to_activity(activity_id):
         'iati_identifier': activity.iati_identifier,
         'title': activity.title,
         'order': title_orders.index(activity.title),
-        'selected': activity.id==activity_id
+        'selected': activity.id == activity_id
 
     } for activity in activities], key=lambda k: k['order'])
 
 
 def get_finances_by_activity_id(activity_id, by_year=False):
     activity = get_activity(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
 
     if by_year:
         commitments = activity.transaction_type_dict(0, ['C'], 'C')
@@ -265,21 +285,25 @@ def get_finances_by_activity_id(activity_id, by_year=False):
         forward_spends = activity.FY_forward_spend_dict
 
     finances = list()
-    if commitments: finances.append(('commitments', {
-        "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
-        "data": commitments.values()
+    if commitments:
+        finances.append(('commitments', {
+            "title": {'external': 'Commitments', 'domestic': 'Appropriations'}[activity.domestic_external],
+            "data": commitments.values()
         }))
-    if allotments: finances.append(('allotment', {
-        "title": 'Allotments',
-        "data": allotments.values()
+    if allotments:
+        finances.append(('allotment', {
+            "title": 'Allotments',
+            "data": allotments.values()
         }))
-    if disbursements: finances.append(('disbursement', {
-        "title": 'Disbursements',
-        "data": disbursements.values()
+    if disbursements:
+        finances.append(('disbursement', {
+            "title": 'Disbursements',
+            "data": disbursements.values()
         }))
-    if forward_spends: finances.append(('forwardspend', {
-        "title": 'MTEF Projections',
-        "data": forward_spends.values()
+    if forward_spends:
+        finances.append(('forwardspend', {
+            "title": 'MTEF Projections',
+            "data": forward_spends.values()
         }))
     return finances
 
@@ -288,14 +312,17 @@ def list_activities():
     acts = models.Activity.query.all()
     return acts
 
+
 def list_activities_by_country(recipient_country_code):
     acts = models.Activity.query.filter_by(
         recipient_country_code=recipient_country_code
     ).all()
     return acts
 
+
 def getISODate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%d')
+
 
 def getJSONDate(value):
     return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -307,15 +334,16 @@ def get_activities_by_reporting_org_id(reporting_org_id):
 
 def list_activities_by_filters(filters, permission_name="view"):
     query = models.Activity.query.outerjoin(
-                    models.ActivityFinances,
-                    models.ActivityFinancesCodelistCode
-                )
+        models.ActivityFinances,
+        models.ActivityFinancesCodelistCode
+    )
     codelist_names = list(codelists.get_db_codelists().keys())
     if "organisation" in codelist_names:
         codelist_names.remove("organisation")
     codelist_vals = []
     for filter_name, filter_value in filters.items():
-        if filter_value == "all": continue
+        if filter_value == "all":
+            continue
         if filter_name == "earliest_date":
             query = query.filter(
                 models.ActivityFinances.transaction_date >= getISODate(filter_value))
@@ -335,7 +363,7 @@ def list_activities_by_filters(filters, permission_name="view"):
             )
         else:
             query = query.filter(
-                getattr(models.Activity, filter_name)==filter_value
+                getattr(models.Activity, filter_name) == filter_value
             )
     # This gets a bit nasty. We join multiple times to the same tables to filter by
     # multiple values. We need to use sqlalchemy.orm' aliased function for this.
@@ -347,14 +375,16 @@ def list_activities_by_filters(filters, permission_name="view"):
             query = query.join(
                 this_activitycodelist_code, models.Activity.id == this_activitycodelist_code.activity_id
             ).join(
-                    this_codelist_code, this_activitycodelist_code.codelist_code_id ==  this_codelist_code.id
+                this_codelist_code, this_activitycodelist_code.codelist_code_id == this_codelist_code.id
             )
             query = query.filter(
-                    this_codelist_code.id == codelist_val
+                this_codelist_code.id == codelist_val
             )
-    query = filter_activities_for_permissions(query, permission_name=permission_name)
+    query = filter_activities_for_permissions(
+        query, permission_name=permission_name)
     acts = query.all()
     return acts
+
 
 def update_attr(data):
     if data['attr'] in ["mtef-sector", "aligned-ministry-agency", "sdg-goals"]:
@@ -375,14 +405,15 @@ def update_attr(data):
         return True
 
     activity = models.Activity.query.filter_by(
-        id = data['id']
+        id=data['id']
     ).first()
 
     if data['attr'].endswith('date'):
         data['value'] = isostring_date(data['value'])
         if data['attr'] == "start_date":
             if data['value'].date() < activity.start_date:
-                new_fs = qfinances.create_missing_forward_spends(data['value'].date(), activity.end_date, activity.id)
+                new_fs = qfinances.create_missing_forward_spends(
+                    data['value'].date(), activity.end_date, activity.id)
                 activity.forwardspends += new_fs
                 print("Warning: activity start date moved earlier")
             if data['value'].date() > activity.start_date:
@@ -390,7 +421,8 @@ def update_attr(data):
                 print("Warning: activity start date moved later")
         if data['attr'] == "end_date":
             if data['value'].date() > activity.end_date:
-                new_fs = qfinances.create_missing_forward_spends(activity.start_date, data['value'].date(), activity.id)
+                new_fs = qfinances.create_missing_forward_spends(
+                    activity.start_date, data['value'].date(), activity.id)
                 activity.forwardspends += new_fs
                 print("Warning: activity end date moved later")
             if data['value'].date() < activity.end_date:
@@ -405,23 +437,22 @@ def update_attr(data):
     db.session.add(activity)
     db.session.commit()
     activity_updated(activity.id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "Activity",
-        "target_id": activity.id,
-        "old_value": {data['attr']: old_value},
-        "value": {data['attr']: data['value']}
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "Activity",
+                         "target_id": activity.id,
+                         "old_value": {data['attr']: old_value},
+                         "value": {data['attr']: data['value']}
+                     }
+                     )
     return True
-
 
 
 def update_activity_policy_marker(activity_id, policy_marker_code, data):
     activity_policy_marker = models.ActivityPolicyMarker.query.filter_by(
-        activity_id = activity_id,
-        policy_marker_code = policy_marker_code
+        activity_id=activity_id,
+        policy_marker_code=policy_marker_code
     ).first()
     if activity_policy_marker:
         old_value = getattr(activity_policy_marker, data['attr'])
@@ -436,48 +467,51 @@ def update_activity_policy_marker(activity_id, policy_marker_code, data):
     db.session.add(activity_policy_marker)
     db.session.commit()
     activity_updated(activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": mode,
-        "target": "ActivityPolicyMarker",
-        "target_id": activity_policy_marker.id,
-        "old_value": old_value,
-        "value": {data['attr']: data['value']}
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": mode,
+                         "target": "ActivityPolicyMarker",
+                         "target_id": activity_policy_marker.id,
+                         "old_value": old_value,
+                         "value": {data['attr']: data['value']}
+                     }
+                     )
     return True
-
 
 
 def update_activity_codelist(activitycodelistcode_id, data):
     activity_codelist = models.ActivityCodelistCode.query.filter_by(
-        id = activitycodelistcode_id
+        id=activitycodelistcode_id
     ).first()
-    if not activity_codelist: return False
+    if not activity_codelist:
+        return False
     old_value = getattr(activity_codelist, data['attr'])
     setattr(activity_codelist, data['attr'], data['value'])
     db.session.add(activity_codelist)
     db.session.commit()
     activity_updated(activity_codelist.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityCodelistCode",
-        "target_id": activity_codelist.id,
-        "old_value": {data['attr']: old_value},
-        "value": {data['attr']: data['value']}
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "ActivityCodelistCode",
+                         "target_id": activity_codelist.id,
+                         "old_value": {data['attr']: old_value},
+                         "value": {data['attr']: data['value']}
+                     }
+                     )
     return True
 
 
 def save_period_data(indicator_id, periods_data):
-    existing_periods = models.ActivityResultIndicator.query.get(indicator_id).periods
+    existing_periods = models.ActivityResultIndicator.query.get(
+        indicator_id).periods
     existing_period_ids = list(map(lambda p: p.id, existing_periods))
     new_period_ids = list(map(lambda p: p.get("id"), periods_data))
     # Delete periods that no longer appear
-    periods_to_delete = filter(lambda r: r not in new_period_ids, existing_period_ids)
-    [delete_result_data({'result_type': "ActivityResultIndicatorPeriod", "id": period}) for period in periods_to_delete]
+    periods_to_delete = filter(
+        lambda r: r not in new_period_ids, existing_period_ids)
+    [delete_result_data({'result_type': "ActivityResultIndicatorPeriod",
+                        "id": period}) for period in periods_to_delete]
     for period in periods_data:
         if not "id" in period:
             # Create a new period
@@ -485,22 +519,27 @@ def save_period_data(indicator_id, periods_data):
         else:
             # Update period
             for k, v in period.items():
-                if k in ['open', 'percent_complete', 'percent_complete_category']: continue
-                update_indicator_period_attr({'id': period['id'], 'attr': k, 'value': v})
+                if k in ['open', 'percent_complete', 'percent_complete_category']:
+                    continue
+                update_indicator_period_attr(
+                    {'id': period['id'], 'attr': k, 'value': v})
+
 
 def save_indicator_data(result_id, data):
     existing_indicators = models.ActivityResult.query.get(result_id).indicators
     if not "indicator_id" in data:
         if len(existing_indicators) > 0:
             for existing_indicator in existing_indicators:
-                delete_result_data({"result_type": "ActivityResultIndicator", "id": existing_indicator.id})
+                delete_result_data(
+                    {"result_type": "ActivityResultIndicator", "id": existing_indicator.id})
         else:
             # Indicator is new
             add_indicator(data, result_id)
     elif (len(existing_indicators) == 1) and (data.get("indicator_id") == existing_indicators[0].id):
         # Indicator exists
         for k in ['indicator_title', 'baseline_year', 'baseline_value', 'measurement_unit_type', 'measurement_type']:
-            indicator = update_indicator_attr({'id': result_id, 'attr': k, 'value': data.get(k)})
+            indicator = update_indicator_attr(
+                {'id': result_id, 'attr': k, 'value': data.get(k)})
         save_period_data(indicator.id, data.get('periods', []))
 
 
@@ -512,29 +551,32 @@ def save_results_data_entry(activity_id, results_data, save_type):
     assert new_result_ids == existing_result_ids
     for result in results_data:
         existing_result = models.ActivityResult.query.get(result["id"])
-        existing_period_ids = set(map(lambda p: p.id, existing_result.indicator_periods))
+        existing_period_ids = set(
+            map(lambda p: p.id, existing_result.indicator_periods))
         new_period_ids = set(map(lambda p: p["id"], result["periods"]))
         assert existing_period_ids == new_period_ids
         for period in result["periods"]:
-            existing_period = models.ActivityResultIndicatorPeriod.query.get(period["id"])
-            if (existing_period.open == False) or (existing_period.status == 4): continue
+            existing_period = models.ActivityResultIndicatorPeriod.query.get(
+                period["id"])
+            if (existing_period.open == False) or (existing_period.status == 4):
+                continue
             update_indicator_period_attr(
                 {'id': period['id'],
-                'attr': 'actual_value',
-                'value': period['actual_value']}
+                 'attr': 'actual_value',
+                 'value': period['actual_value']}
             )
             if ((save_type == "submitAll") or
-                ((save_type == "submitSelected") and (period['status'] == '4'))):
+                    ((save_type == "submitSelected") and (period['status'] == '4'))):
                 update_indicator_period_attr(
                     {'id': period['id'],
-                    'attr': 'status',
-                    'value': 4}
+                     'attr': 'status',
+                     'value': 4}
                 )
             else:
                 update_indicator_period_attr(
                     {'id': period['id'],
-                    'attr': 'status',
-                    'value': 3}
+                     'attr': 'status',
+                     'value': 3}
                 )
 
     return True
@@ -546,52 +588,58 @@ def save_results_data(activity_id, results_data):
     existing_result_ids = list(map(lambda r: r.id, existing_results))
     new_result_ids = list(map(lambda r: r.get("id"), results_data))
     # Delete results that no longer appear
-    results_to_delete = filter(lambda r: r not in new_result_ids, existing_result_ids)
-    [delete_result_data({'result_type': "ActivityResult", "id": result}) for result in results_to_delete]
+    results_to_delete = filter(
+        lambda r: r not in new_result_ids, existing_result_ids)
+    [delete_result_data({'result_type': "ActivityResult", "id": result})
+     for result in results_to_delete]
 
     for result in results_data:
         if not "id" in result:
             result_to_add = result
-            result_to_add['result_type'] = {'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
-            result_to_add["indicators"] = [result] # They use different names so this is OK
+            result_to_add['result_type'] = {
+                'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
+            # They use different names so this is OK
+            result_to_add["indicators"] = [result]
             new_result = add_result(result_to_add, activity_id)
         else:
             existing_result = update_result_attr({
-                    'id': result['id'],
-                    'attr': 'result_title',
-                    'value': result['result_title']
-                })
+                'id': result['id'],
+                'attr': 'result_title',
+                'value': result['result_title']
+            })
             existing_result = update_result_attr({
-                    'id': result['id'],
-                    'attr': 'result_type',
-                    'value': {'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
-                })
+                'id': result['id'],
+                'attr': 'result_type',
+                'value': {'Output': 1, 'Outcome': 2, 'Impact': 3}[result['result_type']]
+            })
             save_indicator_data(existing_result.id, result)
     return True
 
+
 def update_result_attr(data):
     result = models.ActivityResult.query.filter_by(
-        id = data['id']
+        id=data['id']
     ).first()
     oldresult = result.as_dict()
     setattr(result, data['attr'], data['value'])
     db.session.add(result)
     db.session.commit()
     activity_updated(result.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityResult",
-        "target_id": result.id,
-        "old_value": oldresult,
-        "value": result.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "ActivityResult",
+                         "target_id": result.id,
+                         "old_value": oldresult,
+                         "value": result.as_dict()
+                     }
+                     )
     return result
+
 
 def update_indicator_attr(data):
     indicator = models.ActivityResultIndicator.query.filter_by(
-        id = data['id']
+        id=data['id']
     ).first()
     oldindicator = indicator.as_dict()
     if (data['attr'].endswith("year")) and not (data['value'] in (None, '')):
@@ -600,20 +648,21 @@ def update_indicator_attr(data):
     db.session.add(indicator)
     db.session.commit()
     activity_updated(indicator.result.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityResultIndicator",
-        "target_id": indicator.id,
-        "old_value": oldindicator,
-        "value": indicator.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "ActivityResultIndicator",
+                         "target_id": indicator.id,
+                         "old_value": oldindicator,
+                         "value": indicator.as_dict()
+                     }
+                     )
     return indicator
+
 
 def update_indicator_period_attr(data):
     period = models.ActivityResultIndicatorPeriod.query.filter_by(
-        id = data['id']
+        id=data['id']
     ).first()
     oldperiod = period.as_dict()
     if data['attr'].startswith("period_"):
@@ -623,16 +672,17 @@ def update_indicator_period_attr(data):
     db.session.add(period)
     db.session.commit()
     activity_updated(period.result_indicator.result.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "update",
-        "target": "ActivityResultIndicatorPeriod",
-        "target_id": period.id,
-        "old_value": oldperiod,
-        "value": period.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "update",
+                         "target": "ActivityResultIndicatorPeriod",
+                         "target_id": period.id,
+                         "old_value": oldperiod,
+                         "value": period.as_dict()
+                     }
+                     )
     return period
+
 
 def add_indicator_period(data, indicator_id, commit=True):
     p = models.ActivityResultIndicatorPeriod()
@@ -646,16 +696,17 @@ def add_indicator_period(data, indicator_id, commit=True):
     db.session.add(p)
     db.session.commit()
     activity_updated(p.result_indicator.result.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "add",
-        "target": "ActivityResultIndicatorPeriod",
-        "target_id": p.id,
-        "old_value": None,
-        "value": p.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "add",
+                         "target": "ActivityResultIndicatorPeriod",
+                         "target_id": p.id,
+                         "old_value": None,
+                         "value": p.as_dict()
+                     }
+                     )
     return p
+
 
 def add_indicator(data, result_id, commit=True):
     i = models.ActivityResultIndicator()
@@ -672,18 +723,19 @@ def add_indicator(data, result_id, commit=True):
     db.session.commit()
     if data.get("periods"):
         [add_indicator_period(period, i.id, False) for
-                              period in data['periods']]
+         period in data['periods']]
     activity_updated(i.result.activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "add",
-        "target": "ActivityResultIndicator",
-        "target_id": i.id,
-        "old_value": None,
-        "value": i.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "add",
+                         "target": "ActivityResultIndicator",
+                         "target_id": i.id,
+                         "old_value": None,
+                         "value": i.as_dict()
+                     }
+                     )
     return i
+
 
 def add_result(data, activity_id, organisation_slug=None, commit=True):
     r = models.ActivityResult()
@@ -695,22 +747,24 @@ def add_result(data, activity_id, organisation_slug=None, commit=True):
     db.session.commit()
     if data.get("indicators"):
         [add_indicator(indicator, r.id, False) for
-                       indicator in data['indicators']]
+         indicator in data['indicators']]
     activity_updated(activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "add",
-        "target": "ActivityResult",
-        "target_id": r.id,
-        "old_value": None,
-        "value": r.as_dict()
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "add",
+                         "target": "ActivityResult",
+                         "target_id": r.id,
+                         "old_value": None,
+                         "value": r.as_dict()
+                     }
+                     )
     return r
+
 
 def add_results_data(results, activity_id, organisation_slug):
     [add_result(result, activity_id, organisation_slug,
                 False) for result in results]
+
 
 def add_result_data(activity_id, data):
     if data['type'] == "ActivityResult":
@@ -731,32 +785,33 @@ def add_result_data(activity_id, data):
     db.session.commit()
     return r
 
+
 def delete_result_data(data):
     if data['result_type'] == "ActivityResult":
         r = models.ActivityResult.query.filter_by(
-            id = data['id']
+            id=data['id']
         ).first()
         activity_id = r.activity_id
     elif data['result_type'] == "ActivityResultIndicator":
         r = models.ActivityResultIndicator.query.filter_by(
-            id = data['id']
+            id=data['id']
         ).first()
         activity_id = r.result.activity_id
     elif data['result_type'] == "ActivityResultIndicatorPeriod":
         r = models.ActivityResultIndicatorPeriod.query.filter_by(
-            id = data['id']
+            id=data['id']
         ).first()
         activity_id = r.result_indicator.result.activity_id
 
     activity_updated(activity_id,
-        {
-        "user_id": current_user.id,
-        "mode": "delete",
-        "target": data["result_type"],
-        "target_id": r.id,
-        "old_value": r.as_dict(),
-        "value": None
-        }
-    )
+                     {
+                         "user_id": current_user.id,
+                         "mode": "delete",
+                         "target": data["result_type"],
+                         "target_id": r.id,
+                         "old_value": r.as_dict(),
+                         "value": None
+                     }
+                     )
     db.session.delete(r)
     db.session.commit()

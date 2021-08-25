@@ -5,8 +5,10 @@ from openpyxl.utils import get_column_letter
 import datetime
 from io import BytesIO
 
+
 def guess_types(cell_value):
-    if cell_value == None: return ""
+    if cell_value == None:
+        return ""
     try:
         if float(cell_value) == int(float(cell_value)):
             return int(float(cell_value))
@@ -18,6 +20,7 @@ def guess_types(cell_value):
     except ValueError:
         pass
     return cell_value
+
 
 class xlsxDictWriter(object):
     def writesheet(self, worksheet_name):
@@ -31,9 +34,11 @@ class xlsxDictWriter(object):
         header mapping"""
         hm = self.header_mapping
         for column_header, cell in row_data.items():
-            if column_header not in hm: continue
+            if column_header not in hm:
+                continue
             column_letter = get_column_letter((hm[column_header]))
-            self.ws['%s%s'%(column_letter, (self.row_index))] = guess_types(cell)
+            self.ws['%s%s' % (column_letter, (self.row_index))
+                    ] = guess_types(cell)
         self.row_index += 1
 
     def writeheader(self):
@@ -68,8 +73,8 @@ class xlsxDictWriter(object):
         ws.protection.sheet = True
 
     def __init__(self, headers, _type=u"disbursements",
-            template_currency=u"USD",
-            instructions_sheet=False):
+                 template_currency=u"USD",
+                 instructions_sheet=False):
         self.wb = Workbook()
         self.template_currency = template_currency
         self.instructions_sheet = instructions_sheet

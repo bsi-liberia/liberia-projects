@@ -17,7 +17,7 @@ def create_app(config_object='config'):
     register_commands(app)
     CORS(app)
     register_errorhandlers(app)
-    #register_hooks(app)
+    # register_hooks(app)
     return app
 
 
@@ -48,7 +48,8 @@ def check_enforce_sqlite_fkey_constraints(app):
                 dbapi_con.execute('pragma foreign_keys=ON')
 
             from sqlalchemy import event
-            event.listen(extensions.db.engine, 'connect', _fk_pragma_on_connect)
+            event.listen(extensions.db.engine, 'connect',
+                         _fk_pragma_on_connect)
 
 
 def register_extensions(app):

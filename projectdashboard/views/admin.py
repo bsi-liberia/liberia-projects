@@ -18,7 +18,8 @@ blueprint = Blueprint('admin', __name__, url_prefix='/api/admin')
 def api_fiscal_year_choices():
     if request.method == 'GET':
         db_fiscal_year_choices = models.FiscalYearChoice.query.all()
-        fiscal_year_choices = list(map(lambda fiscal_year: fiscal_year.as_dict(), db_fiscal_year_choices))
+        fiscal_year_choices = list(
+            map(lambda fiscal_year: fiscal_year.as_dict(), db_fiscal_year_choices))
         earliest_date = current_app.config['EARLIEST_DATE']
         latest_date = current_app.config['LATEST_DATE']
         return jsonify({

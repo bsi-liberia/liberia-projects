@@ -14,7 +14,8 @@ from projectdashboard import models
 
 from collections import OrderedDict
 
-blueprint = Blueprint('activity_forwardspends', __name__, url_prefix='/api/activity_forwardspends')
+blueprint = Blueprint('activity_forwardspends', __name__,
+                      url_prefix='/api/activity_forwardspends')
 
 
 @blueprint.route("/<activity_id>/<fiscal_year>/", methods=["GET", "POST"])
@@ -23,34 +24,38 @@ blueprint = Blueprint('activity_forwardspends', __name__, url_prefix='/api/activ
 @quser.permissions_required("edit")
 def api_activity_forwardspends(activity_id, fiscal_year=True):
     activity = qactivity.get_activity(activity_id)
-    if activity == None: return abort(404)
+    if activity == None:
+        return abort(404)
     """GET returns a list of all forward spend data for a given activity_id.
     POST updates value for a given forwardspend_id."""
     if request.method == "GET":
-        if not fiscal_year==False:
+        if not fiscal_year == False:
             data = qactivity.get_activity(activity_id).forwardspends
             forwardspends = list(map(lambda fs_db: fs_db.as_dict(),
-                             qactivity.get_activity(activity_id).forwardspends))
+                                     qactivity.get_activity(activity_id).forwardspends))
             # Return fiscal years here
             years = sorted(set(map(lambda fs: util.date_to_fy_fq(fs["value_date"])[0],
-                             forwardspends)))
+                                   forwardspends)))
             out = OrderedDict()
             for year in years:
-                out[year] = OrderedDict({"year": "FY{}".format(util.fy_to_fyfy(str(year))), "total_value": 0.00})
+                out[year] = OrderedDict({"year": "FY{}".format(
+                    util.fy_to_fyfy(str(year))), "total_value": 0.00})
                 for forwardspend in sorted(forwardspends, key=lambda k: k["value_date"]):
                     if util.date_to_fy_fq(forwardspend["period_start_date"])[0] == year:
-                        fq = util.date_to_fy_fq(forwardspend["period_start_date"])[1]
+                        fq = util.date_to_fy_fq(
+                            forwardspend["period_start_date"])[1]
                         out[year]["Q{}".format(fq)] = forwardspend
-                        out[year]["total_value"] += float(forwardspend["value"])
+                        out[year]["total_value"] += float(
+                            forwardspend["value"])
             out = list(out.values())
             quarters = util.make_quarters_text(util.LR_QUARTERS_MONTH_DAY)
             return jsonify(forwardspends=out, quarters=quarters)
         else:
             data = qactivity.get_activity(activity_id).forwardspends
             forwardspends = list(map(lambda fs_db: fs_db.as_dict(),
-                             qactivity.get_activity(activity_id).forwardspends))
+                                     qactivity.get_activity(activity_id).forwardspends))
             years = sorted(set(map(lambda fs: fs["value_date"].year,
-                             forwardspends)))
+                                   forwardspends)))
             out = OrderedDict()
             for year in years:
                 out[year] = {"year": year, "total_value": 0.00}
@@ -58,7 +63,8 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
                     if forwardspend["period_start_date"].year == year:
                         fq = MONTHS_QUARTERS[forwardspend["period_start_date"].month]
                         out[year]["Q{}".format(fq)] = forwardspend
-                        out[year]["total_value"] += float(forwardspend["value"])
+                        out[year]["total_value"] += float(
+                            forwardspend["value"])
             out = list(out.values())
             quarters = util.make_quarters_text(util.QUARTERS_MONTH_DAY)
             return jsonify(forwardspends=out, quarters=quarters)
@@ -77,6 +83,7 @@ def api_activity_forwardspends(activity_id, fiscal_year=True):
         if update_status == True:
             return "success"
         return "error"
+
 
 @blueprint.route("/<activity_id>/update_forwardspends/", methods=['POST'])
 @jwt_required()

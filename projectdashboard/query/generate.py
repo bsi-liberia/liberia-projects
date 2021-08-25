@@ -12,13 +12,16 @@ def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
     return datetime.datetime.strptime(value, "%Y-%m-%d")
 
+
 def date_isostring(value):
     # Returns a string of format YYYY-MM-DD from a date object
     return value.isoformat()
 
+
 def current_datetime():
     return datetime.datetime.now().replace(
-            microsecond=0).isoformat()
+        microsecond=0).isoformat()
+
 
 def actual_or_planned(value):
     date = isostring_date(value)
@@ -27,6 +30,7 @@ def actual_or_planned(value):
         return "actual"
     return "planned"
 
+
 def el_with_narrative(element_name, narrative):
     el = et.Element(element_name)
     el_nar = et.Element("narrative")
@@ -34,12 +38,15 @@ def el_with_narrative(element_name, narrative):
     el_nar.text = narrative
     return el
 
+
 def el_with_text(element_name, text):
     el = et.Element(element_name)
     el.text = text
     return el
 
 # Generate activity date: actual if in past, otherwise planned
+
+
 def el_date_103(start_end, iso_date):
     adt = codelists("1.03")["ActivityDateType"]
 
@@ -52,6 +59,8 @@ def el_date_103(start_end, iso_date):
     return el
 
 # Generate activity date: actual if in past, otherwise planned
+
+
 def el_date(start_end, iso_date):
     adt = codelists("ActivityDateType")
 
@@ -63,6 +72,7 @@ def el_date(start_end, iso_date):
     el.set("iso-date", iso_date)
     return el
 
+
 def el_org_103(role, o_name, o_ref=None, o_type=None):
     if role == "reporting":
         el = et.Element("reporting-org")
@@ -70,10 +80,13 @@ def el_org_103(role, o_name, o_ref=None, o_type=None):
         r = codelists("OrganisationRole")
         el = et.Element("participating-org")
         el.set("role", role)
-    if o_ref: el.set("ref", o_ref)
-    if o_type: el.set("type", o_type)
+    if o_ref:
+        el.set("ref", o_ref)
+    if o_type:
+        el.set("type", o_type)
     el.text = o_name
     return el
+
 
 def el_org(role, o_name, o_ref=None, o_type=None):
     if role == "reporting":
@@ -82,20 +95,24 @@ def el_org(role, o_name, o_ref=None, o_type=None):
         r = codelists("OrganisationRole")
         el = et.Element("participating-org")
         el.set("role", r[role])
-    if o_ref: el.set("ref", o_ref)
-    if o_type: el.set("type", o_type)
+    if o_ref:
+        el.set("ref", o_ref)
+    if o_type:
+        el.set("type", o_type)
     el_nar = et.Element("narrative")
     el.append(el_nar)
     el_nar.text = o_name
     return el
 
+
 def el_iati_identifier(activity, o_ref):
     el = et.Element("iati-identifier")
-    a_code = { True: activity.code,
-               False: activity.id
-             }[bool(activity.code)]
+    a_code = {True: activity.code,
+              False: activity.id
+              }[bool(activity.code)]
     el.text = "%s-%s-%s" % (o_ref, activity.recipient_country_code, a_code)
     return el
+
 
 def el_with_code_103(element_name, code, text, vocabulary=None):
     el = et.Element(element_name)
@@ -108,6 +125,7 @@ def el_with_code_103(element_name, code, text, vocabulary=None):
     el.text = text
     return el
 
+
 def el_with_code(element_name, code, vocabulary=None):
     el = et.Element(element_name)
     if code == None:
@@ -117,6 +135,7 @@ def el_with_code(element_name, code, vocabulary=None):
     if vocabulary:
         el.set("vocabulary", vocabulary)
     return el
+
 
 def el_location(location):
     el = et.Element("location")
@@ -139,7 +158,7 @@ def el_location(location):
     feature_adm = {"ADM1": "1", "ADM2": "2"}
 
     if ((feature_adm[location.locations.feature_code] == "2") and
-        (location.locations.admin1_code != "")):
+            (location.locations.admin1_code != "")):
         administrative = et.Element("administrative")
         el.append(administrative)
         administrative.set("vocabulary", "G1")
@@ -170,6 +189,7 @@ def el_location(location):
 
     return el
 
+
 def el_location_103(location):
     el = et.Element("location")
 
@@ -183,7 +203,8 @@ def el_location_103(location):
     el.append(coordinates)
     coordinates.set("latitude", location.locations.latitude)
     coordinates.set("longitude", location.locations.longitude)
-    coordinates.set("precision", feature_precision[location.locations.feature_code])
+    coordinates.set(
+        "precision", feature_precision[location.locations.feature_code])
 
     name = et.Element("name")
     el.append(name)
@@ -196,10 +217,12 @@ def el_location_103(location):
 
     return el
 
+
 def el_with_attrib(element_name, attrib, attrib_value):
     el = et.Element(element_name)
     el.set(attrib, attrib_value)
     return el
+
 
 def el_contact_info(organisation):
     ec = et.Element("contact-info")
@@ -217,6 +240,7 @@ def el_contact_info(organisation):
               organisation["organisation_contact_address"]))
     return ec
 
+
 def build_transaction_103(transaction):
     transaction_id = str(transaction["id"])
     transaction_date = transaction["transaction_date"].isoformat()
@@ -224,8 +248,10 @@ def build_transaction_103(transaction):
     transaction_description = transaction["transaction_description"]
 
     trt = transaction["transaction_type"]
-    if trt == "D": trtval = "D"
-    if trt == "C": trtval = "C"
+    if trt == "D":
+        trtval = "D"
+    if trt == "C":
+        trtval = "C"
     tt = codelists("1.03")["TransactionType"]
     transaction_type_name = tt[trtval]
 
@@ -250,6 +276,7 @@ def build_transaction_103(transaction):
 
     return t
 
+
 def build_transaction(transaction):
     transaction_id = str(transaction["id"])
     transaction_date = transaction["transaction_date"].isoformat()
@@ -257,8 +284,10 @@ def build_transaction(transaction):
     transaction_description = transaction["transaction_description"]
 
     trt = transaction["transaction_type"]
-    if trt == "D": trtval = "D"
-    if trt == "C": trtval = "C"
+    if trt == "D":
+        trtval = "D"
+    if trt == "C":
+        trtval = "C"
     tt = codelists("TransactionType")
     transaction_type = tt[trtval]
 
@@ -281,8 +310,10 @@ def build_transaction(transaction):
 
     return t
 
+
 def valid_transaction(transaction):
     return (transaction.transaction_date and transaction.transaction_value > 0)
+
 
 def build_activity_103(doc, activity):
     db_activity = activity
@@ -293,8 +324,10 @@ def build_activity_103(doc, activity):
     doc.append(ia)
 
     ia.set("last-updated-datetime", activity.updated_date.isoformat())
-    ia.set("default-currency", current_app.config["ORGANISATION"]["default_currency"])
-    ia.set("{http://www.w3.org/XML/1998/namespace}lang", current_app.config["ORGANISATION"]["default_language"])
+    ia.set("default-currency",
+           current_app.config["ORGANISATION"]["default_currency"])
+    ia.set("{http://www.w3.org/XML/1998/namespace}lang",
+           current_app.config["ORGANISATION"]["default_language"])
 
     o_name = current_app.config["ORGANISATION"]["organisation_name"]
     o_ref = current_app.config["ORGANISATION"]["organisation_ref"]
@@ -313,14 +346,14 @@ def build_activity_103(doc, activity):
     # Participating orgs
     for organisation in activity.funding_organisations:
         ia.append(el_org_103("Funding", organisation.name,
-                                organisation.code, "10"))
+                             organisation.code, "10"))
     for organisation in activity.implementing_organisations:
         ia.append(el_org_103("Implementing", organisation.name,
-                                organisation.code, "10"))
+                             organisation.code, "10"))
 
     ia.append(el_with_code_103("activity-status",
-            activity.activity_status,
-            cl_lookups["ActivityStatus"][activity.activity_status]))
+                               activity.activity_status,
+                               cl_lookups["ActivityStatus"][activity.activity_status]))
 
     # Activity dates
     if activity.start_date:
@@ -329,13 +362,13 @@ def build_activity_103(doc, activity):
         ia.append(el_date_103("end", activity.end_date.isoformat()))
 
     # Contact info
-    #ia.append(el_contact_info(current_app.config["ORGANISATION"]))
+    # ia.append(el_contact_info(current_app.config["ORGANISATION"]))
 
     # Geography
     ia.append(el_with_code_103("recipient-country",
-                  activity.recipient_country_code,
-                  cl_lookups["Country"][activity.recipient_country_code],
-                  ))
+                               activity.recipient_country_code,
+                               cl_lookups["Country"][activity.recipient_country_code],
+                               ))
 
     for location in activity.locations:
         ia.append(el_location_103(location))
@@ -343,15 +376,18 @@ def build_activity_103(doc, activity):
     # Classifications
     ia.append(el_with_code_103("sector",
                                activity.dac_sector or "",
-                               cl_lookups["Sector"].get(activity.dac_sector, ""),
+                               cl_lookups["Sector"].get(
+                                   activity.dac_sector, ""),
                                "DAC"))
     ia.append(el_with_code_103("collaboration-type",
                                activity.collaboration_type,
-                               cl_lookups["CollaborationType"].get(activity.collaboration_type)
+                               cl_lookups["CollaborationType"].get(
+                                   activity.collaboration_type)
                                ))
     ia.append(el_with_code_103("default-finance-type",
                                activity.finance_type,
-                               cl_lookups["FinanceType"].get(activity.finance_type)
+                               cl_lookups["FinanceType"].get(
+                                   activity.finance_type)
                                ))
     ia.append(el_with_code_103("default-flow-type",
                                activity.flow_type,
@@ -364,21 +400,23 @@ def build_activity_103(doc, activity):
                                cl_lookups["TiedStatus"].get(activity.tied_status)))
 
     # Transactions
-    activity_commitments = list(filter(valid_transaction, activity.commitments))
-    activity_disbursements = list(filter(valid_transaction, activity.disbursements))
+    activity_commitments = list(
+        filter(valid_transaction, activity.commitments))
+    activity_disbursements = list(
+        filter(valid_transaction, activity.disbursements))
 
     # Output commitments
     for transaction in activity_commitments:
         ia.append(build_transaction_103(transaction.as_dict()))
 
     if ((len(activity_commitments) == 0) and
-        activity.start_date and activity.total_commitments):
-        transaction = { "id": "%s-C" % activity.id,
-                        "transaction_date": activity.start_date,
-                        "transaction_value": activity.total_commitments,
-                        "transaction_description": "Total commitments",
-                        "transaction_type": "C"
-                        }
+            activity.start_date and activity.total_commitments):
+        transaction = {"id": "%s-C" % activity.id,
+                       "transaction_date": activity.start_date,
+                       "transaction_value": activity.total_commitments,
+                       "transaction_description": "Total commitments",
+                       "transaction_type": "C"
+                       }
         ia.append(build_transaction_103(transaction))
 
     # Output disbursements
@@ -386,16 +424,17 @@ def build_activity_103(doc, activity):
         ia.append(build_transaction_103(transaction.as_dict()))
 
     if ((len(activity_disbursements) == 0) and
-        activity.total_disbursements):
-        transaction = { "id": "%s-D" % activity.id,
-                        "transaction_date": datetime.datetime.utcnow().date(),
-                        "transaction_value": activity.total_disbursements,
-                        "transaction_description": "Total disbursements",
-                        "transaction_type": "D"
-                        }
+            activity.total_disbursements):
+        transaction = {"id": "%s-D" % activity.id,
+                       "transaction_date": datetime.datetime.utcnow().date(),
+                       "transaction_value": activity.total_disbursements,
+                       "transaction_description": "Total disbursements",
+                       "transaction_type": "D"
+                       }
         ia.append(build_transaction_103(transaction))
 
     return doc
+
 
 def build_activity(doc, activity):
     db_activity = activity
@@ -404,8 +443,10 @@ def build_activity(doc, activity):
     doc.append(ia)
 
     ia.set("last-updated-datetime", activity.updated_date.isoformat())
-    ia.set("default-currency", current_app.config["ORGANISATION"]["default_currency"])
-    ia.set("{http://www.w3.org/XML/1998/namespace}lang", current_app.config["ORGANISATION"]["default_language"])
+    ia.set("default-currency",
+           current_app.config["ORGANISATION"]["default_currency"])
+    ia.set("{http://www.w3.org/XML/1998/namespace}lang",
+           current_app.config["ORGANISATION"]["default_language"])
 
     o_name = current_app.config["ORGANISATION"]["organisation_name"]
     o_ref = current_app.config["ORGANISATION"]["organisation_ref"]
@@ -424,9 +465,9 @@ def build_activity(doc, activity):
     # Participating orgs
     for organisation in activity.funding_organisations:
         ia.append(el_org("Funding", organisation.name,
-                            organisation.code, "10"))
+                         organisation.code, "10"))
     ia.append(el_org("Implementing", organisation.name,
-                            organisation.code, "10"))
+                     organisation.code, "10"))
 
     ia.append(el_with_code("activity-status", activity.activity_status))
 
@@ -437,11 +478,11 @@ def build_activity(doc, activity):
         ia.append(el_date("end", activity.end_date.isoformat()))
 
     # Contact info
-    #ia.append(el_contact_info(current_app.config["ORGANISATION"]))
+    # ia.append(el_contact_info(current_app.config["ORGANISATION"]))
 
     # Geography
     ia.append(el_with_code("recipient-country",
-                  activity.recipient_country_code))
+                           activity.recipient_country_code))
 
     for location in activity.locations:
         ia.append(el_location(location))
@@ -456,21 +497,23 @@ def build_activity(doc, activity):
     ia.append(el_with_code("default-tied-status", activity.tied_status))
 
     # Transactions
-    activity_commitments = list(filter(valid_transaction, activity.commitments))
-    activity_disbursements = list(filter(valid_transaction, activity.disbursements))
+    activity_commitments = list(
+        filter(valid_transaction, activity.commitments))
+    activity_disbursements = list(
+        filter(valid_transaction, activity.disbursements))
 
     # Output commitments
     for transaction in activity_commitments:
         ia.append(build_transaction(transaction.as_dict()))
 
     if ((len(activity_commitments) == 0) and
-        activity.start_date and activity.total_commitments):
-        transaction = { "id": "%s-C" % activity.id,
-                        "transaction_date": activity.start_date,
-                        "transaction_value": activity.total_commitments,
-                        "transaction_description": "Total commitments",
-                        "transaction_type": "C"
-                        }
+            activity.start_date and activity.total_commitments):
+        transaction = {"id": "%s-C" % activity.id,
+                       "transaction_date": activity.start_date,
+                       "transaction_value": activity.total_commitments,
+                       "transaction_description": "Total commitments",
+                       "transaction_type": "C"
+                       }
         ia.append(build_transaction(transaction))
 
     # Output disbursemenets
@@ -478,18 +521,20 @@ def build_activity(doc, activity):
         ia.append(build_transaction(transaction.as_dict()))
 
     if ((len(activity_disbursements) == 0) and
-        activity.total_disbursements):
-        transaction = { "id": "%s-D" % activity.id,
-                        "transaction_date": datetime.datetime.utcnow().date(),
-                        "transaction_value": activity.total_disbursements,
-                        "transaction_description": "Total disbursements",
-                        "transaction_type": "D"
-                        }
+            activity.total_disbursements):
+        transaction = {"id": "%s-D" % activity.id,
+                       "transaction_date": datetime.datetime.utcnow().date(),
+                       "transaction_value": activity.total_disbursements,
+                       "transaction_description": "Total disbursements",
+                       "transaction_type": "D"
+                       }
         ia.append(build_transaction(transaction))
 
     return doc
 
 # Process activities for 1.03
+
+
 def generate_iati_activity_data_103(activities):
     doc = et.Element('iati-activities')
     doc.set("version", "1.03")
@@ -500,6 +545,8 @@ def generate_iati_activity_data_103(activities):
     return doc
 
 # Process activities for 2.01
+
+
 def generate_iati_activity_data_201(activities):
     doc = et.Element('iati-activities')
     doc.set("version", "2.01")
@@ -509,10 +556,12 @@ def generate_iati_activity_data_201(activities):
     doc = et.ElementTree(doc)
     return doc
 
+
 def el_with_isodate(element_name, iso_date):
     el = et.Element(element_name)
     el.set("iso-date", date_isostring(iso_date))
     return el
+
 
 def el_total_budget(budget):
     el_b = et.Element("total-budget")
@@ -523,6 +572,7 @@ def el_total_budget(budget):
     el_b.append(el_val)
     return el_b
 
+
 def el_org_doc(document):
     el_d = et.Element("document-link")
     el_d.set("url", document.url)
@@ -530,6 +580,7 @@ def el_org_doc(document):
     el_d.append(el_with_narrative("title", document.title))
     el_d.append(el_with_attrib("category", "code", document.category))
     return el_d
+
 
 def build_organisation(doc, organisation):
     o_name = organisation.organisation_name
@@ -549,7 +600,7 @@ def build_organisation(doc, organisation):
     org.append(el_org("reporting", o_name, o_ref, o_type))
 
     # Total budgets
-    #for budget in organisation.budgets:
+    # for budget in organisation.budgets:
     #    org.append(el_total_budget(budget))
 
     # Documents
@@ -558,6 +609,8 @@ def build_organisation(doc, organisation):
     return doc
 
 # ORGANISATION FILE
+
+
 def generate_iati_organisation_data(organisation_slug):
     organisation = siorganisation.get_org(organisation_slug)
     doc = et.Element('iati-organisations')
@@ -567,9 +620,11 @@ def generate_iati_organisation_data(organisation_slug):
     doc = et.ElementTree(doc)
     return doc
 
+
 def generate_103(country_code):
     activities = qactivity.list_activities_by_country(country_code)
     return et.tostring(generate_iati_activity_data_103(activities))
+
 
 def generate_201(country_code):
     activities = qactivity.list_activities_by_country(country_code)
