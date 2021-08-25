@@ -71,6 +71,52 @@ def get_closest_date(the_date, the_currency):
                                                               ).first()
 
 
+def fwddata_query_year(_self):
+    QUERY_COLS = (func.sum(ActivityForwardSpend.value).label("value"),
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityForwardSpend.period_start_date)
+                    ).label("fiscal_year"),
+                sa.sql.expression.literal(None).label('fiscal_quarter'),
+                sa.sql.expression.literal(None).label('fiscal_period_end'))
+    return db.session.query(
+        *QUERY_COLS
+        ).filter(
+        ActivityForwardSpend.activity_id == _self.id,
+        ActivityForwardSpend.value != 0
+    ).group_by("fiscal_year"
+    ).group_by("fiscal_quarter"
+    ).group_by("fiscal_period_end"
+    ).order_by(ActivityForwardSpend.period_start_date.desc()
+                          ).all()
+
+
+def fydata_query_year(_self, _transaction_types, fund_sources=False):
+    QUERY_COLS = (func.sum(ActivityFinances.transaction_value).label("value"),
+                func.STRFTIME('%Y',
+                    func.DATE(ActivityFinances.transaction_date)
+                    ).label("fiscal_year"),
+                sa.sql.expression.literal(None).label('fiscal_quarter'),
+                sa.sql.expression.literal(None).label('fiscal_period_end'))
+    GROUP_BYS = ("fiscal_year", "fiscal_quarter", "fiscal_period_end", )
+    if fund_sources:
+        QUERY_COLS += (FundSource.id.label("fund_source_id"),)
+        GROUP_BYS += ("fund_source_id",)
+
+    query = db.session.query(
+        *QUERY_COLS
+    )
+    if fund_sources:
+        query = query.outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
+                                )
+    return query.filter(
+        ActivityFinances.activity_id == _self.id,
+        ActivityFinances.transaction_value != 0,
+        ActivityFinances.transaction_type.in_(_transaction_types)
+    ).group_by(*GROUP_BYS
+               ).order_by(ActivityFinances.transaction_date.desc()
+                          ).all()
+
+
 def fwddata_query(_self):
     QUERY_COLS = (func.sum(ActivityForwardSpend.value).label("value"),
                   FiscalPeriod.name.label("fiscal_quarter"),
@@ -414,11 +460,17 @@ class Activity(db.Model):
         return None
 
     def transaction_type_dict(self,
-                              transaction_types, transaction_type_label):
-        if transaction_types == ['MTEF']:
-            fydata = fwddata_query(self)
+                              transaction_types, transaction_type_label, by_year=False):
+        if by_year:
+            if transaction_types == ['MTEF']:
+                fydata = fwddata_query_year(self)
+            else:
+                fydata = fydata_query_year(self, transaction_types)
         else:
-            fydata = fydata_query(self, transaction_types)
+            if transaction_types == ['MTEF']:
+                fydata = fwddata_query(self)
+            else:
+                fydata = fydata_query(self, transaction_types)
         return {
             "{} {} ({})".format(fyval.fiscal_year, fyval.fiscal_quarter, transaction_type_label): {
                 "date": fyval.fiscal_period_end,
