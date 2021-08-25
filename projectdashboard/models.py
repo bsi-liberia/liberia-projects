@@ -5,11 +5,10 @@ import collections
 import sqlalchemy as sa
 from sqlalchemy import func, union_all
 from sqlalchemy.orm import validates, aliased
-from sqlalchemy.sql.expression import case
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
-from projectdashboard.lib import util, codelist_helpers
+from projectdashboard.lib import codelist_helpers
 
 from projectdashboard.extensions import db
 from projectdashboard.query.roles_permissions import make_permissions_list
@@ -316,13 +315,13 @@ class Activity(db.Model):
             ActivityFinances.finance_type
         ).outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
                     ).group_by(ActivityFinances.finance_type
-                               ).filter(ActivityFinances.transaction_type == u"D"
+                               ).filter(ActivityFinances.transaction_type == "D"
                                         ).filter(ActivityFinances.activity_id == self.id
                                                  ).all()
         data = dict(map(lambda ft: (ft.finance_type, ft.sum_value), query))
         total = sum(map(lambda ft: ft.sum_value, query))
         return {
-            "Grant": int(round((data.get(u"110", 0) / total)*100)) if total > 0 else 0.0,
+            "Grant": int(round((data.get("110", 0) / total)*100)) if total > 0 else 0.0,
             "Loan": int(round((data.get("410", 0) / total)*100)) if total > 0 else 0.0,
         }
 
@@ -336,7 +335,7 @@ class Activity(db.Model):
             ActivityFinances.finance_type
         ).outerjoin(FundSource, ActivityFinances.fund_source_id == FundSource.id
                     ).group_by(FundSource.id, FundSource.code, FundSource.name, FundSource.finance_type
-                               ).filter(ActivityFinances.transaction_type == u"D"
+                               ).filter(ActivityFinances.transaction_type == "D"
                                         ).filter(ActivityFinances.activity_id == self.id
                                                  ).all()
         total = sum(map(lambda ft: ft.sum_value, query))
@@ -366,26 +365,26 @@ class Activity(db.Model):
     @hybrid_property
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
-                                ).filter(ActivityFinances.transaction_type == u"C",
+                                ).filter(ActivityFinances.transaction_type == "C",
                                          ActivityFinances.activity_id == self.id).scalar()
 
     @hybrid_property
     def total_disbursements(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
-                                ).filter(ActivityFinances.transaction_type == u"D",
+                                ).filter(ActivityFinances.transaction_type == "D",
                                          ActivityFinances.activity_id == self.id).scalar()
 
     commitments = sa.orm.relationship("ActivityFinances",
                                       primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'C')""",
+        ActivityFinances.transaction_type=='C')""",
                                       viewonly=True)
     allotments = sa.orm.relationship("ActivityFinances",
                                      primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'99-A')""",
+        ActivityFinances.transaction_type=='99-A')""",
                                      viewonly=True)
     disbursements = sa.orm.relationship("ActivityFinances",
                                         primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
-        ActivityFinances.transaction_type==u'D')""",
+        ActivityFinances.transaction_type=='D')""",
                                         viewonly=True)
 
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
@@ -459,7 +458,7 @@ class Activity(db.Model):
         ).filter(
             FiscalYear.id == FY,
             ActivityFinances.activity_id == self.id,
-            ActivityFinances.transaction_type.in_((u'D', u'E'))
+            ActivityFinances.transaction_type.in_(('D', 'E'))
         ).scalar()
         if result is None:
             return 0.00
@@ -653,7 +652,7 @@ class ActivityFinances(db.Model):
                             nullable=False,
                             index=True)
     activity = sa.orm.relationship("Activity")
-    currency = sa.Column(sa.UnicodeText, default=u"USD")
+    currency = sa.Column(sa.UnicodeText, default="USD")
     transaction_date = sa.Column(sa.Date)
     transaction_type = sa.Column(sa.UnicodeText,
                                  index=True)
@@ -682,7 +681,7 @@ class ActivityFinances(db.Model):
     currency_automatic = sa.Column(sa.Boolean,
                                    default=True, nullable=False)
     currency_source = sa.Column(sa.UnicodeText,
-                                default=u"USD", nullable=False)
+                                default="USD", nullable=False)
     currency_rate = sa.Column(sa.Float,
                               default=1.0, nullable=False)
     currency_value_date = sa.Column(sa.Date)
@@ -740,7 +739,7 @@ class ActivityFinances(db.Model):
     def mtef_sector(self):
         mtef = ActivityFinancesCodelistCode.query.filter_by(
             activityfinance_id=self.id,
-            codelist_id=u"mtef-sector"
+            codelist_id="mtef-sector"
         ).first()
         if mtef:
             return mtef.codelist_code_id

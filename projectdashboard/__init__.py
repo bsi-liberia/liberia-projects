@@ -1,16 +1,18 @@
 from flask import Flask, render_template, session, request, current_app, make_response, jsonify
 from flask_login import current_user
 from flask_cors import CORS
+from sqlalchemy import event
 
 from projectdashboard import commands, views, extensions
 
 
 def create_app(config_object='config'):
-    """An application factory, as explained here: http://flask.pocoo.org/docs/patterns/appfactories/.
+    """An application factory, as explained here:
+    http://flask.pocoo.org/docs/patterns/appfactories/.
 
     :param config_object: The configuration object to use.
     """
-    app = Flask(__name__.split('.')[0])
+    app = Flask(__name__.split('.', maxsplit=1)[0])
     app.config.from_object(config_object)
     register_blueprints(app)
     register_extensions(app)
@@ -47,7 +49,6 @@ def check_enforce_sqlite_fkey_constraints(app):
             def _fk_pragma_on_connect(dbapi_con, con_record):
                 dbapi_con.execute('pragma foreign_keys=ON')
 
-            from sqlalchemy import event
             event.listen(extensions.db.engine, 'connect',
                          _fk_pragma_on_connect)
 
