@@ -1,24 +1,22 @@
 from collections import defaultdict
 import datetime
+import io
+import sys
+import re
+import zipfile
 
 from flask import Blueprint, request, abort, \
-    url_for, Response, send_file, redirect, flash, make_response, jsonify
-from flask_login import login_required, current_user
+    Response, send_file, make_response, jsonify
 from flask_jwt_extended import jwt_required
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import organisations as qorganisations
 from projectdashboard.query import generate_csv as qgenerate_csv
 from projectdashboard.query import generate_xlsx as qgenerate_xlsx
-from projectdashboard.query import exchangerates as qexchangerates
 from projectdashboard.query import import_psip_transactions as qimport_psip_transactions
 from projectdashboard.query import import_client_connection as qimport_client_connection
 from projectdashboard.query import user as quser
 from projectdashboard.query import generate_docx as qgenerate_docx
 from projectdashboard.lib import util
-import io
-import sys
-import re
-import zipfile
 
 
 blueprint = Blueprint('exports', __name__, url_prefix='/',
@@ -37,7 +35,8 @@ def allowed_file(filename):
 def export_project_brief(activity_id):
     brief = qgenerate_docx.make_doc(activity_id)
     brief.seek(0)
-    return Response(brief, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    return Response(brief,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
 @blueprint.route("/api/sector-brief/<sector_id>.docx")
@@ -45,7 +44,8 @@ def export_project_brief(activity_id):
 def export_sector_brief(sector_id):
     brief = qgenerate_docx.make_sector_doc(sector_id)
     brief.seek(0)
-    return Response(brief, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    return Response(brief,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
 @blueprint.route("/api/project-brief/donor/<reporting_org_id>.zip")
@@ -66,7 +66,8 @@ def export_project_brief_donor(reporting_org_id):
             zip_file.writestr("{} - {}.docx".format(activity.id,
                               make_title(activity.title)), brief.getvalue())
     zip_buffer.seek(0)
-    return Response(zip_buffer, mimetype="application/zip, application/octet-stream, application/x-zip-compressed, multipart/x-zip")
+    return Response(zip_buffer,
+        mimetype="application/zip, application/octet-stream, application/x-zip-compressed, multipart/x-zip")
 
 
 @blueprint.route("/api/client-connection/")
@@ -95,9 +96,11 @@ def import_psip_transactions(fiscal_year=None):
                 'msg': "{} activities successfully updated!".format(result)
             }), 200)
         else:
-            return make_response(jsonify({'msg': """"No activities were updated. Ensure that projects have the correct
+            return make_response(jsonify({'msg': """"No activities were updated.
+        Ensure that projects have the correct
         IFMIS project code specified under the "project code" field."""}), 200)
-    return make_response(jsonify({'msg': "Sorry, but that file cannot be imported. It must be of type xls or xlsx."}), 400)
+    return make_response(jsonify({'msg': """Sorry, but that file cannot be imported.
+        It must be of type xls or xlsx."""}), 400)
 
 
 @blueprint.route("/api/exports/import/", methods=["POST"])
@@ -118,7 +121,8 @@ def import_template():
                     'messages': result_messages
                 }), 200)
             else:
-                return make_response(jsonify({'msg': """No activities were updated. No updated MTEF projections
+                return make_response(jsonify({'msg': """No activities were updated.
+            No updated MTEF projections
             were found. Check that you selected the correct file and that it
             contains updated MTEF projections data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
@@ -139,14 +143,16 @@ def import_template():
                     'messages': result_messages
                 }), 200)
             else:
-                return make_response(jsonify({'msg': """No activities were updated. No updated disbursements
+                return make_response(jsonify({'msg': """No activities were updated.
+                    No updated disbursements
             were found. Check that you selected the correct file and that it
             contains updated {} data. It must be formatted according to
             the AMCU template format. You can download a copy of this template
             on this page.""".format(util.column_data_to_string(fy_fq)),
                     'messages': result_messages
                 }), 200)
-    return make_response(jsonify({'msg': "Sorry, but that file cannot be imported. It must be of type xls or xlsx."}), 400)
+    return make_response(jsonify({'msg': """Sorry, but that file cannot be imported.
+        It must be of type xls or xlsx."""}), 400)
 
 
 @blueprint.route("/api/exports/activities.csv")
@@ -165,7 +171,8 @@ def activities_xlsx_transactions():
     data = qgenerate_xlsx.generate_xlsx_transactions(
         u"domestic_external", u"external")
     data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return Response(data,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @blueprint.route("/api/exports/activities_<domestic_external>.xlsx")
@@ -175,7 +182,8 @@ def activities_xlsx(domestic_external="external"):
     data = qgenerate_xlsx.generate_xlsx_filtered(
         {"domestic_external": domestic_external})
     data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return Response(data,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @blueprint.route("/api/exports/activities_all.xlsx")
@@ -184,7 +192,8 @@ def activities_xlsx(domestic_external="external"):
 def all_activities_xlsx():
     data = qgenerate_xlsx.generate_xlsx_filtered()
     data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return Response(data,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @blueprint.route("/api/exports/activities_filtered.xlsx")
@@ -194,7 +203,8 @@ def all_activities_xlsx_filtered():
     arguments = request.args.to_dict()
     data = qgenerate_xlsx.generate_xlsx_filtered(arguments)
     data.seek(0)
-    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return Response(data,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @blueprint.route("/api/exports/export_template.xlsx")

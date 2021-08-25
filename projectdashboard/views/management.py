@@ -1,8 +1,3 @@
-from projectdashboard.views.api import jsonify
-from projectdashboard.query import user as quser
-from projectdashboard.query import monitoring as qmonitoring
-from projectdashboard.query import organisations as qorganisations
-
 from flask import Blueprint, request
 from flask_login import current_user
 
@@ -11,6 +6,10 @@ from flask_jwt_extended import (
 )
 from projectdashboard.lib import util
 from projectdashboard import models
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import user as quser
+from projectdashboard.query import monitoring as qmonitoring
+from projectdashboard.query import organisations as qorganisations
 
 
 blueprint = Blueprint('management', __name__, url_prefix='/api/management')
@@ -63,7 +62,7 @@ def generate_reporting_organisation_checklist(reporting_orgs, _response_statuses
                 'status': make_status(ro, qtr, ros_disbursements.get((ro.id, qtr_key)))
             }) for qtr, qtr_key in list_of_quarters.items()])
         return _ro
-    return list(map(lambda ro: annotate_ro(ro), reporting_orgs))
+    return [annotate_ro(reporting_org) for reporting_org in reporting_orgs]
 
 
 @blueprint.route("/reporting_orgs_user.json", methods=["GET", "POST"])
@@ -74,7 +73,8 @@ def reporting_orgs_user():
             qmonitoring.update_organisation_response(
                 request.json)
         return jsonify(result=True)
-    if ("user_id" in request.args) or ("admin" not in current_user.roles_list):  # FIXME Change to Roles
+    #FIXME change to roles
+    if ("user_id" in request.args) or ("admin" not in current_user.roles_list):
         reporting_orgs = qorganisations.get_reporting_orgs(
             user_id=request.args.get('user_id', current_user.id))
         user = models.User.query.get(
@@ -86,12 +86,11 @@ def reporting_orgs_user():
         user_name = None
         user_id = None
     if "admin" in current_user.roles_list:
-        users = list(map(lambda u: {'value': u.id, 'text': u.name},
-                         quser.users_with_role('desk-officer')))
+        users = [{'value': user.id, 'text': user.name} for user in
+            quser.users_with_role('desk-officer')]
     else:
         users = []
-    response_statuses = list(
-        map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    response_statuses = [resp.as_dict() for resp in qmonitoring.response_statuses()]
     orgs = generate_reporting_organisation_checklist(
         reporting_orgs, response_statuses)
 
@@ -115,8 +114,7 @@ def reporting_orgs_user():
 @jwt_required()
 def reporting_orgs():
     reporting_orgs = qorganisations.get_reporting_orgs()
-    response_statuses = list(
-        map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    response_statuses = [resp.as_dict() for resp in qmonitoring.response_statuses()]
     orgs = generate_reporting_organisation_checklist(
         reporting_orgs, response_statuses)
     return jsonify(
@@ -132,8 +130,7 @@ def reporting_orgs():
 @jwt_required()
 def reporting_orgs_summary():
     reporting_orgs = qorganisations.get_reporting_orgs()
-    response_statuses = list(
-        map(lambda r: r.as_dict(), qmonitoring.response_statuses()))
+    response_statuses = [resp.as_dict() for resp in qmonitoring.response_statuses()]
     orgs = generate_reporting_organisation_checklist(
         reporting_orgs, response_statuses)
 

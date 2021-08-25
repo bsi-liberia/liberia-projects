@@ -1,12 +1,11 @@
-from flask import Blueprint, flash, request, \
-    redirect, url_for, jsonify, abort, current_app
-from flask_login import login_required, current_user
+import datetime
+from flask import Blueprint, request, \
+    jsonify, abort, current_app
+from flask_jwt_extended import jwt_required
 from projectdashboard.query import user as quser
 from projectdashboard.query import admin as qadmin
 from projectdashboard.query import activity as qactivity
 from projectdashboard import models
-from flask_jwt_extended import jwt_required
-import datetime
 
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/admin')

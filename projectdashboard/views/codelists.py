@@ -1,13 +1,11 @@
-from flask import Blueprint, flash, request, \
-    redirect, url_for, jsonify
-from flask_login import login_required, current_user
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 
 from projectdashboard.query import location as qlocation
 from projectdashboard.query import organisations as qorganisations
 from projectdashboard.query import codelists as qcodelists
 from projectdashboard.query import user as quser
 from projectdashboard.lib import codelists
-from flask_jwt_extended import jwt_required
 
 
 blueprint = Blueprint('codelists', __name__, url_prefix='/api/codelists')

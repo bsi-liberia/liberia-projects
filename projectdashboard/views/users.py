@@ -18,11 +18,11 @@ blueprint = Blueprint('users', __name__, url_prefix='/',
 
 
 @login_manager.request_loader
-def load_user_from_request(request):
-    current_user = get_jwt_identity()
-    if current_user is None:
+def load_user_from_request(_request):
+    _current_user = get_jwt_identity()
+    if _current_user is None:
         return None
-    user = models.User.query.filter_by(username=current_user).first()
+    user = models.User.query.filter_by(username=_current_user).first()
     if user:
         return user
     return None
@@ -104,7 +104,7 @@ def users_new():
 @quser.administrator_required
 def users_edit(user_id):
     user = quser.user(user_id)
-    if user == None:
+    if user is None:
         return abort(404)
     roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
 
@@ -133,7 +133,7 @@ def users_edit(user_id):
 def user_permissions_edit(user_id):
     if request.method == "GET":
         user = quser.user(user_id)
-        if user == None:
+        if user is None:
             return abort(404)
         user_organisations = list(
             map(lambda uo: uo.as_dict(), user.organisations))
@@ -200,7 +200,7 @@ def login():
 
 @blueprint.route("/api/reset-password/password/", methods=["POST"])
 def reset_password_new_password():
-    if not (request.json.get("password") == request.json.get("password_2")):
+    if request.json.get("password") != request.json.get("password_2"):
         return make_response(jsonify({'msg': 'Please make sure you enter the same password twice.'}), 400)
     elif request.json.get("password") == "":
         return make_response(jsonify({'msg': 'Please enter a password.'}), 400)

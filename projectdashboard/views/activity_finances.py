@@ -1,16 +1,14 @@
+from flask import Blueprint, request, abort
+
+from flask_jwt_extended import (
+    jwt_required
+)
+
 from projectdashboard.views.api import jsonify
 from projectdashboard.query import user as quser
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import exchangerates as qexchangerates
 from projectdashboard.query import finances as qfinances
-
-from flask import Blueprint, request, abort
-from flask_login import current_user
-
-from flask_jwt_extended import (
-    jwt_required
-)
-from projectdashboard.lib import util
 from projectdashboard import models
 
 

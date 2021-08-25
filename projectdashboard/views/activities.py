@@ -1,6 +1,10 @@
-from flask import Blueprint, flash, request, \
-    redirect, url_for, abort
-from flask_login import login_required, current_user
+from collections import OrderedDict
+import datetime
+import difflib
+
+from flask import Blueprint, request, \
+    redirect, abort
+from flask_login import current_user
 from flask_jwt_extended import jwt_required
 
 from projectdashboard.query import codelists as qcodelists
@@ -14,10 +18,6 @@ from projectdashboard.lib import codelists
 from projectdashboard.lib.codelists import get_codelists
 from projectdashboard.views.api import jsonify
 from projectdashboard import models
-
-from collections import OrderedDict
-import datetime
-import difflib
 
 
 blueprint = Blueprint('activities', __name__, url_prefix='/api/activities')
@@ -99,7 +99,7 @@ def api_activities_country():
 @quser.permissions_required("view")
 def api_activities_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     return jsonify(activity=activity.as_jsonable_dict())
 
@@ -203,7 +203,7 @@ def api_new_activity():
         return jsonify(activity=activity)
     elif request.method == "POST":
         data = request.get_json()
-        if data.get('reporting_org_id') == None:
+        if data.get('reporting_org_id') is None:
             return abort(400)
         for codelist, codelist_data in data["classifications"].items():
             data["classification_id_{}".format(
@@ -285,7 +285,7 @@ def api_activities_finances():
 @quser.permissions_required("view")
 def api_activities_finances_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     finances = qactivity.get_finances_by_activity_id(activity_id,
                                                      request.args.get('by_year'))
@@ -299,7 +299,7 @@ def api_activities_finances_by_id(activity_id):
 @quser.permissions_required("view")
 def api_activities_finances_fund_sources_by_id(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
 
     commitments = activity.FY_commitments_dict_fund_sources
@@ -362,7 +362,7 @@ def jsonify_results_design(results):
 @quser.permissions_required("view")
 def api_activities_results(activity_id):
     activity = models.Activity.query.get(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     results = activity.results
     return jsonify(results=jsonify_results_design(results))
@@ -373,7 +373,7 @@ def api_activities_results(activity_id):
 @quser.permissions_required("view")
 def api_activities_documents(activity_id):
     activity = models.Activity.query.get(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     documents = list(map(lambda d: d.as_dict(), activity.documents))
     return jsonify(documents=documents)
@@ -389,7 +389,7 @@ def api_activities_results_data_entry(activity_id):
         if not result:
             return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     results = activity.results
     return jsonify(
@@ -409,7 +409,7 @@ def api_activities_results_design(activity_id):
         if not result:
             return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     results = activity.results
     return jsonify(
@@ -576,7 +576,7 @@ def api_activity_milestones(activity_id):
         return "error"
     else:
         activity = qactivity.get_activity(activity_id)
-        if activity == None:
+        if activity is None:
             return abort(404)
         return jsonify(milestones=activity.milestones_data)
 

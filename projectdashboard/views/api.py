@@ -118,7 +118,8 @@ def available_fys_fqs():
 
 @blueprint.route("/api/filters/reporting_organisation.json")
 def filters_reporting_organisation():
-    return jsonify(reporting_organisations=list(map(lambda ro: ro.as_dict(), qorganisations.get_reporting_orgs())))
+    return jsonify(reporting_organisations=
+        [reporting_org.as_dict() for reporting_org in qorganisations.get_reporting_orgs()])
 
 
 @blueprint.route("/api/organisations/search_similar/", methods=['POST'])
@@ -144,8 +145,11 @@ def api_activities_user_results():
             "funding_org": ", ".join(list(map(lambda o: o.name, activity.funding_organisations))),
             "results_average": activity.results_average,
             "permissions": {
-                    "data_entry": ("results-data-entry" in current_user.roles_list) or ("results-data-design" in current_user.roles_list) or ("admin" in current_user.roles_list),
-                    "data_design": ("results-data-design" in current_user.roles_list) or ("admin" in current_user.roles_list)
+                    "data_entry": (("results-data-entry" in current_user.roles_list) or
+                        ("results-data-design" in current_user.roles_list) or
+                        ("admin" in current_user.roles_list)),
+                    "data_design": (("results-data-design" in current_user.roles_list) or
+                        ("admin" in current_user.roles_list))
                     }
         } for activity in activities]
     )
@@ -219,7 +223,10 @@ def api_sectors_C_D():
     def append_path(root, paths):
         if paths:
             sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {
-                                     'Commitments': 0.0, 'Disbursements': 0.0, 'Allotments': 0.0, 'Disbursement Projection': 0.0})
+                                     'Commitments': 0.0,
+                                     'Disbursements': 0.0,
+                                     'Allotments': 0.0,
+                                     'Disbursement Projection': 0.0})
             sector[{"C": "Commitments", "D": "Disbursements", "99-A": "Allotments",
                     "FS": "Disbursement Projection"}[paths.transaction_type]] = paths.total_value
             sector["name"] = paths.name
@@ -271,7 +278,10 @@ def api_aggregates():
     def append_path(root, paths):
         if paths:
             sector = root.setdefault("{}_{}_{}".format(paths.domestic_external, paths.fiscal_year, paths.name), {
-                                     'Commitments': 0.0, 'Disbursements': 0.0, 'Allotments': 0.0, 'Disbursement Projection': 0.0})
+                                     'Commitments': 0.0,
+                                     'Disbursements': 0.0,
+                                     'Allotments': 0.0,
+                                     'Disbursement Projection': 0.0})
             sector[{"C": "Commitments", "D": "Disbursements", "99-A": "Allotments",
                     "FS": "Disbursement Projection"}[paths.transaction_type]] = paths.total_value
             sector["name"] = paths.name

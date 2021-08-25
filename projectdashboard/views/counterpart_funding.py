@@ -1,16 +1,14 @@
-from projectdashboard.views.api import jsonify
-from projectdashboard.query import user as quser
-from projectdashboard.query import activity as qactivity
-from projectdashboard.query import counterpart_funding as qcounterpart_funding
-
 from flask import Blueprint, request, abort
-from flask_login import current_user
 
 from flask_jwt_extended import (
     jwt_required
 )
+
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import user as quser
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import counterpart_funding as qcounterpart_funding
 from projectdashboard.lib import util
-from projectdashboard import models
 
 
 blueprint = Blueprint('counterpart_funding', __name__,
@@ -22,7 +20,7 @@ blueprint = Blueprint('counterpart_funding', __name__,
 @quser.permissions_required("edit")
 def api_activity_counterpart_funding(activity_id):
     activity = qactivity.get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     """GET returns a list of all counterpart funding for a given activity_id.
     POST also accepts counterpart funding data to be added, deleted, updated."""
