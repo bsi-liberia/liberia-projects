@@ -270,14 +270,14 @@ def closest_to_activity(activity_id):
 
 def get_finances_by_activity_id(activity_id, by_year=False):
     activity = get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
 
     if by_year:
-        commitments = activity.transaction_type_dict(0, ['C'], 'C')
-        allotments = activity.transaction_type_dict(0, ['99-A'], '99-A')
-        disbursements = activity.transaction_type_dict(0, ['D', 'E'], 'D')
-        forward_spends = activity.transaction_type_dict(0, ['MTEF'], 'MTEF')
+        commitments = activity.transaction_type_dict(['C'], 'C', True)
+        allotments = activity.transaction_type_dict(['99-A'], '99-A', True)
+        disbursements = activity.transaction_type_dict(['D', 'E'], 'D', True)
+        forward_spends = activity.transaction_type_dict(['MTEF'], 'MTEF', True)
     else:
         commitments = activity.FY_commitments_dict
         allotments = activity.FY_allotments_dict
