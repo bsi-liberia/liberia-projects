@@ -44,8 +44,8 @@ def app():
         assert models.User.query.get(admin.id).username == admin_dict["username"]
 
         fiscal_years = [{
-            'from': app.config['EARLIEST_DATE'].isoformat(),
-            'to': app.config['LATEST_DATE'].isoformat()
+            'start_date': app.config['EARLIEST_DATE'].isoformat(),
+            'end_date': app.config['LATEST_DATE'].isoformat()
         }]
         qadmin.process_fiscal_years(fiscal_years)
 
