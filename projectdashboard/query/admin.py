@@ -19,13 +19,13 @@ def quarters_between(start_date, end_date):
 def validate_fiscalyears_input(fiscal_years):
     for i, item in enumerate(fiscal_years):
         # Check from is before to
-        if item['from'] > item['to']: return False
+        if item['start_date'] > item['end_date']: return False
         if i == 0: continue
         # Check from is after the previous item's to
-        if item['from'] < fiscal_years[i-1]['to']: return False
+        if item['start_date'] < fiscal_years[i-1]['end_date']: return False
         # Check start and end dates align with calendar quarters
-        if item['from'][5:10] not in START_QUARTERS: return False
-        if item['to'][5:10] not in END_QUARTERS: return False
+        if item['start_date'][5:10] not in START_QUARTERS: return False
+        if item['end_date'][5:10] not in END_QUARTERS: return False
     return True
 
 
@@ -35,10 +35,10 @@ def create_fiscal_year_choices(fiscal_years):
     db.session.commit()
     for fiscal_year in fiscal_years:
         fyc = models.FiscalYearChoice(
-            start_date = util.isostring_date(fiscal_year['from']),
-            end_date = util.isostring_date(fiscal_year['to']),
-            num_quarters = quarters_between(fiscal_year['from'],
-                fiscal_year['to'])
+            start_date = util.isostring_date(fiscal_year['start_date']),
+            end_date = util.isostring_date(fiscal_year['end_date']),
+            num_quarters = quarters_between(fiscal_year['start_date'],
+                fiscal_year['end_date'])
         )
         db.session.add(fyc)
     db.session.commit()
@@ -181,7 +181,7 @@ def create_fiscal_years():
 
 
 def process_fiscal_years(fiscal_years):
-    sorted_fiscal_years = sorted(fiscal_years, key=lambda k: k['to'])
+    sorted_fiscal_years = sorted(fiscal_years, key=lambda k: k['end_date'])
     valid = validate_fiscalyears_input(sorted_fiscal_years)
     if not valid:
         return False
