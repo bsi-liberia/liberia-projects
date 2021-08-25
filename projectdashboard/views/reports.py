@@ -33,8 +33,7 @@ def psip_disbursements_api():
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'domestic'})
     if start_date is not None:
-        fys = list(
-            map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+        fys = [str(fy) for fy in util.fys_in_date_range(start_date, end_date)]
     else:
         fys = []
     return jsonify(activities=qreports.make_appropriations_disbursements_data(fiscal_year),
@@ -60,7 +59,7 @@ def aid_disbursements_api():
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'external'})
     start_date = max(start_date, current_app.config['EARLIEST_DATE'])
-    fys = list(map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+    fys = [str(fy) for fy in util.fys_in_date_range(start_date, end_date)]
 
     return jsonify(activities=qreports.make_forwardspends_disbursements_data(fiscal_year),
                    progress_time=progress_time,
@@ -98,7 +97,7 @@ def project_development_tracking():
         out = OrderedDict({
             'id': activity.id,
             'title': activity.title,
-            'implementer': ", ".join(list(map(lambda io: io.name, activity.implementing_organisations))),
+            'implementer': ", ".join([implementer.name for implementer in activity.implementing_organisations]),
             'sum_appropriations': sum_appropriations.get(activity.id, 0.00),
             'sum_allotments': sum_allotments.get(activity.id, 0.00),
             'sum_disbursements': sum_disbursements.get(activity.id, 0.00)
@@ -107,7 +106,7 @@ def project_development_tracking():
          for ms in activity.milestones_data]
         return out
 
-    milestone_data = list(map(lambda a: annotate_activity(a), activities))
+    milestone_data = [annotate_activity(activity) for activity in activities]
 
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'domestic'})
@@ -118,7 +117,7 @@ def project_development_tracking():
         fys = []
 
     return jsonify(activities=milestone_data,
-                   milestones=list(map(lambda m: m.name, milestones)),
+                   milestones=[milestone.name for milestone in milestones],
                    fiscalYears=fys,
                    fiscalYear=str(fiscal_year))
 
@@ -132,22 +131,22 @@ def counterpart_funding():
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'external'})
     next_fy_end_date = util.FY("next").date("end")
-    fys = list(map(lambda f: str(f), util.fys_in_date_range(
-        start_date, max(end_date, next_fy_end_date))))
+    fys = [str(fy) for fy in util.fys_in_date_range(
+        start_date, max(end_date, next_fy_end_date))]
 
     def annotate_activity(activity):
         return {
             'id': activity.id,
             'title': activity.title,
             'reporting_org_name': activity.reporting_org.name,
-            'sector_name': ", ".join(list(map(lambda sector: sector.codelist_code.name, activity.classification_data.get('mtef-sector', {}).get('entries', [])))),
-            'ministry_name': ", ".join(list(map(lambda ministry: ministry.codelist_code.name, activity.classification_data.get('aligned-ministry-agency', {}).get('entries', [])))),
+            'sector_name': ", ".join([sector.codelist_code.name for sector in activity.classification_data.get('mtef-sector', {}).get('entries', [])]),
+            'ministry_name': ", ".join([ministry.codelist_code.name for ministry in activity.classification_data.get('aligned-ministry-agency', {}).get('entries', [])]),
             'gol_requested': activity._fy_counterpart_funding,
             'donor_planned': activity._fy_forwardspends
         }
 
-    activities = list(map(lambda activity: annotate_activity(activity),
-                          qcounterpart_funding.annotate_activities_with_aggregates(fiscal_year)))
+    activities = [annotate_activity(activity) for activity in
+        qcounterpart_funding.annotate_activities_with_aggregates(fiscal_year)]
 
     return jsonify(
         fy=util.FY("next").fy_fy(),
@@ -166,17 +165,17 @@ def results():
             'id': activity.id,
             'title': activity.title,
             'reporting_org_name': activity.reporting_org.name,
-            'implementer_name': ", ".join(list(map(lambda org: org.name, activity.implementing_organisations))),
+            'implementer_name': ", ".join([org.name for org in activity.implementing_organisations]),
             'results_average': round(activity.results_average) if activity.results_average is not None else None,
             'results_average_status': activity.results_average_status
         }
 
-    activities = list(map(lambda activity: annotate_activity(activity),
+    activities = [annotate_activity(activity) for activity in
                           models.Activity.query.filter(
         models.Activity.results.any(),
         models.Activity.domestic_external == 'external'
     ).all()
-    ))
+    ]
 
     return jsonify(
         activities=activities
