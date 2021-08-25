@@ -1,19 +1,20 @@
+import datetime
+from collections import OrderedDict
+
+from flask import Blueprint, request, \
+    current_app
+
+from flask_jwt_extended import (
+    jwt_required
+)
+
+from projectdashboard import models
 from projectdashboard.views.api import jsonify
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import user as quser
 from projectdashboard.query import reports as qreports
 from projectdashboard.query import counterpart_funding as qcounterpart_funding
-
-from flask import Blueprint, request, \
-    url_for, Response, current_app, abort
-
-from flask_jwt_extended import (
-    jwt_required
-)
 from projectdashboard.lib import util
-from projectdashboard import models
-import datetime
-from collections import OrderedDict
 
 
 blueprint = Blueprint('reports', __name__, url_prefix='/api/reports')
@@ -77,10 +78,10 @@ def project_development_tracking():
     current_fy = util.FY("previous").fiscal_year.name
     fiscal_year = request.args.get("fiscal_year", current_fy)
     activities = models.Activity.query.filter_by(
-        domestic_external=u"domestic"
+        domestic_external="domestic"
     ).all()
     milestones = models.Milestone.query.filter_by(
-        domestic_external=u"domestic"
+        domestic_external="domestic"
     ).order_by(
         models.Milestone.milestone_order
     ).all()
@@ -93,11 +94,12 @@ def project_development_tracking():
         fiscal_year, 0, 'domestic', 'sum_disbursements', 'D')
 
     def annotate_activity(activity):
-        out = {}
         out = OrderedDict({
             'id': activity.id,
             'title': activity.title,
-            'implementer': ", ".join([implementer.name for implementer in activity.implementing_organisations]),
+            'implementer': ", ".join(
+                [implementer.name for implementer in activity.implementing_organisations]
+            ),
             'sum_appropriations': sum_appropriations.get(activity.id, 0.00),
             'sum_allotments': sum_allotments.get(activity.id, 0.00),
             'sum_disbursements': sum_disbursements.get(activity.id, 0.00)
@@ -111,8 +113,7 @@ def project_development_tracking():
     start_date, end_date = qactivity.get_earliest_latest_dates_filter(
         {'key': 'domestic_external', 'val': 'domestic'})
     if start_date is not None:
-        fys = list(
-            map(lambda f: str(f), util.fys_in_date_range(start_date, end_date)))
+        fys = [str(fy) for fy in util.fys_in_date_range(start_date, end_date)]
     else:
         fys = []
 
