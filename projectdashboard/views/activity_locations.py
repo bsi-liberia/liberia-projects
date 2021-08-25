@@ -1,16 +1,14 @@
-from projectdashboard.views.api import jsonify
-from projectdashboard.query import user as quser
-from projectdashboard.query import activity as qactivity
-from projectdashboard.query import location as qlocation
-
 from flask import Blueprint, request, abort
-from flask_login import current_user
 
 from flask_jwt_extended import (
     jwt_required
 )
-from projectdashboard.lib import util
+
 from projectdashboard import models
+from projectdashboard.views.api import jsonify
+from projectdashboard.query import user as quser
+from projectdashboard.query import activity as qactivity
+from projectdashboard.query import location as qlocation
 
 
 blueprint = Blueprint('activity_locations', __name__,
@@ -49,7 +47,7 @@ def api_activity_locations(activity_id):
     """GET returns a list of all locations for a given activity_id.
     POST also accepts locations to be added or deleted."""
     activity = qactivity.get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     if request.method == "POST":
         if not quser.check_permissions("edit", None, activity_id):
