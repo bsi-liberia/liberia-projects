@@ -23,36 +23,36 @@
           <strong>Loading...</strong>
         </div>
       </template>
-      <template #cell(from)="data">
+      <template #cell(start_date)="data">
         <finances-input
           :disabled="data.index == 0"
           :transaction="data"
           type="date"
-          name="from"
-          :placeholder="data.item.from ? 'yyyy-mm-dd' : ''"
-          :value.sync="data.item.from">
+          name="start_date"
+          :placeholder="data.item.start_date ? 'yyyy-mm-dd' : ''"
+          :value.sync="data.item.start_date">
         </finances-input>
       </template>
-      <template #cell(to)="data">
+      <template #cell(end_date)="data">
         <finances-input
           :disabled="data.index == fiscalYearItems.length-1"
           :transaction="data"
           type="date"
-          name="to"
-          :placeholder="data.item.to != null ? 'yyyy-mm-dd' : ''"
-          :value.sync="data.item.to">
+          name="end_date"
+          :placeholder="data.item.end_date != null ? 'yyyy-mm-dd' : ''"
+          :value.sync="data.item.end_date">
         </finances-input>
       </template>
       <template #cell(fyStart)="data">
         <b-input
           plaintext
-          :value="fyStartOptions[data.item.from.slice(5,10)]">
+          :value="fyStartOptions[data.item.start_date.slice(5,10)]">
         </b-input>
       </template>
       <template #cell(fyEnd)="data">
         <b-input
           plaintext
-          :value="fyEndOptions[data.item.to.slice(5,10)]">
+          :value="fyEndOptions[data.item.end_date.slice(5,10)]">
         </b-input>
       </template>
       <template #cell(delete)="data">
@@ -81,8 +81,8 @@ export default {
       invalid: [],
       fiscalYearItems: [],
       fiscalYearFields: [
-        { key: 'from' },
-        { key: 'to' },
+        { key: 'start_date' },
+        { key: 'end_date' },
         { key: 'fyStart', label: 'FY Start' },
         { key: 'fyEnd', label: 'FY End' },
         { key: 'delete', label: 'Delete' },
@@ -132,8 +132,8 @@ export default {
           const start_date = new Date(item.start_date)
           const end_date = new Date(item.end_date)
           return {
-            from: new Date(item.start_date).toISOString().slice(0,10),
-            to: new Date(item.end_date).toISOString().slice(0,10),
+            start_date: new Date(item.start_date).toISOString().slice(0,10),
+            end_date: new Date(item.end_date).toISOString().slice(0,10),
           }
         })
         this.earliestDate = response.data.earliestDate
@@ -146,21 +146,21 @@ export default {
       return
     },
     ensureStartAndEnd() {
-      this.fiscalYearItems[0].from = this.earliestDate
-      this.fiscalYearItems[this.fiscalYearItems.length-1].to = this.latestDate
+      this.fiscalYearItems[0].start_date = this.earliestDate
+      this.fiscalYearItems[this.fiscalYearItems.length-1].end_date = this.latestDate
     },
     addBreak() {
       const today = new Date().toISOString().slice(0,10)
       const lastItemIndex = this.fiscalYearItems.length-1
       this.$set(this.fiscalYearItems, lastItemIndex,
         {
-          from: this.fiscalYearItems[lastItemIndex].from,
-          to: today
+          start_date: this.fiscalYearItems[lastItemIndex].start_date,
+          end_date: today
         }
       )
       this.fiscalYearItems.push({
-        from: today,
-        to: this.latestDate
+        start_date: today,
+        end_date: this.latestDate
       })
       this.ensureStartAndEnd()
     },
@@ -169,7 +169,7 @@ export default {
       // Check they are contiguous and not overlapping
       this.invalid = []
       const sortedItems = [...this.fiscalYearItems].sort((a,b) => {
-        return new Date(a.to) - new Date(b.to)
+        return new Date(a.end_date) - new Date(b.end_date)
       })
       const makeDate = (date) => {
         return new Date(date)
@@ -177,33 +177,33 @@ export default {
       const validated = sortedItems.reduce((summary, item, index) => {
         if (index == 0) { return summary }
         const previous = {
-          from: makeDate(sortedItems[index-1].from),
-          to: makeDate(sortedItems[index-1].to)
+          start_date: makeDate(sortedItems[index-1].start_date),
+          end_date: makeDate(sortedItems[index-1].end_date)
         }
         const current = {
-          from: makeDate(item.from),
-          to: makeDate(item.to)
+          start_date: makeDate(item.start_date),
+          end_date: makeDate(item.end_date)
         }
         // Check that previous from is not after current from
-        if (makeDate(sortedItems[index-1].from) > makeDate(item.from)) {
+        if (makeDate(sortedItems[index-1].start_date) > makeDate(item.start_date)) {
           this.invalid.push('overlapping')
           summary = false
         }
         // Check that previous to is not after current to
-        if (makeDate(sortedItems[index-1].to) > makeDate(item.to)) {
+        if (makeDate(sortedItems[index-1].end_date) > makeDate(item.end_date)) {
           this.invalid.push('overlapping')
           summary = false
         }
         // Check that previous to is one day before current from
-        previous.to.setDate(previous.to.getDate()+1)
-        if (previous.to.toISOString() != current.from.toISOString()) {
+        previous.end_date.setDate(previous.end_date.getDate()+1)
+        if (previous.end_date.toISOString() != current.start_date.toISOString()) {
           this.invalid.push('gaps')
           summary = false
         }
-        if (!(this.fyStartValues.includes(current.from.toISOString().substr(5,5)))) {
+        if (!(this.fyStartValues.includes(current.start_date.toISOString().substr(5,5)))) {
           this.invalid.push('calendarQuarters')
         }
-        if (!(this.fyEndValues.includes(current.to.toISOString().substr(5,5)))) {
+        if (!(this.fyEndValues.includes(current.end_date.toISOString().substr(5,5)))) {
           this.invalid.push('calendarQuarters')
         }
         return summary
