@@ -1,23 +1,19 @@
+from urllib import parse as urllib_parse
+from lxml import etree
+import requests
+
+from flask import Blueprint, request, \
+    Response
+
+from flask_jwt_extended import (
+    jwt_required
+)
+
 from projectdashboard.views.api import jsonify
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import user as quser
 from projectdashboard.query import import_iati as qimport_iati
 from projectdashboard.query import generate as qgenerate
-
-from flask import Blueprint, request, \
-    url_for, Response, current_app, abort
-
-from flask_jwt_extended import (
-    jwt_required
-)
-import re
-import json
-import requests
-from lxml import etree
-from urllib import parse as urllib_parse
-
-#DSV2_SEARCH_URL = "https://iatidatastore.iatistandard.org/api/activities/?format=json&q=%22{}%22&recipient_country=LR&reporting_org_identifier={}&fields=iati_identifier,title,description"
-#DSV2_IATI_IDENTIFIER_URL = "https://iatidatastore.iatistandard.org/api/activities/?format=json&iati_identifier={}&fields=iati_identifier,title,description"
 
 DSV1_TITLE_URL = "https://datastore.codeforiati.org/api/1/access/activity.xml?title={}&reporting-org={}&limit=10"
 DSV1_IATI_IDENTIFIER_URL = "https://datastore.codeforiati.org/api/1/access/activity.xml?iati-identifier={}&limit=10"
@@ -86,11 +82,12 @@ def api_iati_search():
                 'iati_identifier': activity.find("iati-identifier").text,
                 'title': title,
                 'description': description,
-                'country_data': len(activity.xpath("//iati-activity[recipient-country/@code='LR' or \
+                'country_data': len(
+                    activity.xpath("//iati-activity[recipient-country/@code='LR' or \
                     transaction/recipient-country/@code='LR']")) > 0
             }
         return {
-            "results": list(map(lambda activity: clean_activity(activity), doc.xpath("//iati-activity")))
+            "results": [clean_activity(activity) for activity in doc.xpath("//iati-activity")]
         }
     # Try to get IATI Identifier results
     if (args.get("iati_identifier")) and (args.get('iati_identifier').strip() != ''):
@@ -153,7 +150,8 @@ def api_iati_fetch_data(activity_id):
     activities_fields_options = request.json.get("activitiesFieldsOptions")
     #iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
     return jsonify(status=qimport_iati.import_data(activity_id, iati_identifier,
-                                                   activity_ids, import_options, activities_fields_options))
+                                                   activity_ids, import_options,
+                                                   activities_fields_options))
 
     #iati_document_result = qimport_iati.import_documents(activity_id, iati_identifier)
     # return str(iati_document_result)
