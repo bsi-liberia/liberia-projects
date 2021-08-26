@@ -1,7 +1,6 @@
 from collections import OrderedDict
 
 from flask import Blueprint, request, abort
-
 from flask_jwt_extended import (
     jwt_required
 )
@@ -26,24 +25,24 @@ def api_activity_forwardspends(activity_id):
     # GET returns a list of all forward spend data for a given activity_id.
     if request.method == "GET":
         data = qactivity.get_activity(activity_id).forwardspends
-        forwardspends = list(map(lambda fs_db: fs_db.as_dict(),
-                                 qactivity.get_activity(activity_id).forwardspends))
+        forwardspends = [fs_db.as_dict() for fs_db in
+            qactivity.get_activity(activity_id).forwardspends]
         # Return fiscal years here
-        years = sorted(set(map(lambda fs: util.date_to_fy_fq(fs["value_date"])[0],
+        years = sorted(set(map(lambda fs: util.date_to_fy_fq_present(fs["value_date"])[0],
                                forwardspends)))
         out = OrderedDict()
         for year in years:
             out[year] = OrderedDict({"year": "FY{}".format(
-                util.fy_to_fyfy(str(year))), "total_value": 0.00})
+                util.fy_to_fyfy_present(str(year))), "total_value": 0.00})
             for forwardspend in sorted(forwardspends, key=lambda k: k["value_date"]):
-                if util.date_to_fy_fq(forwardspend["period_start_date"])[0] == year:
-                    fq = util.date_to_fy_fq(
+                if util.date_to_fy_fq_present(forwardspend["period_start_date"])[0] == year:
+                    fq = util.date_to_fy_fq_present(
                         forwardspend["period_start_date"])[1]
                     out[year]["Q{}".format(fq)] = forwardspend
                     out[year]["total_value"] += float(
                         forwardspend["value"])
         out = list(out.values())
-        quarters = util.make_quarters_text(util.LR_QUARTERS_MONTH_DAY)
+        quarters = util.make_quarters_text_present()
         return jsonify(forwardspends=out, quarters=quarters)
 
     # POST updates value for a given forwardspend_id.
