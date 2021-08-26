@@ -546,9 +546,9 @@ def generate_iati_activity_data_103(activities):
 # Process activities for 2.01
 
 
-def generate_iati_activity_data_201(activities):
+def generate_iati_activity_data_203(activities):
     doc = et.Element('iati-activities')
-    doc.set("version", "2.01")
+    doc.set("version", "2.03")
     doc.set("generated-datetime", current_datetime())
     for activity in activities:
         doc = build_activity(doc, activity)
@@ -613,7 +613,7 @@ def build_organisation(doc, organisation):
 def generate_iati_organisation_data(organisation_slug):
     organisation = siorganisation.get_org(organisation_slug)
     doc = et.Element('iati-organisations')
-    doc.set("version", "2.01")
+    doc.set("version", "2.03")
     doc.set("generated-datetime", current_datetime())
     doc = build_organisation(doc, organisation)
     doc = et.ElementTree(doc)
@@ -625,6 +625,6 @@ def generate_103(country_code):
     return et.tostring(generate_iati_activity_data_103(activities))
 
 
-def generate_201(country_code):
+def generate_203(country_code):
     activities = qactivity.list_activities_by_country(country_code)
-    return et.tostring(generate_iati_activity_data_201(activities))
+    return et.tostring(generate_iati_activity_data_203(activities))

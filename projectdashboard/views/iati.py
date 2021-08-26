@@ -55,8 +55,8 @@ def generate_iati_xml(version, country_code):
     if version == "1.03":
         xml = qgenerate.generate_103(country_code)
         return Response(xml, mimetype='text/xml')
-    elif version == "2.01":
-        xml = qgenerate.generate_201(country_code)
+    elif version == "2.03":
+        xml = qgenerate.generate_203(country_code)
         return Response(xml, mimetype='text/xml')
 
     return "ERROR: UNKNOWN VERSION"
