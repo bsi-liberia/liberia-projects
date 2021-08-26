@@ -54,11 +54,14 @@ def api_activity_finances(activity_id):
             return abort(500)
     elif request.method == "GET":
         finances = {
-            'commitments': sorted([transaction.as_dict() for transaction in activity.commitments],
+            'commitments': sorted(
+                [transaction.as_dict() for transaction in activity.commitments],
                 key=lambda transaction: transaction['transaction_date']),
-            'allotments': sorted([transaction.as_dict() for transaction in activity.allotments],
+            'allotments': sorted(
+                [transaction.as_dict() for transaction in activity.allotments],
                 key=lambda transaction: transaction['transaction_date']),
-            'disbursements': sorted([transaction.as_dict() for transaction in activity.disbursements],
+            'disbursements': sorted(
+                [transaction.as_dict() for transaction in activity.disbursements],
                 key=lambda transaction: transaction['transaction_date'])
         }
         fund_sources = [{
