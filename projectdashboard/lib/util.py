@@ -325,15 +325,6 @@ def fy_to_fyfy(fy):
     return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
 
 
-def fy_to_fyfy_present(fy):
-    """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819,
-    but only if the latest fiscal year spans more than one year"""
-    fiscal_year = models.FiscalYear.query.order_by(models.FiscalYear.end.desc()).first()
-    if fiscal_year.start.year != fiscal_year.end.year:
-        return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
-    return "{}".format(fy[0:4])
-
-
 def fy_fy_to_fy(fy_fy):
     """Converts a fiscal year FY2019/20 to e.g. 2019"""
     result = re.match(r"FY(\d*)/.*", fy_fy).group(1)
@@ -368,6 +359,20 @@ def make_quarters_text(list):
         datetime.date(2019, l["start"][1], l["start"][0]).strftime("%b"),
         datetime.date(2019, l["end"][1], l["end"][0]).strftime("%b")
     )} for k, l in list.items()]
+
+
+# The below functions return the FY/FQ according to the format of the
+# last fiscal year. E.g. if the last Fiscal Year runs January-December,
+# then January (for any year) will be returned as Q1.
+
+
+def fy_to_fyfy_present(fy):
+    """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819,
+    but only if the latest fiscal year spans more than one year"""
+    fiscal_year = models.FiscalYear.query.order_by(models.FiscalYear.end.desc()).first()
+    if fiscal_year.start.year != fiscal_year.end.year:
+        return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
+    return "{}".format(fy[0:4])
 
 
 def make_quarters_text_present():
