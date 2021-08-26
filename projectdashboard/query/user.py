@@ -1,18 +1,18 @@
 from functools import wraps
+import datetime
+import uuid
 
 from werkzeug.security import generate_password_hash
 from flask import flash, redirect, url_for, request, make_response, jsonify
 from flask_login import current_user
+
+from smtplib import SMTPRecipientsRefused
 
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.query import organisations as qorganisations
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import send_email as qsend_email
-from smtplib import SMTPRecipientsRefused
-
-import datetime
-import uuid
 
 
 def administrator_required(f):
@@ -260,8 +260,8 @@ def updateUser(data):
 
     if "admin" in current_user.roles_list:
         # Only an admin user can give administrative privileges
-        setPermission(checkU, u"view", data.get("view", "none"))
-        setPermission(checkU, u"edit", data.get("edit", "none"))
+        setPermission(checkU, "view", data.get("view", "none"))
+        setPermission(checkU, "edit", data.get("edit", "none"))
 
     db.session.add(checkU)
     db.session.commit()
@@ -305,8 +305,8 @@ def addUser(data):
         )
         db.session.add(newU)
         db.session.commit()
-        setPermission(newU, u"view", data.get("view"))
-        setPermission(newU, u"edit", data.get("edit"))
+        setPermission(newU, "view", data.get("view"))
+        setPermission(newU, "edit", data.get("edit"))
 
         if data.get("administrator") == True:
             add_user_role(data["username"], "admin")

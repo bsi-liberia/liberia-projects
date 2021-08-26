@@ -4,11 +4,7 @@ from zipfile import ZipFile
 from flask_login import current_user
 from sqlalchemy import *
 import requests
-import sys
-if sys.version_info.major == 2:
-    import unicodecsv
-else:
-    import csv as unicodecsv
+import csv as unicodecsv
 
 from projectdashboard import models
 from projectdashboard.extensions import db

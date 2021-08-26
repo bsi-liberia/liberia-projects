@@ -3,13 +3,7 @@
 import os
 import re
 import datetime as dt
-
-import sys
-if sys.version_info.major == 2:
-    import unicodecsv
-else:
-    import csv as unicodecsv
-from six import u as unicode
+import csv as unicodecsv
 
 from projectdashboard import models
 from projectdashboard.lib import codelists, util
@@ -22,8 +16,6 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def clean_string(_string):
-    if sys.version_info.major == 2:
-        return unicode(_string.decode("utf-8"))
     return _string
 
 
@@ -49,7 +41,7 @@ def preprocess_data(csv):
                     "ministry_code": data["ministry_code"],
                     "sector_name": data["sector_name"],
                     "sector_code": data["sector_code"],
-                    "transaction_type": u"C",
+                    "transaction_type": "C",
                     "transaction_value": float(data["REVISED_APPROPRIATION"])
                 }
                 project["rows"].append(r)
@@ -61,7 +53,7 @@ def preprocess_data(csv):
                     "ministry_code": data["ministry_code"],
                     "sector_name": data["sector_name"],
                     "sector_code": data["sector_code"],
-                    "transaction_type": u"D",
+                    "transaction_type": "D",
                     "transaction_value": float(data["ACTUAL"])
                 }
                 project["rows"].append(r)
@@ -72,7 +64,7 @@ def preprocess_data(csv):
                 project["earliest_year"] = data["fy"]
             if data["fy"] > project["latest_year"]:
                 project["latest_year"] = data["fy"]
-            if data["fy"] == u"20182019":
+            if data["fy"] == "20182019":
                 project["activity_status"] = "2"
     root = {}
     for row in csv:
@@ -95,11 +87,11 @@ def nonempty_from_list(some_list):
 
 def get_date(date_value):
     date_value = date_value.strip()
-    if re.match("^\d{5}$", date_value):  # Excel date like 43465
+    if re.match(r"^\d{5}$", date_value):  # Excel date like 43465
         temp = dt.datetime(1899, 12, 30)
         delta = dt.timedelta(days=int(date_value))
         return (temp+delta).date()
-    if re.match("^\d{2}/\d{2}/\d{4}$", date_value):  # dd/mm/yyyy
+    if re.match(r"^\d{2}/\d{2}/\d{4}$", date_value):  # dd/mm/yyyy
         return dt.datetime.strptime(date_value, "%d/%m/%Y").date()
     if date_value == "":
         return dt.datetime.utcnow().date()
@@ -108,31 +100,31 @@ def get_date(date_value):
 
 CODES = {
     "collaboration_type": {
-        "Multilateral": u"4",
-        "Bilateral": u"1",
-        "": u"1"
+        "Multilateral": "4",
+        "Bilateral": "1",
+        "": "1"
     },
     "finance_type": {
-        "Loan": u"410",
-        "Grant": u"110",
-        "": u"110"
+        "Loan": "410",
+        "Grant": "110",
+        "": "110"
     },
     "aid_type": {
-        "Trust Fund": u"B03",
-        "Budget Support": u"A01",
-        "Project/Program Aid": u"C01",
-        "Pool Fund": u"B04",
-        "": u"C01"
+        "Trust Fund": "B03",
+        "Budget Support": "A01",
+        "Project/Program Aid": "C01",
+        "Pool Fund": "B04",
+        "": "C01"
     },
     "activity_status": {
-        "Cancelled": u"5",
-        "Executing": u"2",
-        "On-going": u"2",
-        "Ratified": u"91",
-        "Signed": u"92",
-        "signed": u"92",
-        "Started": u"2",
-        "": u"2"
+        "Cancelled": "5",
+        "Executing": "2",
+        "On-going": "2",
+        "Ratified": "91",
+        "Signed": "92",
+        "signed": "92",
+        "Started": "2",
+        "": "2"
     }
 }
 
@@ -158,17 +150,17 @@ def make_organisation(role, name, code=None):
 def tidy_amount(amount_value):
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
-    if re.match("^\d*$", amount_value):  # 2000
+    if re.match(r"^\d*$", amount_value):  # 2000
         return (float(amount_value), "USD")
-    elif re.match("^-\d*$", amount_value):  # -2000
+    elif re.match(r"^-\d*$", amount_value):  # -2000
         return (float(amount_value), "USD")
-    elif re.match('(\d*\.\d*)', amount_value):
+    elif re.match(r'(\d*\.\d*)', amount_value):
         return (float(amount_value), "USD")
-    elif re.match("^(\d*)m (\D*)$", amount_value):  # 20m EUR
-        result = re.match("^(\d*)m (\D*)$", amount_value).groups()
+    elif re.match(r"^(\d*)m (\D*)$", amount_value):  # 20m EUR
+        result = re.match(r"^(\d*)m (\D*)$", amount_value).groups()
         return (float(result[0])*1000000, result[1].upper())
-    elif re.match("^(\d*) (\D*)$", amount_value):  # 2000 EUR
-        result = re.match("^(\d*) (\D*)$", amount_value).groups()
+    elif re.match(r"^(\d*) (\D*)$", amount_value):  # 2000 EUR
+        result = re.match(r"^(\d*) (\D*)$", amount_value).groups()
         return (float(result[0]), result[1].upper())
 
 
@@ -178,7 +170,7 @@ def process_transaction_classifications(row, CODELIST_IDS_BY_CODE):
     cl.codelist_id = 'mtef-sector'
     cl.codelist_code_id = CODELIST_IDS_BY_CODE["mtef-sector"].get(
         row["sector_code"],
-        CODELIST_IDS_BY_CODE["mtef-sector"][u""])
+        CODELIST_IDS_BY_CODE["mtef-sector"][""])
     classifications.append(cl)
     return classifications
 
@@ -190,21 +182,22 @@ def process_transactions(activity, CODELIST_IDS_BY_CODE):
         tr.transaction_date = util.fp_fy_to_date(row["fiscalperiod"],
                                                  int(row["fy"][0:4]), "end")
         tr.transaction_type = row["transaction_type"]
-        tr.transaction_description = u"{} {} FY{}, imported from IFMIS PSIP data".format(
-            {u"C": "Revised appropriation for", u"D": "Actuals for"}[
+        tr.transaction_description = "{} {} FY{}, imported from IFMIS PSIP data".format(
+            {"C": "Revised appropriation for", "D": "Actuals for"}[
                 row["transaction_type"]],
             row["fiscalperiod"],
             row["fy"]
         )
         tr.transaction_value = row["transaction_value"]
-        tr.currency = u"USD"
+        tr.currency = "USD"
         tr.provider_org_id = clean_get_create_organisation(
-            u"Government of Liberia")
+            "Government of Liberia")
         tr.receiver_org_id = clean_get_create_organisation(
             row["ministry_name"], row["ministry_code"]
         )
-        tr.finance_type = CODES["finance_type"][u"Grant"]
-        tr.aid_type = CODES["aid_type"][u""]  # NB defaults to C01 Project!
+        tr.finance_type = CODES["finance_type"]["Grant"]
+        # NB defaults to C01 Project!
+        tr.aid_type = CODES["aid_type"][""]
         tr.classifications = process_transaction_classifications(
             row, CODELIST_IDS_BY_CODE)
         transactions.append(tr)
@@ -225,7 +218,7 @@ def process_forward_spends(activity, start_date, end_date):
         for col in mtef_cols:
             if activity[col].strip() in ("", "-", "0"):
                 continue
-            mtef_year = int(re.match("MTEF (\d{4})/\d{4}", col).groups()[0])
+            mtef_year = int(re.match(r"MTEF (\d{4})/\d{4}", col).groups()[0])
             activity_mtefs[mtef_year] = tidy_amount(activity[col])[0]
         return activity_mtefs
 
@@ -287,7 +280,7 @@ def process_classifications(activity, CODELIST_IDS):
     for sector_code, sector_name in activity["sectors"]:
         cl = models.ActivityCodelistCode()
         cl.codelist_code_id = CODELIST_IDS["mtef-sector"].get(sector_code,
-                                                              CODELIST_IDS["mtef-sector"][u""])
+                                                              CODELIST_IDS["mtef-sector"][""])
         cl.percentage = 100.0/len(activity["sectors"])
         classifications.append(cl)
     return classifications
@@ -311,28 +304,28 @@ def import_file():
 
         d = {
             "user_id": 1,  # FIXME
-            "domestic_external": u"domestic",
-            "code": unicode(activity["code"]),
+            "domestic_external": "domestic",
+            "code": activity["code"],
             "title": clean_string(activity["name"]),
-            "description": u"",
+            "description": "",
             # "description": nonempty_from_list([
-            #     unicode(activity["Project Description"].decode("utf-8")),
-            #     unicode(activity["Objective"].decode("utf-8")),
+            #     activity["Project Description"].decode("utf-8"),
+            #     activity["Objective"].decode("utf-8"),
             # ]),
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "reporting_org_id": qorganisations.get_or_create_organisation(
-                u"Government of Liberia"),
+                "Government of Liberia"),
             "organisations": [
                 make_organisation(4, org[1], org[0]) for org in activity["organisations"]
-            ] + [(make_organisation(1, u"Government of Liberia"))],
+            ] + [(make_organisation(1, "Government of Liberia"))],
             "recipient_country_code": "LR",
             "classifications": process_classifications(activity, CODELIST_IDS_BY_CODE),
             # "collaboration_type": CODES["collaboration_type"][
             #           activity["Donor Type"].strip()
             #       ],
-            "finance_type": CODES["finance_type"][u"Grant"],
-            "aid_type": CODES["aid_type"][u""],
+            "finance_type": CODES["finance_type"]["Grant"],
+            "aid_type": CODES["aid_type"][""],
             "activity_status": activity["activity_status"],
             #        "tied_status": "5", # Assume everything is untied
             #        "flow_type": "10", # Assume everything is ODA

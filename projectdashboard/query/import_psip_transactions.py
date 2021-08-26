@@ -1,12 +1,14 @@
 # -*- coding: UTF-8 -*-
+import os
+from collections import defaultdict
+
+import openpyxl
 from flask import flash
+
 from projectdashboard import models
 from projectdashboard.lib import codelists, util, xlsx_to_csv
 from projectdashboard.query import finances as qfinances
 from projectdashboard.extensions import db
-import openpyxl
-import os
-from collections import defaultdict
 
 
 def first_or_only(list_or_dict):

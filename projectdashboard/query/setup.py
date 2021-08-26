@@ -1,15 +1,10 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import csv as unicodecsv
 
 from flask import current_app
 import normality
-import sys
-if sys.version_info.major == 2:
-    import unicodecsv
-else:
-    import csv as unicodecsv
-from six import u as unicode
 
 from projectdashboard import models
 from projectdashboard.lib import codelists
@@ -57,10 +52,10 @@ def import_responses():
         }]
     for response in responses:
         r = models.Response()
-        r.name = unicode(response['name'])
-        r.icon = unicode(response['icon'])
-        r.icon_class = unicode(response['icon_class'])
-        r.colour = unicode(response['colour'])
+        r.name = response['name']
+        r.icon = response['icon']
+        r.icon_class = response['icon_class']
+        r.colour = response['colour']
         db.session.add(r)
     db.session.commit()
 
@@ -75,21 +70,21 @@ def import_roles():
     ]
     for role in roles:
         r = models.Role()
-        r.slug = unicode(role['slug'])
-        r.name = unicode(role['slug'])
+        r.slug = role['slug']
+        r.name = role['slug']
         db.session.add(r)
     db.session.commit()
     for user in models.User.query.all():
         if len(user.organisations) > 0:
             role = models.Role.query.filter_by(
-                slug=u'desk-officer').first()
+                slug='desk-officer').first()
             user_role = models.UserRole()
             user_role.user_id = user.id
             user_role.role_id = role.id
             user.userroles = [user_role]
         elif user.administrator:
             role = models.Role.query.filter_by(
-                slug=u'admin').first()
+                slug='admin').first()
             user_role = models.UserRole()
             user_role.user_id = user.id
             user_role.role_id = role.id
@@ -138,23 +133,23 @@ def create_codes_codelists():
 
     local_codelist_files = [
         {
-            "name": u"Aligned Ministry / Agency",
+            "name": "Aligned Ministry / Agency",
             "filename": "aligned-ministry-agency.csv"
         },
         {
-            "name": u"MTEF Sector",
+            "name": "MTEF Sector",
             "filename": "mtef-sector.csv"
         },
         {
-            "name": u"AfT Pillar",
+            "name": "AfT Pillar",
             "filename": "aft-pillar.csv"
         },
         {
-            "name": u"PAPD Pillar",
+            "name": "PAPD Pillar",
             "filename": "papd-pillar.csv"
         },
         {
-            "name": u"SDG Goals",
+            "name": "SDG Goals",
             "filename": "sdg-goals.csv"
         }]
 

@@ -5,8 +5,6 @@ from collections import OrderedDict
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
-from six import u as unicode
-
 from projectdashboard.lib.util import isostring_date, isostring_year
 from projectdashboard.lib import codelists, util
 from . import finances as qfinances
@@ -53,7 +51,7 @@ def activity_C_D_FSs():
         models.ActivityFinances.activity_id,
         func.sum(models.ActivityFinances.transaction_value).label(
             "total_commitments")
-    ).filter(models.ActivityFinances.transaction_type == u'C'
+    ).filter(models.ActivityFinances.transaction_type == 'C'
              ).group_by(models.ActivityFinances.activity_id
                         ).all()
     commitments = dict(
@@ -62,7 +60,7 @@ def activity_C_D_FSs():
         models.ActivityFinances.activity_id,
         func.sum(models.ActivityFinances.transaction_value).label(
             "total_disbursements")
-    ).filter(models.ActivityFinances.transaction_type == u'D'
+    ).filter(models.ActivityFinances.transaction_type == 'D'
              ).group_by(models.ActivityFinances.activity_id
                         ).all()
     disbursements = dict(
@@ -141,23 +139,23 @@ def get_updates():
 def create_activity_for_test(data, user_id):
     act = models.Activity()
     act.reporting_org_id = qorganisations.get_organisation_by_name(
-        unicode(data.get(u"Funded by"))).id
+        data.get("Funded by")).id
     funding_org = models.ActivityOrganisation()
     funding_org.role = 1
     funding_org.organisation_id = qorganisations.get_organisation_by_name(
-        unicode(data.get(u"Funded by"))).id
+        data.get("Funded by")).id
     implementing_org = models.ActivityOrganisation()
     implementing_org.role = 4
     implementing_org.organisation_id = qorganisations.get_or_create_organisation(
-        unicode(data.get(u"Implemented by")))
+        data.get("Implemented by"))
     act.organisations = [implementing_org, funding_org]
     mtef_sector = models.ActivityCodelistCode()
     mtef_sector.codelist_code_id = codelists.get_codelists_ids_by_name()[
-        'mtef-sector'][data.get(u"MTEF Sector")]
+        'mtef-sector'][data.get("MTEF Sector")]
     act.classifications = [mtef_sector]
-    act.title = unicode(data.get(u"Activity Title"))
-    act.description = u""
-    act.recipient_country_code = u"LR"
+    act.title = data.get("Activity Title")
+    act.description = ""
+    act.recipient_country_code = "LR"
     act.domestic_external = data.get("Domestic/External", "external")
     act.user_id = user_id
     act.code = data.get("Project code")
