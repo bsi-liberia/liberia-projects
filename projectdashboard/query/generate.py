@@ -1,6 +1,5 @@
 import datetime
 from lxml import etree as et
-from six import u as unicode
 from flask import current_app
 
 from projectdashboard.query import activity as qactivity
@@ -268,7 +267,7 @@ def build_transaction_103(transaction):
 
     tvalue = et.Element("value")
     t.append(tvalue)
-    tvalue.text = unicode(str(transaction_value))
+    tvalue.text = str(transaction_value)
     tvalue.set("value-date", transaction_date)
 
     if transaction_description:
@@ -302,7 +301,7 @@ def build_transaction(transaction):
 
     tvalue = et.Element("value")
     t.append(tvalue)
-    tvalue.text = unicode(str(transaction_value))
+    tvalue.text = str(transaction_value)
     tvalue.set("value-date", transaction_date)
 
     if transaction_description:

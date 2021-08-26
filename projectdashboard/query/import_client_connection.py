@@ -1,14 +1,16 @@
 # -*- coding: UTF-8 -*-
+
+import os
+from collections import defaultdict
+import datetime
+
 from flask import flash
+import openpyxl
+
 from projectdashboard import models
 from projectdashboard.lib import codelists, util, xlsx_to_csv
 from projectdashboard.query import finances as qfinances
 from projectdashboard.extensions import db
-import openpyxl
-import os
-from collections import defaultdict
-import datetime
-from six import u as unicode
 
 
 def first_or_only(list_or_dict):
@@ -33,7 +35,7 @@ def make_transactions(activity, project_data, fiscal_year=None, fund_sources={})
             "fund_source_id": fund_sources.get(row['Loan']).id,
             "provider_org_id": activity.funding_organisations[0].id,
             "receiver_org_id": activity.implementing_organisations[0].id,
-            "currency": unicode(row["Currency of Loan Commitment"]),
+            "currency": row["Currency of Loan Commitment"],
             "currency_automatic": True,
             "transaction_description": u"Imported from Client Connection",
             "classifications": {

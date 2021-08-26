@@ -1,4 +1,9 @@
 from io import BytesIO
+from collections import defaultdict
+
+import sqlalchemy as sa
+from sqlalchemy.sql import func
+
 from projectdashboard.lib import docx_helpers as docx
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import aggregates as qaggregates
@@ -6,10 +11,6 @@ from projectdashboard.query import codelists as qcodelists
 from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
 from projectdashboard.extensions import db
 from projectdashboard import models
-
-import sqlalchemy as sa
-from sqlalchemy.sql import func
-from collections import defaultdict
 
 
 def make_sector_doc(sector_code):
