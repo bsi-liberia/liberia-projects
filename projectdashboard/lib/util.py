@@ -325,6 +325,15 @@ def fy_to_fyfy(fy):
     return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
 
 
+def fy_to_fyfy_present(fy):
+    """Converts a fiscal year to a year + year+1 e.g. 2018 to 1819,
+    but only if the latest fiscal year spans more than one year"""
+    fiscal_year = models.FiscalYear.query.order_by(models.FiscalYear.end.desc()).first()
+    if fiscal_year.start.year != fiscal_year.end.year:
+        return "{}{}".format(fy[2:4], str(int(fy)+1)[2:4])
+    return "{}".format(fy[0:4])
+
+
 def fy_fy_to_fy(fy_fy):
     """Converts a fiscal year FY2019/20 to e.g. 2019"""
     result = re.match(r"FY(\d*)/.*", fy_fy).group(1)
@@ -351,8 +360,40 @@ def get_real_date_from_header(column_name, start_end="start"):
 
 
 def make_quarters_text(list):
-    return [{"quarter_name": "Q{}".format(k),
-             "quarter_months": "{}-{}".format(
+    return [{
+            "months": range(l["start"][1], l["end"][1]+1),
+            "quarter_num": k,
+            "quarter_name": "Q{}".format(k),
+            "quarter_months": "{}-{}".format(
         datetime.date(2019, l["start"][1], l["start"][0]).strftime("%b"),
         datetime.date(2019, l["end"][1], l["end"][0]).strftime("%b")
     )} for k, l in list.items()]
+
+
+def make_quarters_text_present():
+    quarters_months = quarters_months_present()
+    return make_quarters_text(quarters_months)
+
+
+def quarters_months_present():
+    fiscal_year = models.FiscalYear.query.order_by(models.FiscalYear.end.desc()).first()
+    fiscal_periods = fiscal_year.fiscal_year_periods
+    return dict(map(lambda period: (period.order, {
+        "start": (period.start.day, period.start.month),
+        "end": (period.end.day, period.end.month)
+    }), fiscal_year.fiscal_year_periods))
+
+def date_to_fy_fq_present(date, quarters_months_text=None):
+    if quarters_months_text is None:
+        quarters_months_text = make_quarters_text_present()
+    months_quarters = dict([(month, quarter['quarter_num'])
+        for quarter in quarters_months_text
+        for month in quarter['months']])
+    list_months_quarters = list(months_quarters)
+    quarter = months_quarters[date.month]
+    # Q3 and Q4 (Jan-Jun) are FY of previous year
+    if list_months_quarters.index(date.month) < list_months_quarters.index(1):
+        year = date.year-1
+    else:
+        year = date.year
+    return year, quarter
