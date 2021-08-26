@@ -19,7 +19,6 @@ def create_app(config_object='config'):
     register_commands(app)
     CORS(app)
     register_errorhandlers(app)
-    # register_hooks(app)
     return app
 
 
@@ -87,26 +86,3 @@ def register_errorhandlers(app):
     for errcode in [400, 401, 403, 404, 500, 405]:
         app.errorhandler(errcode)(render_error)
     return None
-
-
-def register_hooks(app):
-    @app.before_request
-    def setup_default_permissions():
-        if current_user.is_authenticated:
-            assert models.User.query.get(current_user.id)
-            session["permissions"] = current_user.permissions_dict
-        else:
-            session["permissions"] = {}
-            current_user.permissions_dict = {
-                'domestic_external': 'external',
-                'domestic_external_edit': 'none'
-            }
-            if request.headers['Host'] == "psip.liberiaprojects.org":
-                session["permissions"]["domestic_external"] = "domestic"
-            elif request.headers['Host'] == "liberiaprojects.org":
-                session["permissions"]["domestic_external"] = "external"
-            # Only used for bug testing locally
-            elif request.headers['Host'] == "127.0.0.1:5000":
-                session["permissions"]["domestic_external"] = "domestic"
-            else:
-                session["permissions"]["domestic_external"] = "both"
