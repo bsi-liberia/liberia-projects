@@ -1,10 +1,12 @@
-from flask_login import current_user
 import datetime
+
+from flask_login import current_user
+from sqlalchemy import func
+
 from projectdashboard import models
 from projectdashboard.lib import util
 from projectdashboard.extensions import db
 from projectdashboard.query import activity as qactivity
-from sqlalchemy import func
 
 
 def isostring_date(value):

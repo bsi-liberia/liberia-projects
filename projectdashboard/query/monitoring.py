@@ -1,9 +1,11 @@
+import datetime
+
+import sqlalchemy as sa
+from sqlalchemy import func, case
+
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.lib import util
-import sqlalchemy as sa
-from sqlalchemy import func, case
-import datetime
 
 
 def response_statuses():

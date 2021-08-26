@@ -1,7 +1,5 @@
 import datetime
 
-from sqlalchemy import *
-
 from projectdashboard import models
 from projectdashboard.extensions import db
 

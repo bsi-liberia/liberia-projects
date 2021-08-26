@@ -1,18 +1,19 @@
 import datetime
+from collections import OrderedDict
+import difflib
+
 from flask import url_for, session, flash
 from flask_login import current_user
-from collections import OrderedDict
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
 from projectdashboard.lib.util import isostring_date, isostring_year
 from projectdashboard.lib import codelists, util
-from . import finances as qfinances
+from projectdashboard.query import finances as qfinances
 from projectdashboard.query import organisations as qorganisations
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.query.activity_log import activity_updated
-import difflib
 
 
 def force_earliest_latest(earliest, latest):
