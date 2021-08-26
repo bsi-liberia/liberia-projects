@@ -44,7 +44,7 @@ def activity_log():
         }
     return jsonify(
         count=count,
-        items=list(map(lambda al: simple_log(al), activitylogs)))
+        items=[simple_log(activitylog) for activitylog in activitylogs])
 
 
 @blueprint.route("/<int:activitylog_id>.json")

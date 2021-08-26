@@ -2,13 +2,13 @@
 
 import datetime
 import re
+import sys
+from io import BytesIO
+
 from flask import flash
 from openpyxl.styles import Protection
 import openpyxl
-import sys
-
 from six import u as unicode
-from io import BytesIO
 
 from projectdashboard import models
 from projectdashboard.extensions import db
@@ -21,7 +21,6 @@ from projectdashboard.query.activity_log import activity_updated
 from projectdashboard.lib import xlsx_to_csv, util
 from projectdashboard.lib.spreadsheet_headers import headers, fr_headers, headers_transactions
 from projectdashboard.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
-from projectdashboard.lib.spreadsheets.formatting import yellowFill, orangeFill
 from projectdashboard.lib.spreadsheets import apply_formatting, helpers, xlsx_writer
 from projectdashboard.lib.codelist_helpers import codelists
 from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
@@ -38,7 +37,7 @@ def tidy_amount(amount_value):
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
     if re.match(r'^-?\d*\.?\d*$', amount_value):  # 2000 or -2000
-        return (float(amount_value), u"USD")
+        return (float(amount_value), "USD")
     elif re.match(r"^(\d*)m (\D*)$", amount_value):  # 20m EUR
         result = re.match(r"^(\d*)m (\D*)$", amount_value).groups()
         return (float(result[0])*1000000, unicode(result[1].upper()))
@@ -76,8 +75,8 @@ def process_transaction(activity, amount, currency, column_name):
     end_fq_date = util.fq_fy_to_date(fq, fy, "end")
     disbursement = models.ActivityFinances()
     disbursement.transaction_date = end_fq_date
-    disbursement.transaction_type = u"D"
-    disbursement.transaction_description = u"Disbursement for Q{} FY{}, imported from AMCU template".format(
+    disbursement.transaction_type = "D"
+    disbursement.transaction_description = "Disbursement for Q{} FY{}, imported from AMCU template".format(
         fq, fy
     )
     disbursement.currency = currency
@@ -103,30 +102,30 @@ def clean_string(_string):
 def update_activity_data(activity, existing_activity, row, codelists):
     updated = False
 
-    if ("Activity Title" in row) and (existing_activity[u"Activity Title"] != clean_string(row[u"Activity Title"])):
-        activity.title = clean_string(row[u"Activity Title"])
+    if ("Activity Title" in row) and (existing_activity["Activity Title"] != clean_string(row["Activity Title"])):
+        activity.title = clean_string(row["Activity Title"])
         updated = True
-    if ("Activity Description" in row) and (existing_activity[u"Activity Description"] != clean_string(row[u"Activity Description"])):
-        activity.description = clean_string(row[u"Activity Description"])
+    if ("Activity Description" in row) and (existing_activity["Activity Description"] != clean_string(row["Activity Description"])):
+        activity.description = clean_string(row["Activity Description"])
         updated = True
-    if ("Implemented by" in row) and (existing_activity[u"Implemented by"] != clean_string(row[u"Implemented by"])):
+    if ("Implemented by" in row) and (existing_activity["Implemented by"] != clean_string(row["Implemented by"])):
         for organisation in activity.organisations:
             if organisation.role == 4:
                 db.session.delete(organisation)
         activity.organisations.append(qorganisations.make_organisation(
-            clean_string(row[u"Implemented by"]), 4))
+            clean_string(row["Implemented by"]), 4))
         updated = True
-    if ("Activity Status" in row) and (existing_activity[u"Activity Status"] != row[u"Activity Status"]):
-        activity.activity_status = codelists["ActivityStatus"][row[u"Activity Status"]]
+    if ("Activity Status" in row) and (existing_activity["Activity Status"] != row["Activity Status"]):
+        activity.activity_status = codelists["ActivityStatus"][row["Activity Status"]]
         updated = True
-    if ("Activity Dates (Start Date)" in row):
-        start_date = row[u"Activity Dates (Start Date)"].date()
-        if (existing_activity["Activity Dates (Start Date)"] != start_date.isoformat()):
+    if "Activity Dates (Start Date)" in row:
+        start_date = row["Activity Dates (Start Date)"].date()
+        if existing_activity["Activity Dates (Start Date)"] != start_date.isoformat():
             activity.start_date = start_date
             updated = True
-    if ("Activity Dates (End Date)" in row):
-        end_date = row[u"Activity Dates (End Date)"].date()
-        if (existing_activity[u"Activity Dates (End Date)"] != end_date.isoformat()):
+    if "Activity Dates (End Date)" in row:
+        end_date = row["Activity Dates (End Date)"].date()
+        if existing_activity["Activity Dates (End Date)"] != end_date.isoformat():
             activity.end_date = end_date
             updated = True
     activity.forwardspends += qfinances.create_missing_forward_spends(
@@ -138,7 +137,7 @@ def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
     updated_years = []
     for mtef_year in mtef_cols:
         new_fy_value = clean_value(row[mtef_year])
-        if u'Q' in mtef_year:  # Quarterly MTEF projections
+        if 'Q' in mtef_year:  # Quarterly MTEF projections
             _mtef_year_year, _mtef_year_quarter = re.match(
                 r"FY(\S*) Q(\d*) \(MTEF\)", mtef_year).groups()
             existing_fy_value = float(existing_activity["FY{} Q{} (MTEF)".format(
@@ -157,7 +156,7 @@ def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
             year, quarter = util.lr_quarter_to_cal_quarter(
                 int("{}".format(_mtef_year_year)), int(_mtef_year_quarter))
             inserted = qfinances.create_or_update_forwardspend(
-                activity_id, quarter, year, value, u"USD")
+                activity_id, quarter, year, value, "USD")
             updated_years.append("FY{} Q{}".format(
                 _mtef_year_year, _mtef_year_quarter))
         else:  # Annual MTEF projections
@@ -183,7 +182,7 @@ def parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id):
             for fp in fy.fiscal_year_periods:
                 year, quarter = util.date_to_fy_fq_calendar_year(fp.start)
                 inserted = qfinances.create_or_update_forwardspend(
-                    activity_id, quarter, year, value, u"USD")
+                    activity_id, quarter, year, value, "USD")
             updated_years.append("FY{}".format(fy_start))
     return updated_years
 
@@ -226,8 +225,9 @@ def parse_disbursement_cols(currency, disbursement_cols, activity, existing_acti
         )
         db.session.add(activity)
         if existing_activity.get(column_name, 0) != 0:
-            # Non-zero financial values were previously provided and should be adjusted upwards/downwards
-            updated_disbursements.append(u"{}; previous value was {}; \
+            # Non-zero financial values were previously provided
+            # and should be adjusted upwards/downwards
+            updated_disbursements.append("{}; previous value was {}; \
                 new value is {}; new entry for {} added".format(
                 util.column_data_to_string(column_name),
                 existing_value_same_currency,
@@ -235,31 +235,32 @@ def parse_disbursement_cols(currency, disbursement_cols, activity, existing_acti
                 difference))
         else:
             # Financial values were not previously provided, and are now entered
-            updated_disbursements.append(u"{}".format(
+            updated_disbursements.append("{}".format(
                 util.column_data_to_string(column_name)))
     return updated_disbursements
 
 
 def make_updated_info(updated, activity, num_updated_activities):
-    if updated.get("mtef_years") or updated.get("counterpart_years") or updated.get("disbursements") or updated.get("activity"):
+    if (updated.get("mtef_years") or updated.get("counterpart_years") or
+        updated.get("disbursements") or updated.get("activity")):
         num_updated_activities += 1
         activity_updated(activity.id)
     else:
         return None, num_updated_activities
-    msg = u"Updated {} (Project ID: {}): ".format(
+    msg = "Updated {} (Project ID: {}): ".format(
         activity.title,
         activity.id)
     msgs = []
     if updated.get("activity"):
-        msgs.append(u"updated activity data")
+        msgs.append("updated activity data")
     if updated.get("mtef_years"):
-        msgs.append(u"updated MTEF projections for {}".format(
+        msgs.append("updated MTEF projections for {}".format(
             ", ".join(updated["mtef_years"])))
     if updated.get("counterpart_years"):
-        msgs.append(u"updated counterpart funding for {}".format(
+        msgs.append("updated counterpart funding for {}".format(
             ", ".join(updated["counterpart_years"])))
     if updated.get("disbursements"):
-        msgs.append(u"updated disbursement data for {}".format(
+        msgs.append("updated disbursement data for {}".format(
             ", ".join(updated["disbursements"])))
     return msg + "; ".join(msgs), num_updated_activities
 
@@ -289,12 +290,12 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
     def filter_counterpart(column):
         pattern = r"(\S*) \(GoL counterpart fund request\)$"
         return re.match(pattern, column)
-    if u"Instructions" in xl_workbook.sheetnames:
+    if "Instructions" in xl_workbook.sheetnames:
         currency = xl_workbook["Instructions"].cell(6, 3).value
         print("Currency is {}".format(currency))
         begin_sheet = 1
     else:
-        currency = u"USD"
+        currency = "USD"
         begin_sheet = 0
     try:
         for sheet_id in range(begin_sheet, num_sheets):
@@ -311,17 +312,17 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
             elif _type == 'disbursements':
                 for _column_name in disbursement_cols:
                     if _column_name not in data[0].keys():
-                        raise Exception(u"The column {} containing financial data was not \
+                        raise Exception("The column {} containing financial data was not \
                         found in the uploaded spreadsheet!".format(_column_name))
             for row in data:  # each row is one ID
-                activity_id = int(row[u"ID"])
+                activity_id = int(row["ID"])
                 activity = qactivity.get_activity(activity_id)
                 activity_iati_preferences = [
                     pref.field for pref in activity.iati_preferences]
                 if not activity:
                     messages.append("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
                         and was not imported! Please create this activity in the \
-                        system before trying to import.".format(row[u'ID'], row[u'Activity Title']))
+                        system before trying to import.".format(row['ID'], row['Activity Title']))
                     continue
                 existing_activity = activity_to_json(activity, cl_lookups)
                 if _type == 'mtef':
@@ -329,19 +330,24 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                     if 'forwardspend' in activity_iati_preferences:
                         continue
                     updated = {
-                        'activity': update_activity_data(activity, existing_activity, row, cl_lookups_by_name),
+                        'activity': update_activity_data(activity, existing_activity,
+                            row, cl_lookups_by_name),
                         # Parse MTEF projections columns
-                        'mtef_years': parse_mtef_cols(currency, mtef_cols, existing_activity, row, activity_id),
+                        'mtef_years': parse_mtef_cols(currency, mtef_cols, existing_activity,
+                            row, activity_id),
                         # Parse counterpart funding columns
-                        'counterpart_years': parse_counterpart_cols(counterpart_funding_cols, activity, row, activity_id),
+                        'counterpart_years': parse_counterpart_cols(counterpart_funding_cols,
+                            activity, row, activity_id),
                     }
                 elif _type == 'disbursements':
                     # FIXME quick fix for now
                     if 'disbursement' in activity_iati_preferences:
                         continue
                     updated = {
-                        'activity': update_activity_data(activity, existing_activity, row, cl_lookups_by_name),
-                        'disbursements': parse_disbursement_cols(currency, disbursement_cols, activity, existing_activity, row)
+                        'activity': update_activity_data(activity, existing_activity,
+                            row, cl_lookups_by_name),
+                        'disbursements': parse_disbursement_cols(currency, disbursement_cols,
+                            activity, existing_activity, row)
                     }
                 # Mark activity as updated and inform user
                 update_message, num_updated_activities = make_updated_info(
@@ -365,7 +371,7 @@ def generate_xlsx_filtered(arguments={}):
     disbFYs = generate_disb_fys()
     _headers = headers + disbFYs
     writer = xlsx_writer.xlsxDictWriter(_headers)
-    writer.writesheet(u"Data")
+    writer.writesheet("Data")
     writer.writeheader()
     cl_lookups = get_codelists_lookups()
     activities = qactivity.list_activities_by_filters(
@@ -394,10 +400,10 @@ def generate_xlsx_filtered(arguments={}):
             activity_data.update(
                 dict(map(lambda d: (d, 0.00), list(generate_disb_fys()))))
             activity_data["Fund Source"] = "{} - {}".format(fund_source_code,
-                                                            fund_source_name) if fund_source_name != fund_source_code else fund_source_name
+                fund_source_name) if fund_source_name != fund_source_code else fund_source_name
             # Add Disbursements data
             if fundsource is not None and fundsource_data.get('finance_type'):
-                activity_data[u'Finance Type (Type of Assistance)'] = fundsource_data.get(
+                activity_data['Finance Type (Type of Assistance)'] = fundsource_data.get(
                     'finance_type')
             if fundsource in activity.FY_commitments_dict_fund_sources:
                 activity_data.update(dict(map(lambda d: (
@@ -412,10 +418,10 @@ def generate_xlsx_filtered(arguments={}):
     return writer.save()
 
 
-def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=None):
+def generate_xlsx_export_template(data, mtef=False, currency="USD", _headers=None):
     mtef_cols, counterpart_funding_cols, disb_cols, _headers = helpers.get_column_information(
         mtef, _headers)
-    for required_field in [u"ID", u"Activity Status", u'Activity Dates (Start Date)', u'Activity Dates (End Date)']:
+    for required_field in ["ID", "Activity Status", 'Activity Dates (Start Date)', 'Activity Dates (End Date)']:
         if required_field not in _headers:
             flash("Error: the field `{}` is required in this export. Please adjust your selected fields and try again!".format(
                 required_field))
@@ -445,7 +451,7 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=No
                                                     float(existing_activity.get(
                                                         "FY{} Q3 (MTEF)".format(fy_start), 0)),
                                                     float(existing_activity.get("FY{} Q4 (MTEF)".format(fy_start), 0))])
-                if writer.template_currency != u"USD":
+                if writer.template_currency != "USD":
                     # N.B.: we convert at (close to) today's date,
                     # because these are *projections* and we store in USD
                     existing_activity[mtef_year] = qexchangerates.convert_to_currency(
@@ -454,7 +460,7 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=No
                         value=existing_activity[mtef_year])
             # Convert disbursement data to writer.template_currency
             for disb_year in disb_cols:
-                if writer.template_currency != u"USD":
+                if writer.template_currency != "USD":
                     existing_activity[disb_year] = qexchangerates.convert_to_currency(
                         currency=writer.template_currency,
                         _date=util.get_real_date_from_header(disb_year, "end"),
@@ -476,7 +482,7 @@ def generate_xlsx_export_template(data, mtef=False, currency=u"USD", _headers=No
 def generate_xlsx_transactions(filter_key=None, filter_value=None):
     disbFYs = generate_disb_fys()
     writer = xlsx_writer.xlsxDictWriter(headers_transactions)
-    writer.writesheet(u"Data")
+    writer.writesheet("Data")
     writer.writeheader()
     cl_lookups = get_codelists_lookups()
     if (filter_key and filter_value):

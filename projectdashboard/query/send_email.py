@@ -1,4 +1,4 @@
-from flask import request, current_app
+from flask import current_app
 
 from flask_mail import Message
 from projectdashboard.extensions import mail

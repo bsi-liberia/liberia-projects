@@ -1,4 +1,3 @@
-import datetime
 from flask import Blueprint, request, \
     jsonify, abort, current_app
 from flask_jwt_extended import jwt_required

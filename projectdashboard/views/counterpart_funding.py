@@ -22,8 +22,8 @@ def api_activity_counterpart_funding(activity_id):
     activity = qactivity.get_activity(activity_id)
     if activity is None:
         return abort(404)
-    """GET returns a list of all counterpart funding for a given activity_id.
-    POST also accepts counterpart funding data to be added, deleted, updated."""
+    # GET returns a list of all counterpart funding for a given activity_id.
+    # POST also accepts counterpart funding data to be added, deleted, updated.
     if request.method == "POST":
         request_data = request.get_json()
         if request_data["action"] == "add":
@@ -37,9 +37,10 @@ def api_activity_counterpart_funding(activity_id):
                 "disbursed": False,
             }
             result = qcounterpart_funding.add_entry(activity_id, data)
-            cf = result.as_dict()
-            cf["required_fy"], fq = util.date_to_fy_fq(cf["required_date"])
-            return jsonify(counterpart_funding=cf)
+            counterpart_fund = result.as_dict()
+            counterpart_fund["required_fy"], _ = util.date_to_fy_fq(
+                counterpart_fund["required_date"])
+            return jsonify(counterpart_funding=counterpart_fund)
         elif request_data["action"] == "delete":
             result = qcounterpart_funding.delete_entry(
                 activity_id, request_data["id"])
@@ -70,13 +71,13 @@ def api_activity_counterpart_funding(activity_id):
         return str(result)
     elif request.method == "GET":
         def to_fy(counterpart_funding):
-            cf = counterpart_funding.as_dict()
-            cf["required_fy"], fq = util.date_to_fy_fq(
+            counterpart_fund = counterpart_funding.as_dict()
+            counterpart_fund["required_fy"], _ = util.date_to_fy_fq(
                 counterpart_funding.required_date)
-            return cf
+            return counterpart_fund
         counterpart_funding = sorted(
-            list(map(lambda cf: to_fy(cf),
-                     qactivity.get_activity(activity_id).counterpart_funding)),
+            [to_fy(counterpart_fund) for counterpart_fund in
+            qactivity.get_activity(activity_id).counterpart_funding],
             key=lambda x: x["required_date"])
         return jsonify(counterpart_funding=counterpart_funding,
                        fiscal_years=range(2013, 2025))

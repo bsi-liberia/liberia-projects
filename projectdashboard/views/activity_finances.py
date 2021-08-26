@@ -23,7 +23,7 @@ def api_activity_finances(activity_id):
     """GET returns a list of all financial data for a given activity_id.
     POST also accepts financial data to be added or deleted."""
     activity = qactivity.get_activity(activity_id)
-    if activity == None:
+    if activity is None:
         return abort(404)
     if request.method == "POST":
         request_data = request.get_json()
@@ -38,7 +38,7 @@ def api_activity_finances(activity_id):
                 "provider_org_id": request_data.get("provider_org_id", activity.funding_organisations[0].id),
                 "receiver_org_id": request_data.get("receiver_org_id", activity.implementing_organisations[0].id),
                 "fund_source_id": request_data.get("fund_source_id", None),
-                "currency": request_data.get("currency", u"USD"),
+                "currency": request_data.get("currency", "USD"),
                 "classifications": {
                     "mtef-sector": request_data.get("mtef_sector",
                                                     activity.classification_data['mtef-sector']['entries'][0].codelist_code_id)
@@ -54,13 +54,13 @@ def api_activity_finances(activity_id):
             return abort(500)
     elif request.method == "GET":
         finances = {
-            'commitments': list(map(lambda t: t.as_dict(), activity.commitments)),
-            'allotments': list(map(lambda t: t.as_dict(), activity.allotments)),
-            'disbursements': list(map(lambda t: t.as_dict(), activity.disbursements))
+            'commitments': [transaction.as_dict() for transaction in activity.commitments],
+            'allotments': [transaction.as_dict() for transaction in activity.allotments],
+            'disbursements': [transaction.as_dict() for transaction in activity.disbursements]
         }
-        fund_sources = list(map(lambda fs: {
-            "id": fs.id, "name": fs.name
-        }, models.FundSource.query.all()))
+        fund_sources = [{
+            "id": fundsource.id, "name": fundsource.name
+        } for fundsource in models.FundSource.query.all()]
         return jsonify(
             finances=finances,
             fund_sources=fund_sources
@@ -90,7 +90,7 @@ def finances_edit_attr(activity_id):
             finances_id=data["finances_id"],
             force_update=True)
         return jsonify(update_status.as_dict())
-    elif (data.get("attr") in ("currency", "transaction_date")):
+    elif data.get("attr") in ("currency", "transaction_date"):
         update_curency = qfinances.update_attr(data)
         update_status = qexchangerates.automatic_currency_conversion(
             finances_id=data["finances_id"],

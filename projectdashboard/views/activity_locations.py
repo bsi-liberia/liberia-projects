@@ -29,15 +29,15 @@ def api_all_activity_locations():
         models.ActivityFinances.transaction_date >= '2019-01-01'
     )
     activitylocations = query.all()
-    locations = list(map(lambda al: ({
-        'locationID': al.id,
-        'latitude': al.locations.latitude,
-        'longitude': al.locations.longitude,
-        'latlng': [al.locations.latitude, al.locations.longitude],
-        'name': al.locations.name,
-        "title": al.activity.title,
-        "id": al.activity_id}),
-        activitylocations))
+    locations = [{
+        'locationID': activitylocation.id,
+        'latitude': activitylocation.locations.latitude,
+        'longitude': activitylocation.locations.longitude,
+        'latlng': [activitylocation.locations.latitude, activitylocation.locations.longitude],
+        'name': activitylocation.locations.name,
+        "title": activitylocation.activity.title,
+        "id": activitylocation.activity_id} for activitylocation in
+        activitylocations]
     return jsonify(locations=locations)
 
 
