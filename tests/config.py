@@ -57,7 +57,6 @@ USER_2 = {
 EARLIEST_DATE = datetime.date(2013,1,1)
 LATEST_DATE = datetime.date(2049,12,31)
 
-MORPHIO_API_KEY = os.environ["MORPHIO_API_KEY"]
 SERVER_NAME = "0.0.0.0"
 LIVESERVER_PORT=8943
 selenium_capture_debug="ALWAYS"

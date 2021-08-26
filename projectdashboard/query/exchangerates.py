@@ -77,7 +77,6 @@ def import_exchange_rates_from_file():
 
 
 def import_exchange_rates_from_url():
-    MORPHIO_API_KEY = current_app.config["MORPHIO_API_KEY"]
     print("Downloading full set of exchange rate data...")
     f = requests.get(EXCHANGE_RATES_API_FULL, stream=True)
     _ercsv = csv.DictReader([line.decode('utf-8') for line in f.iter_lines()])
