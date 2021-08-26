@@ -1,9 +1,11 @@
-from projectdashboard.lib.spreadsheets import instructions
+import datetime
+from io import BytesIO
+
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
-import datetime
-from io import BytesIO
+
+from projectdashboard.lib.spreadsheets import instructions
 
 
 def guess_types(cell_value):
@@ -72,15 +74,15 @@ class xlsxDictWriter(object):
         # Protect sheet
         ws.protection.sheet = True
 
-    def __init__(self, headers, _type=u"disbursements",
-                 template_currency=u"USD",
+    def __init__(self, headers, _type="disbursements",
+                 template_currency="USD",
                  instructions_sheet=False):
         self.wb = Workbook()
         self.template_currency = template_currency
         self.instructions_sheet = instructions_sheet
         self._type = _type
         ws = self.wb.worksheets[0]
-        ws.title = u"Data"
+        ws.title = "Data"
         if instructions_sheet:
             self.write_instructions_sheet()
         self.header_mapping = dict(

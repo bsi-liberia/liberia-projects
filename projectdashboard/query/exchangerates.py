@@ -1,24 +1,25 @@
-from projectdashboard import models
-from projectdashboard.extensions import db
-from projectdashboard.lib import util
 import csv
 import requests
 from flask import current_app
 from hashlib import md5
+
+from projectdashboard import models
+from projectdashboard.extensions import db
+from projectdashboard.lib import util
 
 
 EXCHANGE_RATES_API_FULL = "https://codeforiati.org/imf-exchangerates/imf_exchangerates.csv"
 
 
 def convert_from_currency(currency, _date, value):
-    if currency == u"USD":
+    if currency == "USD":
         return value
     source, rate, value_date = closest_exchange_rate(_date, currency)
     return float(value)*rate
 
 
 def convert_to_currency(currency, _date, value):
-    if currency == u"USD":
+    if currency == "USD":
         return value
     source, rate, value_date = closest_exchange_rate(_date, currency)
     return float(value)/rate
@@ -26,8 +27,8 @@ def convert_to_currency(currency, _date, value):
 
 def get_currencies():
     c = models.Currency()
-    c.code = U"USD"
-    c.name = u"U.S. Dollars"
+    c.code = "USD"
+    c.name = "U.S. Dollars"
     currencies = [c]
     currencies += models.Currency.query.order_by(
         models.Currency.code.asc()).all()
@@ -35,8 +36,8 @@ def get_currencies():
 
 
 def get_exchange_rate(transaction_date, currency):
-    if currency == u"USD":
-        return u"USD", 1, transaction_date
+    if currency == "USD":
+        return "USD", 1, transaction_date
     return closest_exchange_rate(transaction_date, currency)
 
 
@@ -48,8 +49,8 @@ def automatic_currency_conversion(finances_id, force_update=False):
     if (not force_update) and (not aF.currency_automatic):
         return aF
     aF.currency_automatic = True
-    if aF.currency == u"USD":
-        aF.currency_source, aF.currency_rate, aF.currency_value_date = u"USD", 1, aF.transaction_date
+    if aF.currency == "USD":
+        aF.currency_source, aF.currency_rate, aF.currency_value_date = "USD", 1, aF.transaction_date
     else:
         aF.currency_source, aF.currency_rate, aF.currency_value_date = closest_exchange_rate(
             aF.transaction_date, aF.currency)
@@ -107,8 +108,8 @@ def import_exchange_rates_file(_ercsv):
             print("Processed {} rows".format(i))
         if row["Currency"] == '':
             continue
-        sourcename = u"{} ({})".format(
-            row["Source"], {u"D": u"Daily", u"M": u"Monthly"}[row["Frequency"]])
+        sourcename = "{} ({})".format(
+            row["Source"], {"D": "Daily", "M": "Monthly"}[row["Frequency"]])
         _unique = (row['Date'], row['Currency'], sourcename)
         if _unique in seen:
             continue
@@ -137,7 +138,7 @@ def import_exchange_rates_file(_ercsv):
     db.session.commit()
 
     oecd = models.ExchangeRateSource.query.filter_by(
-        name=u"OECD (Monthly)").first()
+        name="OECD (Monthly)").first()
     oecd.weight = 33
     db.session.add(oecd)
     db.session.commit()

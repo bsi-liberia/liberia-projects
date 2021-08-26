@@ -1,9 +1,9 @@
+import sqlalchemy as sa
+from sqlalchemy.sql import func
+
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.query import activity as qactivity
-
-import sqlalchemy as sa
-from sqlalchemy.sql import func
 
 
 def aggregate(dimension, req_filters=[], req_finances_joins=[], req_forwardspends_joins=[]):

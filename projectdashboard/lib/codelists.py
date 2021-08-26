@@ -1,8 +1,4 @@
-import sys
-if sys.version_info.major == 2:
-    import unicodecsv
-else:
-    import csv as unicodecsv
+import csv as unicodecsv
 import os
 
 import flask_babel as babel

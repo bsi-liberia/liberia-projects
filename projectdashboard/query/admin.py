@@ -1,8 +1,9 @@
+import datetime
+
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.lib import util
 from projectdashboard.query import activity as qactivity
-import datetime
 
 START_QUARTERS = ['01-01', '04-01', '07-01', '10-01']
 END_QUARTERS = ['03-31', '06-30', '09-30', '12-31']

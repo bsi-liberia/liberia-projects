@@ -243,11 +243,11 @@ def api_activity_summaries():
                     for field in fields_len])
         f.update(flen)
         f['implementing_organisations'] = "; ".join(
-            list(map(lambda org: org.name, activity.implementing_organisations)))
+            [organisation.name for organisation in activity.implementing_organisations])
         f['funding_organisations'] = "; ".join(
-            list(map(lambda org: org.name, activity.funding_organisations)))
+            [organisation.name for organisation in activity.funding_organisations])
         f['locations'] = "; ".join(
-            list(map(lambda location: location.locations.name, activity.locations)))
+            [location.locations.name for location in activity.locations])
         #f['classifications'] = dict(filter(lambda clsf: clsf[0]!='mtef-sector', activity.classification_data_dict.items()))
         return f
 
@@ -262,7 +262,7 @@ def api_activity_summaries():
     # Get only fields with multiple distinct values
 
     def filter_unique(field):
-        return len(set(list(map(lambda val: str(val), field[1].values())))) > 1
+        return len(set([str(val) for val in field[1].values()])) > 1
     unique_filters = dict(filter(filter_unique, summaries_by_field.items()))
     return jsonify(fields=unique_filters)
 
@@ -349,8 +349,7 @@ def jsonify_results_design(results):
             _result["baseline_value"] = result.indicators[0].baseline_value
             if result.indicators[0].baseline_year:
                 _result["baseline_year"] = result.indicators[0].baseline_year.year
-            _result["periods"] = list(
-                map(lambda p: p.as_dict(), result.indicators[0].periods))
+            _result["periods"] = [period.as_dict() for period in result.indicators[0].periods]
         else:
             _result["periods"] = []
         out.append(_result)
@@ -375,7 +374,7 @@ def api_activities_documents(activity_id):
     activity = models.Activity.query.get(activity_id)
     if activity is None:
         return abort(404)
-    documents = list(map(lambda d: d.as_dict(), activity.documents))
+    documents = [document.as_dict() for document in activity.documents]
     return jsonify(documents=documents)
 
 
@@ -385,7 +384,7 @@ def api_activities_documents(activity_id):
 def api_activities_results_data_entry(activity_id):
     if request.method == "POST":
         result = qactivity.save_results_data_entry(activity_id,
-                                                   request.json.get("results"), request.json.get("saveType"))
+           request.json.get("results"), request.json.get("saveType"))
         if not result:
             return jsonify(error="Error, could not save data."), 500
     activity = models.Activity.query.get(activity_id)

@@ -1,10 +1,10 @@
+import re
+
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Mm
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
-import re
-from six import u as unicode
 
 
 def looks_like_num(value):
