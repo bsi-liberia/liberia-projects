@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import sys
-from six import u as unicode
 import os
 import re
 import datetime as dt
@@ -16,8 +14,6 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def clean_string(_string):
-    if sys.version_info.major == 2:
-        return unicode(_string.decode("utf-8"))
     return _string
 
 
@@ -35,11 +31,11 @@ def nonempty_from_list(some_list):
 
 def get_date(date_value):
     date_value = date_value.strip()
-    if re.match("^\d{5}$", date_value):  # Excel date like 43465
+    if re.match(r"^\d{5}$", date_value):  # Excel date like 43465
         temp = dt.datetime(1899, 12, 30)
         delta = dt.timedelta(days=int(date_value))
         return (temp+delta).date()
-    if re.match("^\d{2}/\d{2}/\d{4}$", date_value):  # dd/mm/yyyy
+    if re.match(r"^\d{2}/\d{2}/\d{4}$", date_value):  # dd/mm/yyyy
         return dt.datetime.strptime(date_value, "%d/%m/%Y").date()
     if date_value == "":
         return dt.datetime.utcnow().date()
@@ -80,16 +76,16 @@ CODES = {
 def tidy_amount(amount_value):
     amount_value = amount_value.strip()
     amount_value = re.sub(",", "", amount_value)
-    if re.match("^\d*$", amount_value):  # 2000
+    if re.match(r"^\d*$", amount_value):  # 2000
         return (float(amount_value), u"USD")
-    elif re.match('(\d*\.\d*)', amount_value):
+    elif re.match(r'(\d*\.\d*)', amount_value):
         return (float(amount_value), u"USD")
-    elif re.match("^(\d*)m (\D*)$", amount_value):  # 20m EUR
-        result = re.match("^(\d*)m (\D*)$", amount_value).groups()
-        return (float(result[0])*1000000, unicode(result[1].upper()))
-    elif re.match("^(\d*) (\D*)$", amount_value):  # 2000 EUR
-        result = re.match("^(\d*) (\D*)$", amount_value).groups()
-        return (float(result[0]), unicode(result[1].upper()))
+    elif re.match(r"^(\d*)m (\D*)$", amount_value):  # 20m EUR
+        result = re.match(r"^(\d*)m (\D*)$", amount_value).groups()
+        return (float(result[0])*1000000, result[1].upper())
+    elif re.match(r"^(\d*) (\D*)$", amount_value):  # 2000 EUR
+        result = re.match(r"^(\d*) (\D*)$", amount_value).groups()
+        return (float(result[0]), result[1].upper())
 
 
 def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
@@ -131,9 +127,9 @@ def process_transactions(activity, start_date, CODELISTS_IDS_BY_NAME):
                          'Actual Disbursement Q 2', 'Actual Disbursement Q 3']
 
     def get_data_from_header(column_name):
-        patterns = ["Actual Disbursements Q(\d) FY(\d*)/\d*",
-                    "Actual Disbursement Q(\d) FY(\d*)/\d*",
-                    "Actual Disbursement Q (\d)"
+        patterns = [r"Actual Disbursements Q(\d) FY(\d*)/\d*",
+                    r"Actual Disbursement Q(\d) FY(\d*)/\d*",
+                    r"Actual Disbursement Q (\d)"
                     ]
         for pattern in patterns:
             if re.match(pattern, column_name):
@@ -197,7 +193,7 @@ def process_forward_spends(activity, start_date, end_date):
         for col in mtef_cols:
             if activity[col].strip() in ("", "-", "0"):
                 continue
-            mtef_year = int(re.match("MTEF (\d{4})/\d{4}", col).groups()[0])
+            mtef_year = int(re.match(r"MTEF (\d{4})/\d{4}", col).groups()[0])
             activity_mtefs[mtef_year] = tidy_amount(activity[col])[0]
         return activity_mtefs
 
@@ -336,7 +332,6 @@ def import_file():
 
     # Get location data and codelists for lookup
     LOCATIONS = get_locations_as_lookup()
-    CODELISTS_BY_NAME = codelists.get_codelists_lookups_by_name()
     CODELISTS_IDS_BY_NAME = codelists.get_codelists_ids_by_name()
 
     for activity in data:

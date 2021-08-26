@@ -1,14 +1,10 @@
 import datetime
 import json
-import re
-from collections import OrderedDict
 
 from flask import Blueprint, request, \
-    url_for, Response, current_app, abort
+    url_for, current_app, abort
 from flask_login import current_user
-import sqlalchemy as sa
 from sqlalchemy.sql import func
-import requests
 from flask_jwt_extended import (
     jwt_required
 )
@@ -23,8 +19,7 @@ from projectdashboard.query import user as quser
 from projectdashboard.query import aggregates as qaggregates
 
 from projectdashboard.lib import util, spreadsheet_headers
-from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
-from projectdashboard.lib.util import MONTHS_QUARTERS
+from projectdashboard.lib.codelists import get_codelists
 from projectdashboard import models
 from projectdashboard.extensions import db
 
@@ -200,8 +195,8 @@ def api_sectors():
         models.ActivityFinancesCodelistCode,
         models.CodelistCode
     ).filter(
-        models.ActivityFinances.transaction_type == u"D",
-        models.ActivityFinancesCodelistCode.codelist_id == u"mtef-sector"
+        models.ActivityFinances.transaction_type == "D",
+        models.ActivityFinancesCodelistCode.codelist_id == "mtef-sector"
     ).group_by(
         models.CodelistCode.name,
         models.CodelistCode.code,

@@ -1,5 +1,4 @@
 from collections import defaultdict
-import datetime
 import io
 import sys
 import re
@@ -169,7 +168,7 @@ def activities_csv():
 @quser.permissions_required("view", "external")
 def activities_xlsx_transactions():
     data = qgenerate_xlsx.generate_xlsx_transactions(
-        u"domestic_external", u"external")
+        "domestic_external", "external")
     data.seek(0)
     return Response(data,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -211,14 +210,14 @@ def all_activities_xlsx_filtered():
 @blueprint.route("/api/exports/export_template/<organisation_id>.xlsx")
 @jwt_required(optional=True)
 @quser.permissions_required("view")
-def export_donor_template(organisation_id=None, mtef=False, currency=u"USD", headers=None):
+def export_donor_template(organisation_id=None, mtef=False, currency="USD", headers=None):
     if request.args.get('template') == 'mtef':
-        fyfq_string = u"MTEF Forward Projections"
+        fyfq_string = "MTEF Forward Projections"
         mtef = True
     else:
         fyfq_string = util.column_data_to_string(util.previous_fy_fq())
         mtef = False
-    currency = request.args.get("currency_code", u"USD")
+    currency = request.args.get("currency_code", "USD")
     organisation_id = request.args.get('reporting_organisation_id', None)
     headers = request.args.get("headers", "")
     headers = headers.split(",")
@@ -228,11 +227,11 @@ def export_donor_template(organisation_id=None, mtef=False, currency=u"USD", hea
         filename = "AMCU {} Template {}.xlsx".format(
             fyfq_string, reporting_org_name)
         activities = {reporting_org_name: qactivity.list_activities_by_filters({
-            u"reporting_org_id": organisation_id})}
+            "reporting_org_id": organisation_id})}
     else:
         filename = "AMCU {} Template All Donors.xlsx".format(fyfq_string)
         all_activities = qactivity.list_activities_by_filters({
-            u"domestic_external": u"external"
+            "domestic_external": "external"
         })
 
         activities = defaultdict(list)
