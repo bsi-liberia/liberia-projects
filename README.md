@@ -2,6 +2,8 @@
 
 Simple project database to collect information about aid projects in Liberia and publish it in IATI format (both v1.03 and v2.01). View it at https://liberiaprojects.org
 
+Requires Python v3
+
 [![Build Status](https://travis-ci.com/bsi-liberia/liberia-projects.svg?branch=master&status=passed)](https://travis-ci.com/github/bsi-liberia/liberia-projects)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPLv3-blue.svg)](https://github.com/bsi-liberia/liberia-projects/blob/main/LICENSE.txt)
 
