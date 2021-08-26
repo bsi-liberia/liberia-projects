@@ -37,8 +37,8 @@ class TestImportFiles:
         route_activity = url_for('activity_forwardspends.api_activity_forwardspends', activity_id=1)
         res_activity1 = self.client.get(route_activity, headers=headers_admin)
         data = json.loads(res_activity1.data)
-        assert data['forwardspends'][6]['year'] == 'FY2021'
-        assert data['forwardspends'][6]['total_value'] == 0
+        assert data['forwardspends'][5]['year'] == 'FY2020'
+        assert data['forwardspends'][5]['total_value'] == 0
 
         route = url_for('exports.import_template')
         data = {
@@ -50,8 +50,8 @@ class TestImportFiles:
 
         res_activity2 = self.client.get(route_activity, headers=headers_admin)
         data = json.loads(res_activity2.data)
-        assert data['forwardspends'][6]['year'] == 'FY2021'
-        assert data['forwardspends'][6]['total_value'] == 500.0
+        assert data['forwardspends'][5]['year'] == 'FY2020'
+        assert data['forwardspends'][5]['total_value'] == 1000.0
 
 
     def test_import_psip_xlsx_file(self, client, admin, headers_admin):
