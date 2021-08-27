@@ -32,15 +32,14 @@ def api_activity_forwardspends(activity_id):
                                forwardspends)))
         out = OrderedDict()
         for year in years:
-            out[year] = OrderedDict({"year": "FY{}".format(
-                util.fy_to_fyfy_present(str(year))), "total_value": 0.00})
-            for forwardspend in sorted(forwardspends, key=lambda k: k["value_date"]):
-                if util.date_to_fy_fq_present(forwardspend["period_start_date"])[0] == year:
-                    fq = util.date_to_fy_fq_present(
-                        forwardspend["period_start_date"])[1]
-                    out[year]["Q{}".format(fq)] = forwardspend
-                    out[year]["total_value"] += float(
-                        forwardspend["value"])
+            out[year] = OrderedDict({
+                "year": "FY{}".format(util.fy_to_fyfy_present(str(year))),
+                "total_value": 0.00
+            })
+        for forwardspend in sorted(forwardspends, key=lambda k: k["value_date"]):
+            year, fq = util.date_to_fy_fq_present(forwardspend["period_start_date"])
+            out[year]["Q{}".format(fq)] = forwardspend
+            out[year]["total_value"] += forwardspend['value']
         out = list(out.values())
         quarters = util.make_quarters_text_present()
         return jsonify(forwardspends=out, quarters=quarters)
