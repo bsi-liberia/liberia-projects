@@ -397,7 +397,7 @@ def date_to_fy_fq_present(date, quarters_months_text=None):
     list_months_quarters = list(months_quarters)
     quarter = months_quarters[date.month]
     # Q3 and Q4 (Jan-Jun) are FY of previous year
-    if list_months_quarters.index(date.month) < list_months_quarters.index(1):
+    if list_months_quarters.index(date.month) > list_months_quarters.index(12):
         year = date.year-1
     else:
         year = date.year
