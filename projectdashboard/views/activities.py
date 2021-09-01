@@ -110,9 +110,11 @@ def api_activities_by_id(activity_id):
 def api_new_activity():
     if request.method == "GET":
         today = datetime.datetime.now().date()
-        domestic_external = current_user.permissions_dict.get(
-            "edit") or current_user.permissions_dict.get("view")
-        if domestic_external == "both":
+        if current_user.permissions_dict.get("edit") in ["domestic", "external"]:
+            domestic_external = current_user.permissions_dict.get("edit")
+        elif current_user.permissions_dict.get("view") in ["domestic", "external"]:
+            domestic_external = current_user.permissions_dict.get("view")
+        else:
             domestic_external = "external"
         activity = {
             "title": "",
