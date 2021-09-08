@@ -2,7 +2,6 @@ import datetime
 import json
 from projectdashboard.extensions import db
 from projectdashboard import models
-from six import u as unicode
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -16,11 +15,13 @@ def activity_add_log(activity_id, user_id, mode=None, target=None, target_id=Non
     activity_log = models.ActivityLog()
     activity_log.activity_id = activity_id
     activity_log.user_id = user_id
-    activity_log.mode = unicode(mode)
-    activity_log.target = unicode(target)
+    activity_log.mode = mode
+    activity_log.target = target
     activity_log.target_id = target_id
-    activity_log.old_value = json.dumps(old_value, cls=JSONEncoder) if old_value != None else None
-    activity_log.value = json.dumps(value, cls=JSONEncoder) if value != None else None
+    activity_log.old_value = json.dumps(
+        old_value, cls=JSONEncoder) if old_value != None else None
+    activity_log.value = json.dumps(
+        value, cls=JSONEncoder) if value != None else None
     db.session.add(activity_log)
     db.session.commit()
     return activity_log

@@ -134,7 +134,7 @@ export default {
   },
   computed: {
     fy_text() {
-      return `FY${this.fiscalYear.slice(-2)}`
+      return `${this.fiscalYear}`
     }
   },
   methods: {

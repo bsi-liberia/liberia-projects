@@ -1,23 +1,24 @@
 from flask import Flask, render_template, session, request, current_app, make_response, jsonify
 from flask_login import current_user
 from flask_cors import CORS
+from sqlalchemy import event
 
 from projectdashboard import commands, views, extensions
 
 
 def create_app(config_object='config'):
-    """An application factory, as explained here: http://flask.pocoo.org/docs/patterns/appfactories/.
+    """An application factory, as explained here:
+    http://flask.pocoo.org/docs/patterns/appfactories/.
 
     :param config_object: The configuration object to use.
     """
-    app = Flask(__name__.split('.')[0])
+    app = Flask(__name__.split('.', maxsplit=1)[0])
     app.config.from_object(config_object)
     register_blueprints(app)
     register_extensions(app)
     register_commands(app)
     CORS(app)
     register_errorhandlers(app)
-    #register_hooks(app)
     return app
 
 
@@ -47,8 +48,8 @@ def check_enforce_sqlite_fkey_constraints(app):
             def _fk_pragma_on_connect(dbapi_con, con_record):
                 dbapi_con.execute('pragma foreign_keys=ON')
 
-            from sqlalchemy import event
-            event.listen(extensions.db.engine, 'connect', _fk_pragma_on_connect)
+            event.listen(extensions.db.engine, 'connect',
+                         _fk_pragma_on_connect)
 
 
 def register_extensions(app):
@@ -75,6 +76,7 @@ def register_blueprints(app):
     app.register_blueprint(views.activity_finances.blueprint)
     app.register_blueprint(views.activity_forwardspends.blueprint)
     app.register_blueprint(views.activity_locations.blueprint)
+    app.register_blueprint(views.admin.blueprint)
 
 
 def register_errorhandlers(app):
@@ -84,26 +86,3 @@ def register_errorhandlers(app):
     for errcode in [400, 401, 403, 404, 500, 405]:
         app.errorhandler(errcode)(render_error)
     return None
-
-
-def register_hooks(app):
-    @app.before_request
-    def setup_default_permissions():
-        if current_user.is_authenticated:
-            assert models.User.query.get(current_user.id)
-            session["permissions"] = current_user.permissions_dict
-        else:
-            session["permissions"] = {}
-            current_user.permissions_dict = {
-                'domestic_external': 'external',
-                'domestic_external_edit': 'none'
-            }
-            if request.headers['Host'] == "psip.liberiaprojects.org":
-                session["permissions"]["domestic_external"] = "domestic"
-            elif request.headers['Host'] == "liberiaprojects.org":
-                session["permissions"]["domestic_external"] = "external"
-            # Only used for bug testing locally
-            elif request.headers['Host'] == "127.0.0.1:5000":
-                session["permissions"]["domestic_external"] = "domestic"
-            else:
-                session["permissions"]["domestic_external"] = "both"

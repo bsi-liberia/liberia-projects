@@ -13,14 +13,16 @@ from projectdashboard.views.api import jsonify
 from projectdashboard.extensions import login_manager, UnauthenticatedUser
 
 
-blueprint = Blueprint('users', __name__, url_prefix='/', static_folder='../static')
+blueprint = Blueprint('users', __name__, url_prefix='/',
+                      static_folder='../static')
 
 
 @login_manager.request_loader
-def load_user_from_request(request):
-    current_user = get_jwt_identity()
-    if current_user is None: return None
-    user = models.User.query.filter_by(username=current_user).first()
+def load_user_from_request(_request):
+    _current_user = get_jwt_identity()
+    if _current_user is None:
+        return None
+    user = models.User.query.filter_by(username=_current_user).first()
     if user:
         return user
     return None
@@ -67,7 +69,8 @@ def users_delete():
             jsonify({'msg': "Successfully deleted user."}),
             200)
     return make_response(
-        jsonify({'msg': "Sorry, there was an error and that user could not be deleted."}),
+        jsonify(
+            {'msg': "Sorry, there was an error and that user could not be deleted."}),
         500)
 
 
@@ -101,7 +104,8 @@ def users_new():
 @quser.administrator_required
 def users_edit(user_id):
     user = quser.user(user_id)
-    if user == None: return abort(404)
+    if user is None:
+        return abort(404)
     roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
 
     def annotate_user(user):
@@ -129,11 +133,14 @@ def users_edit(user_id):
 def user_permissions_edit(user_id):
     if request.method == "GET":
         user = quser.user(user_id)
-        if user == None: return abort(404)
-        user_organisations = list(map(lambda uo: uo.as_dict(), user.organisations))
+        if user is None:
+            return abort(404)
+        user_organisations = list(
+            map(lambda uo: uo.as_dict(), user.organisations))
         user_roles = list(map(lambda uo: uo.as_dict(), user.userroles))
         roles = list(map(lambda r: r.as_dict(), models.Role.query.all()))
-        organisations = list(map(lambda o: o.as_dict(), qorganisations.get_organisations()))
+        organisations = list(
+            map(lambda o: o.as_dict(), qorganisations.get_organisations()))
         permission_values = [
             {"name": "View projects", "value": "view"},
             {"name": "Edit projects", "value": "edit"},
@@ -141,16 +148,17 @@ def user_permissions_edit(user_id):
             {"name": "Results data design", "value": "results-data-design"}
         ]
         return jsonify(permissions=user_organisations,
-            organisations=organisations,
-            permission_values=permission_values,
-            user_roles=user_roles,
-            roles=roles)
+                       organisations=organisations,
+                       permission_values=permission_values,
+                       user_roles=user_roles,
+                       roles=roles)
     elif request.method == "POST":
         data = request.get_json()
         data["user_id"] = user_id
         if data["action"] == "add":
             op = quser.addOrganisationPermission(data)
-            if not op: return "False"
+            if not op:
+                return "False"
             return jsonify(op.as_dict())
         elif data["action"] == "delete":
             op = quser.deleteOrganisationPermission(data)
@@ -192,7 +200,7 @@ def login():
 
 @blueprint.route("/api/reset-password/password/", methods=["POST"])
 def reset_password_new_password():
-    if not (request.json.get("password") == request.json.get("password_2")):
+    if request.json.get("password") != request.json.get("password_2"):
         return make_response(jsonify({'msg': 'Please make sure you enter the same password twice.'}), 400)
     elif request.json.get("password") == "":
         return make_response(jsonify({'msg': 'Please enter a password.'}), 400)
@@ -201,7 +209,7 @@ def reset_password_new_password():
             email_address=request.json.get("email_address"),
             reset_password_key=request.json.get("reset_password_key"),
             password=request.json.get("password")
-            ):
+        ):
             return make_response(jsonify({'msg': 'Password successfully changed! Please login with your new password.'}), 200)
         else:
             return make_response(jsonify({'msg': 'Sorry, something went wrong, and your password could not be changed.'}), 400)

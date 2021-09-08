@@ -242,7 +242,7 @@
       <dl class="dl-horizontal">
         <dt>IATI XML file</dt>
         <dd><code>
-          <a :href="`${baseURL}/iati/2.01/LR.xml`">{{baseURL}}/iati/2.01/LR.xml</a></code></dd>
+          <a :href="`${baseURL}/iati/2.03/LR.xml`">{{baseURL}}/iati/2.03/LR.xml</a></code></dd>
       </dl>
       <p></p>
       <b-modal id="customise-fields" title="Customise columns" size="xl" scrollable ok-only>
@@ -451,7 +451,7 @@ export default {
       })[0].name
     },
     templateDownloadFilename() {
-      return `AMCU ${this.currentFY} Q${this.quarter} Disbursements Template ${this.selectedReportingOrganisationName}.xlsx`
+      return `AMCU ${this.selectedQuarter} Disbursements Template ${this.selectedReportingOrganisationName}.xlsx`
     },
     templateDownloadURL() {
       var params = {

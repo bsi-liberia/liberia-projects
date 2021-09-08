@@ -10,6 +10,7 @@ from projectdashboard.query.setup import create_codes_codelists, import_countrie
 from werkzeug.datastructures import FileStorage
 from projectdashboard.query.generate_xlsx import xlsx_to_csv, import_xls, import_xls_mtef
 from projectdashboard.query import activity as qactivity
+from projectdashboard.query import admin as qadmin
 from projectdashboard.query.location import import_locations_from_file
 from flask_jwt_extended import (
     create_access_token
@@ -41,6 +42,12 @@ def app():
         admin_dict = app.config["ADMIN_USER"]
         admin = addUser(admin_dict)
         assert models.User.query.get(admin.id).username == admin_dict["username"]
+
+        fiscal_years = [{
+            'start_date': app.config['EARLIEST_DATE'].isoformat(),
+            'end_date': app.config['LATEST_DATE'].isoformat()
+        }]
+        qadmin.process_fiscal_years(fiscal_years)
 
         import_test_data(app, admin)
         yield app
@@ -85,7 +92,7 @@ def import_test_data(app, user):
                 filename="testdata.xlsx")
             result = import_xls(
                 input_file=_fakeUpload,
-                column_name='2019 Q1 (D)'
+                column_name='FY2019 Q1 (D)'
             )
         with open(filename, "rb") as _file:
             _fakeUpload = FileStorage(

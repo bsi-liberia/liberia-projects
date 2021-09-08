@@ -137,7 +137,8 @@ def list_user_roles(username):
     assert username
     roles = quser.list_user_role_by_username(username)
     if roles:
-        print("User {} has the following roles: {}".format(username, ", ".join(roles)))
+        print("User {} has the following roles: {}".format(
+            username, ", ".join(roles)))
     else:
         print("Sorry, could not find roles for that user.")
 
@@ -150,7 +151,8 @@ def list_users():
     users = list(map(lambda u: u.username, quser.user()))
     if users:
         print("There are the following users:")
-        for user in users: print(user)
+        for user in users:
+            print(user)
     else:
         print("Sorry, could not find any users.")
 
@@ -163,6 +165,7 @@ def list_roles():
     roles = list(map(lambda r: r.slug, quser.role()))
     if roles:
         print("There are the following roles:")
-        for role in roles: print(role)
+        for role in roles:
+            print(role)
     else:
         print("Sorry, could not find any roles.")

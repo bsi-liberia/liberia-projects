@@ -57,7 +57,8 @@
                 <em>Logged in as {{ loggedInUser.username }}</em>
               </template>
               <template v-if="loggedInUser.administrator">
-              <b-dropdown-item :to="{name: 'codelists'}" active-class="active">Manage codelists</b-dropdown-item>
+              <b-dropdown-item :to="{name: 'admin-codelists'}" active-class="active">Manage codelists</b-dropdown-item>
+              <b-dropdown-item :to="{name: 'admin-fiscal-years'}" active-class="active">Manage fiscal years</b-dropdown-item>
               <b-dropdown-item :to="{name: 'users'}" active-class="active">Users</b-dropdown-item>
               </template>
               <b-dropdown-item href="#" @click="logout">Sign Out</b-dropdown-item>

@@ -19,6 +19,7 @@ login_manager.login_view = "users.login"
 login_manager.login_message = gettext(u"Please log in to access this page.")
 login_manager.login_message_category = "danger"
 
+
 class UnauthenticatedUser(AnonymousUserMixin):
     def as_simple_dict(self):
         return (
@@ -29,6 +30,7 @@ class UnauthenticatedUser(AnonymousUserMixin):
                 'new_permissions_list'
             ]}
         )
+
     def __init__(self):
         self.username = None
         self.administrator = False
@@ -46,5 +48,6 @@ class UnauthenticatedUser(AnonymousUserMixin):
             "view": "external"
         }
         self.new_permissions_list = make_permissions_list(self)
+
 
 login_manager.anonymous_user = UnauthenticatedUser

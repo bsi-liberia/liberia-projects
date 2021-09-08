@@ -1,87 +1,86 @@
 from io import StringIO
 from zipfile import ZipFile
+import csv as unicodecsv
 
 from flask_login import current_user
-from sqlalchemy import *
+from sqlalchemy import and_
 import requests
-import sys
-if sys.version_info.major == 2:
-    import unicodecsv
-else:
-    import csv as unicodecsv
 
 from projectdashboard import models
 from projectdashboard.extensions import db
 from projectdashboard.query.activity_log import activity_updated
 
 
-GEONAMES_URL="http://download.geonames.org/export/dump/%s.zip"
+GEONAMES_URL = "http://download.geonames.org/export/dump/%s.zip"
 GEONAMES_FIELDNAMES = ['geonameid', 'name', 'asciiname', 'alternatenames',
-'latitude', 'longitude', 'feature_class', 'feature_code', 'country_code',
-'cc2', 'admin1_code', 'admin2_code', 'admin3_code', 'admin4_code',
-'population', 'elevation', 'dem', 'timezone', 'modification_date']
+                       'latitude', 'longitude', 'feature_class', 'feature_code', 'country_code',
+                       'cc2', 'admin1_code', 'admin2_code', 'admin3_code', 'admin4_code',
+                       'population', 'elevation', 'dem', 'timezone', 'modification_date']
 ALLOWED_FEATURE_CODES = ["ADM1", "ADM2", "ADM3"]
+
 
 def get_countries_locations():
     return db.session.query(models.Location
-                ).distinct(models.Location.country_code
-                ).group_by(models.Location.country_code)
+                            ).distinct(models.Location.country_code
+                                       ).group_by(models.Location.country_code)
+
 
 def get_locations_country(country_code):
     locations = models.Location.query.filter(and_(
-        models.Location.feature_code.in_((u"ADM1", u"ADM2")),
-        models.Location.country_code==country_code
+        models.Location.feature_code.in_(("ADM1", "ADM2")),
+        models.Location.country_code == country_code
     )).order_by(
         models.Location.admin1_code,
         models.Location.feature_code
     ).all()
     return locations
 
+
 def add_location(activity_id, location_id):
-    checkL = models.ActivityLocation.query.filter_by(
-        activity_id = activity_id,
-        location_id = location_id
+    check_location = models.ActivityLocation.query.filter_by(
+        activity_id=activity_id,
+        location_id=location_id
     ).first()
-    if not checkL:
-        aL = models.ActivityLocation()
-        aL.activity_id = activity_id
-        aL.location_id = location_id
-        db.session.add(aL)
+    if not check_location:
+        activity_location = models.ActivityLocation()
+        activity_location.activity_id = activity_id
+        activity_location.location_id = location_id
+        db.session.add(activity_location)
         db.session.commit()
 
         activity_updated(activity_id,
-            {
-            "user_id": current_user.id,
-            "mode": "add",
-            "target": "ActivityLocation",
-            "target_id": aL.id,
-            "old_value": None,
-            "value": {'location_id': location_id}
-            }
-            )
+                         {
+                             "user_id": current_user.id,
+                             "mode": "add",
+                             "target": "ActivityLocation",
+                             "target_id": activity_location.id,
+                             "old_value": None,
+                             "value": {'location_id': location_id}
+                         }
+                         )
         return True
     return False
 
+
 def delete_location(activity_id, location_id):
-    checkL = models.ActivityLocation.query.filter_by(
-        activity_id = activity_id,
-        location_id = location_id
+    check_location = models.ActivityLocation.query.filter_by(
+        activity_id=activity_id,
+        location_id=location_id
     ).first()
-    if checkL:
-        db.session.delete(checkL)
+    if check_location:
+        db.session.delete(check_location)
         db.session.commit()
 
-
         activity_updated(activity_id,
-            {
-            "user_id": current_user.id,
-            "mode": "delete",
-            "target": "ActivityLocation",
-            "target_id": checkL.id,
-            "old_value": {'location_id': location_id},
-            "value": None
-            }
-            )
+                         {
+                             "user_id": current_user.id,
+                             "mode": "delete",
+                             "target": "ActivityLocation",
+                             "target_id": check_location.id,
+                             "old_value": {'location_id': location_id},
+                             "value": None
+                         }
+                         )
         return True
     return False
 
@@ -120,7 +119,7 @@ def import_locations_from_file(file_path, country_code):
 # Called when setting up individual countries
 def import_locations(country_code):
     """Downloads geolocations from Geonames."""
-    r = requests.get(GEONAMES_URL % country_code)
-    zipfile = ZipFile(StringIO(r.content))
+    req = requests.get(GEONAMES_URL % country_code)
+    zipfile = ZipFile(StringIO(req.content))
 
     _process_locations_import(zipfile, country_code)

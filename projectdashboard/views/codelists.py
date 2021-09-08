@@ -1,13 +1,11 @@
-from flask import Blueprint, flash, request, \
-    redirect, url_for, jsonify
-from flask_login import login_required, current_user
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 
 from projectdashboard.query import location as qlocation
 from projectdashboard.query import organisations as qorganisations
 from projectdashboard.query import codelists as qcodelists
 from projectdashboard.query import user as quser
 from projectdashboard.lib import codelists
-from flask_jwt_extended import jwt_required
 
 
 blueprint = Blueprint('codelists', __name__, url_prefix='/api/codelists')
@@ -18,11 +16,14 @@ blueprint = Blueprint('codelists', __name__, url_prefix='/api/codelists')
 @quser.administrator_required
 def codelists_management():
     return jsonify(
-    codelist_codes = codelists.get_db_codelists(),
-    codelist_names = list(map(lambda codelist: codelist.as_dict(), codelists.get_db_codelist_names())),
-    countries = codelists.get_codelists()["Country"],
-    organisations = list(map(lambda org: org.as_dict(), qorganisations.get_organisations()))
-)
+        codelist_codes=codelists.get_db_codelists(),
+        codelist_names=list(
+            map(lambda codelist: codelist.as_dict(), codelists.get_db_codelist_names())),
+        countries=codelists.get_codelists()["Country"],
+        organisations=list(map(lambda org: org.as_dict(),
+                           qorganisations.get_organisations()))
+    )
+
 
 """
 This should be a command line command
@@ -41,6 +42,8 @@ def import_locations():
         flash("Locations for that country were not imported, because they have already been imported!", "danger")
     return redirect(url_for("codelists.codelists_management"))
 """
+
+
 @blueprint.route("/<codelist>/<code_id>.json")
 def api_codelist_code(codelist, code_id):
     code = qcodelists.get_code_by_id(codelist, code_id)
@@ -87,6 +90,7 @@ def api_codelists_update():
     else:
         return "ERROR"
 
+
 @blueprint.route("/delete/", methods=["POST"])
 @jwt_required()
 @quser.administrator_required
@@ -110,7 +114,7 @@ def api_codelists_new_organisation():
     # FIXME check for admin status
     result = qorganisations.create_organisation(request.json)
     if result:
-        return jsonify(organisation = result.as_dict())
+        return jsonify(organisation=result.as_dict())
     return "ERROR"
 
 

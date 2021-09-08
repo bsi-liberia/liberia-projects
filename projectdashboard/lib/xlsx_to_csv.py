@@ -1,7 +1,6 @@
-from openpyxl import load_workbook
-import datetime
-import sys
 from io import BytesIO
+
+from openpyxl import load_workbook
 
 
 def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
