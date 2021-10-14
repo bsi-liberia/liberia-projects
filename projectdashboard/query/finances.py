@@ -12,7 +12,7 @@ from projectdashboard.query.activity_log import activity_updated
 
 def isostring_date(value):
     # Returns a date object from a string of format YYYY-MM-DD
-    return datetime.datetime.strptime(value, "%Y-%m-%d")
+    return datetime.datetime.strptime(value, "%Y-%m-%d").date()
 
 
 def isostring_year(value):
