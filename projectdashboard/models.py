@@ -759,8 +759,8 @@ class ActivityFinances(db.Model):
     def update_fiscal_period_id(self, key, transaction_date):
         if transaction_date:
             fiscal_period = FiscalPeriod.query.filter(
-                FiscalPeriod.start <= transaction_date,
-                FiscalPeriod.end >= transaction_date).first()
+                FiscalPeriod.start <= transaction_date.date(),
+                FiscalPeriod.end >= transaction_date.date()).first()
             if fiscal_period:
                 self.fiscal_period_id = fiscal_period.id
         return transaction_date
