@@ -62,6 +62,42 @@ class TestActivityFinances:
         assert res.status_code == 200
 
 
+    def test_edit_finances_date(self, admin, headers_admin):
+        activity_id = 1
+        # Check transaction date is 2019-03-31
+        route = url_for('activity_finances.api_activity_finances', activity_id=activity_id)
+        res = self.client.get(route, headers=headers_admin)
+        data = json.loads(res.data)["finances"]
+        disbursement = data['disbursements'][0]
+        assert disbursement['transaction_date'] == '2019-03-31'
+        assert disbursement['fiscal_period_id'] == 'FY2019Q1'
+
+        # Change it to 2020-01-01
+        route = url_for('activity_finances.finances_edit_attr', activity_id=activity_id)
+        data = {
+            'activity_id': activity_id,
+            'attr': 'transaction_date',
+            'value': '2020-01-01',
+            'finances_id': disbursement['id']
+        }
+        res = self.client.post(route, json=data, headers=headers_admin)
+        assert res.status_code == 200
+        assert json.loads(res.data)['transaction_date'] == '2020-01-01'
+
+        # Make sure that fiscal period has been automatically updated
+        assert json.loads(res.data)['fiscal_period_id'] == 'FY2020Q1'
+
+        # Change it back to 2019-03-31
+        data = {
+            'activity_id': activity_id,
+            'attr': 'transaction_date',
+            'value': '2019-03-31',
+            'finances_id': disbursement['id']
+        }
+        res = self.client.post(route, json=data, headers=headers_admin)
+        assert res.status_code == 200
+
+
     def test_add_delete_finances(self, admin, headers_admin):
         activity_id = 1
         # Check there is only 1 disbursement
@@ -69,6 +105,7 @@ class TestActivityFinances:
         res = self.client.get(route, headers=headers_admin)
         data = json.loads(res.data)["finances"]
         assert len(data['disbursements']) == 1
+        assert data['disbursements'][0]['fiscal_period_id'] == 'FY2019Q1'
 
         # Add one disbursement of USD 200
         data = {
@@ -88,6 +125,7 @@ class TestActivityFinances:
         res = self.client.get(route, headers=headers_admin)
         data = json.loads(res.data)["finances"]
         assert len(data['disbursements']) == 2
+        assert data['disbursements'][1]['fiscal_period_id'] == 'FY2020Q4'
 
         # Delete transaction
         data = {
