@@ -3,12 +3,27 @@
     :label="label"
     :label-cols-sm="labelColsSm"
     :label-for="name">
-    <b-input :type="type" step=".01"
-    :name="name" :placeholder="placeholder"
-    v-model="_value" size="30" :disabled="disabled"
-    v-on:change="update" :state="validation"
-    :min="minDate" :max="maxDate">
-    </b-input>
+    <template v-if="currency!=null">
+      <b-input-group>
+        <b-input :type="type" step=".01"
+        :name="name" :placeholder="placeholder"
+        v-model="_value" size="30" :disabled="disabled"
+        v-on:change="update" :state="validation"
+        :min="minDate" :max="maxDate">
+        </b-input>
+        <b-input-group-append is-text>
+          {{ currency }}
+        </b-input-group-append>
+      </b-input-group>
+    </template>
+    <template v-else>
+      <b-input :type="type" step=".01"
+      :name="name" :placeholder="placeholder"
+      v-model="_value" size="30" :disabled="disabled"
+      v-on:change="update" :state="validation"
+      :min="minDate" :max="maxDate">
+      </b-input>
+    </template>
   </b-form-group>
 </template>
 <script>
@@ -16,7 +31,8 @@ export default {
   data() {
     return { validation: null }
   },
-  props: ["transaction", "type", "name", "placeholder", "value", "disabled", "label", "label-cols-sm"],
+  props: ["transaction", "type", "name", "placeholder", "value",
+    "disabled", "label", "label-cols-sm", "currency"],
   inject: ['updateFinances'],
   methods: {
     update(newValue, oldValue) {
