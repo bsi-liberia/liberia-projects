@@ -265,6 +265,11 @@ class FY:
             return self.fiscal_year.start
         return self.fiscal_year.end
 
+    def date_format(self, start_end='end'):
+        if start_end == "start":
+            return datetime.datetime.strftime(self.fiscal_year.start, '%B %-d %Y')
+        return datetime.datetime.strftime(self.fiscal_year.end, '%B %-d %Y')
+
     def __init__(self, current_previous):
         if current_previous == "current":
             self.current_date = datetime.datetime.utcnow()
