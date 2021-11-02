@@ -44,6 +44,7 @@ def api_activities_filters():
         ("SDG Goals", "sdg-goals", cl["sdg-goals"]),
         ("Activity Status", "activity_status", cl["ActivityStatus"]),
         ("Aid Type", "aid_type", cl["AidType"]),
+        ("Bilateral / Multilateral", "collaboration_type", cl["CollaborationType"]),
         ("Domestic / External", "domestic_external", _cl_domestic_external),
     ]
     earliest, latest = qactivity.get_earliest_latest_dates(force=True)
