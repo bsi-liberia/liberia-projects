@@ -9,12 +9,17 @@
       </b-row>
     </template>
     <template v-else>
-      <LineChart
-        :data="chartData"
-        :options="lineChartOptions"
-        class="line-chart"
-        v-if="isBusy==false"
-        ></LineChart>
+      <template v-if="Object.entries(summaryData).length>0">
+        <LineChart
+          :data="chartData"
+          :options="lineChartOptions"
+          class="line-chart"
+          v-if="isBusy==false"
+          ></LineChart>
+      </template>
+      <template v-else>
+        <b-alert show variant="secondary" class="text-center">No data.</b-alert>
+      </template>
     </template>
   </div>
 </template>
