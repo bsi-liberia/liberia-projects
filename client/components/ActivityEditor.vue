@@ -120,8 +120,6 @@
               <b-card-body v-show="$route.query.tab === 'conditions'" v-if="mode=='edit'">
                   <b-card-text id="conditions">
                   <h3>Counterpart funding</h3>
-                  <div class="alert alert-info">Enter how much counterpart funding is required for each year.
-                  Enter a new row for each fiscal year that counterpart funding is required for.</div>
                   <div class="row">
                     <div class="col-md-12">
                       <counterpart-funding-section
