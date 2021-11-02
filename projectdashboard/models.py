@@ -1150,9 +1150,7 @@ class ActivityCounterpartFunding(db.Model):
                             index=True)
     required_value = sa.Column(sa.Float(precision=2))
     required_date = sa.Column(sa.Date)
-    budgeted = sa.Column(sa.Boolean, default=False)
-    allotted = sa.Column(sa.Boolean, default=False)
-    disbursed = sa.Column(sa.Boolean, default=False)
+    required_funding_type = sa.Column(sa.UnicodeText)
     fiscal_period_id = sa.Column(sa.UnicodeText,
                                  sa.ForeignKey('fiscal_period.id'),
                                  nullable=True)
@@ -1638,6 +1636,9 @@ class FiscalPeriod(db.Model):
                       nullable=False)
     end = sa.Column(sa.Date,
                     nullable=False)
+
+    counterpart_funding = sa.orm.relationship("ActivityCounterpartFunding",
+                                        backref="fiscal_period")
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
