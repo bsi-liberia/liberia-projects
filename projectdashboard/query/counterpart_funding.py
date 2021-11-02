@@ -42,46 +42,80 @@ def add_entry(activity_id, data):
     return CF
 
 
-def delete_entry(activity_id, counterpartfunding_id):
-    checkCF = models.ActivityCounterpartFunding.query.filter_by(
+def delete_year(activity_id, year):
+    checkCFall = models.ActivityCounterpartFunding.query.filter(
+        models.ActivityCounterpartFunding.activity_id == activity_id,
+        models.FiscalYear.name == year
+    ).join(
+        models.FiscalPeriod, models.FiscalPeriod.id == models.ActivityCounterpartFunding.fiscal_period_id
+    ).join(
+        models.FiscalYear, models.FiscalYear.id == models.FiscalPeriod.fiscal_year_id
+    ).all()
+    if checkCFall:
+        for checkCF in checkCFall:
+            old_value = checkCF.as_dict()
+            db.session.delete(checkCF)
+            db.session.commit()
+            qactivity.activity_updated(
+                checkCF.activity_id,
+                {
+                    "user_id": current_user.id,
+                    "mode": "delete",
+                    "target": "ActivityCounterpartFunding",
+                    "target_id": old_value["id"],
+                    "old_value": old_value,
+                    "value": None
+                }
+            )
+        return True
+    return False
+
+
+def delete_type(activity_id, required_funding_type):
+    checkCFall = models.ActivityCounterpartFunding.query.filter_by(
         activity_id=activity_id,
-        id=counterpartfunding_id
-    ).first()
-    if checkCF:
-        old_value = checkCF.as_dict()
-        db.session.delete(checkCF)
-        db.session.commit()
-        qactivity.activity_updated(
-            checkCF.activity_id,
-            {
-                "user_id": current_user.id,
-                "mode": "delete",
-                "target": "ActivityCounterpartFunding",
-                "target_id": old_value["id"],
-                "old_value": old_value,
-                "value": None
-            }
-        )
+        required_funding_type=required_funding_type
+    ).all()
+    if checkCFall:
+        for checkCF in checkCFall:
+            old_value = checkCF.as_dict()
+            db.session.delete(checkCF)
+            db.session.commit()
+            qactivity.activity_updated(
+                checkCF.activity_id,
+                {
+                    "user_id": current_user.id,
+                    "mode": "delete",
+                    "target": "ActivityCounterpartFunding",
+                    "target_id": old_value["id"],
+                    "old_value": old_value,
+                    "value": None
+                }
+            )
         return True
     return False
 
 # Counterpart funding data
 
-
 def update_entry(data):
+    if data['year'] == 'total':
+        required_date = None
+    else:
+        required_date = util.fq_fy_to_date(fq=1, fy=data['year'][2:])
     cf = models.ActivityCounterpartFunding.query.filter_by(
-        id=data['id']
+        required_date=required_date,
+        activity_id=data['activity_id'],
+        required_funding_type=data['type']
     ).first()
-    old_value = getattr(cf, data['attr'])
-    if data['attr'].endswith('date'):
-        if data["value"] == "":
-            data["value"] = None
-        else:
-            data['value'] = isostring_date(data['value'])
-    elif data['attr'] == "required_value":
-        if data['value'] == "":
-            data['value'] = 0.0
-    setattr(cf, data['attr'], data['value'])
+    if cf is None:
+        cf = models.ActivityCounterpartFunding()
+        cf.required_date = required_date
+        cf.activity_id = data['activity_id']
+        cf.required_funding_type = data['type']
+    old_value = cf.required_value
+    if data['value'] == "":
+        data['value'] = 0.0
+    cf.required_value = data['value']
     db.session.add(cf)
     db.session.commit()
 
@@ -92,8 +126,8 @@ def update_entry(data):
             "mode": "update",
             "target": "ActivityCounterpartFunding",
             "target_id": cf.id,
-            "old_value": {data['attr']: old_value},
-            "value": {data['attr']: data['value']}
+            "old_value": {data['year']: old_value},
+            "value": {data['year']: data['value']}
         }
     )
 
@@ -184,6 +218,7 @@ def annotate_activities_with_aggregates(fiscal_year):
         ).join(models.FiscalPeriod
                ).join(models.FiscalYear
                       ).filter(models.FiscalYear.id == fiscal_year
+                      ).filter(models.ActivityCounterpartFunding.required_funding_type == 'total'
                                ).group_by(
             models.ActivityCounterpartFunding.activity_id
         ).all()
