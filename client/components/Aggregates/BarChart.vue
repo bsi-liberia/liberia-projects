@@ -164,11 +164,7 @@ export default {
   },
   methods: {
     async loadData() {
-      const data = {
-        filter: this.aggFilter,
-        'filter-value': this.aggFilterValue
-      }
-      const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter-value=${this.aggFilterValue}`
+      const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter_value=${this.aggFilterValue}`
       await this.$axios.get(apiURL)
       .then(response => {
         this.data = response.data.entries
