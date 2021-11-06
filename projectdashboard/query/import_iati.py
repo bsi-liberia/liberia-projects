@@ -82,6 +82,8 @@ def import_data(activity_id, iati_identifier, activity_ids, import_options, acti
     activities_lookup = dict((_activity.id, _activity)
                              for _activity in activities)
     iati_activity = retrieve_data(iati_identifier)
+    #FIXME activity has disappeared, so we should unlink it
+    if iati_activity is None: return False
     iati_activity_transactions = get_transactions_summary(iati_activity, False)
     iati_options = list(
         dict(filter(lambda option: option[1] == 'IATI', import_options.items())).keys())
@@ -211,6 +213,7 @@ def makeFinanceFromTransaction(activity, transaction):
     f.activity_id = activity.id
     f.currency = transaction['currency_original']
     f.transaction_date = util.isostring_date(transaction['transaction_date'])
+    f.fiscal_period_id = util.date_to_fiscal_period(f.transaction_date).id
     f.transaction_type = iati_transaction_types.get(
         transaction['transaction_type'])
     f.transaction_description = 'Imported from IATI data'
