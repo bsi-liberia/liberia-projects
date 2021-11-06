@@ -138,9 +138,10 @@ def import_exchange_rates_file(_ercsv):
 
     oecd = models.ExchangeRateSource.query.filter_by(
         name="OECD (Monthly)").first()
-    oecd.weight = 33
-    db.session.add(oecd)
-    db.session.commit()
+    if oecd is not None:
+        oecd.weight = 33
+        db.session.add(oecd)
+        db.session.commit()
     add_names_to_currencies()
 
 

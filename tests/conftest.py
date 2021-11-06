@@ -1,4 +1,5 @@
 import os
+import csv
 
 from flask import url_for
 import pytest
@@ -11,6 +12,7 @@ from werkzeug.datastructures import FileStorage
 from projectdashboard.query.generate_xlsx import xlsx_to_csv, import_xls, import_xls_mtef
 from projectdashboard.query import activity as qactivity
 from projectdashboard.query import admin as qadmin
+from projectdashboard.query import exchangerates as qexchangerates
 from projectdashboard.query.location import import_locations_from_file
 from flask_jwt_extended import (
     create_access_token
@@ -101,6 +103,10 @@ def import_test_data(app, user):
             result = import_xls_mtef(
                 input_file=_fakeUpload
             )
+        with open(os.path.join("tests", "artefacts", "rates.csv"), "r") as _erf:
+            _ercsv = csv.DictReader(_erf)
+            qexchangerates.import_exchange_rates_file(_ercsv)
+
 
 
 @pytest.fixture(scope='function')
