@@ -829,7 +829,7 @@ class ActivityForwardSpend(db.Model):
     period_end_date = sa.Column(sa.Date)
     fiscal_period_id = sa.Column(sa.UnicodeText,
                                  sa.ForeignKey('fiscal_period.id'),
-                                 nullable=True)
+                                 nullable=False)
 
     @validates("period_start_date")
     def update_fiscal_period_id(self, key, period_start_date):
