@@ -739,7 +739,7 @@ class ActivityFinances(db.Model):
     currency_value_date = sa.Column(sa.Date)
     fiscal_period_id = sa.Column(sa.UnicodeText,
                                  sa.ForeignKey('fiscal_period.id'),
-                                 nullable=True)
+                                 nullable=False)
 
     @validates("currency_rate")
     def update_transaction_value_rate(self, key, currency_rate):
