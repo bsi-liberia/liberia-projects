@@ -352,7 +352,7 @@ def column_data_to_string(column_name):
 
 def get_real_date_from_header(column_name, start_end="start"):
     fy, fq = get_data_from_header(column_name)
-    return (fq_fy_to_date(int(fy), int(fq), start_end=start_end))
+    return (fq_fy_to_date(fy, fq, start_end=start_end))
 
 
 def make_quarters_text(list):
