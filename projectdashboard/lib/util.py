@@ -2,6 +2,7 @@ import datetime
 import re
 import collections
 from projectdashboard import models
+from flask import current_app
 
 ALLOWED_YEARS = range(2013, datetime.datetime.utcnow().year+3)
 
@@ -146,8 +147,10 @@ def available_fys_forward(num_years=4):
 
 def available_fys(num_years=4):
     now = datetime.datetime.utcnow()
+    earliest_date = current_app.config['EARLIEST_DATE']
     cutoff_date = datetime.date(now.year+num_years, now.month, now.day)
     db_fys = models.FiscalYear.query.filter(
+        models.FiscalYear.start >= earliest_date,
         models.FiscalYear.end <= cutoff_date
     ).order_by(models.FiscalYear.end
                ).all()
@@ -156,8 +159,10 @@ def available_fys(num_years=4):
 
 def available_fy_fqs():
     now = datetime.datetime.utcnow()
+    earliest_date = current_app.config['EARLIEST_DATE']
     cutoff_date = datetime.date(now.year+3, now.month, now.day)
     db_fys_fps = models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.start >= earliest_date,
         models.FiscalPeriod.end <= cutoff_date
     ).order_by(
         models.FiscalPeriod.end
