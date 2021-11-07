@@ -55,6 +55,7 @@ USER_2 = {
 # The earliest date shown in many interfaces.
 # Used to filter out partial data from a long / messy dataset.
 EARLIEST_DATE = datetime.date(2013,1,1)
+FY_EARLIEST_DATE = datetime.date(2000,7,1)
 LATEST_DATE = datetime.date(2049,12,31)
 
 SERVER_NAME = "0.0.0.0"
