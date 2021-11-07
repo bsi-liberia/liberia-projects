@@ -433,6 +433,23 @@ class Activity(db.Model):
         ActivityFinances.transaction_type=='D')""",
                                         viewonly=True)
 
+
+    @hybrid_property
+    def fund_sources(self):
+        fund_sources = db.session.query(
+                FundSource.id,
+                FundSource.code,
+                FundSource.name,
+                FundSource.finance_type).distinct().filter(
+            ActivityFinances.activity_id==self.id
+            ).join(ActivityFinances, ActivityFinances.fund_source_id==FundSource.id
+            ).all()
+        if len(fund_sources) > 0:
+            return fund_sources
+        FS = collections.namedtuple('FundSource', ['id', 'code', 'name', 'finance_type'])
+        return [(FS(id=None, code=None, name=None, finance_type=None))]
+
+
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
                                                    secondary="join(ActivityResultIndicator, ActivityResult, ActivityResult.id == ActivityResultIndicator.result_id)",
                                                    primaryjoin="and_(Activity.id == ActivityResult.activity_id, ActivityResult.id == ActivityResultIndicator.result_id)",
