@@ -379,13 +379,13 @@ def generate_xlsx_filtered(arguments={}):
     for activity in activities:
         total_commitments = activity.total_commitments
         total_disbursements = activity.total_disbursements
-        for fundsource, fundsource_data in activity.disb_fund_sources.items():
-            fund_source_code = fundsource_data['code']
-            fund_source_name = fundsource_data['name']
+        for fundsource in activity.fund_sources:
+            fund_source_code = fundsource.code
+            fund_source_name = fundsource.name
             fund_source_commitments = sum(map(
-                lambda item: item['value'], activity.FY_commitments_dict_fund_sources[fundsource].values()))
+                lambda item: item['value'], activity.FY_commitments_dict_fund_sources[fundsource.id].values()))
             fund_source_disbursements = sum(map(
-                lambda item: item['value'], activity.FY_disbursements_dict_fund_sources[fundsource].values()))
+                lambda item: item['value'], activity.FY_disbursements_dict_fund_sources[fundsource.id].values()))
             # MTEF projections don't have fund sources. So we pro-rate their value out, ideally
             # by commitments, alternatively by disbursements.
             # This is a bit of an ugly hack and this whole function needs to be rewritten
@@ -402,15 +402,14 @@ def generate_xlsx_filtered(arguments={}):
             activity_data["Fund Source"] = "{} - {}".format(fund_source_code,
                 fund_source_name) if fund_source_name != fund_source_code else fund_source_name
             # Add Disbursements data
-            if fundsource is not None and fundsource_data.get('finance_type'):
-                activity_data['Finance Type (Type of Assistance)'] = fundsource_data.get(
-                    'finance_type')
-            if fundsource in activity.FY_commitments_dict_fund_sources:
+            if fundsource.id is not None and fundsource.finance_type:
+                activity_data['Finance Type (Type of Assistance)'] = {'110': 'Grant', '410': 'Loan'}[fundsource.finance_type]
+            if fundsource.id in activity.FY_commitments_dict_fund_sources:
                 activity_data.update(dict(map(lambda d: (
-                    d[0], d[1]["value"]), activity.FY_commitments_dict_fund_sources[fundsource].items())))
-            if fundsource in activity.FY_disbursements_dict_fund_sources:
+                    d[0], d[1]["value"]), activity.FY_commitments_dict_fund_sources[fundsource.id].items())))
+            if fundsource.id in activity.FY_disbursements_dict_fund_sources:
                 activity_data.update(dict(map(lambda d: (
-                    d[0], d[1]["value"]), activity.FY_disbursements_dict_fund_sources[fundsource].items())))
+                    d[0], d[1]["value"]), activity.FY_disbursements_dict_fund_sources[fundsource.id].items())))
             activity_data.update(dict(map(lambda d: (
                 d[0], d[1]["value"]*pct), activity.FY_forward_spend_dict_fund_sources[None].items())))
             writer.writerow(activity_data)
