@@ -342,6 +342,10 @@ def get_or_create_fund_source(fund_source_name, finance_type, fund_source_code=N
         fund_soure_code = fund_source_name
     fs = models.FundSource.query.filter_by(code=fund_source_code).first()
     if fs:
+        if fs.finance_type != finance_type:
+            fs.finance_type = finance_type
+            db.session.add(fs)
+            db.session.commit()
         return fs.id
     fs = models.FundSource()
     fs.code = fund_source_code
