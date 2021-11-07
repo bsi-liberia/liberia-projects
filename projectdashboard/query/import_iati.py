@@ -242,6 +242,7 @@ def makeFinanceFromTransaction(activity, transaction):
                 fund_source_code = None
             else:
                 fund_source_code = fund_source_code[0]
+            if fund_source_code == '1': return None
             f.fund_source_id = get_or_create_fund_source(
                 fund_source_name, finance_type, fund_source_code)
     f.transaction_value_original = transaction['value_original']
@@ -252,7 +253,7 @@ def makeFinanceFromTransaction(activity, transaction):
 
 
 def makeFinancesFromTransactions(activity, transactions):
-    return [makeFinanceFromTransaction(activity, transaction) for transaction in transactions]
+    return list(filter(lambda transaction: transaction is not None, [makeFinanceFromTransaction(activity, transaction) for transaction in transactions]))
 
 
 def retrieve_data(iati_identifier):
