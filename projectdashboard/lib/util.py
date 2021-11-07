@@ -74,6 +74,12 @@ def fp_fy_to_date(fp, fy, start_end='start'):
     return datetime.datetime(year, month, day)
 
 
+def date_to_fiscal_period(date):
+    return models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.start <= date.date(),
+        models.FiscalPeriod.end >= date.date()).first()
+
+
 def fq_fy_to_date(fq, fy, start_end='start', calendar_year=False):
     """
     Convert from Liberian FQ, FY (default) or calendar
