@@ -9,6 +9,7 @@ from projectdashboard.query import activity as qactivity
 from projectdashboard.query import aggregates as qaggregates
 from projectdashboard.query import codelists as qcodelists
 from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists
+from projectdashboard.lib import util
 from projectdashboard.extensions import db
 from projectdashboard import models
 
@@ -30,8 +31,9 @@ def make_sector_doc(sector_code):
                                               models.CodelistCode
                                           ]
                                           )
+    current_fy = util.FY('current')
     filtered_current_fy = list(
-        filter(lambda entry: entry.fiscal_year == '2020', sector_totals))
+        filter(lambda entry: entry.fiscal_year == current_fy.fy_fy(), sector_totals))
 
     donors = {}
     for item in filtered_current_fy:
@@ -87,7 +89,7 @@ def make_sector_doc(sector_code):
     font = run.font
     font.bold = True
     run = paragraph.add_run(
-        "Includes current fiscal year projected and actual disbursement information for donors operating in the sector (FY 2020/2021) July 1 2020 to June 30, 2021")
+        f"Includes current fiscal year projected and actual disbursement information for donors operating in the sector for { current_fy.fy_fy() } ({ current_fy.date_format('start') } to { current_fy.date_format('end') })")
     font = run.font
     font.italic = True
     sector_donors = [(
@@ -95,7 +97,8 @@ def make_sector_doc(sector_code):
         "USD {:,}m".format(donor['forwardspends']),
         "USD {:,}m".format(donor['disbursements'])
     ) for donor in donors.values()]
-    docx.rows_to_table(sector_donors, document, [
+    if len(sector_donors) > 0:
+        docx.rows_to_table(sector_donors, document, [
                        'Donor', 'Amount Projected', 'Amount Disbursed'])
 
     # Sector portfolio value

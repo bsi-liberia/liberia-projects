@@ -1,3 +1,5 @@
+import json
+
 from flask import url_for
 import pytest
 
@@ -32,3 +34,29 @@ class TestAPI:
         for route, status_code in routes:
             res = client.get(route, headers=headers_admin)
             assert res.status_code == status_code
+
+    def test_aggregations_api(self, client, user, headers_user):
+        route = url_for('api.api_aggregates',
+            dimension='reporting-org',
+            filter='mtef-sector',
+            filter_value='07')
+        res = client.get(route)
+        data = json.loads(res.data)
+        data_by_fy = dict([(entry['fy'], entry) for entry in data['entries']])
+
+        assert data_by_fy['FY2018']['Disbursements'] == 0.0
+        assert data_by_fy['FY2018']['Disbursement Projection'] == 11000.0
+        assert data_by_fy['FY2019']['Disbursements'] == 200.0
+        assert data_by_fy['FY2019']['Disbursement Projection'] == 0.0
+
+    def test_aggregations_api(self, client, user, headers_user):
+        route = url_for('api.api_aggregates',
+            dimension='mtef-sector')
+        res = client.get(route)
+        data = json.loads(res.data)
+        data_by_fy = dict([(entry['fy'], entry) for entry in data['entries']])
+
+        assert data_by_fy['FY2018']['Disbursements'] == 0.0
+        assert data_by_fy['FY2018']['Disbursement Projection'] == 29000.0
+        assert data_by_fy['FY2019']['Disbursements'] == 5500.0
+        assert data_by_fy['FY2019']['Disbursement Projection'] == 0.0

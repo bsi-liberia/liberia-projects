@@ -18,7 +18,7 @@ def api_fiscal_year_choices():
         db_fiscal_year_choices = models.FiscalYearChoice.query.all()
         fiscal_year_choices = list(
             map(lambda fiscal_year: fiscal_year.as_dict(), db_fiscal_year_choices))
-        earliest_date = current_app.config['EARLIEST_DATE']
+        earliest_date = current_app.config['FY_EARLIEST_DATE']
         latest_date = current_app.config['LATEST_DATE']
         return jsonify({
             'fiscalYearChoices': fiscal_year_choices,

@@ -23,7 +23,7 @@ class TestFiscalYears:
             res = self.client.get(route, headers=headers_admin)
             assert res.status_code == status_code
             data = json.loads(res.data)
-            assert data["earliestDate"] == app.config['EARLIEST_DATE'].isoformat()
+            assert data["earliestDate"] == app.config['FY_EARLIEST_DATE'].isoformat()
             assert data["latestDate"] == app.config['LATEST_DATE'].isoformat()
 
 

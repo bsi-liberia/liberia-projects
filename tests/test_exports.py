@@ -12,6 +12,7 @@ import openpyxl
 from werkzeug.datastructures import FileStorage
 from projectdashboard.query.generate_xlsx import xlsx_to_csv
 from projectdashboard.query import activity as qactivity
+from projectdashboard.query import organisations as qorganisations
 
 @pytest.mark.usefixtures('client_class')
 class TestExports:
@@ -37,6 +38,20 @@ class TestExports:
         ]
         for route, status_code in routes:
             res = client.get(route, headers=headers_user)
+            assert res.status_code == status_code
+
+    def test_auth_routes_work_admin(self, client, admin, headers_admin):
+        afdb_id = qorganisations.get_organisation_by_name("African Development Bank").id
+        csv_headers = "ID,Project code,Activity Title,FY2021 Q1 (D),Activity Status,Activity Dates (Start Date),Activity Dates (End Date),County"
+        routes = [
+            (url_for('exports.export_donor_template',
+                reporting_organisation_id=afdb_id,
+                currency_code='EUR',
+                template='disbursements',
+                headers=csv_headers), 200)
+        ]
+        for route, status_code in routes:
+            res = client.get(route, headers=headers_admin)
             assert res.status_code == status_code
 
 

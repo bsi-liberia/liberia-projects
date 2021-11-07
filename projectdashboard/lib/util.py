@@ -2,6 +2,7 @@ import datetime
 import re
 import collections
 from projectdashboard import models
+from flask import current_app
 
 ALLOWED_YEARS = range(2013, datetime.datetime.utcnow().year+3)
 
@@ -71,6 +72,12 @@ def fp_fy_to_date(fp, fy, start_end='start'):
         year = fy
     day, month = LR_PERIODS_MONTH_DAY[fp][start_end]
     return datetime.datetime(year, month, day)
+
+
+def date_to_fiscal_period(date):
+    return models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.start <= date.date(),
+        models.FiscalPeriod.end >= date.date()).first()
 
 
 def fq_fy_to_date(fq, fy, start_end='start', calendar_year=False):
@@ -146,8 +153,10 @@ def available_fys_forward(num_years=4):
 
 def available_fys(num_years=4):
     now = datetime.datetime.utcnow()
+    earliest_date = current_app.config['EARLIEST_DATE']
     cutoff_date = datetime.date(now.year+num_years, now.month, now.day)
     db_fys = models.FiscalYear.query.filter(
+        models.FiscalYear.start >= earliest_date,
         models.FiscalYear.end <= cutoff_date
     ).order_by(models.FiscalYear.end
                ).all()
@@ -156,8 +165,10 @@ def available_fys(num_years=4):
 
 def available_fy_fqs():
     now = datetime.datetime.utcnow()
+    earliest_date = current_app.config['EARLIEST_DATE']
     cutoff_date = datetime.date(now.year+3, now.month, now.day)
     db_fys_fps = models.FiscalPeriod.query.filter(
+        models.FiscalPeriod.start >= earliest_date,
         models.FiscalPeriod.end <= cutoff_date
     ).order_by(
         models.FiscalPeriod.end
@@ -265,6 +276,11 @@ class FY:
             return self.fiscal_year.start
         return self.fiscal_year.end
 
+    def date_format(self, start_end='end'):
+        if start_end == "start":
+            return datetime.datetime.strftime(self.fiscal_year.start, '%B %-d %Y')
+        return datetime.datetime.strftime(self.fiscal_year.end, '%B %-d %Y')
+
     def __init__(self, current_previous):
         if current_previous == "current":
             self.current_date = datetime.datetime.utcnow()
@@ -347,7 +363,7 @@ def column_data_to_string(column_name):
 
 def get_real_date_from_header(column_name, start_end="start"):
     fy, fq = get_data_from_header(column_name)
-    return (fq_fy_to_date(int(fy), int(fq), start_end=start_end))
+    return (fq_fy_to_date(fy, fq, start_end=start_end))
 
 
 def make_quarters_text(list):

@@ -9,12 +9,17 @@
       </b-row>
     </template>
     <template v-else>
-      <BarChart
-        :data="chartData"
-        :options="barChartOptions"
-        class="bar-chart"
-        v-if="isBusy==false"
-        ></BarChart>
+      <template v-if="summaryData.length>0">
+        <BarChart
+          :data="chartData"
+          :options="barChartOptions"
+          class="bar-chart"
+          v-if="isBusy==false"
+          ></BarChart>
+      </template>
+      <template v-else>
+        <b-alert show variant="secondary" class="text-center">No data.</b-alert>
+      </template>
     </template>
   </div>
 </template>
@@ -159,11 +164,7 @@ export default {
   },
   methods: {
     async loadData() {
-      const data = {
-        filter: this.aggFilter,
-        'filter-value': this.aggFilterValue
-      }
-      const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter-value=${this.aggFilterValue}`
+      const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter_value=${this.aggFilterValue}`
       await this.$axios.get(apiURL)
       .then(response => {
         this.data = response.data.entries

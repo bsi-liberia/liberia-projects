@@ -241,7 +241,7 @@ def api_aggregates():
     if dimension not in ['mtef-sector', 'reporting-org', 'papd-pillar', 'sdg-goals']:
         abort(405)
     if request.args.get("filter") == 'mtef-sector':
-        filter_value = request.args.get("filter-value")
+        filter_value = request.args.get("filter_value")
         sector_totals = qaggregates.aggregate(dimension,
                                               req_filters=[
                                                   models.CodelistCode.codelist_code == 'mtef-sector',
@@ -257,7 +257,7 @@ def api_aggregates():
                                               ]
                                               )
     elif request.args.get("filter") == 'reporting-org':
-        filter_value = request.args.get("filter-value")
+        filter_value = request.args.get("filter_value")
         sector_totals = qaggregates.aggregate(dimension,
                                               req_filters=[
                                                   models.Activity.reporting_org_id == filter_value

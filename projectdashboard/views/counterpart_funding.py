@@ -42,27 +42,23 @@ def api_activity_counterpart_funding(activity_id):
                 counterpart_fund["required_date"])
             return jsonify(counterpart_funding=counterpart_fund)
         elif request_data["action"] == "delete":
-            result = qcounterpart_funding.delete_entry(
-                activity_id, request_data["id"])
+            if 'year' in request_data:
+                result = qcounterpart_funding.delete_year(
+                    activity_id, request_data["year"])
+            elif 'type' in request_data:
+                result = qcounterpart_funding.delete_type(
+                    activity_id, request_data["type"])
             if result:
                 return jsonify(result=True)
             return abort(500)
         elif request_data["action"] == "update":
-            attr = request_data['attr']
+            year = request_data['year']
             value = request_data['value']
-            if value == "true":
-                value = True
-            elif value == "false":
-                value = False
-            if attr == "required_fy":
-                attr = "required_date"
-                value = util.fq_fy_to_date(1,
-                                           int(value)).date().isoformat()
             data = {
                 'activity_id': activity_id,
-                'attr': attr,
+                'year': year,
                 'value': value,
-                'id': request_data['id'],
+                'type': request_data['type'],
             }
             update_status = qcounterpart_funding.update_entry(data)
             if update_status:
@@ -72,12 +68,17 @@ def api_activity_counterpart_funding(activity_id):
     elif request.method == "GET":
         def to_fy(counterpart_funding):
             counterpart_fund = counterpart_funding.as_dict()
-            counterpart_fund["required_fy"], _ = util.date_to_fy_fq(
-                counterpart_funding.required_date)
+            if counterpart_funding.required_date == None:
+                counterpart_fund["year"] = 'total'
+            else:
+                counterpart_fund["year"] = counterpart_funding.fiscal_period.fiscal_year.name
+            if counterpart_funding.required_funding_type == None:
+                counterpart_fund["type"] = 'total'
+            else:
+                counterpart_fund["type"] = counterpart_funding.required_funding_type
             return counterpart_fund
-        counterpart_funding = sorted(
-            [to_fy(counterpart_fund) for counterpart_fund in
-            qactivity.get_activity(activity_id).counterpart_funding],
-            key=lambda x: x["required_date"])
+        counterpart_funding = [to_fy(counterpart_fund) for counterpart_fund in
+            qactivity.get_activity(activity_id).counterpart_funding]
+        fys = [str(fy) for fy in util.available_fys(10)]
         return jsonify(counterpart_funding=counterpart_funding,
-                       fiscal_years=range(2013, 2025))
+                       fiscal_years=fys)

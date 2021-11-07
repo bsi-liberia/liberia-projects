@@ -82,6 +82,8 @@ def import_data(activity_id, iati_identifier, activity_ids, import_options, acti
     activities_lookup = dict((_activity.id, _activity)
                              for _activity in activities)
     iati_activity = retrieve_data(iati_identifier)
+    #FIXME activity has disappeared, so we should unlink it
+    if iati_activity is None: return False
     iati_activity_transactions = get_transactions_summary(iati_activity, False)
     iati_options = list(
         dict(filter(lambda option: option[1] == 'IATI', import_options.items())).keys())
@@ -240,6 +242,7 @@ def makeFinanceFromTransaction(activity, transaction):
                 fund_source_code = None
             else:
                 fund_source_code = fund_source_code[0]
+            if fund_source_code == '1': return None
             f.fund_source_id = get_or_create_fund_source(
                 fund_source_name, finance_type, fund_source_code)
     f.transaction_value_original = transaction['value_original']
@@ -250,7 +253,7 @@ def makeFinanceFromTransaction(activity, transaction):
 
 
 def makeFinancesFromTransactions(activity, transactions):
-    return [makeFinanceFromTransaction(activity, transaction) for transaction in transactions]
+    return list(filter(lambda transaction: transaction is not None, [makeFinanceFromTransaction(activity, transaction) for transaction in transactions]))
 
 
 def retrieve_data(iati_identifier):
@@ -339,6 +342,10 @@ def get_or_create_fund_source(fund_source_name, finance_type, fund_source_code=N
         fund_soure_code = fund_source_name
     fs = models.FundSource.query.filter_by(code=fund_source_code).first()
     if fs:
+        if fs.finance_type != finance_type:
+            fs.finance_type = finance_type
+            db.session.add(fs)
+            db.session.commit()
         return fs.id
     fs = models.FundSource()
     fs.code = fund_source_code

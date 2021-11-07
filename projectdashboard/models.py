@@ -433,6 +433,23 @@ class Activity(db.Model):
         ActivityFinances.transaction_type=='D')""",
                                         viewonly=True)
 
+
+    @hybrid_property
+    def fund_sources(self):
+        fund_sources = db.session.query(
+                FundSource.id,
+                FundSource.code,
+                FundSource.name,
+                FundSource.finance_type).distinct().filter(
+            ActivityFinances.activity_id==self.id
+            ).join(ActivityFinances, ActivityFinances.fund_source_id==FundSource.id
+            ).all()
+        if len(fund_sources) > 0:
+            return fund_sources
+        FS = collections.namedtuple('FundSource', ['id', 'code', 'name', 'finance_type'])
+        return [(FS(id=None, code=None, name=None, finance_type=None))]
+
+
     result_indicator_periods = sa.orm.relationship("ActivityResultIndicatorPeriod",
                                                    secondary="join(ActivityResultIndicator, ActivityResult, ActivityResult.id == ActivityResultIndicator.result_id)",
                                                    primaryjoin="and_(Activity.id == ActivityResult.activity_id, ActivityResult.id == ActivityResultIndicator.result_id)",
@@ -739,7 +756,7 @@ class ActivityFinances(db.Model):
     currency_value_date = sa.Column(sa.Date)
     fiscal_period_id = sa.Column(sa.UnicodeText,
                                  sa.ForeignKey('fiscal_period.id'),
-                                 nullable=True)
+                                 nullable=False)
 
     @validates("currency_rate")
     def update_transaction_value_rate(self, key, currency_rate):
@@ -829,7 +846,7 @@ class ActivityForwardSpend(db.Model):
     period_end_date = sa.Column(sa.Date)
     fiscal_period_id = sa.Column(sa.UnicodeText,
                                  sa.ForeignKey('fiscal_period.id'),
-                                 nullable=True)
+                                 nullable=False)
 
     @validates("period_start_date")
     def update_fiscal_period_id(self, key, period_start_date):
@@ -1150,9 +1167,7 @@ class ActivityCounterpartFunding(db.Model):
                             index=True)
     required_value = sa.Column(sa.Float(precision=2))
     required_date = sa.Column(sa.Date)
-    budgeted = sa.Column(sa.Boolean, default=False)
-    allotted = sa.Column(sa.Boolean, default=False)
-    disbursed = sa.Column(sa.Boolean, default=False)
+    required_funding_type = sa.Column(sa.UnicodeText)
     fiscal_period_id = sa.Column(sa.UnicodeText,
                                  sa.ForeignKey('fiscal_period.id'),
                                  nullable=True)
@@ -1638,6 +1653,9 @@ class FiscalPeriod(db.Model):
                       nullable=False)
     end = sa.Column(sa.Date,
                     nullable=False)
+
+    counterpart_funding = sa.orm.relationship("ActivityCounterpartFunding",
+                                        backref="fiscal_period")
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

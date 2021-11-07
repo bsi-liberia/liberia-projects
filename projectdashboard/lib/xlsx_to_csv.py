@@ -4,7 +4,6 @@ from openpyxl import load_workbook
 
 
 def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
-    headers_row += 1
 
     if file_contents:
         f = BytesIO(file_contents)
@@ -16,10 +15,10 @@ def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
         else:
             sheet = book[sheetname]
 
-        rows = sheet.rows
-        first_row = [cell.value for cell in next(rows)]
+        rows = list(sheet.rows)[headers_row:]
+        first_row = [cell.value for cell in rows[0]]
         data = []
-        for row in rows:
+        for row in rows[1:]:
             record = {}
             for key, cell in zip(first_row, row):
                 if cell.data_type == 's':
