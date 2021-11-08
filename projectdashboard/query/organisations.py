@@ -84,6 +84,16 @@ def get_reporting_orgs(user_id=None):
     ).all()
 
 
+def get_implementing_orgs():
+    return db.session.query(models.Organisation
+    ).join(models.ActivityOrganisation, models.ActivityOrganisation.role == 4
+    ).order_by(
+        models.Organisation.name
+    ).group_by(
+        models.Organisation.name
+    ).all()
+
+
 def get_or_create_organisation(name):
     org = get_organisation_by_name(name)
     if org:
