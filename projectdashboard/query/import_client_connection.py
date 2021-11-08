@@ -3,14 +3,19 @@
 import os
 from collections import defaultdict
 import datetime
+import re
+import difflib
 
 from flask import flash
 import openpyxl
+import sqlalchemy as sa
 
 from projectdashboard import models
 from projectdashboard.lib import codelists, util, xlsx_to_csv
 from projectdashboard.query import finances as qfinances
+from projectdashboard.query import activity as qactivity
 from projectdashboard.extensions import db
+from projectdashboard.query.import_iati import get_or_create_fund_source
 
 
 def first_or_only(list_or_dict):
@@ -21,6 +26,207 @@ def first_or_only(list_or_dict):
 
 def parse_cc_date(_date):
     return datetime.datetime.strptime(_date, "%d-%b-%Y")
+
+
+def get_iati_identifier_match(iati_identifier, cc_projects):
+    if iati_identifier == None: return None
+    elif iati_identifier in cc_projects:
+        return iati_identifier
+    elif iati_identifier[6:] in cc_projects:
+        return iati_identifier[6:]
+    return None
+
+
+def client_connection_project(project_code):
+    return models.ClientConnectionData.query.filter_by(processed=False,
+        project_code=project_code
+        ).all()
+
+
+def client_connection_projects():
+    return db.session.query(
+        models.ClientConnectionData.project_code,
+        models.ClientConnectionData.project_title
+        ).distinct(models.ClientConnectionData.project_code
+        ).order_by(models.ClientConnectionData.project_title
+        ).all()
+
+
+def make_finance_from_cc_transaction(activity, transaction):
+    aF = models.ActivityFinances()
+    aF.currency = 'USD'
+    aF.transaction_date = transaction.transaction_date
+    aF.transaction_type = 'D'
+    aF.description = "Imported from Client Connection"
+    aF.finance_type = {"grant": "110", "loan": "410"}[transaction.grant_loan]
+    aF.aid_type = activity.aid_type
+    aF.provider_org_id = activity.funding_organisations[0].id
+    aF.receiver_org_id = activity.implementing_organisations[0].id
+    aF.transaction_value_original = transaction.value
+    aF.fund_source_id = get_or_create_fund_source(transaction.loan_number,
+        aF.finance_type,
+        transaction.loan_number)
+    aFC = models.ActivityFinancesCodelistCode()
+    aFC.codelist_id = 'mtef-sector'
+    aFC.codelist_code_id = first_or_only(
+        activity.classification_data["mtef-sector"]["entries"]).codelist_code_id
+    aF.classifications = [aFC]
+    aF.activity_id = activity.id
+    aF.currency_source, aF.currency_rate, aF.currency_value_date = 'USD', 1, transaction.transaction_date
+    return aF
+
+
+def make_cc_finances(activity, cc_project_code):
+    return [make_finance_from_cc_transaction(activity, transaction) for transaction in client_connection_project(cc_project_code)]
+
+
+def combined_forwardspends(forwardspends):
+    out = {}
+    for forwardspend in forwardspends:
+        if forwardspend.period_start_date not in out:
+            out[forwardspend.period_start_date] = models.ActivityForwardSpend()
+            out[forwardspend.period_start_date].period_start_date = forwardspend.period_start_date
+            out[forwardspend.period_start_date].period_end_date = forwardspend.period_end_date
+            out[forwardspend.period_start_date].value_date = forwardspend.value_date
+            out[forwardspend.period_start_date].value_currency = 'USD'
+            out[forwardspend.period_start_date].value = 0
+        out[forwardspend.period_start_date].value += forwardspend.value
+    return list(out.values())
+
+
+def import_data(cc_project_code, activity_ids, activities_fields_options):
+    activity = qactivity.get_activity(activity_ids[0])
+    activity_id = activity.id
+    activities = [qactivity.get_activity(
+        _activity_id) for _activity_id in activity_ids]
+    activities_lookup = dict((_activity.id, _activity)
+                             for _activity in activities)
+    activities_finances = [_finance for _activity in activities_lookup.values(
+        ) for _finance in _activity.finances]
+
+    activity_retained_finances = list(
+        filter(lambda transaction: transaction.transaction_type == 'C', activities_finances))
+
+    cc_finances = make_cc_finances(activity, cc_project_code)
+    activity.finances = cc_finances + activity_retained_finances
+
+
+    forwardspends = combined_forwardspends(_forwardspend for _activity in activities_lookup.values(
+        ) for _forwardspend in _activity.forwardspends)
+
+    activity.forwardspends = []
+
+    db.session.add(activity)
+    db.session.commit()
+
+    # Set data from other activity (if we are merging activities)
+    for field, field_activity_id in activities_fields_options.items():
+        if field_activity_id == activity_id:
+            continue
+        field_data = getattr(qactivity.get_activity(field_activity_id), field)
+        setattr(activity, field, field_data)
+
+    for delete_id in activity_ids:
+        # We don't delete the activity that we are merging
+        if delete_id == activity_id:
+            continue
+        delete_activity = qactivity.get_activity(delete_id)
+        db.session.delete(delete_activity)
+
+    activity.forwardspends = forwardspends
+
+    db.session.add(activity)
+    db.session.commit()
+
+
+
+def closest_matches_groupings():
+    client_connection_projects = db.session.query(
+        models.ClientConnectionData.project_code,
+        models.ClientConnectionData.project_title
+        ).distinct(models.ClientConnectionData.project_code
+        ).order_by(models.ClientConnectionData.project_code
+        ).all()
+
+    #FIXME use some other identifier for WB?
+    activities = models.Activity.query.filter_by(
+        reporting_org_id=11
+    ).with_entities(models.Activity.id, models.Activity.title, models.Activity.iati_identifier
+                    ).all()
+    activity_titles = [client_connection_project.project_title for client_connection_project in client_connection_projects]
+    cc_projects_by_code = dict([(cc_project.project_code, cc_project.project_title) for cc_project in client_connection_projects])
+    out = {}
+    for activity in activities:
+        title_orders = difflib.get_close_matches(
+            activity.title, activity_titles, 1, 0.4)
+        check_match_iati_identifier = get_iati_identifier_match(activity.iati_identifier, cc_projects_by_code.keys())
+        if check_match_iati_identifier:
+            cc_code = check_match_iati_identifier
+            cc_title = cc_projects_by_code.get(check_match_iati_identifier)
+        elif len(title_orders) > 0:
+            cc_title = title_orders[0]
+            cc_code = client_connection_projects[activity_titles.index(cc_title)].project_code
+        else:
+            cc_title = None
+            cc_code = None
+        out[activity.id] = {
+            'id': activity.id,
+            'iati_identifier': activity.iati_identifier,
+            'title': activity.title,
+            'client_connection_project_title': cc_title,
+            'client_connection_project_code': cc_code
+        }
+    return out
+
+
+def get_grant_loan(loan_number):
+    if loan_number.startswith("TF"):
+        return "grant"
+    elif loan_number.startswith("IDA D"):
+        return "grant"
+    elif loan_number.startswith("IDA H"):
+        return "grant"
+    elif loan_number.startswith("IDA V"):
+        return "loan"
+    elif loan_number.startswith("IDA"):
+        return "loan"
+    return "unknown"
+
+
+def add_row(filename, period_start, period_end, transaction):
+    cc = models.ClientConnectionData()
+    cc.filename = filename
+    cc.period_start = period_start
+    cc.period_end = period_end
+    cc.project_code, cc.project_title = re.match(r'(\w*): (.*)', transaction['Project']).groups()
+    cc.loan_number = transaction['Loan']
+    cc.loan_currency = transaction['Currency of Loan Commitment']
+    cc.grant_loan = get_grant_loan(transaction['Loan'])
+    cc.transaction_date = datetime.datetime.strptime(transaction['EOP Date'], '%d-%b-%Y')
+    cc.value = transaction['Disbursed During Month']
+    cc.processed = False
+    db.session.add(cc)
+    db.session.commit()
+
+
+def load_transactions_from_file(input_file):
+    workbook = openpyxl.load_workbook(filename=input_file,
+        read_only=True)
+    sheet = workbook[workbook.sheetnames[0]]
+    fromto_cell = sheet['A5'].value
+    _period_start, _period_end = re.match("(?:.*) from (.*) to (.*)", fromto_cell).groups()
+    period_start = datetime.datetime.strptime(_period_start, '%d-%b-%Y')
+    period_end = datetime.datetime.strptime(_period_end, '%d-%b-%Y')
+    input_file.seek(0)
+    data = xlsx_to_csv.getDataFromFile(
+        input_file.filename, input_file.read(), 0, True, 5)
+    for transaction in data:
+        if transaction['Project'] == None: break
+        try:
+            add_row(input_file.filename, period_start, period_end, transaction)
+        except sa.exc.IntegrityError:
+            db.session.rollback()
+            continue
 
 
 def make_transactions(activity, project_data, fiscal_year=None, fund_sources={}):
