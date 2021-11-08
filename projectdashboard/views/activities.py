@@ -26,6 +26,7 @@ blueprint = Blueprint('activities', __name__, url_prefix='/api/activities')
 @blueprint.route("/filters.json")
 def api_activities_filters():
     reporting_orgs = qorganisations.get_reporting_orgs()
+    implementing_orgs = qorganisations.get_implementing_orgs()
     organisation_types = qorganisations.get_organisation_types()
     cl = get_codelists()
     _cl_domestic_external = [
@@ -37,6 +38,7 @@ def api_activities_filters():
     filters_codelists = [
         ("Reported by", "reporting_org_id", reporting_orgs),
         ("Type of Implementer", "implementing_org_type", organisation_types),
+        ("Implementer", "implementing_org", implementing_orgs),
         ("Sector", "mtef-sector", cl["mtef-sector"]),
         ("Aligned Ministry / Agency", "aligned-ministry-agency",
          cl["aligned-ministry-agency"]),

@@ -1182,7 +1182,7 @@ class ActivityCounterpartFunding(db.Model):
                 self.fiscal_period_id = fiscal_period.id
         return required_date
 
-    __table_args__ = (sa.UniqueConstraint('activity_id', 'required_date'),)
+    __table_args__ = (sa.UniqueConstraint('activity_id', 'required_date', 'required_funding_type'),)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -170,6 +170,17 @@ class TestExportFiles:
         number_fill = sheet.cell(6,4).fill
         assert number_fill.bgColor.value == "00FFFF00"
 
+    def test_activity_values(self, client, admin, headers_admin):
+        route = url_for('exports.activities_xlsx', domestic_external="external")
+        res = client.get(route)
+        f = BytesIO(res.get_data())
+        xlsx_res = get_clean_data_from_file(f, 0, True)
+        first_activity = xlsx_res[0]
+        assert first_activity["ID"] == 1
+        assert first_activity["FY2019 Q1 (D)"] == 100
+        assert first_activity["Fund Source"] == None
+
+
     def test_zero_spend_activity(self, client, admin, headers_admin):
         # Check there are 10 (external) activities
         route = url_for('exports.activities_xlsx', domestic_external="external")

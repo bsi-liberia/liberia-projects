@@ -351,6 +351,11 @@ def list_activities_by_filters(filters, permission_name="view"):
                 models.ActivityFinances.transaction_date <= getISODate(filter_value))
         elif filter_name in codelist_names:
             codelist_vals.append(int(filter_value))
+        elif filter_name == 'implementing_org':
+            query = query.filter(
+                models.Activity.implementing_organisations.any(
+                    models.Organisation.id == filter_value)
+            )
         elif filter_name == 'implementing_org_type':
             query = query.filter(
                 models.Activity.implementing_organisations.any(

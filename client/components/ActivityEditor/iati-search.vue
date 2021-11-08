@@ -102,26 +102,10 @@
             in the Dashboard. Note that no changes will be made unless
             you choose to import IATI data at the end of this process.
           </b-alert>
-          <b-table
-            :items="similarActivities"
-            :fields="['title', 'selected']"
-            :tbody-tr-class="rowClassStep2">
-            <template #cell(title)="data">
-              <nuxt-link
-                :to="{ name: 'activities-id', params: { id: data.item.id}}"
-                target="_blank">
-                {{ data.item.title }}
-              </nuxt-link>
-              <code v-if="data.item.iati_identifier">{{ data.item.iati_identifier }}</code>
-            </template>
-            <template #cell(selected)="data">
-              <b-form-checkbox
-                v-model="selectedActivities"
-                name="selected-activities"
-                :value="data.item.id"
-                :disabled="data.item.id==activity.id">Select activity</b-form-checkbox>
-            </template>
-          </b-table>
+          <SelectActivities
+            :similar-activities.sync="similarActivities"
+            :selected-activities.sync="selectedActivities"
+            :activity="activity" />
         </template>
         <template v-if="iatiStep == 2.5">
           <h4>Merge Dashboard data</h4>
@@ -130,22 +114,10 @@
             differences in these projects for the below fields. Please
             confirm which data you would prefer to take for each field.
           </b-alert>
-          <b-table
-            :items="selectedActivitiesFields"
-            :fields="['field', 'alternatives']">
-            <template #cell(field)="data">
-              {{ data.item.field.replace("_", " ") }}
-            </template>
-            <template #cell(alternatives)="data">
-              <b-form-radio-group
-                v-model="selectedActivitiesFieldsOptions[data.item.field]"
-                :id="`radio-group-fields-${data.item.field}`"
-                :options="alternativesAsOptions(data.item.alternatives)"
-                :name="`radio-options-${data.item.field}`"
-                stacked
-              ></b-form-radio-group>
-            </template>
-          </b-table>
+          <SelectMergeActivities
+            :selected-activities-fields="selectedActivitiesFields"
+            :selected-activities-fields-options="selectedActivitiesFieldsOptions"
+          />
         </template>
         <template v-if="iatiStep == 3">
           <h4>Review data before import</h4>
@@ -267,9 +239,13 @@
 </style>
 <script>
 import LineChart from '~/components/charts/line-chart'
+import SelectActivities from '~/components/ActivityEditor/MergeActivities/SelectActivities.vue'
+import SelectMergeActivities from '~/components/ActivityEditor/MergeActivities/SelectMergeActivities.vue'
 export default {
   components: {
-    LineChart
+    LineChart,
+    SelectActivities,
+    SelectMergeActivities
   },
   props: ['activity', 'api_routes'],
   data() {
@@ -548,11 +524,6 @@ export default {
     },
   },
   methods: {
-    alternativesAsOptions(alternatives) {
-      return Object.entries(alternatives).map(item => {
-        return {'text': item[1], 'value': item[0]}
-      })
-    },
     financesChartData(chartData, series) {
       if (Object.keys(chartData).length == 0) { return null }
       return {
