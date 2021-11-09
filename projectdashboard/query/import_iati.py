@@ -123,10 +123,10 @@ def import_data(activity_id, iati_identifier, activity_ids, import_options, acti
         return True
     if 'forwardspend' in iati_options:
         iati_forwardspends = makeForwardSpendsFromTransactions(activity,
-                                                               aggregate_transactions(
-                                                                   filter(
-                                                                       filter_iati_forwardspends, iati_activity_transactions)
-                                                               )['forwardspend']['data'])
+            aggregate_transactions(
+                filter(
+                    filter_iati_forwardspends, iati_activity_transactions)
+            )['forwardspend']['data'])
         # For now, we clear activity.forwardspends
         # After commit(), we then add iati_forwardspends.
         # See below for more details of this.
