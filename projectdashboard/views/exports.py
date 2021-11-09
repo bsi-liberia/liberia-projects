@@ -16,6 +16,7 @@ from projectdashboard.query import import_client_connection as qimport_client_co
 from projectdashboard.query import user as quser
 from projectdashboard.query import generate_docx as qgenerate_docx
 from projectdashboard.lib import util
+from projectdashboard import models
 
 
 blueprint = Blueprint('exports', __name__, url_prefix='/',
@@ -69,11 +70,51 @@ def export_project_brief_donor(reporting_org_id):
         mimetype="application/zip, application/octet-stream, application/x-zip-compressed, multipart/x-zip")
 
 
-@blueprint.route("/api/client-connection/")
+@blueprint.route("/api/client-connection/", methods=["POST"])
 @jwt_required()
 @quser.permissions_required("edit", "external")
 def wb_client_connection():
-    return qimport_client_connection.import_transactions_from_file()
+    for file in request.files.getlist("file"):
+        qimport_client_connection.load_transactions_from_file(file)
+    return 'ok'
+
+
+@blueprint.route("/api/client-connection/transactions/")
+@jwt_required()
+@quser.permissions_required("edit", "external")
+def wb_client_connection_transactions():
+    transactions_db = models.ClientConnectionData.query.filter_by(processed=False
+        ).all()
+    return jsonify(transactions = [transaction.as_dict() for transaction in transactions_db])
+
+
+@blueprint.route("/api/client-connection/similar/")
+@jwt_required()
+def wb_client_connection_similar_activities():
+    cc_projects = [{
+        'project_code': cc_project.project_code,
+        'project_title': cc_project.project_title
+        } for cc_project in qimport_client_connection.client_connection_projects()]
+    db_activities = [{
+        'id': activity.id,
+        'iati_identifier': activity.iati_identifier,
+        'title': activity.title
+        } for activity in qactivity.list_activities_by_filters({'reporting_org_id': 11})]
+    return jsonify(
+        matches=qimport_client_connection.closest_matches_groupings(),
+        clientConnectionProjects = cc_projects,
+        dbActivities = db_activities
+    )
+
+
+@blueprint.route("/api/client-connection/import/", methods=['POST'])
+@jwt_required()
+def wb_client_connection_import_data():
+    data = request.get_json()
+    qimport_client_connection.import_data(cc_project_code=data['ccProjectCode'],
+        activity_ids=data['selectedActivities'],
+        activities_fields_options=data['selectedActivitiesFieldsOptions'])
+    return "true"
 
 
 @blueprint.route("/api/exports/import_psip/", methods=["POST"])

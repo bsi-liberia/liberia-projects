@@ -1659,3 +1659,36 @@ class FiscalPeriod(db.Model):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class ClientConnectionData(db.Model):
+    __tablename__ = 'client_connection_data'
+    id = sa.Column(sa.Integer, primary_key=True)
+    filename = sa.Column(sa.UnicodeText,
+                     nullable=False)
+    period_start = sa.Column(sa.Date,
+                      nullable=False)
+    period_end = sa.Column(sa.Date,
+                      nullable=False)
+    project_code = sa.Column(sa.UnicodeText,
+                     nullable=False)
+    project_title = sa.Column(sa.UnicodeText,
+                     nullable=False)
+    loan_number = sa.Column(sa.UnicodeText,
+                     nullable=False)
+    loan_currency = sa.Column(sa.UnicodeText,
+                     nullable=False)
+    transaction_date = sa.Column(sa.Date,
+                      nullable=False)
+    grant_loan = sa.Column(sa.UnicodeText,
+                     nullable=False)
+    value = sa.Column(sa.Float(precision=2))
+    processed = sa.Column(sa.Boolean,
+        default=False, nullable=False)
+
+    __table_args__ = (sa.UniqueConstraint('transaction_date', 'project_code', 'loan_number'),)
+
+    def as_dict(self):
+        data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        data['transaction_date'] = self.transaction_date.isoformat()
+        return data

@@ -123,10 +123,10 @@ def import_data(activity_id, iati_identifier, activity_ids, import_options, acti
         return True
     if 'forwardspend' in iati_options:
         iati_forwardspends = makeForwardSpendsFromTransactions(activity,
-                                                               aggregate_transactions(
-                                                                   filter(
-                                                                       filter_iati_forwardspends, iati_activity_transactions)
-                                                               )['forwardspend']['data'])
+            aggregate_transactions(
+                filter(
+                    filter_iati_forwardspends, iati_activity_transactions)
+            )['forwardspend']['data'])
         # For now, we clear activity.forwardspends
         # After commit(), we then add iati_forwardspends.
         # See below for more details of this.
@@ -213,6 +213,7 @@ def makeFinanceFromTransaction(activity, transaction):
     f.activity_id = activity.id
     f.currency = transaction['currency_original']
     f.transaction_date = util.isostring_date(transaction['transaction_date'])
+    f.fiscal_period_id = util.date_to_fiscal_period(f.transaction_date).id
     f.transaction_type = iati_transaction_types.get(
         transaction['transaction_type'])
     f.transaction_description = 'Imported from IATI data'
@@ -313,7 +314,8 @@ def get_transactions_summary(activity, aggregated=True):
     flattener.activity_data = {}
     flattener.organisations = {}
     flattener.category_group = {}
-    flattener.countries = ['LR']
+    #FIXME this is just to include AfDB multinational projects for now
+    flattener.countries = ['LR', '298']
     flattener.exchange_rates = exchangerates.CurrencyConverter(
         update=False, source="consolidated-exchangerates.csv")
 
