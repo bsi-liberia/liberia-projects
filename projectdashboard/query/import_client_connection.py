@@ -77,7 +77,9 @@ def make_finance_from_cc_transaction(activity, transaction):
 
 
 def make_cc_finances(activity, cc_project_code):
-    return [make_finance_from_cc_transaction(activity, transaction) for transaction in client_connection_project(cc_project_code)]
+    cc_project_transactions = filter(lambda project: project.value != 0, client_connection_project(cc_project_code))
+    return [make_finance_from_cc_transaction(activity, transaction)
+        for transaction in cc_project_transactions]
 
 
 def combined_forwardspends(forwardspends):

@@ -55,7 +55,8 @@ def activity_to_json(activity, cl_lookups):
 
     data = {u'Reported by': activity.reporting_org.name,
             u'ID': activity.id,
-            u'Project code': activity.code,
+            u'GoL project code': activity.code,
+            u'Donor project code': activity.iati_identifier,
             u'Domestic/External': activity.domestic_external,
             u'Activity Title': re.sub("\t|\n|\r", "", activity.title if activity.title is not None else ''),
             u'Activity Description': re.sub("\t|\n|\r", "", activity.description if activity.description is not None else ''),
@@ -171,7 +172,8 @@ def activity_to_transactions_list(activity, cl_lookups):
     def make_transaction(activity, tr, transaction_type, fiscal_periods):
         return {u'Reported by': activity.reporting_org.name,
                 u'ID': activity.id,
-                u'Project code': activity.code,
+                u'GoL project code': activity.code,
+                u'Donor project code': activity.iati_identifier,
                 u'Domestic/External': activity.domestic_external,
                 u'Activity Title': re.sub("\t|\n|\r", "", activity.title if activity.title is not None else ''),
                 u'Activity Description': re.sub("\t|\n|\r", "", activity.description if activity.description is not None else ''),

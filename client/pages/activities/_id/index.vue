@@ -214,10 +214,22 @@
               </h4>
             </b-col>
           </b-row>
+          <b-row class="mb-2" v-if="getFundSourceProgress(fundSource)">
+            <b-col>
+              <b-progress
+                :max="100"
+                height="2rem">
+                <b-progress-bar
+                :value="getFundSourceProgress(fundSource)"
+                :label="`${getFundSourceProgress(fundSource).toFixed(0)}% Disbursed`"></b-progress-bar>
+              </b-progress>
+            </b-col>
+          </b-row>
           <b-row>
             <template v-for="finance in financesFundSources">
               <b-col v-if="fundSource in finance.data">
                 <h3>{{ finance.title }}</h3>
+                <b-alert variant="secondary" show class="lead">USD {{ getTotal(Object.values(finance.data[fundSource])) }}</b-alert>
                 <b-table class="table financial-table table-sm"
                 :fields="fiscal_fields" :items="Object.values(finance.data[fundSource])"
                 sort-by="period"
@@ -235,10 +247,22 @@
         </template>
       </template>
       <template v-else>
+        <b-row class="mb-2" v-if="getProgress()">
+          <b-col>
+            <b-progress
+              :max="100"
+              height="2rem">
+              <b-progress-bar
+              :value="getProgress()"
+              :label="`${getProgress().toFixed(0)}% Disbursed`"></b-progress-bar>
+            </b-progress>
+          </b-col>
+        </b-row>
         <b-row>
           <template v-for="(finance, fkey) in finances">
             <b-col>
               <h3>{{ finance.title }}</h3>
+              <b-alert variant="secondary" show class="lead">USD {{ getTotal(finance.data) }}</b-alert>
               <b-table class="table financial-table table-sm"
               :id="`${fkey}-table`"
               :fields="fiscal_fields" :items="finance.data"
@@ -364,6 +388,7 @@ export default {
         },
         {
           key: 'value',
+          label: 'Value (USD)',
           sortable: true,
           class: "number",
           formatter: value => {
@@ -531,6 +556,37 @@ export default {
     ...mapGetters(['isAuthenticated', 'loggedInUser'])
   },
   methods: {
+    getProgress() {
+      const commitments = this.finances.commitments.data
+      const disbursements = this.finances.disbursement.data
+      if (commitments && disbursements) {
+        const totalCommitments = this.getTotalNum(Object.values(commitments))
+        const totalDisbursements = this.getTotalNum(Object.values(disbursements))
+        return ((totalDisbursements/totalCommitments)*100)
+      }
+      return 50
+      return null
+    },
+    getFundSourceProgress(fundSource) {
+      const commitments = this.financesFundSources.commitments.data[fundSource]
+      const disbursements = this.financesFundSources.disbursement.data[fundSource]
+      if (commitments && disbursements) {
+        const totalCommitments = this.getTotalNum(Object.values(commitments))
+        const totalDisbursements = this.getTotalNum(Object.values(disbursements))
+        return ((totalDisbursements/totalCommitments)*100)
+      }
+      return 50
+      return null
+    },
+    getTotalNum(items) {
+      return items.reduce((total, item) => {
+        return total + item.value
+      }, 0)
+    },
+    getTotal(items) {
+      return this.getTotalNum(items
+        ).toLocaleString(undefined, {minimumFractionDigits: 2})
+    },
     getRange: function(start, stop, step = 1) {
       return Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * step)
     },

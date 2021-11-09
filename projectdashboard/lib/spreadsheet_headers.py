@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-headers = ['Reported by', 'ID', 'Project code',
+headers = ['Reported by', 'ID', 'GoL project code', 'Donor project code',
            'Domestic/External',
            'Activity Title', 'Activity Description', 'Activity Status',
            'Activity Dates (Start Date)', 'Activity Dates (End Date)',
@@ -12,7 +12,7 @@ headers = ['Reported by', 'ID', 'Project code',
            'Total Commitments', 'Total Disbursements',
            'Activity Documents', 'Activity Website', 'Last updated date']
 
-headers_transactions = ['Reported by', 'ID', 'Project code',
+headers_transactions = ['Reported by', 'ID', 'GoL project code', 'Donor project code',
                         'Domestic/External',
                         'Activity Title', 'Activity Description', 'Activity Status',
                         'Activity Dates (Start Date)', 'Activity Dates (End Date)',
