@@ -213,6 +213,7 @@ def makeFinanceFromTransaction(activity, transaction):
     f.activity_id = activity.id
     f.currency = transaction['currency_original']
     f.transaction_date = util.isostring_date(transaction['transaction_date'])
+    f.fiscal_period_id = util.date_to_fiscal_period(f.transaction_date).id
     f.transaction_type = iati_transaction_types.get(
         transaction['transaction_type'])
     f.transaction_description = 'Imported from IATI data'
@@ -313,7 +314,8 @@ def get_transactions_summary(activity, aggregated=True):
     flattener.activity_data = {}
     flattener.organisations = {}
     flattener.category_group = {}
-    flattener.countries = ['LR']
+    #FIXME this is just to include AfDB multinational projects for now
+    flattener.countries = ['LR', '298']
     flattener.exchange_rates = exchangerates.CurrencyConverter(
         update=False, source="consolidated-exchangerates.csv")
 

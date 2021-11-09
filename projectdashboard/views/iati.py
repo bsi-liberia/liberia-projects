@@ -82,9 +82,10 @@ def api_iati_search():
                 'iati_identifier': activity.find("iati-identifier").text,
                 'title': title,
                 'description': description,
-                'country_data': len(
-                    activity.xpath("//iati-activity[recipient-country/@code='LR' or \
-                    transaction/recipient-country/@code='LR']")) > 0
+                #FIXME include AfDB multinational data for now
+                'country_data': True #len(
+                    #activity.xpath("//iati-activity[recipient-country/@code='LR' or \
+                    #transaction/recipient-country/@code='LR']")) > 0
             }
         return {
             "results": [clean_activity(activity) for activity in doc.xpath("//iati-activity")]
