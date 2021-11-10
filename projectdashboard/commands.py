@@ -8,7 +8,7 @@ from flask.cli import with_appcontext
 @with_appcontext
 def setup(language):
     """Initial setup."""
-    from query import setup as qsetup
+    from .query import setup as qsetup
     qsetup.create_codes_codelists()
     qsetup.import_countries(language)
     qsetup.create_user()
@@ -19,7 +19,7 @@ def setup(language):
 @with_appcontext
 def setup_country(country_code):
     """Setup a country."""
-    from query import setup as qsetup
+    from .query import setup as qsetup
     qsetup.import_countries('en', country_code)
 
 
@@ -27,7 +27,7 @@ def setup_country(country_code):
 @with_appcontext
 def import_liberia():
     """Import Liberia data."""
-    from query import import_liberia_db as qlibimport
+    from .query import import_liberia_db as qlibimport
     qlibimport.import_file()
 
 
@@ -35,7 +35,7 @@ def import_liberia():
 @with_appcontext
 def import_psip():
     """Import psip data."""
-    from query import import_psip as qpsipimport
+    from .query import import_psip as qpsipimport
     qpsipimport.import_file()
 
 
@@ -88,7 +88,7 @@ def test_closest_date(date, currency):
 @with_appcontext
 def import_iati():
     """Import Liberia data."""
-    from query import import_iati as qiatiimport
+    from .query import import_iati as qiatiimport
     qiatiimport.import_documents()
 
 
@@ -96,7 +96,7 @@ def import_iati():
 @with_appcontext
 def import_psip_transactions():
     """ Import currency data"""
-    from query import import_psip_transactions as qimportpsip
+    from .query import import_psip_transactions as qimportpsip
     qimportpsip.import_transactions()
 
 
@@ -106,7 +106,7 @@ def import_psip_transactions():
 @with_appcontext
 def add_user_role(username, role_slug):
     """ Add user roles """
-    from query import user as quser
+    from .query import user as quser
     assert username and role_slug
     if quser.add_user_role(username, role_slug):
         print("User role created successfully.")
@@ -120,7 +120,7 @@ def add_user_role(username, role_slug):
 @with_appcontext
 def delete_user_role(username, role_slug):
     """ Delete user roles """
-    from query import user as quser
+    from .query import user as quser
     assert username and role_slug
     if quser.delete_user_role(username, role_slug):
         print("User role deleted successfully.")
@@ -133,7 +133,7 @@ def delete_user_role(username, role_slug):
 @with_appcontext
 def list_user_roles(username):
     """ List user roles """
-    from query import user as quser
+    from .query import user as quser
     assert username
     roles = quser.list_user_role_by_username(username)
     if roles:
@@ -147,7 +147,7 @@ def list_user_roles(username):
 @with_appcontext
 def list_users():
     """ List user roles """
-    from query import user as quser
+    from .query import user as quser
     users = list(map(lambda u: u.username, quser.user()))
     if users:
         print("There are the following users:")
@@ -161,7 +161,7 @@ def list_users():
 @with_appcontext
 def list_roles():
     """ List user roles """
-    from query import user as quser
+    from .query import user as quser
     roles = list(map(lambda r: r.slug, quser.role()))
     if roles:
         print("There are the following roles:")

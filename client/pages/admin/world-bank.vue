@@ -29,6 +29,11 @@ import WorldBankCCTransactionsTable from '~/components/WorldBank/CCTransactionsT
 import WorldBankMatchActivities from '~/components/WorldBank/MatchActivities.vue'
 import WorldBankMergeActivities from '~/components/WorldBank/MergeActivities.vue'
 export default {
+  head() {
+    return {
+      title: `Import World Bank data | ${this.$config.title}`
+    }
+  },
   data() {
     return {
       isBusy: true,
