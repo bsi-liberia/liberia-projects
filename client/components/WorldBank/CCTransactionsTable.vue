@@ -3,16 +3,36 @@
     <b-card title="Transactions ready to process" class="mt-2">
       <b-card-text>
         <b-btn variant="success" class="mb-2" @click="changeStep(2)">Process transactions &raquo;</b-btn>
+        <hr />
         <b-row>
-          <b-col>
-            <b-pagination
-              v-model="currentPage"
-              :total-rows="rows"
-              :per-page="perPage"
-              aria-controls="my-table"
-              :limit="10"
-              align="fill"
-            ></b-pagination>
+          <b-col md="6">
+            <b-form-group
+              label="Filter"
+              label-for="filter-input"
+            >
+              <b-input-group>
+                <b-form-input
+                  id="filter-input"
+                  v-model="filter"
+                  type="search"
+                  placeholder="Type to Search"
+                ></b-form-input>
+              </b-input-group>
+            </b-form-group>
+          </b-col>
+          <b-col md="6">
+            <b-form-group
+              label="Page"
+              label-for="pagination"
+            >
+              <b-pagination
+                v-model="currentPage"
+                :total-rows="rows"
+                :per-page="perPage"
+                :limit="10"
+                align="fill"
+              ></b-pagination>
+            </b-form-group>
           </b-col>
         </b-row>
         <b-row>
@@ -23,6 +43,7 @@
               :per-page="perPage"
               :current-page="currentPage"
               :fields="transactionsFields"
+              :filter="filter"
               sortable
               >
               <template v-slot:table-busy>
@@ -43,6 +64,7 @@ export default {
   props: ['isBusy', 'transactions', 'change-step'],
   data() {
     return {
+      filter: null,
       perPage: 50,
       currentPage: 1,
       transactionsFields: [
