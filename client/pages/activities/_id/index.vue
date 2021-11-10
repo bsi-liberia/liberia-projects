@@ -557,6 +557,9 @@ export default {
   },
   methods: {
     getProgress() {
+      if (!(this.finances.disbursement && this.finances.commitments)) {
+        return null
+      }
       const commitments = this.finances.commitments.data
       const disbursements = this.finances.disbursement.data
       if (commitments && disbursements) {
