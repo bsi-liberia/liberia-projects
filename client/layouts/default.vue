@@ -61,6 +61,9 @@
               <b-dropdown-item :to="{name: 'admin-fiscal-years'}" active-class="active">Manage fiscal years</b-dropdown-item>
               <b-dropdown-item :to="{name: 'users'}" active-class="active">Users</b-dropdown-item>
               </template>
+              <template v-if="loggedInUser.administrator || loggedInUser.new_permissions_list.includes('world-bank') ">
+                <b-dropdown-item :to="{name: 'admin-world-bank'}" active-class="active">Manage World Bank data</b-dropdown-item>
+              </template>
               <b-dropdown-item href="#" @click="logout">Sign Out</b-dropdown-item>
             </b-nav-item-dropdown>
             <b-nav-item to="/login" right v-else>Sign In</b-nav-item>
