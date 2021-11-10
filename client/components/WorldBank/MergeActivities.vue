@@ -2,7 +2,7 @@
   <div>
     <b-card title="Merge activities" class="mt-2">
       <b-card-text>
-        <b-btn variant="warning" class="mb-2" @click="changeStep(1)">&laquo; Go back</b-btn>
+        <b-btn variant="warning" class="mb-2" @click="changeStep(2)">&laquo; Go back</b-btn>
       </b-card-text>
       <b-select
         :options="ccProjectOptions"
