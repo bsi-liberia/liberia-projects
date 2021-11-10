@@ -10,17 +10,25 @@
           v-model="ccProjectCode" class="mb-2">
         </b-select>
       </b-form-group>
-      <template v-if="this.selectedActivitiesForProject.length == 0">
-        <b-alert variant="secondary" show>There are no Dashboard projects matched to this Client Connection project.</b-alert>
+      <template v-if="isBusy">
+        <div class="text-center my-2">
+          <b-spinner class="align-middle" label="Loading..."></b-spinner>
+          <strong>Loading...</strong>
+        </div>
       </template>
-      <template v-if="this.selectedActivitiesFields.length > 1">
-        <SelectMergeActivities
-          :selected-activities-fields="selectedActivitiesFields"
-          :selected-activities-fields-options="selectedActivitiesFieldsOptions"
-        />
-      </template>
-      <template v-if="this.selectedActivitiesForProject.length > 0">
-        <b-btn variant="success" @click="importCCData">Import</b-btn>
+      <template v-else>
+        <template v-if="this.selectedActivitiesForProject.length == 0">
+          <b-alert variant="secondary" show>There are no Dashboard projects matched to this Client Connection project.</b-alert>
+        </template>
+        <template v-if="this.selectedActivitiesFields.length > 1">
+          <SelectMergeActivities
+            :selected-activities-fields="selectedActivitiesFields"
+            :selected-activities-fields-options="selectedActivitiesFieldsOptions"
+          />
+        </template>
+        <template v-if="this.selectedActivitiesForProject.length > 0">
+          <b-btn variant="success" @click="importCCData" :disabled="isBusyImporting">Import</b-btn>
+        </template>
       </template>
     </b-card>
   </div>
@@ -31,6 +39,8 @@ import SelectMergeActivities from '~/components/ActivityEditor/MergeActivities/S
 export default {
   data() {
     return {
+      isBusy: true,
+      isBusyImporting: false,
       ccProjectCode: 'P113266',
       selectedActivitiesFieldsOptions: {},
       selectedActivitiesFields: []
@@ -70,6 +80,7 @@ export default {
   },
   methods: {
     async selectMerge2() {
+      this.isBusy = true
       const data = {
         activity_ids: this.selectedActivities[this.ccProjectCode]
       }
@@ -89,8 +100,10 @@ export default {
           return {'field': item[0], 'alternatives': item[1]}
         })
       })
+      this.isBusy = false
     },
     async importCCData() {
+      this.isBusyImporting = true
       const data = {
         ccProjectCode: this.ccProjectCode,
         selectedActivitiesFieldsOptions: this.selectedActivitiesFieldsOptions,
@@ -106,6 +119,7 @@ export default {
           solid: true
         })
       })
+      this.isBusyImporting = false
     }
   },
   mounted() {
