@@ -6,6 +6,7 @@
         <b-col>
           <b-form-file
             v-model="uploadFiles"
+            :file-name-formatter="formatNames"
             multiple>
           </b-form-file>
         </b-col>
@@ -26,6 +27,9 @@ export default {
     }
   },
   methods: {
+    formatNames(files) {
+      return files.length === 1 ? files[0].name : `${files.length} files selected`
+    },
     async submitFile() {
       let postData = new FormData()
       for (let file of this.uploadFiles) {
