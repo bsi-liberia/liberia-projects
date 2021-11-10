@@ -4,15 +4,24 @@
       <b-card-text>
         <b-btn variant="warning" class="mb-2" @click="changeStep(2)">&laquo; Go back</b-btn>
       </b-card-text>
-      <b-select
-        :options="ccProjectOptions"
-        v-model="ccProjectCode" />
-
-      <SelectMergeActivities
-        :selected-activities-fields="selectedActivitiesFields"
-        :selected-activities-fields-options="selectedActivitiesFieldsOptions"
-      />
-      <b-btn variant="success" @click="importCCData">Import</b-btn>
+      <b-form-group label="Client Connection Project">
+        <b-select
+          :options="ccProjectOptions"
+          v-model="ccProjectCode" class="mb-2">
+        </b-select>
+      </b-form-group>
+      <template v-if="this.selectedActivitiesForProject.length == 0">
+        <b-alert variant="secondary" show>There are no Dashboard projects matched to this Client Connection project.</b-alert>
+      </template>
+      <template v-if="this.selectedActivitiesFields.length > 1">
+        <SelectMergeActivities
+          :selected-activities-fields="selectedActivitiesFields"
+          :selected-activities-fields-options="selectedActivitiesFieldsOptions"
+        />
+      </template>
+      <template v-if="this.selectedActivitiesForProject.length > 0">
+        <b-btn variant="success" @click="importCCData">Import</b-btn>
+      </template>
     </b-card>
   </div>
 </template>
@@ -52,6 +61,11 @@ export default {
           summary[item.client_connection_project_code].push(item.id)
           return summary
         }, {})
+    },
+    selectedActivitiesForProject() {
+      const activities = this.selectedActivities[this.ccProjectCode]
+      if (activities != undefined) { return activities }
+      return []
     }
   },
   methods: {
@@ -60,10 +74,15 @@ export default {
         activity_ids: this.selectedActivities[this.ccProjectCode]
       }
       const url = '/activities/activity_summaries.json'
+      if (this.selectedActivitiesForProject.length == 0) {
+        this.selectedActivitiesFieldsOptions = {}
+        this.selectedActivitiesFields = []
+        return false
+      }
       await this.$axios.post(url, data)
       .then(response => {
         this.selectedActivitiesFieldsOptions = Object.keys(response.data.fields).reduce((summary, item) => {
-          summary[item] = this.selectedActivities[this.ccProjectCode][0]
+          summary[item] = this.selectedActivitiesForProject[0]
           return summary
         }, {})
         this.selectedActivitiesFields = Object.entries(response.data.fields).map(item=> {
