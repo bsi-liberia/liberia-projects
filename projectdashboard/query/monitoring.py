@@ -19,25 +19,25 @@ def generate_data_collection_calendar():
         {
             "iso_date": datetime.date(current_year, 1, 15),
             "date": datetime.datetime.strftime(datetime.date(current_year, 1, 15), "%B %d"),
-            "data_request": "Disbursement data for Q2 of the current FY (October-December)"
+            "data_request": "Disbursement data for Q4 of the previous FY (October-December)"
         },
-        {"iso_date": datetime.date(current_year, 2, 15),
-            "date": datetime.datetime.strftime(datetime.date(current_year, 2, 15), "%B %d"),
-            "data_request": "Forward disbursement projections: for the next 3 FYs"
-         },
         {
             "iso_date": datetime.date(current_year, 4, 15),
             "date": datetime.datetime.strftime(datetime.date(current_year, 4, 15), "%B %d"),
-            "data_request": "Disbursement data for Q3 of the current FY (January-March)"
+            "data_request": "Disbursement data for Q1 of the current FY (January-March)"
         },
         {"iso_date": datetime.date(current_year, 7, 15),
             "date": datetime.datetime.strftime(datetime.date(current_year, 7, 15), "%B %d"),
-            "data_request": "Disbursement data for Q4 of the previous FY (April-June)"
+            "data_request": "Disbursement data for Q2 of the current FY (April-June)"
+         },
+        {"iso_date": datetime.date(current_year, 8, 15),
+            "date": datetime.datetime.strftime(datetime.date(current_year, 8, 15), "%B %d"),
+            "data_request": "Forward disbursement projections: for the next 3 FYs"
          },
         {
             "iso_date": datetime.date(current_year, 10, 15),
             "date": datetime.datetime.strftime(datetime.date(current_year, 10, 15), "%B %d"),
-            "data_request": "Disbursement data for Q1 of the current FY (July-September)"
+            "data_request": "Disbursement data for Q3 of the current FY (July-September)"
         }
     ]
 
