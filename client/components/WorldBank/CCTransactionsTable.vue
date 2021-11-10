@@ -3,19 +3,37 @@
     <b-card title="Transactions ready to process" class="mt-2">
       <b-card-text>
         <b-btn variant="success" class="mb-2" @click="changeStep(2)">Process transactions &raquo;</b-btn>
-        <b-table
-          :busy="isBusy"
-          :items="transactions"
-          :fields="transactionsFields"
-          sortable
-          >
-          <template v-slot:table-busy>
-            <div class="text-center my-2">
-              <b-spinner class="align-middle" label="Loading..."></b-spinner>
-              <strong>Loading...</strong>
-            </div>
-          </template>
-        </b-table>
+        <b-row>
+          <b-col>
+            <b-pagination
+              v-model="currentPage"
+              :total-rows="rows"
+              :per-page="perPage"
+              aria-controls="my-table"
+              :limit="10"
+              align="fill"
+            ></b-pagination>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <b-table
+              :busy="isBusy"
+              :items="transactions"
+              :per-page="perPage"
+              :current-page="currentPage"
+              :fields="transactionsFields"
+              sortable
+              >
+              <template v-slot:table-busy>
+                <div class="text-center my-2">
+                  <b-spinner class="align-middle" label="Loading..."></b-spinner>
+                  <strong>Loading...</strong>
+                </div>
+              </template>
+            </b-table>
+          </b-col>
+        </b-row>
       </b-card-text>
     </b-card>
   </div>
@@ -25,6 +43,8 @@ export default {
   props: ['isBusy', 'transactions', 'change-step'],
   data() {
     return {
+      perPage: 50,
+      currentPage: 1,
       transactionsFields: [
         {
           key: 'project_code',
@@ -50,6 +70,11 @@ export default {
           key: 'value',
           sortable: true
         }]
+    }
+  },
+  computed: {
+    rows() {
+      return this.transactions.length
     }
   },
   methods: {
