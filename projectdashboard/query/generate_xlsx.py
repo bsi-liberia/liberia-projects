@@ -404,6 +404,8 @@ def generate_xlsx_filtered(arguments={}):
             # Add Disbursements data
             if fundsource.id is not None and fundsource.finance_type:
                 activity_data['Finance Type (Type of Assistance)'] = {'110': 'Grant', '410': 'Loan'}[fundsource.finance_type]
+                activity_data['Total Commitments'] = activity_data['Total Commitments'] * pct
+                activity_data['Total Disbursements'] = activity_data['Total Disbursements'] * pct
             if fundsource.id in activity.FY_commitments_dict_fund_sources:
                 activity_data.update(dict(map(lambda d: (
                     d[0], d[1]["value"]), activity.FY_commitments_dict_fund_sources[fundsource.id].items())))
