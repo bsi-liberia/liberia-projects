@@ -16,7 +16,8 @@ ROLES_PERMISSIONS = {
     'admin': ['sector-dashboard'],
     'results-data-entry': ['sector-dashboard', 'results'],
     'results-data-design': ['sector-dashboard', 'results'],
-    'piu-desk-officer': ['sector-dashboard']
+    'piu-desk-officer': ['sector-dashboard'],
+    'world-bank': ['world-bank']
 }
 
 
