@@ -94,14 +94,15 @@ def import_test_data(app, user):
                 filename="testdata.xlsx")
             result = import_xls(
                 input_file=_fakeUpload,
-                column_name='FY2019 Q1 (D)'
+                column_names=['FY2019 Q1 (D)']
             )
         with open(filename, "rb") as _file:
             _fakeUpload = FileStorage(
                 stream=_file,
                 filename="testdata.xlsx")
             result = import_xls_mtef(
-                input_file=_fakeUpload
+                input_file=_fakeUpload,
+                column_names=[]
             )
         with open(os.path.join("tests", "artefacts", "rates.csv"), "r") as _erf:
             _ercsv = csv.DictReader(_erf)
