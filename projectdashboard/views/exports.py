@@ -153,44 +153,47 @@ def import_template():
     if file.filename == '':
         return make_response(jsonify({'msg': 'Please select a file.'}), 400)
     if file and allowed_file(file.filename):
-        if request.form.get('template_type') == 'mtef':
-            result_messages, result_rows = qgenerate_xlsx.import_xls_mtef(file)
-            if result_rows > 0:
-                return make_response(jsonify({
-                    'msg': "{} activities successfully updated!".format(result_rows),
-                    'messages': result_messages
-                }), 200)
-            else:
-                return make_response(jsonify({'msg': """No activities were updated.
-            No updated MTEF projections
-            were found. Check that you selected the correct file and that it
-            contains updated MTEF projections data. It must be formatted according to
-            the AMCU template format. You can download a copy of this template
-            on this page.""",
-                                              'messages': result_messages}), 200)
-        elif request.form.get('template_type') == 'disbursements':
-            fy_fq = request.form.get('fy_fq', util.previous_fy_fq())
-            # For each sheet: convert to dict
-            # For each line in each sheet:
-            # Process (financial data) import column
-            # If no data in that FQ: then import
-            # If there was data for that FY: then don't import
-            result_messages, result_rows = qgenerate_xlsx.import_xls(
-                file, fy_fq)
-            if result_rows > 0:
-                return make_response(jsonify({
-                    'msg': "{} activities successfully updated!".format(result_rows),
-                    'messages': result_messages
-                }), 200)
-            else:
-                return make_response(jsonify({'msg': """No activities were updated.
-                    No updated disbursements
-            were found. Check that you selected the correct file and that it
-            contains updated {} data. It must be formatted according to
-            the AMCU template format. You can download a copy of this template
-            on this page.""".format(util.column_data_to_string(fy_fq)),
-                    'messages': result_messages
-                }), 200)
+        headers = request.form.get('import_headers').split(",")
+        try:
+            if request.form.get('template_type') == 'mtef':
+                result_messages, result_rows = qgenerate_xlsx.import_xls_mtef(file, headers)
+                if result_rows > 0:
+                    return make_response(jsonify({
+                        'msg': "{} activities successfully updated!".format(result_rows),
+                        'messages': result_messages
+                    }), 200)
+                else:
+                    return make_response(jsonify({'msg': """No activities were updated.
+                No updated MTEF projections
+                were found. Check that you selected the correct file and that it
+                contains updated MTEF projections data. It must be formatted according to
+                the AMCU template format. You can download a copy of this template
+                on this page.""",
+                  'messages': result_messages}), 200)
+            elif request.form.get('template_type') == 'disbursements':
+                # For each sheet: convert to dict
+                # For each line in each sheet:
+                # Process (financial data) import column
+                # If no data in that FQ: then import
+                # If there was data for that FY: then don't import
+                result_messages, result_rows = qgenerate_xlsx.import_xls(
+                    file, headers)
+                if result_rows > 0:
+                    return make_response(jsonify({
+                        'msg': "{} activities successfully updated!".format(result_rows),
+                        'messages': result_messages
+                    }), 200)
+                else:
+                    return make_response(jsonify({'msg': """No activities were updated.
+                        No updated disbursements
+                were found. Check that you selected the correct file and that it
+                contains updated {} data. It must be formatted according to
+                the AMCU template format. You can download a copy of this template
+                on this page.""".format(", ".join(headers)),
+                        'messages': result_messages
+                    }), 200)
+        except Exception as e:
+            return make_response(jsonify({'msg': str(e)}), 400)
     return make_response(jsonify({'msg': """Sorry, but that file cannot be imported.
         It must be of type xls or xlsx."""}), 400)
 
