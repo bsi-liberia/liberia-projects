@@ -164,10 +164,23 @@
                   :description="'Selected template: ' + selectedTemplateOptionImportDescription"
                   label-class="font-weight-bold">
                   <b-form-radio-group
-                    v-model="importTemplate.template_type"
+                    v-model="selectedTemplateOption"
                     :options="templateOptionsImport"
                     stacked
                     required></b-form-radio-group>
+                </b-form-group>
+                <b-form-group label="Financial columns"
+                  description="Select which columns containing financial data you would like to import."
+                  label-class="font-weight-bold">
+                  <client-only>
+                    <v-select
+                      class="selected-import-headers"
+                      label="text" value="value"
+                      v-model="selectedImportHeaders"
+                      :options="headers[selectedTemplateOption]" multiple
+                      :reduce="field => field.value" :get-option-label="getFieldLabel" required>
+                    </v-select>
+                  </client-only>
                 </b-form-group>
                 <b-form-group label="Template file"
                   label-for="file-amcu"
@@ -263,7 +276,7 @@
                   <b-form-checkbox-group
                     v-model="selectedHeaders[selectedTemplateOption]"
                     stacked
-                    :options="headers.disbursement"
+                    :options="headers.disbursements"
                   ></b-form-checkbox-group>
                 </b-form-group>
               </b-card>
@@ -322,6 +335,12 @@
     </template>
   </div>
 </template>
+<style>
+.selected-import-headers .vs__dropdown-option--selected {
+  background: #55a44f;
+  color: #ffffff;
+}
+</style>
 <script>
 import { mapGetters } from 'vuex'
 import DownloadFile from '~/components/DownloadFile.vue'
@@ -377,6 +396,7 @@ export default {
       importTemplate: {
         template_type: "disbursements",
         file: null,
+        import_headers: [],
         isBusy: false
       },
       importPSIP: {
@@ -396,7 +416,7 @@ export default {
       headers: {
         basic: [],
         mtef: [],
-        disbursement: [],
+        disbursements: [],
         custom: []
       },
       selectedHeaders: {},
@@ -407,7 +427,8 @@ export default {
       isBusy: true,
       importMessagesTemplate: [],
       importMessagesPSIP: [],
-      projectBriefDonorID: null
+      projectBriefDonorID: null,
+      selectedImportHeaders: []
     }
   },
   computed: {
@@ -466,6 +487,9 @@ export default {
     ...mapGetters(['isAuthenticated', 'loggedInUser'])
   },
   methods: {
+    getFieldLabel (field) {
+      return `${field.text}`
+    },
     async submitFile(data, url, messages) {
       this.$set(this, messages, [])
       this.$set(data, 'isBusy', true)
@@ -489,6 +513,7 @@ export default {
         })
         .catch(error => {
           console.log('Error uploading file', error)
+          this.$set(this, messages, [error.response.data.msg].concat(error.response.data.messages ? error.response.data.messages : []))
         })
       this.$set(data, 'isBusy', false)
     },
@@ -496,8 +521,8 @@ export default {
       this.selectedHeaders[this.selectedTemplateOption].push(this.newColumnName)
       this.headers.custom.push(this.newColumnName)
     },
-    setupForm: function() {
-      this.$axios
+    async setupForm() {
+      await this.$axios
       .get(`filters/available_fys_fqs.json`)
       .then(response => {
         this.fys = response.data.fys
@@ -514,11 +539,12 @@ export default {
         this.headers = {
           basic: this.checkRequired(response.data.headers),
           mtef: this.checkRequired(response.data.mtef_headers),
-          disbursement: this.checkRequired(response.data.disbursement_headers),
+          disbursements: this.checkRequired(response.data.disbursement_headers),
           counterpart_funding: this.checkRequired(response.data.counterpart_funding_headers),
           custom: []
         }
         this.selectedHeaders = response.data.selected
+        this.setImportHeaders(this.selectedTemplateOption)
       });
       this.$axios
       .get(`filters/currency.json`)
@@ -542,6 +568,31 @@ export default {
           }
         }
       )
+    },
+    setImportHeaders(templateOption) {
+      this.selectedImportHeaders = this.headers[templateOption].reduce((summary, item) => {
+        if (this.selectedHeaders[templateOption].includes(item.value)) {
+          summary.push(item.value)
+        }
+        return summary
+      }, [])
+    }
+  },
+  watch: {
+    selectedTemplateOption: {
+      immediate: true,
+      handler(newValue, oldValue) {
+        if (newValue != undefined) {
+          this.setImportHeaders(newValue)
+          this.importTemplate.template_type = newValue
+        }
+      }
+    },
+    selectedImportHeaders: {
+      immediate: true,
+      handler(value) {
+        this.importTemplate.import_headers = value
+      }
     }
   },
   mounted: function() {

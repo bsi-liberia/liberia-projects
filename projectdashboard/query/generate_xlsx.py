@@ -265,12 +265,12 @@ def make_updated_info(updated, activity, num_updated_activities):
     return msg + "; ".join(msgs), num_updated_activities
 
 
-def import_xls_mtef(input_file):
-    return import_xls_new(input_file, "mtef")
+def import_xls_mtef(input_file, column_names):
+    return import_xls_new(input_file, "mtef", column_names)
 
 
-def import_xls(input_file, column_name):
-    return import_xls_new(input_file, "disbursements", [column_name])
+def import_xls(input_file, column_names):
+    return import_xls_new(input_file, "disbursements", column_names)
 
 
 def import_xls_new(input_file, _type, disbursement_cols=[]):

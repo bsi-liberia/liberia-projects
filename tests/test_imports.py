@@ -23,7 +23,7 @@ class TestImportFiles:
         data = {
             'file': (open('tests/artefacts/api/exports/import_template_disbursements.xlsx', 'rb'), 'disbursements.xlsx'),
             'template_type': 'disbursements',
-            'fy_fq': 'FY2019 Q2 (D)'
+            'import_headers': 'FY2019 Q2 (D)'
         }
         res = client.post(route, data=data, headers=headers_admin)
         data = json.loads(res.data)
@@ -43,7 +43,8 @@ class TestImportFiles:
         route = url_for('exports.import_template')
         data = {
             'file': (open('tests/artefacts/api/exports/import_template_mtef.xlsx', 'rb'), 'mtef.xlsx'),
-            'template_type': 'mtef'
+            'template_type': 'mtef',
+            'import_headers': ''
         }
         res = client.post(route, data=data, headers=headers_admin)
         data = json.loads(res.data)
