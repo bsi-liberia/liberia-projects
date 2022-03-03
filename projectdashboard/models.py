@@ -726,7 +726,8 @@ class ActivityFinances(db.Model):
     transaction_type = sa.Column(sa.UnicodeText,
                                  index=True)
     transaction_description = sa.Column(sa.UnicodeText)
-    transaction_value = sa.Column(sa.Float(precision=2))
+    transaction_value = sa.Column(sa.Float(precision=2),
+                               nullable=False)
     finance_type = sa.Column(sa.UnicodeText)
     aid_type = sa.Column(sa.UnicodeText)
     provider_org_id = sa.Column(sa.Integer,
@@ -760,14 +761,14 @@ class ActivityFinances(db.Model):
 
     @validates("currency_rate")
     def update_transaction_value_rate(self, key, currency_rate):
-        if self.transaction_value_original and currency_rate:
+        if (self.transaction_value_original is not None) and currency_rate:
             self.transaction_value = float(
                 currency_rate)*float(self.transaction_value_original)
         return currency_rate
 
     @validates("transaction_value_original")
     def update_transaction_value_original(self, key, transaction_value_original):
-        if self.currency_rate and transaction_value_original:
+        if self.currency_rate and (transaction_value_original is not None):
             self.transaction_value = float(
                 self.currency_rate)*float(transaction_value_original)
         return transaction_value_original
