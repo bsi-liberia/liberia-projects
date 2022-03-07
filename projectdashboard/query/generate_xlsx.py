@@ -128,6 +128,11 @@ def update_activity_data(activity, existing_activity, row, codelists):
         if existing_activity["Activity Dates (End Date)"] != end_date.isoformat():
             activity.end_date = end_date
             updated = True
+    if "Donor project code" in row:
+        project_code = row["Donor project code"]
+        if (existing_activity["Donor project code"] != str(project_code)) and (str(project_code) != ""):
+            activity.iati_identifier = project_code
+            updated = True
     activity.forwardspends += qfinances.create_missing_forward_spends(
         activity.start_date, activity.end_date, activity.id)
     return updated
