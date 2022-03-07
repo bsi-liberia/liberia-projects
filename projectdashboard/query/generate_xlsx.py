@@ -297,7 +297,6 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
         return re.match(pattern, column)
     if "Instructions" in xl_workbook.sheetnames:
         currency = xl_workbook["Instructions"].cell(6, 3).value
-        print("Currency is {}".format(currency))
         begin_sheet = 1
     else:
         currency = "USD"
@@ -368,7 +367,6 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
             messages.append("""There was an error while importing your projects,
         the error was: {}""".format(e))
     db.session.commit()
-    print(messages)
     return messages, num_updated_activities
 
 
