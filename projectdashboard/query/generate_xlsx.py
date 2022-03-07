@@ -128,6 +128,11 @@ def update_activity_data(activity, existing_activity, row, codelists):
         if existing_activity["Activity Dates (End Date)"] != end_date.isoformat():
             activity.end_date = end_date
             updated = True
+    if "Donor project code" in row:
+        project_code = row["Donor project code"]
+        if (existing_activity["Donor project code"] != str(project_code)) and (str(project_code) != ""):
+            activity.iati_identifier = project_code
+            updated = True
     activity.forwardspends += qfinances.create_missing_forward_spends(
         activity.start_date, activity.end_date, activity.id)
     return updated
@@ -292,7 +297,6 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
         return re.match(pattern, column)
     if "Instructions" in xl_workbook.sheetnames:
         currency = xl_workbook["Instructions"].cell(6, 3).value
-        print("Currency is {}".format(currency))
         begin_sheet = 1
     else:
         currency = "USD"
@@ -363,7 +367,6 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
             messages.append("""There was an error while importing your projects,
         the error was: {}""".format(e))
     db.session.commit()
-    print(messages)
     return messages, num_updated_activities
 
 

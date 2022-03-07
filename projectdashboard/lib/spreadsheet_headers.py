@@ -26,10 +26,10 @@ headers_transactions = ['Reported by', 'ID', 'GoL project code', 'Donor project 
                         "Transaction Date", "Transaction Value", "Transaction Type"]
 
 
-headers_disb_template_1 = ["ID", "Project code", "Activity Title"]
+headers_disb_template_1 = ["ID", "Donor project code", "Activity Title"]
 headers_disb_template_2 = ['Activity Status', 'Activity Dates (Start Date)', 'Activity Dates (End Date)',
                            "County"]
-headers_mtef_template_1 = ["ID", "Project code", "Activity Title"]
+headers_mtef_template_1 = ["ID", "Donor project code", "Activity Title"]
 headers_mtef_template_2 = ['Activity Status', 'Activity Dates (Start Date)', 'Activity Dates (End Date)',
                            "County", ]
 

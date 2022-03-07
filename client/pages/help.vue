@@ -46,20 +46,25 @@ However, sometimes you may want to update many activities at once. For this, you
 In the past, it took a lot of effort each quarter to update disbursement data for every donor. This is now much simpler and faster, if you follow these steps:
 
 1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
-2. Click on the `Quarterly disbursement reporting` drop-down to expand it, if the section is not already visible.
-3. Select a template to download.
-4. Send the template _as an email attachment_ to the relevant donor. Ask them to update the quarterly disbursements column.
+2. On the left hand side, under `Download template`, select the **Disbursements** template type.
+3. Select a donor and currency (default is USD).
+4. Optionally select additional columns to include in your template, using the `Customise columns` button.
+5. Send the template _as an email attachment_ to the relevant donor. Ask them to update the quarterly disbursements column.
 
 Review the file you receive back from the donor and check the numbers make sense. If you're happy, continue to the next section and import the file.
 
 #### Importing the updated data
 1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
-2. Click on the `Quarterly disbursement reporting` drop-down to expand it, if the section is not already visible.
-3. Upload the file you received back from the donor. All projects will be updated according to the data entered into the file by the donor.
+2. On the right hand side, under `Import template`, select **Disbursements**, if it's not already selected.
+3. Optionally select additional financial columns, to import disbursements for other fiscal quarters.
+4. Upload the file you received back from the donor. All projects will be updated according to the data entered into the file by the donor.
 
 The following fields will be automatically updated:
 
-* Disbursement for previous fiscal quarter
+* Disbursement for relevant fical quarter(s)
+* Title
+* Description
+* Implementer
 * Activity Status
 * Activity Start Date
 * Activity End Date
@@ -71,20 +76,25 @@ The following fields will be automatically updated:
 Each year, MTEF projections data has to be collected from donors for the forthcoming fiscal years, as part of the budget process. This should be a fairly straightforward process to collect and input this data, if you follow these steps:
 
 1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
-2. Click on the `MTEF projections reporting` drop-down to expand it, if it's not already visible.
-3. Select a template to download.
-4. Send the template _as an email attachment_ to the relevant donor. Ask them to update the quarterly disbursements column.
+2. On the left hand side, under `Download template`, select the **MTEF projections** template type.
+3. Select a donor and currency (default is USD).
+4. Optionally select additional columns to include in your template, using the `Customise columns` button.
+5. Send the template _as an email attachment_ to the relevant donor. Ask them to update the MTEF Projections column.
 
 Review the file you receive back from the donor and check the numbers make sense. If you're happy, continue to the next section and import the file.
 
 #### Importing the updated data
 1. On the <nuxt-link :to="{name: 'export'}">Export data</nuxt-link> tab, scroll down to `Excel reporting templates`
-2. Click on the `MTEF projections reporting` drop-down to expand it, if it's not already visible.
-3. Upload the file you received back from the donor. All projects will be updated according to the data entered into the file by the donor.
+2. On the right hand side, under `Import template`, select **MTEF Projections** template type, if it's not already selected.
+3. Optionally select additional financial columns, to import MTEF projections for other years.
+4. Upload the file you received back from the donor. All projects will be updated according to the data entered into the file by the donor.
 
 The following fields will be automatically updated:
 
-* MTEF Projections for relevant FY (amount columns)
+* MTEF Projections for relevant FY(s)
+* Title
+* Description
+* Implementer
 * Activity Status
 * Activity Start Date
 * Activity End Date
