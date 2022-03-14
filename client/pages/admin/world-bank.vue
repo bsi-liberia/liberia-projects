@@ -5,15 +5,17 @@
       <WorldBankUploadCCData :loadTransactions="loadTransactions" />
       <WorldBankCCTransactionsTable
         :transactions="transactions"
-        :isBusy="isBusy"
-        :changeStep="changeStep"
+        :is-busy="isBusy"
+        :change-step="changeStep"
+        :import-all="importAll"
+        :messages="messages"
       />
     </template>
     <template v-if="step==2">
       <WorldBankMatchActivities
-        :changeStep="changeStep"
-        :changeMatches="changeMatches"
-        :ccProjects.sync="ccProjects" />
+        :change-step="changeStep"
+        :change-matches="changeMatches"
+        :cc-projects.sync="ccProjects" />
     </template>
     <template v-if="step==3">
       <WorldBankMergeActivities
@@ -40,7 +42,8 @@ export default {
       transactions: [],
       step: 1,
       matches: [],
-      ccProjects: []
+      ccProjects: [],
+      messages: []
     }
   },
   components: {
@@ -56,6 +59,13 @@ export default {
         .then(response => {
           this.transactions = response.data.transactions
           this.isBusy = false
+        })
+    },
+    async importAll() {
+      const url = '/client-connection/import-all/'
+      await this.$axios.get(url)
+        .then(response => {
+          this.messages = response.data.status
         })
     },
     changeStep(step) {
