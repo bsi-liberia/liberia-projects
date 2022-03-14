@@ -117,6 +117,13 @@ def wb_client_connection_import_data():
     return "true"
 
 
+@blueprint.route("/api/client-connection/import-all/", methods=['GET'])
+@jwt_required()
+def wb_client_connection_import_all_data():
+    status = qimport_client_connection.import_all_data()
+    return jsonify(status=status)
+
+
 @blueprint.route("/api/exports/import_psip/", methods=["POST"])
 @jwt_required()
 @quser.permissions_required("edit", "domestic")
