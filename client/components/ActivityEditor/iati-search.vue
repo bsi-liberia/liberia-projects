@@ -633,7 +633,10 @@ export default {
       .then(response => {
         this.selectedActivitiesFinances = response.data.activities
       })
-      await this.$axios.post(`${this.api_routes.iati_search}${this.selectedIATIIdentifier}/`)
+      const search_data = {
+        iati_identifier: this.selectedIATIIdentifier
+      }
+      await this.$axios.post(`${this.api_routes.iati_search_by_identifier}`, search_data)
       .then(response => {
         this.iatiStep = 3
         this.iatiSelected = response.data.activity
