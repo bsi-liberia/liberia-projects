@@ -286,7 +286,7 @@ def aggregate_transactions(transactions):
         'transaction_type': item[0][2],
         'value': item[1]
     }, grouped_transactions.items()))
-    _parts = {'2': [], '3': [], 'budget': []}
+    _parts = {'2': [], '3': [], '4': [], 'budget': []}
     for part in parts:
         if part['transaction_type'] not in _parts:
             continue
@@ -296,9 +296,10 @@ def aggregate_transactions(transactions):
             'title': 'Commitments',
             'data': _parts['2']
         },
+        # NB we combine disbursements and expenditure
         'disbursement': {
             'title': 'Disbursements',
-            'data': _parts['3']
+            'data': _parts['3'] + _parts['4']
         },
         'forwardspend': {
             'title': 'MTEF Projections',
