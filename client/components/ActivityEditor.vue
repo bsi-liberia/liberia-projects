@@ -243,6 +243,7 @@ export default {
         results: `activities/${this.$route.params.id}/results.json`,
         documents: `activities/${this.$route.params.id}/documents.json`,
         iati_search: `iati/search/`,
+        iati_search_by_identifier: `iati/search_by_identifier/`,
         iati_import: `iati/fetch_data/${this.$route.params.id}/`,
         finances_by_year: `activities/finances.json?by_year=true`,
         similar_activities: `activities/${this.$route.params.id}/similar/`,
