@@ -686,9 +686,26 @@ export default {
             forwardspend: this.activity.iati_preferences.includes('forwardspend') ? 'IATI' : 'dashboard',
           }
           this.previewImport()
-        } else if (!(this.iatiSearchResults.length > 0)) {
-          this.title = this.activity.title
-          this.iati_identifier = this.activity.iati_identifier
+        } else {
+          // EU
+          if (this.activity.reporting_org_id == 6) {
+            this.importOptions = {
+              commitments: 'dashboard',
+              disbursement: 'IATI',
+              forwardspend: 'dashboard'
+            }
+          // USAID
+          } else if (this.activity.reporting_org_id == 20) {
+            this.importOptions = {
+              commitments: 'dashboard',
+              disbursement: 'IATI',
+              forwardspend: 'dashboard'
+            }
+          }
+          if (!(this.iatiSearchResults.length > 0)) {
+            this.title = this.activity.title
+            this.iati_identifier = this.activity.iati_identifier
+          }
         }
       }
     })
