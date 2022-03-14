@@ -319,7 +319,13 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                         raise Exception("The column {} containing financial data was not \
                         found in the uploaded spreadsheet!".format(_column_name))
             for row in data:  # each row is one ID
-                activity_id = int(row["ID"])
+                try:
+                    activity_id = int(row["ID"])
+                except TypeError:
+                    messages.append("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                        and was not imported! Please create this activity in the \
+                        system before trying to import.".format(row['ID'], row['Activity Title']))
+                    continue
                 activity = qactivity.get_activity(activity_id)
                 activity_iati_preferences = [
                     pref.field for pref in activity.iati_preferences]
@@ -358,7 +364,7 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                     updated, activity, num_updated_activities)
                 if update_message is not None:
                     messages.append(update_message)
-    except UnicodeEncodeError as e:  # Exception as e:
+    except Exception as e:
         if activity_id is not None:
             messages.append("""There was an unexpected error when importing your
             projects, there appears to be an error around activity ID {}.
