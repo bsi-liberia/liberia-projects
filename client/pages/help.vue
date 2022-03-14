@@ -62,6 +62,7 @@ Review the file you receive back from the donor and check the numbers make sense
 The following fields will be automatically updated:
 
 * Disbursement for relevant fical quarter(s)
+* Donor project code
 * Title
 * Description
 * Implementer
@@ -92,6 +93,7 @@ Review the file you receive back from the donor and check the numbers make sense
 The following fields will be automatically updated:
 
 * MTEF Projections for relevant FY(s)
+* Donor project code
 * Title
 * Description
 * Implementer

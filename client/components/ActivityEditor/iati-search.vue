@@ -633,7 +633,10 @@ export default {
       .then(response => {
         this.selectedActivitiesFinances = response.data.activities
       })
-      await this.$axios.post(`${this.api_routes.iati_search}${this.selectedIATIIdentifier}/`)
+      const search_data = {
+        iati_identifier: this.selectedIATIIdentifier
+      }
+      await this.$axios.post(`${this.api_routes.iati_search_by_identifier}`, search_data)
       .then(response => {
         this.iatiStep = 3
         this.iatiSelected = response.data.activity
@@ -683,9 +686,26 @@ export default {
             forwardspend: this.activity.iati_preferences.includes('forwardspend') ? 'IATI' : 'dashboard',
           }
           this.previewImport()
-        } else if (!(this.iatiSearchResults.length > 0)) {
-          this.title = this.activity.title
-          this.iati_identifier = this.activity.iati_identifier
+        } else {
+          // EU
+          if (this.activity.reporting_org_id == 6) {
+            this.importOptions = {
+              commitments: 'dashboard',
+              disbursement: 'IATI',
+              forwardspend: 'dashboard'
+            }
+          // USAID
+          } else if (this.activity.reporting_org_id == 20) {
+            this.importOptions = {
+              commitments: 'dashboard',
+              disbursement: 'IATI',
+              forwardspend: 'dashboard'
+            }
+          }
+          if (!(this.iatiSearchResults.length > 0)) {
+            this.title = this.activity.title
+            this.iati_identifier = this.activity.iati_identifier
+          }
         }
       }
     })

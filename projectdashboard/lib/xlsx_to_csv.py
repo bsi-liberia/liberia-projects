@@ -15,9 +15,12 @@ def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
         else:
             sheet = book[sheetname]
 
+        # FIXME don't convert to list - this can be very slow
+        # with massive files that have lots of empty lines
         rows = list(sheet.rows)[headers_row:]
         first_row = [cell.value for cell in rows[0]]
         data = []
+        empty_rows = 0
         for row in rows[1:]:
             record = {}
             for key, cell in zip(first_row, row):
@@ -25,6 +28,13 @@ def getDataFromFile(f, file_contents, sheetname, by_id=False, headers_row=0):
                     record[key] = cell.value.strip()
                 else:
                     record[key] = cell.value
+            # Ignore empty rows
+            # Break after 10 empty rows
+            if len(list(filter(lambda cell: cell not in [None, ''], list(record.values())))) == 0:
+                empty_rows += 1
+                if empty_rows >= 10:
+                    break
+                continue
             data.append(record)
         return data
     if sheetname == "all":

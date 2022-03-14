@@ -115,12 +115,15 @@ def api_iati_search():
         return jsonify(data)
 
 
-# FIXME
-
+# FIXME needs tidying up
 
 @blueprint.route("/search/<iati_identifier>/", methods=["POST", "GET"])
+@blueprint.route("/search_by_identifier/", methods=["POST", "GET"])
 # @jwt_required()
-def api_iati_search_iati_identifier(iati_identifier):
+def api_iati_search_iati_identifier(iati_identifier=None):
+    args = request.get_json()
+    if iati_identifier is None:
+        iati_identifier = args["iati_identifier"]
     # FIXME
     def clean_data(doc):
         def clean_activity(activity):
