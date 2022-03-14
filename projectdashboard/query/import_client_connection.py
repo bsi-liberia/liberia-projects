@@ -96,6 +96,28 @@ def combined_forwardspends(forwardspends):
     return list(out.values())
 
 
+def import_all_data():
+    # Get list of WB activities with WB project ID
+    # check project ID actually exists
+    activities = models.Activity.query.filter(
+        models.Activity.iati_identifier.isnot(None),
+        models.Activity.iati_identifier.isnot(''),
+        models.Activity.reporting_org_id == 11).all()
+    ids_identifiers = [(activity.id, activity.iati_identifier) for activity in activities]
+    iati_identifiers = [iati_identifier for activity_id, iati_identifier in ids_identifiers]
+    status = []
+    for activity_id, iati_identifier in ids_identifiers:
+        if iati_identifiers.count(iati_identifier) != 1:
+            status.append("Skipping activity {} as identifier {} appears more than once".format(activity_id, iati_identifier))
+            continue
+        print("Importing activity {} with identifier {}".format(activity_id, iati_identifier))
+        result = import_data(iati_identifier, [activity_id], {})
+        status.append("Updated activity {} (ID: {}); {} transactions before; {} transactions after import.".format(
+            result['title'], result['id'], result['transactions_before'], result['transactions_after']))
+    return status
+
+
+
 def import_data(cc_project_code, activity_ids, activities_fields_options):
     activity = qactivity.get_activity(activity_ids[0])
     activity_id = activity.id
@@ -105,6 +127,8 @@ def import_data(cc_project_code, activity_ids, activities_fields_options):
                              for _activity in activities)
     activities_finances = [_finance for _activity in activities_lookup.values(
         ) for _finance in _activity.finances]
+
+    transactions_before = len(activities_finances)
 
     activity_retained_finances = list(
         filter(lambda transaction: transaction.transaction_type == 'C', activities_finances))
@@ -137,8 +161,16 @@ def import_data(cc_project_code, activity_ids, activities_fields_options):
 
     activity.forwardspends = forwardspends
 
+    transactions_after = len(activity.finances)
+
     db.session.add(activity)
     db.session.commit()
+
+    return {
+        'id': activity.id,
+        'title': activity.title,
+        'transactions_before': transactions_before,
+        'transactions_after': transactions_after}
 
 
 

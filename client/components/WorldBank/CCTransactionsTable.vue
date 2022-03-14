@@ -2,7 +2,15 @@
   <div>
     <b-card title="Transactions ready to process" class="mt-2">
       <b-card-text>
-        <b-btn variant="success" class="mb-2" @click="changeStep(2)">Process transactions &raquo;</b-btn>
+        <b-row>
+          <b-col md="6">
+            <b-btn variant="success" class="mb-2" @click="changeStep(2)">Import and merge activities &raquo;</b-btn>
+          </b-col>
+          <b-col md="6" class="text-md-right">
+            <b-btn variant="primary" class="mb-2" @click="importAll()">Update already imported activities</b-btn>
+          </b-col>
+        </b-row>
+        <b-alert variant="info" show dismissible v-for="message in messages">{{ message }}</b-alert>
         <hr />
         <b-row>
           <b-col md="6">
@@ -61,7 +69,7 @@
 </template>
 <script>
 export default {
-  props: ['isBusy', 'transactions', 'change-step'],
+  props: ['isBusy', 'transactions', 'change-step', 'import-all', 'messages'],
   data() {
     return {
       filter: null,
