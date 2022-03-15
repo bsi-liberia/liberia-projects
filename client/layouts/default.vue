@@ -12,20 +12,18 @@
             <b-nav-item :to="{name: 'index'}" exact-active-class="active">Home
             </b-nav-item>
             <b-nav-item  :to="{name: 'activities'}" active-class="active" v-if="loggedInUser.new_permissions_list.includes('activities')">Activities</b-nav-item>
-            <template v-if="isAuthenticated">
-              <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
-                <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
-                  {{ sector.name }}
+            <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
+              <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
+                {{ sector.name }}
+              </b-dropdown-item>
+            </b-nav-item-dropdown>
+            <b-nav-item-dropdown text="Donors" active-class="active" :class="this.$route.name=='donors-id' ?'active' : ''">
+              <div class="scrollable-menu">
+                <b-dropdown-item :to="{name: 'donors-id', params: { id: donor.id }}" v-for="donor in donors" :key="donor.id" active-class="active">
+                  {{ donor.name }}
                 </b-dropdown-item>
-              </b-nav-item-dropdown>
-              <b-nav-item-dropdown text="Donors" active-class="active" :class="this.$route.name=='donors-id' ?'active' : ''">
-                <div class="scrollable-menu">
-                  <b-dropdown-item :to="{name: 'donors-id', params: { id: donor.id }}" v-for="donor in donors" :key="donor.id" active-class="active">
-                    {{ donor.name }}
-                  </b-dropdown-item>
-                </div>
-              </b-nav-item-dropdown>
-            </template>
+              </div>
+            </b-nav-item-dropdown>
             <template v-if="loggedInUser.new_permissions_list.includes('reports')">
               <b-nav-item-dropdown text="Reports">
                 <b-dropdown-item :to="{name: 'reports-milestones'}" active-class="active"
