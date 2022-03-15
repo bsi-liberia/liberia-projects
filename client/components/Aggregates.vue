@@ -51,7 +51,7 @@
       <hr />
       <b-row>
         <b-col>
-          <h2>Projected / Actual Disbursements by {{ dimensionLabel }}, over time</h2>
+          <h2>Planned / Actual Disbursements by {{ dimensionLabel }}, over time</h2>
           <b-row class="mb-2">
             <b-col md="6" class="mt-1">
               <b-form-radio-group
@@ -280,7 +280,7 @@ export default {
       plannedActualDisbursementOptions: [
         {
           'value': 'Disbursement Projection',
-          'text': 'Projected Disbursements'
+          'text': 'Planned Disbursements'
         },
         {
           'value': 'Disbursements',
