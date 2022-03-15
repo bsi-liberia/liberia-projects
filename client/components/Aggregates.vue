@@ -11,7 +11,7 @@
         <b-col md="9">
           <h1>{{ aggregate.name }}</h1>
         </b-col>
-        <b-col md="3" class="text-center" v-if="aggFilter=='mtef-sector'">
+        <b-col md="3" class="text-center" v-if="(aggFilter=='mtef-sector') && isAuthenticated">
           <template v-if="preparingSectorBriefFile">
             <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-top:4px;" @click="getSectorBriefFile">
               <b-spinner label="Preparing" small></b-spinner> Preparing file...
