@@ -93,10 +93,10 @@
         </b-row>
       </template>
       <hr />
-      <template v-if="loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('admin')">
+      <template>
         <h1 id="excel-reporting-templates">Excel reporting templates</h1>
-        <p class="lead">You can import data that donors have entered on
-          AMCU reporting templates. This means you do not have to go through
+        <p class="lead">The Dashboard can export and import data that
+          donors have entered on AMCU reporting templates. This means you do not have to go through
           each project and manually update it: the templates are automatically
           generated and then you can import one file for each donor.</p>
         <b-row>
@@ -153,7 +153,7 @@
               </b-form-group>
             </b-card>
           </b-col>
-          <b-col>
+          <b-col v-if="loggedInUser.roles_list.includes('desk-officer') || loggedInUser.roles_list.includes('admin')">
             <b-card>
               <template v-slot:header>
                 <h4><font-awesome-icon :icon="['fa', 'upload']" /> Import template</h4>
