@@ -9,7 +9,7 @@
       </b-row>
     </template>
     <template v-else>
-      <template v-if="summaryData.length>0">
+      <template v-if="showChart">
         <BarChart
           :data="chartData"
           :options="barChartOptions"
@@ -55,6 +55,9 @@ export default {
   watch: {
   },
   computed: {
+    showChart() {
+      return this.summaryData.length>0 && (this.totalDisbursements > 0 || this.totalDisbursementProjections > 0)
+    },
     barChartOptions(){
       return {
         maintainAspectRatio: false,
@@ -124,6 +127,18 @@ export default {
       return this.data.filter(item => {
         return item.fy == this.selectedFy
       })
+    },
+    totalDisbursements() {
+      return this.summaryData.reduce((summary, item)=> {
+        summary += item['Disbursements']
+        return summary
+      }, 0.00)
+    },
+    totalDisbursementProjections() {
+      return this.summaryData.reduce((summary, item)=> {
+        summary += item['Disbursement Projection']
+        return summary
+      }, 0.00)
     },
     summaryData() {
       return Object.values(this.filteredData.reduce((summary, item) => {

@@ -9,7 +9,7 @@
       </b-row>
     </template>
     <template v-else>
-      <template v-if="Object.entries(summaryData).length>0">
+      <template v-if="showChart">
         <LineChart
           :data="chartData"
           :options="lineChartOptions"
@@ -54,6 +54,9 @@ export default {
   watch: {
   },
   computed: {
+    showChart() {
+      return (Object.entries(this.summaryData).length>0) && (this.total > 0)
+    },
     lineChartOptions() {
       return {
         maintainAspectRatio: false,
@@ -128,6 +131,14 @@ export default {
       }).map(option => {
         return option.text
       })
+    },
+    total() {
+      return Object.values(this.summaryData).reduce((summary, item)=> {
+        summary += Object.values(item).reduce((_summary, _item) => {
+          return _summary + _item
+        })
+        return summary
+      }, 0.00)
     },
     summaryData() {
       /* Roll up by sector, with a list of years */

@@ -11,7 +11,7 @@
         <b-col md="9">
           <h1>{{ aggregate.name }}</h1>
         </b-col>
-        <b-col md="3" class="text-center" v-if="type=='sectors'">
+        <b-col md="3" class="text-center" v-if="aggFilter=='mtef-sector'">
           <template v-if="preparingSectorBriefFile">
             <b-btn variant="secondary" class="float-md-right" id="download_excel" style="margin-top:4px;" @click="getSectorBriefFile">
               <b-spinner label="Preparing" small></b-spinner> Preparing file...
@@ -99,7 +99,10 @@
                 <p class="lead">Find projects matching all of the following conditions. Results automatically update.</p>
                 <b-form-group
                   :label="filter.label"
-                  :label-for="filter.name" v-for="filter in filters" v-bind:key="filter.name">
+                  :label-for="filter.name"
+                  v-for="filter in filters"
+                  v-bind:key="filter.name"
+                  v-if="filter.name!=aggFilter">
                   <b-select class="form-control filter-select" :name="filter.name"
                     :options="filter.codes" value-field="id" text-field="name"
                     v-model="selectedFilters[filter.name]" size="sm"
@@ -185,14 +188,6 @@
                   <font-awesome-icon :icon="['fas', 'edit']" />
                 </nuxt-link>
               </template>
-
-              <template v-slot:cell(delete)="data">
-                <b-link href="#" variant="link" class="text-danger"
-                  @click="confirmDelete(data.item.id, data)"
-                  v-if="data.item.permissions.edit">
-                  <font-awesome-icon :icon="['fa', 'trash-alt']" />
-                </b-link>
-              </template>
             </b-table>
             <b-row>
               <b-col>
@@ -239,7 +234,7 @@ export default {
     AggregatesBarChart,
     AggregatesLineChart
   },
-  props: ['type', 'label'],
+  props: ['aggFilter', 'label', 'aggFilterValue'],
   head() {
     return {
       title: this.aggregate.name ? `${this.label}: ${this.aggregate.name} | ${this.$config.title}` : `${this.label} | ${this.$config.title}`
@@ -263,6 +258,8 @@ export default {
       defaultFilters: {
       },
       selectedFilters: {
+      },
+      aggDefaultFilters: {
       },
       projects: [],
       fields: [],
@@ -296,9 +293,9 @@ export default {
     this.setupData()
   },
   watch: {
-    sectorID: {
+    aggFilterValue: {
       handler() {
-        this.getSector()
+        this.getAggData()
       }
     },
     selectedFilters: {
@@ -315,11 +312,7 @@ export default {
       this.getFYs()
       this.setupFilters()
       this.setFiltersFromQuery()
-      if (this.type == 'sectors') {
-        this.getSector()
-      } else if (this.type == 'donors') {
-        this.getDonor()
-      }
+      await this.getAggData()
       this.queryProjectsData()
     },
     getFYs() {
@@ -330,31 +323,38 @@ export default {
         this.selectedFY = response.data.current_fy
       });
     },
+    async getAggData() {
+      if (this.aggFilter == 'mtef-sector') {
+        await this.getSector()
+        this.setAggDefaultFilters('mtef-sector')
+      } else if (this.aggFilter == 'reporting-org') {
+        await this.getDonor()
+        this.setAggDefaultFilters('reporting_org_id')
+      }
+    },
+    setAggDefaultFilters(_filter) {
+      this.$set(this.selectedFilters, _filter, this.aggregate.id)
+      this.$set(this.aggDefaultFilters, _filter, this.aggregate.id)
+      this.$set(this.selectedFilters, 'domestic_external', 'external')
+      this.$set(this.aggDefaultFilters, 'domestic_external', 'external')
+    },
     async getDonor() {
-      await this.$axios
+      return await this.$axios
       .get(`codelists/organisations/donors/${this.aggFilterValue}.json`)
       .then(response => {
         this.aggregate = response.data.organisation
-        this.selectedFilters['reporting_org_id'] = this.aggregate.id
-        this.defaultFilters['reporting_org_id'] = this.aggregate.id
-        this.selectedFilters['domestic_external'] = 'external'
-        this.defaultFilters['domestic_external'] = 'external'
       })
     },
     async getSector() {
-      await this.$axios
-      .get(`codelists/mtef-sector/${this.sectorID}.json`)
+      return await this.$axios
+      .get(`codelists/mtef-sector/${this.aggFilterValue}.json`)
       .then(response => {
         this.aggregate = response.data.code
-        this.selectedFilters['mtef-sector'] = this.aggregate.id
-        this.defaultFilters['mtef-sector'] = this.aggregate.id
-        this.selectedFilters['domestic_external'] = 'external'
-        this.defaultFilters['domestic_external'] = 'external'
       })
     },
     async getSectorBriefFile() {
       this.preparingSectorBriefFile = true
-      await this.$axios({url: `sector-brief/${this.sectorID}.docx`,
+      await this.$axios({url: `sector-brief/${this.aggFilterValue}.docx`,
         method: 'GET',
         responseType: 'blob'}).then(response => {
         if (response.status === 200) {
@@ -391,7 +391,7 @@ export default {
     dateFormatter(value) {
       return new Date(value).toISOString().split("T")[0]
     },
-    makeFields: function(projects) {
+    makeFields(projects) {
       var _fields = [
         {
           key: 'title',
@@ -428,52 +428,8 @@ export default {
             key: 'edit',
             sortable: false
           })
-        _fields.push({
-            key: 'delete',
-            sortable: false
-          })
       }
       return _fields
-
-
-    },
-    confirmDelete(activity_id, data) {
-      this.$bvModal.msgBoxConfirm('Are you sure you want to delete this activity? This action cannot be undone!', {
-        title: 'Confirm delete',
-        okVariant: 'danger',
-        okTitle: 'Confirm delete',
-        hideHeaderClose: false,
-        centered: true
-      })
-      .then(value => {
-        if (value) {
-          this.$axios.post(`activities/${activity_id}/delete/`)
-          .then(response => {
-            /* Not quite sure why this is necessary... */
-            const getIndex = (project => {
-              return project.id == data.item.id
-            })
-            const index = this.projects.findIndex(getIndex)
-            this.$delete(this.projects, index)
-            this.$bvToast.toast('Your activity was successfully deleted.', {
-              title: 'Deleted',
-              autoHideDelay: 5000,
-              variant: 'success',
-              solid: true,
-              appendToast: true
-            })
-          })
-          .catch(error => {
-            this.$bvToast.toast('Sorry, there was an error, and your activity could not be deleted.', {
-              title: 'Error',
-              autoHideDelay: 5000,
-              variant: 'danger',
-              solid: true,
-              appendToast: true
-            })
-          })
-        }
-      })
     },
     setFiltersFromQuery() {
       if (Object.keys(this.$route.query).length == 0) { return }
@@ -509,9 +465,9 @@ export default {
       this.currentPage = 1
     },
     updateRouter() {
-      if (this.type == 'sectors') {
-        this.$router.push({ name: 'sectors-id', params: {id: this.sectorID}, query: this.nonDefaultFilters })
-      } else if (this.type == 'donors') {
+      if (this.aggFilter == 'mtef-sector') {
+        this.$router.push({ name: 'sectors-id', params: {id: this.aggFilterValue}, query: this.nonDefaultFilters })
+      } else if (this.aggFilter == 'reporting-org') {
         this.$router.push({ name: 'donors-id', params: {id: this.aggFilterValue}, query: this.nonDefaultFilters })
       }
     },
@@ -549,31 +505,18 @@ export default {
   },
   computed: {
     dimension() {
-      if (this.type == 'sectors') {
+      if (this.aggFilter == 'mtef-sector') {
         return 'reporting-org'
-      } else if (this.type == 'donors') {
+      } else if (this.aggFilter == 'reporting-org') {
         return 'mtef-sector'
       }
     },
     dimensionLabel() {
-      if (this.type == 'sectors') {
+      if (this.aggFilter == 'mtef-sector') {
         return 'Donor'
-      } else if (this.type == 'donors') {
+      } else if (this.aggFilter == 'reporting-org') {
         return 'Sector'
       }
-    },
-    aggFilter() {
-      if (this.type == 'sectors') {
-        return 'mtef-sector'
-      } else if (this.type == 'donors') {
-        return 'reporting-org'
-      }
-    },
-    aggFilterValue() {
-      return this.$route.params.id
-    },
-    sectorID() {
-      return this.$route.params.id
     },
     downloadURL() {
       return `exports/activities_filtered.xlsx${this.filtersHash}`
