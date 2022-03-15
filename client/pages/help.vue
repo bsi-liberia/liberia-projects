@@ -18,7 +18,7 @@ Date | Required data
 --- | ---
 **January 15th** | Disbursement data for Q4 of the previous FY (October-December).
 **April 15th** | Disbursement data for Q1 of this FY (January-March).
-**July 15th** | Disbursement data for Q2 of the this FY (April-June).
+**July 15th** | Disbursement data for Q2 of this FY (April-June).
 **August 15th** | Forward disbursement projections <br>*For the next FY (beginning January)*, broken down by quarter. <br>*For the subsequent two FYs*, broken down by year.
 **October 15th** | Disbursement data for Q3 of this FY (July-September).
 
