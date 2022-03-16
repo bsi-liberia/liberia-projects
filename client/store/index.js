@@ -24,7 +24,7 @@ export const mutations = {
     state.unathenticatedUserDefaults = data
   },
   setMtefSectors(state, data) {
-    state.sectors = data.codelists.filter((sector) => {return sector.name != ''})
+    state.sectors = data.codelists.filter((sector) => {return sector.name != ''}).sort((a, b) => a.name > b.name ? 1 : -1);
   },
   setDonors(state, data) {
     state.donors = data.organisations.filter((donor) => {return donor.name != ''})
