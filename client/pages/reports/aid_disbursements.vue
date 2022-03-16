@@ -12,7 +12,7 @@
       <b-row>
         <b-col lg="9">
           <h1>Aid disbursement tracking</h1>
-          <p class="lead">Showing {{ activities.length }} aid activities with planned disbursements over
+          <p class="lead">Showing {{ activities.length }} aid activities with planned disbursements over
           USD 1 million. Planned and actual disbursements are restricted to amounts in {{ fy_text }} only.</p>
         </b-col>
         <b-col lg="3">
@@ -126,7 +126,7 @@ export default {
   },
   computed: {
     fy_text() {
-      return `FY${this.fiscalYear.slice(-2)}`
+      return this.fiscalYear
     }
   },
   methods: {
