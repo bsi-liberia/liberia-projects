@@ -13,7 +13,7 @@
         <b-col lg="9">
           <h1>Project Development and Appraisal Tracking</h1>
           <p class="lead">The indicators show progress through the project development and appraisal process for {{ activities.length }} PSIP activities.</p>
-          <p class="lead">Appropriations, allotment and actual disbursement columns are restricted to amounts in {{ fy_text }} only, and are generated automatically based on the latest available financial data.</p>
+          <p class="lead">Appropriations, allotment and actual disbursement columns are restricted to amounts in {{ fiscalYear }} only, and are generated automatically based on the latest available financial data.</p>
         </b-col>
         <b-col lg="3">
           <b-form-group label="Select fiscal year"
@@ -98,11 +98,6 @@ export default {
   watch: {
     fiscalYear: function() {
       this.getReportData()
-    }
-  },
-  computed: {
-    fy_text() {
-      return `FY${this.fiscalYear.slice(-2)}`
     }
   },
   methods: {
