@@ -12,7 +12,7 @@
       <b-row>
         <b-col lg="9">
           <h1>Counterpart funding</h1>
-          <p class="lead">Activities with counterpart funding requirements for {{ fy_text }}. Only shows activities with planned expenditure or GoL counterpart funding requirements.</p>
+          <p class="lead">Activities with counterpart funding requirements for {{ fiscalYear }}. Only shows activities with planned expenditure or GoL counterpart funding requirements.</p>
         </b-col>
         <b-col lg="3">
           <b-form-group label="Select fiscal year"
@@ -31,7 +31,7 @@
             sort-by="gol_requested" :sort-desc="true">
             <template v-slot:thead-top="data">
               <b-tr>
-                <b-th colspan="6" class="text-center">Financial reporting for {{ fy_text }} only</b-th>
+                <b-th colspan="6" class="text-center">Financial reporting for {{ fiscalYear }} only</b-th>
               </b-tr>
             </template>
             <template v-slot:cell(title)="data">
@@ -105,11 +105,6 @@ export default {
   watch: {
     fiscalYear: function() {
       this.getReportData()
-    }
-  },
-  computed: {
-    fy_text() {
-      return `FY${this.fiscalYear.slice(-2)}`
     }
   },
   methods: {
