@@ -248,6 +248,8 @@ class Activity(db.Model):
         act_ForeignKey('maediuser.id'),
         nullable=False,
         index=True)
+    published = sa.Column(sa.Boolean,
+        default=True, nullable=False)
     user = sa.orm.relationship("User")
     iati_identifier = sa.Column(sa.UnicodeText)
     code = sa.Column(sa.UnicodeText)
