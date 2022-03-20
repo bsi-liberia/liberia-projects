@@ -79,6 +79,8 @@ def activity_C_D_FSs():
 
 def filter_activities_for_permissions(query, permission_name="view"):
     permissions = current_user.permissions_dict
+    if current_user.is_authenticated == False:
+        query = query.filter(models.Activity.published == True)
     if permissions.get(permission_name) == "both":
         return query
     elif permissions.get(permission_name) == "domestic":
