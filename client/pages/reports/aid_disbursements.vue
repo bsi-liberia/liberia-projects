@@ -13,7 +13,7 @@
         <b-col lg="9">
           <h1>Aid disbursement tracking</h1>
           <p class="lead">Showing {{ activities.length }} aid activities with planned disbursements over
-          USD 1 million. Planned and actual disbursements are restricted to amounts in {{ fy_text }} only.</p>
+          USD 1 million. Planned and actual disbursements are restricted to amounts in {{ fiscalYear }} only.</p>
         </b-col>
         <b-col lg="3">
           <b-form-group label="Select fiscal year"
@@ -34,7 +34,7 @@
         </template>
         <template v-slot:thead-top="data">
           <b-tr>
-            <b-th colspan="5" class="text-center">Financial reporting for {{ fy_text }} only</b-th>
+            <b-th colspan="5" class="text-center">Financial reporting for {{ fiscalYear }} only</b-th>
           </b-tr>
         </template>
         <template v-slot:cell(title)="data">
@@ -122,11 +122,6 @@ export default {
   watch: {
     fiscalYear: function() {
       this.getReportData()
-    }
-  },
-  computed: {
-    fy_text() {
-      return this.fiscalYear
     }
   },
   methods: {

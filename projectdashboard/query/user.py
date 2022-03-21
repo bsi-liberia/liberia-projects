@@ -27,6 +27,11 @@ def administrator_required(f):
 def check_permissions(permission_name, permission_value=None, activity_id=None):
     if "admin" in current_user.roles_list:
         return True
+    if activity_id:
+        act = qactivity.get_activity(activity_id)
+        # If the activity is in draft, don't show it to unauthenticated users
+        if (act.published == False) and (current_user.is_authenticated == False):
+            return False
     if permission_name in ("results-data-entry", "results-data-design"):
         if "edit" in current_user.roles_list:
             return True
@@ -58,6 +63,9 @@ def check_activity_permissions(permission_name, activity_id):
     if "admin" in current_user.roles_list:
         return True
     act = qactivity.get_activity(activity_id)
+    # If the activity is in draft, don't show it to unauthenticated users
+    if (act.published == False) and (current_user.is_authenticated == False):
+        return False
     if permission_name in ('edit', 'results-data-entry', 'results-data-design'):
         if edit_rights(act, current_user.permissions_dict):
             return True
@@ -98,7 +106,7 @@ def permissions_required(permission_name, permission_value=None):
             elif kwargs.get('activity_id'):
                 activity_id = kwargs.get('activity_id')
                 check = (check_activity_permissions(permission_name, activity_id)
-                         or check_permissions(permission_name, permission_value))
+                         or check_permissions(permission_name, permission_value, activity_id))
             elif permission_name == "new":
                 check = (check_new_activity_permission() or check_permissions(
                     permission_name, permission_value))

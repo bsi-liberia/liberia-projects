@@ -3,7 +3,8 @@ import datetime
 import difflib
 
 from flask import Blueprint, request, \
-    redirect, abort
+    redirect, abort, send_from_directory, \
+    current_app
 from flask_login import current_user
 from flask_jwt_extended import jwt_required
 
@@ -14,6 +15,7 @@ from projectdashboard.query import organisations as qorganisations
 from projectdashboard.query import exchangerates as qexchangerates
 from projectdashboard.query import milestones as qmilestones
 from projectdashboard.query import user as quser
+from projectdashboard.query import documents as qdocuments
 from projectdashboard.lib import codelists
 from projectdashboard.lib.codelists import get_codelists
 from projectdashboard.views.api import jsonify
@@ -372,15 +374,33 @@ def api_activities_results(activity_id):
     return jsonify(results=jsonify_results_design(results))
 
 
-@blueprint.route("/<activity_id>/documents.json")
+@blueprint.route("/<activity_id>/documents.json", methods=['GET', 'POST'])
 @jwt_required(optional=True)
 @quser.permissions_required("view")
 def api_activities_documents(activity_id):
-    activity = models.Activity.query.get(activity_id)
-    if activity is None:
-        return abort(404)
-    documents = [document.as_dict() for document in activity.documents]
-    return jsonify(documents=documents)
+    if request.method == "POST":
+        title = request.form.get('title')
+        category_code = request.form.get('category')
+        file = request.files['file']
+        document = qdocuments.add_document(activity_id, title, category_code, file)
+        return jsonify(document=document.as_dict())
+    else:
+        activity = models.Activity.query.get(activity_id)
+        if activity is None:
+            return abort(404)
+        documents = [document.as_dict() for document in activity.documents]
+        return jsonify(documents=documents)
+
+
+@blueprint.route("/<int:activity_id>/documents/<filename>")
+def api_activities_document(activity_id, filename):
+    document = models.ActivityDocumentLink.query.filter_by(
+        activity_id=activity_id,
+        filename=filename
+        ).first()
+    return send_from_directory(current_app.config["UPLOAD_FOLDER"],
+        document.filename, attachment_filename=document.original_filename,
+        as_attachment=True, cache_timeout=-1)
 
 
 @blueprint.route("/<activity_id>/results/data-entry.json", methods=['GET', 'POST'])

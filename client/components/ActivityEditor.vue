@@ -45,7 +45,7 @@
             <b-nav-item :to="{query: {'tab': 'results'}}"  :active="$route.query.tab === 'results'" v-if="mode=='edit'">
               Results
             </b-nav-item>
-            <b-nav-item :to="{query: {'tab': 'documents'}}"  :active="$route.query.tab === 'documents'" v-if="activity.documents">
+            <b-nav-item :to="{query: {'tab': 'documents'}}"  :active="$route.query.tab === 'documents'" v-if="activity.documents || (activity.domestic_external == 'domestic')">
               Documents
             </b-nav-item>
           </b-nav>
@@ -130,14 +130,19 @@
               </b-card-body>
             </transition>
             <transition name="fade">
-              <b-card-body v-show="$route.query.tab === 'documents'" v-if="activity.documents">
-                <b-card-text id="documents">
+              <b-card-body v-show="$route.query.tab === 'documents'" v-if="activity.documents || (activity.domestic_external == 'domestic')">
+                <b-card-text id="documents" v-if="activity.domestic_external == 'external'">
                   <h2>Documents</h2>
                   <div class="alert alert-info">
                     These documents were automatically captured from <a :href="`http://d-portal.org/q.html?aid=${activity.code}`">this donor's IATI data</a>.
                   </div>
                   <documents-section
                     :api_routes="api_routes"></documents-section>
+                </b-card-text>
+                <b-card-text id="documents" v-if="activity.domestic_external == 'domestic'">
+                  <h2>Documents</h2>
+                  <documents-editable-section
+                    :api_routes="api_routes" :activity="activity" :codelists="codelists"></documents-editable-section>
                 </b-card-text>
               </b-card-body>
             </transition>
@@ -184,6 +189,7 @@ import LocationsSection from '~/components/ActivityEditor/locations-section.vue'
 import CounterpartFundingSection from '~/components/ActivityEditor/counterpart-funding-section.vue'
 import ResultsSection from '~/components/ActivityEditor/results-section.vue'
 import DocumentsSection from '~/components/ActivityEditor/documents-section.vue'
+import DocumentsEditableSection from '~/components/ActivityEditor/documents-editable-section.vue'
 
 export default {
   components: {
@@ -195,7 +201,8 @@ export default {
     LocationsSection,
     CounterpartFundingSection,
     ResultsSection,
-    DocumentsSection
+    DocumentsSection,
+    DocumentsEditableSection
   },
   data() {
     return {

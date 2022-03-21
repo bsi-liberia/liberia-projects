@@ -8,6 +8,7 @@ from sqlalchemy.orm import validates, aliased
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
+from flask import url_for
 from projectdashboard.lib import codelist_helpers
 
 from projectdashboard.extensions import db
@@ -221,6 +222,12 @@ class ActivityDocumentLink(db.Model):
         nullable=False, index=True)
     title = sa.Column(sa.UnicodeText)
     url = sa.Column(sa.UnicodeText)
+    local = sa.Column(sa.Boolean,
+        default=True, nullable=False)
+    saved_datetime = sa.Column(sa.DateTime)
+    filename = sa.Column(sa.UnicodeText)
+    original_filename = sa.Column(sa.UnicodeText)
+    filesize = db.Column(db.Integer, nullable=True)
     categories = sa.orm.relationship("ActivityDocumentLinkCategory",
                                      cascade="all, delete-orphan")
     document_date = sa.Column(sa.Date)
@@ -229,6 +236,11 @@ class ActivityDocumentLink(db.Model):
         ret = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         ret['categories'] = list(
             map(lambda category: category.code, self.categories))
+        if self.local:
+            ret['url'] = url_for('activities.api_activities_document',
+                activity_id=self.activity_id,
+                filename=self.filename,
+                _external=True)
         return ret
 
 
@@ -248,6 +260,8 @@ class Activity(db.Model):
         act_ForeignKey('maediuser.id'),
         nullable=False,
         index=True)
+    published = sa.Column(sa.Boolean,
+        default=True, nullable=False)
     user = sa.orm.relationship("User")
     iati_identifier = sa.Column(sa.UnicodeText)
     code = sa.Column(sa.UnicodeText)

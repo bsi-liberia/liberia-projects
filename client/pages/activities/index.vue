@@ -204,7 +204,7 @@ export default {
   watch: {
     selectedFilters: {
       deep: true,
-      handler(oldValue, newValue) {
+      handler() {
         if (this.isBusy == true) { return }
         this.updateRouter()
         this.queryProjectsData()

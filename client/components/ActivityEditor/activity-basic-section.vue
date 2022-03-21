@@ -120,6 +120,12 @@
                   name="domestic_external" id="domestic_external"
                   :options="codelists.domestic_external" :value.sync="activity.domestic_external">
                 </finances-select>
+                <finances-checkbox
+                  label="Published" label-cols-sm="2"
+                  name="published" id="published"
+                  :labels="{ true: 'Published', false: 'Draft' }"
+                  :value.sync="activity.published">
+                </finances-checkbox>
               </b-card-text>
             </b-card-body>
           </b-collapse>
@@ -131,6 +137,7 @@
 import FinancesInput from './subcomponents/finances-input.vue'
 import FinancesTextarea from './subcomponents/finances-textarea.vue'
 import FinancesSelect from './subcomponents/finances-select.vue'
+import FinancesCheckbox from './subcomponents/finances-checkbox.vue'
 import OrganisationsSection from './organisations-section.vue'
 import IATISearch from './iati-search.vue'
 export default {
@@ -142,6 +149,7 @@ export default {
     FinancesInput,
     FinancesTextarea,
     FinancesSelect,
+    FinancesCheckbox,
     OrganisationsSection,
     IATISearch
   },
