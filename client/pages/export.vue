@@ -340,6 +340,9 @@
   background: #55a44f;
   color: #ffffff;
 }
+.draggable-item {
+  cursor:  grab;
+}
 </style>
 <script>
 import { mapGetters } from 'vuex'
