@@ -380,9 +380,9 @@ def api_activities_results(activity_id):
 def api_activities_documents(activity_id):
     if request.method == "POST":
         title = request.form.get('title')
-        category_code = request.form.get('category')
+        category_codes = request.form.get('categoryCodes').split(",")
         file = request.files['file']
-        document = qdocuments.add_document(activity_id, title, category_code, file)
+        document = qdocuments.add_document(activity_id, title, category_codes, file)
         return jsonify(document=document.as_dict())
     else:
         activity = models.Activity.query.get(activity_id)
