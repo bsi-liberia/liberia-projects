@@ -123,7 +123,7 @@
                 <finances-checkbox
                   label="Published" label-cols-sm="2"
                   name="published" id="published"
-                  :labels="{ true: 'Published', false: 'Draft' }"
+                  :labels="{ true: 'Published', false: 'Unpublished' }"
                   :value.sync="activity.published">
                 </finances-checkbox>
               </b-card-text>

@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from flask_login import current_user
 
 
-def add_document(activity_id, title, category_code, file):
+def add_document(activity_id, title, category_codes, file):
     datetime_now = datetime.datetime.utcnow()
     safe_timestamp = secure_filename(datetime_now.isoformat())
     safe_filename = secure_filename(file.filename)
@@ -24,8 +24,9 @@ def add_document(activity_id, title, category_code, file):
     document.saved_datetime = datetime_now
     document.filesize = filesize
     category = models.ActivityDocumentLinkCategory()
-    category.code = category_code
-    document.categories = [category]
+    for category_code in category_codes:
+        category.code = category_code
+        document.categories.append(category)
     db.session.add(document)
     db.session.commit()
     return document

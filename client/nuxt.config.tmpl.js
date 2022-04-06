@@ -33,7 +33,8 @@ export default {
   */
   plugins: [
     '~/plugins/errors',
-    {src: '~/plugins/vue2-leaflet-markercluster.js', mode: 'client'}
+    {src: '~/plugins/vue2-leaflet-markercluster.js', mode: 'client'},
+    {src: '~plugins/vuedraggable.js'}
   ],
   /*
   ** Nuxt.js dev-modules

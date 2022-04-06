@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-navbar toggleable="lg" type="dark" variant="light" sticky>
+    <b-navbar toggleable="xl" type="dark" variant="light" sticky>
       <b-container fluid>
         <b-navbar-brand :to="'/'">
           <img src="~/assets/img/flag-lr.png" alt="Flag" />

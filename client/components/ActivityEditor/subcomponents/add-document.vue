@@ -13,13 +13,12 @@
       </b-form-group>
       <b-form-group label="Type"
         label-cols-sm="3"
-        :state="newDocument.validation.category">
-        <b-select
-          :options="categories"
-          required
-          v-model="newDocument.category"
-          :state="newDocument.validation.category">
-        </b-select>
+        :state="newDocument.validation.categoryCodes">
+        <client-only>
+          <v-select :options="categories" v-model="newDocument.categoryCodes" multiple
+          label="text" :reduce="item => item.value" :get-option-label="getDocumentLabel">
+          </v-select>
+        </client-only>
       </b-form-group>
       <b-form-group
         label="Upload file"
@@ -53,13 +52,15 @@ export default {
     }
   },
   methods: {
+    getDocumentLabel(item) {
+      return item.text
+    },
     submitFile(bvEvent) {
       bvEvent.preventDefault()
       if (!this.newDocument.title || !this.newDocument.file) {
         if (!this.newDocument.title) { this.$set(this.newDocument.validation, 'title', false) }
         if (!this.newDocument.file) { this.$set(this.newDocument.validation, 'file', false) }
-        if (!this.newDocument.category) { this.$set(this.newDocument.validation, 'category', false) }
-        this.$bvToast.toast("Please enter a title, select a type, and select a file.", {
+        this.$bvToast.toast("Please enter a title and select a file.", {
           title: 'Error',
           variant: 'danger'
         })
@@ -72,7 +73,7 @@ export default {
       postData.append('file', this.newDocument.file, this.newDocument.file.name)
       postData.append('activity_id', this.activityID)
       postData.append('title', this.newDocument.title)
-      postData.append('category', this.newDocument.category)
+      postData.append('categoryCodes', this.newDocument.categoryCodes)
       this.loading = true
       this.$axios.post(API_URL, postData)
         .then(response => {
