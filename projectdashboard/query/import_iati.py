@@ -112,6 +112,7 @@ def import_data(activity_id, iati_identifier, activity_ids, import_options, acti
     # Combine activity retained finances and IATI finances
     activities_finances = [_finance for _activity in activities_lookup.values(
     ) for _finance in _activity.finances]
+    count_before_finances = len(activities_finances)
     activity_retained_finances = list(
         filter(filter_non_iati_transactions, activities_finances))
     activity.finances = iati_finances + activity_retained_finances
@@ -149,6 +150,11 @@ def import_data(activity_id, iati_identifier, activity_ids, import_options, acti
     activity.iati_identifier = iati_identifier
     activity.iati_preferences = set_activity_iati_preferences(
         activity, iati_options)
+
+    count_after_finances = len(activity.finances)
+
+    if (count_before_finances != count_after_finances) :
+        activity.updated_date = datetime.datetime.utcnow()
 
     db.session.add(activity)
     db.session.commit()
@@ -216,7 +222,7 @@ def makeFinanceFromTransaction(activity, transaction):
     f.fiscal_period_id = util.date_to_fiscal_period(f.transaction_date).id
     f.transaction_type = iati_transaction_types.get(
         transaction['transaction_type'])
-    f.transaction_description = 'Imported from IATI data'
+    f.transaction_description = 'Imported from IATI on {}'.format(datetime.datetime.utcnow().date().isoformat())
 
     f.finance_type = iati_finance_types.get(transaction['finance_type'])
     if (transaction['iati_identifier'].startswith('46002-')) and (f.finance_type == None):
@@ -247,7 +253,15 @@ def makeFinanceFromTransaction(activity, transaction):
             f.fund_source_id = get_or_create_fund_source(
                 fund_source_name, finance_type, fund_source_code)
     f.transaction_value_original = transaction['value_original']
-    f.value_date = transaction['value_date']
+    if transaction['iati_identifier'].startswith('XI-IATI-EC_INTPA-'):
+        fy = int(transaction['fiscal_year'])
+        fq = int(transaction['fiscal_quarter'][1:])
+        quarter_end_date = util.fq_fy_to_date(
+            fq, fy, 'end', True
+        )
+        f.value_date = quarter_end_date
+    else:
+        f.value_date = transaction['value_date']
     f.currency_source, f.currency_rate, f.currency_value_date = qexchangerates.get_exchange_rate(
         f.value_date, f.currency)
     return f
