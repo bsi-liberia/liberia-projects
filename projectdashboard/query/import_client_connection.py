@@ -255,7 +255,8 @@ def load_transactions_from_file(input_file):
     data = xlsx_to_csv.getDataFromFile(
         input_file.filename, input_file.read(), 0, True, 5)
     for transaction in data:
-        if transaction['Project'] == None: break
+        if (transaction['Project'] is None or transaction['Project'].startswith('Note:')):
+            break
         try:
             add_row(input_file.filename, period_start, period_end, transaction)
         except sa.exc.IntegrityError:
