@@ -421,18 +421,18 @@ class Activity(db.Model):
             "name": ft.fund_source_name
         }), query))
 
-    # NB this can return a number or None, which is not so nice
+
     @hybrid_property
     def total_commitments(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                                 ).filter(ActivityFinances.transaction_type == "C",
-                                         ActivityFinances.activity_id == self.id).scalar()
+                                         ActivityFinances.activity_id == self.id).scalar() or 0
 
     @hybrid_property
     def total_disbursements(self):
         return db.session.query(sa.func.sum(ActivityFinances.transaction_value)
                                 ).filter(ActivityFinances.transaction_type == "D",
-                                         ActivityFinances.activity_id == self.id).scalar()
+                                         ActivityFinances.activity_id == self.id).scalar() or 0
 
     commitments = sa.orm.relationship("ActivityFinances",
                                       primaryjoin="""and_(ActivityFinances.activity_id==Activity.id,
