@@ -101,19 +101,18 @@ def clean_string(_string):
 
 def update_activity_data(activity, existing_activity, row, codelists):
     updated = False
-
-    if ("Activity Title" in row) and (existing_activity["Activity Title"] != clean_string(row["Activity Title"])):
-        activity.title = clean_string(row["Activity Title"])
+    if ("Activity Title" in row) and (existing_activity["Activity Title"] != row["Activity Title"]):
+        activity.title = row["Activity Title"]
         updated = True
-    if ("Activity Description" in row) and (existing_activity["Activity Description"] != clean_string(row["Activity Description"])):
-        activity.description = clean_string(row["Activity Description"])
+    if ("Activity Description" in row) and (existing_activity["Activity Description"] != row["Activity Description"]):
+        activity.description = row["Activity Description"]
         updated = True
-    if ("Implemented by" in row) and (existing_activity["Implemented by"] != clean_string(row["Implemented by"])):
+    if ("Implemented by" in row) and (existing_activity["Implemented by"] != row["Implemented by"]):
         for organisation in activity.organisations:
             if organisation.role == 4:
                 db.session.delete(organisation)
         activity.organisations.append(qorganisations.make_organisation(
-            clean_string(row["Implemented by"]), 4))
+            row["Implemented by"]), 4)
         updated = True
     if ("Activity Status" in row) and (existing_activity["Activity Status"] != row["Activity Status"]):
         activity.activity_status = codelists["ActivityStatus"][row["Activity Status"]]
