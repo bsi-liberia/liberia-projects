@@ -182,6 +182,19 @@
                     </v-select>
                   </client-only>
                 </b-form-group>
+                <b-form-group label="Activity columns"
+                  description="Select which columns containing activity data you would like to update."
+                  label-class="font-weight-bold">
+                  <client-only>
+                    <v-select
+                      class="selected-import-headers"
+                      label="text" value="value"
+                      v-model="selectedBasicImportHeaders"
+                      :options="headers.basic" multiple
+                      :reduce="field => field.value" :get-option-label="getFieldLabel" required>
+                    </v-select>
+                  </client-only>
+                </b-form-group>
                 <b-form-group label="Template file"
                   label-for="file-amcu"
                   label-class="font-weight-bold"
@@ -369,14 +382,7 @@ export default {
             'text': 'MTEF projections (annually)',
             'value': "mtef",
             'help': 'Annual MTEF forward projections template'
-        },
-        /*
-        {
-            'text': 'Detailed update (ad hoc)',
-            'value': 'detail',
-            'help': 'Ad hoc detailed update template',
-            disabled: true
-        },*/
+        }
       ],
       templateOptionsImport: [
         {
@@ -388,18 +394,13 @@ export default {
             'text': 'MTEF projections (annually)',
             'value': "mtef",
             'help': 'Annual MTEF forward projections template'
-        },
-        {
-            'text': 'Automatically detect',
-            'value': 'detect',
-            'help': 'Automatically detect and import/update all fields',
-            disabled: true
         }
       ],
       importTemplate: {
         template_type: "disbursements",
         file: null,
         import_headers: [],
+        activity_headers: [],
         isBusy: false
       },
       importPSIP: {
@@ -431,7 +432,8 @@ export default {
       importMessagesTemplate: [],
       importMessagesPSIP: [],
       projectBriefDonorID: null,
-      selectedImportHeaders: []
+      selectedImportHeaders: [],
+      selectedBasicImportHeaders: []
     }
   },
   computed: {
@@ -548,6 +550,7 @@ export default {
         }
         this.selectedHeaders = response.data.selected
         this.setImportHeaders(this.selectedTemplateOption)
+        this.setBasicImportHeaders()
       });
       this.$axios
       .get(`filters/currency.json`)
@@ -579,6 +582,14 @@ export default {
         }
         return summary
       }, [])
+    },
+    setBasicImportHeaders() {
+      this.selectedBasicImportHeaders = this.headers.basic.reduce((summary, item) => {
+        if (this.selectedHeaders.basic.includes(item.value)) {
+          summary.push(item.value)
+        }
+        return summary
+      }, [])
     }
   },
   watch: {
@@ -588,6 +599,7 @@ export default {
         if (newValue != undefined) {
           this.setImportHeaders(newValue)
           this.importTemplate.template_type = newValue
+          this.setBasicImportHeaders()
         }
       }
     },
@@ -595,6 +607,12 @@ export default {
       immediate: true,
       handler(value) {
         this.importTemplate.import_headers = value
+      }
+    },
+    selectedBasicImportHeaders: {
+      immediate: true,
+      handler(value) {
+        this.importTemplate.activity_headers = value
       }
     }
   },
