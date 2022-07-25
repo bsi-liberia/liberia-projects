@@ -207,3 +207,27 @@ class TestExportFiles:
         route = url_for('activities.activity_delete', activity_id=12)
         res = client.post(route, headers=headers_admin)
         assert res.status_code == 200
+
+
+    def test_totals_transactions_xlsx(self, client, admin, headers_admin):
+        """
+        Check that totals of transaction XLSX file are correct.
+        Check that total of education transactions in transaaction XLSX file are correct.
+        """
+        route = url_for('exports.activities_xlsx_transactions')
+        res = client.get(route)
+        f = BytesIO(res.get_data())
+        xlsx_res = get_clean_data_from_file(f, 0, True)
+        assert list(xlsx_res[0].keys()) == ['Reported by', 'ID', 'GoL project code',
+            'Donor project code', 'Domestic/External', 'Activity Title',
+            'Activity Description', 'Activity Status', 'Activity Dates (Start Date)',
+            'Activity Dates (End Date)', 'County', 'Funded by', 'Implemented by',
+            'Sector (DAC CRS)', 'MTEF Sector', 'Aligned Ministry/Agency', 'PAPD Pillar',
+            'AfT Pillar', 'SDG Goal', 'Collaboration Type (Donor Type)', 'Fund Source',
+            'Finance Type (Type of Assistance)', 'Aid Type (Aid Modality)',
+            'Fiscal Year', 'Fiscal Quarter', 'Transaction Date',
+            'Transaction Value', 'Transaction Type']
+        total = sum([row.get('Transaction Value') for row in xlsx_res])
+        assert total == 62550
+        total_education = sum([row.get('Transaction Value') for row in xlsx_res if row.get('MTEF Sector') == 'EDUCATION'])
+        assert total_education == 11200

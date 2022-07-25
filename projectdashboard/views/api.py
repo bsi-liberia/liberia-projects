@@ -72,7 +72,8 @@ def spreadsheet_field_names():
                    counterpart_funding_headers=counterpart_headers,
                    selected={
                        "disbursements": spreadsheet_headers.headers_disb_template_1 + selected_disb_headers + spreadsheet_headers.headers_disb_template_2,
-                       "mtef": spreadsheet_headers.headers_mtef_template_1 + selected_counterpart_headers + selected_mtef_headers + spreadsheet_headers.headers_mtef_template_2
+                       "mtef": spreadsheet_headers.headers_mtef_template_1 + selected_counterpart_headers + selected_mtef_headers + spreadsheet_headers.headers_mtef_template_2,
+                       "basic": spreadsheet_headers.headers_disb_template_1 + spreadsheet_headers.headers_disb_template_2
                    })
 
 
@@ -240,15 +241,33 @@ def api_aggregates():
     dimension = request.args.get("dimension")
     if dimension not in ['mtef-sector', 'reporting-org', 'papd-pillar', 'sdg-goals']:
         abort(405)
+    # Codelists set at the transaction level
     if request.args.get("filter") == 'mtef-sector':
         filter_value = request.args.get("filter_value")
         sector_totals = qaggregates.aggregate(dimension,
                                               req_filters=[
-                                                  models.CodelistCode.codelist_code == 'mtef-sector',
+                                                  models.CodelistCode.codelist_code == request.args.get("filter"),
                                                   models.CodelistCode.code == filter_value
                                               ],
                                               req_finances_joins=[
                                                   models.ActivityFinancesCodelistCode,
+                                                  models.CodelistCode
+                                              ],
+                                              req_forwardspends_joins=[
+                                                  models.ActivityCodelistCode,
+                                                  models.CodelistCode
+                                              ]
+                                              )
+    # Codelists set at the activity level
+    elif request.args.get("filter") in ['sdg-goals']:
+        filter_value = request.args.get("filter_value")
+        sector_totals = qaggregates.aggregate(dimension,
+                                              req_filters=[
+                                                  models.CodelistCode.codelist_code == request.args.get("filter"),
+                                                  models.CodelistCode.code == filter_value
+                                              ],
+                                              req_finances_joins=[
+                                                  models.ActivityCodelistCode,
                                                   models.CodelistCode
                                               ],
                                               req_forwardspends_joins=[

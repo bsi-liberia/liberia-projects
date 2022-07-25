@@ -25,64 +25,7 @@
         </b-col>
       </b-row>
       <hr />
-      <b-row>
-        <b-col>
-          <h2>Planned and Actual Disbursement by {{ dimensionLabel }}</h2>
-          <b-row>
-            <b-col md="6">
-              <b-form-group
-                label="Fiscal year"
-                label-align="right"
-                label-cols-sm="3">
-                <b-select v-model="selectedFY"
-                :options="fyOptions"></b-select>
-              </b-form-group>
-            </b-col>
-          </b-row>
-          <client-only>
-            <aggregates-bar-chart
-              :selected-fy="selectedFY"
-              :dimension="dimension"
-              :agg-filter="aggFilter"
-              :agg-filter-value="aggFilterValue"></aggregates-bar-chart>
-          </client-only>
-        </b-col>
-      </b-row>
-      <hr />
-      <b-row>
-        <b-col>
-          <h2>Planned / Actual Disbursements by {{ dimensionLabel }}, over time</h2>
-          <b-row class="mb-2">
-            <b-col md="6" class="mt-1">
-              <b-form-radio-group
-                v-model="selectedPlannedActualDisbursements"
-                :options="plannedActualDisbursementOptions"
-                button-variant="outline-primary"
-                buttons
-                size="sm"
-              ></b-form-radio-group>
-            </b-col>
-            <b-col md="6" class="text-md-right mt-1">
-              <b-form-radio-group
-                v-model="plannedActualDisbursementsStacked"
-                :options="plannedActualDisbursementsStackedOptions"
-                button-variant="outline-secondary"
-                buttons
-                size="sm"
-              ></b-form-radio-group>
-            </b-col>
-          </b-row>
-          <client-only>
-            <aggregates-line-chart
-              :value-field="selectedPlannedActualDisbursements"
-              :fy-options="fyOptions"
-              :stacked="plannedActualDisbursementsStacked"
-              :dimension="dimension"
-              :agg-filter="aggFilter"
-              :agg-filter-value="aggFilterValue"></aggregates-line-chart>
-          </client-only>
-        </b-col>
-      </b-row>
+      <AggregatesTop :dimension="dimension" :dimension-label="dimensionLabel" :agg-filter="aggFilter" :agg-filter-value="aggFilterValue" />
       <hr />
       <b-row class="mb-3">
         <b-col md="9">
@@ -217,6 +160,8 @@
 </template>
 <script>
 // import component
+
+import AggregatesTop from '~/components/AggregatesTop.vue'
 import VueSlider from 'vue-slider-component/dist-css/vue-slider-component.umd.min.js'
 import 'vue-slider-component/dist-css/vue-slider-component.css'
 // import theme
@@ -224,15 +169,12 @@ import 'vue-slider-component/theme/default.css'
 import { debounce } from 'vue-debounce'
 import { mapGetters } from 'vuex'
 import { saveAs } from 'file-saver'
-import AggregatesBarChart from '~/components/Aggregates/BarChart.vue'
-import AggregatesLineChart from '~/components/Aggregates/LineChart.vue'
 // We use saveAs because we have token-based authentication so a normal
 // link won't work.
 export default {
   components: {
     VueSlider,
-    AggregatesBarChart,
-    AggregatesLineChart
+    AggregatesTop
   },
   props: ['aggFilter', 'label', 'aggFilterValue'],
   head() {
@@ -245,8 +187,6 @@ export default {
       aggregate: {
         name: null
       },
-      selectedFY: '2020',
-      fyOptions: [],
       slider: null,
       isBusy: true,
       perPage: 20,
@@ -265,28 +205,6 @@ export default {
       fields: [],
       preparingFile: false,
       preparingSectorBriefFile: false,
-      selectedPlannedActualDisbursements: 'Disbursements',
-      plannedActualDisbursementsStacked: true,
-      plannedActualDisbursementsStackedOptions: [
-        {
-          'value': true,
-          'text': 'Area chart'
-        },
-        {
-          'value': false,
-          'text': 'Line chart'
-        }
-      ],
-      plannedActualDisbursementOptions: [
-        {
-          'value': 'Disbursement Projection',
-          'text': 'Planned Disbursements'
-        },
-        {
-          'value': 'Disbursements',
-          'text': 'Actual Disbursements'
-        }
-      ]
     }
   },
   mounted: function() {
@@ -309,24 +227,18 @@ export default {
   },
   methods: {
     async setupData() {
-      this.getFYs()
       this.setupFilters()
       this.setFiltersFromQuery()
       await this.getAggData()
       this.queryProjectsData()
     },
-    getFYs() {
-      this.$axios
-      .get(`filters/available_fys.json`)
-      .then(response => {
-        this.fyOptions = [{'value': null, 'text': 'All Fiscal Years'}].concat(response.data.fys)
-        this.selectedFY = response.data.current_fy
-      });
-    },
     async getAggData() {
       if (this.aggFilter == 'mtef-sector') {
         await this.getSector()
         this.setAggDefaultFilters('mtef-sector')
+      } else if (this.aggFilter == 'sdg-goals') {
+        await this.getSector()
+        this.setAggDefaultFilters('sdg-goals')
       } else if (this.aggFilter == 'reporting-org') {
         await this.getDonor()
         this.setAggDefaultFilters('reporting_org_id')
@@ -347,7 +259,7 @@ export default {
     },
     async getSector() {
       return await this.$axios
-      .get(`codelists/mtef-sector/${this.aggFilterValue}.json`)
+      .get(`codelists/${this.aggFilter}/${this.aggFilterValue}.json`)
       .then(response => {
         this.aggregate = response.data.code
       })
@@ -467,6 +379,8 @@ export default {
     updateRouter() {
       if (this.aggFilter == 'mtef-sector') {
         this.$router.push({ name: 'sectors-id', params: {id: this.aggFilterValue}, query: this.nonDefaultFilters })
+      } else if (this.aggFilter == 'sdg-goals') {
+        this.$router.push({ name: 'sdgs-id', params: {id: this.aggFilterValue}, query: this.nonDefaultFilters })
       } else if (this.aggFilter == 'reporting-org') {
         this.$router.push({ name: 'donors-id', params: {id: this.aggFilterValue}, query: this.nonDefaultFilters })
       }
@@ -507,12 +421,16 @@ export default {
     dimension() {
       if (this.aggFilter == 'mtef-sector') {
         return 'reporting-org'
+      } else if (this.aggFilter == 'sdg-goals') {
+        return 'reporting-org'
       } else if (this.aggFilter == 'reporting-org') {
         return 'mtef-sector'
       }
     },
     dimensionLabel() {
       if (this.aggFilter == 'mtef-sector') {
+        return 'Donor'
+      } else if (this.aggFilter == 'sdg-goals') {
         return 'Donor'
       } else if (this.aggFilter == 'reporting-org') {
         return 'Sector'

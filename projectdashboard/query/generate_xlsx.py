@@ -23,7 +23,7 @@ from projectdashboard.lib.spreadsheet_headers import headers, fr_headers, header
 from projectdashboard.lib.spreadsheets.validation import v_status, v_id, v_date, v_number
 from projectdashboard.lib.spreadsheets import apply_formatting, helpers, xlsx_writer
 from projectdashboard.lib.codelist_helpers import codelists
-from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name
+from projectdashboard.lib.codelists import get_codelists_lookups, get_codelists_lookups_by_name, get_codelists_ids_by_name
 from projectdashboard.query.generate_csv import activity_to_json, generate_disb_fys, activity_to_transactions_list
 
 
@@ -93,46 +93,58 @@ def process_transaction(activity, amount, currency, column_name):
     return disbursement
 
 
-def clean_string(_string):
-    if sys.version_info.major == 2:
-        return _string.decode("utf-8")
-    return _string
+friendly_to_column = {
+    'Activity Title': 'title',
+    'Activity Description': 'description',
+    'Activity Dates (Start Date)': 'start_date',
+    'Activity Dates (End Date)': 'end_date',
+    'SDG Goal': 'sdg-goals'
+}
 
 
-def update_activity_data(activity, existing_activity, row, codelists):
+def update_activity_attrib(activity, existing_activity, column, value, codelists, codelists_with_ids):
+    print(f"Attempting update of {column}")
+    friendly_column = friendly_to_column.get(column)
+    if column in ['Activity Title', 'Activity Description']:
+        if existing_activity.get(column) != value:
+            setattr(activity, friendly_column, value)
+            return True
+    elif column in ['Implemented by']:
+        if existing_activity.get(column) != value:
+            for organisation in activity.organisations:
+                if organisation.role == 4:
+                    db.session.delete(organisation)
+            activity.organisations.append(qorganisations.make_organisation(
+                value), 4)
+            return True
+    elif column in ['Donor project code']:
+        if (existing_activity.get(column) != str(value)) and (str(value) != ""):
+            activity.iati_identifier = value
+            return True
+    elif column in ['Activity Status']:
+        if existing_activity.get(column) != value:
+            activity.activity_status = codelists["ActivityStatus"][value]
+            return True
+    elif column in ['Activity Dates (Start Date)', 'Activity Dates (End Date)']:
+        if existing_activity.get(column) != value.date().isoformat():
+            setattr(activity, friendly_column, value.date())
+        return True
+    elif column in ['SDG Goal']:
+        if value not in (None, ''):
+            sdg_goal = value.split(" - ")[1]
+            activity.set_classification('sdg-goals', codelists_with_ids['sdg-goals'][sdg_goal])
+            return True
+
+
+def update_activity_data(activity_cols, activity, existing_activity, row, codelists, codelists_with_ids):
     updated = False
-
-    if ("Activity Title" in row) and (existing_activity["Activity Title"] != clean_string(row["Activity Title"])):
-        activity.title = clean_string(row["Activity Title"])
-        updated = True
-    if ("Activity Description" in row) and (existing_activity["Activity Description"] != clean_string(row["Activity Description"])):
-        activity.description = clean_string(row["Activity Description"])
-        updated = True
-    if ("Implemented by" in row) and (existing_activity["Implemented by"] != clean_string(row["Implemented by"])):
-        for organisation in activity.organisations:
-            if organisation.role == 4:
-                db.session.delete(organisation)
-        activity.organisations.append(qorganisations.make_organisation(
-            clean_string(row["Implemented by"]), 4))
-        updated = True
-    if ("Activity Status" in row) and (existing_activity["Activity Status"] != row["Activity Status"]):
-        activity.activity_status = codelists["ActivityStatus"][row["Activity Status"]]
-        updated = True
-    if "Activity Dates (Start Date)" in row:
-        start_date = row["Activity Dates (Start Date)"].date()
-        if existing_activity["Activity Dates (Start Date)"] != start_date.isoformat():
-            activity.start_date = start_date
-            updated = True
-    if "Activity Dates (End Date)" in row:
-        end_date = row["Activity Dates (End Date)"].date()
-        if existing_activity["Activity Dates (End Date)"] != end_date.isoformat():
-            activity.end_date = end_date
-            updated = True
-    if "Donor project code" in row:
-        project_code = row["Donor project code"]
-        if (existing_activity["Donor project code"] != str(project_code)) and (str(project_code) != ""):
-            activity.iati_identifier = project_code
-            updated = True
+    for column in activity_cols:
+        if column not in row:
+            print(f"WARNING: column {column} not in row")
+        else:
+            _updated = update_activity_attrib(activity, existing_activity, column,
+                row.get(column), codelists, codelists_with_ids)
+            if _updated == True: updated = True
     activity.forwardspends += qfinances.create_missing_forward_spends(
         activity.start_date, activity.end_date, activity.id)
     return updated
@@ -270,15 +282,15 @@ def make_updated_info(updated, activity, num_updated_activities):
     return msg + "; ".join(msgs), num_updated_activities
 
 
-def import_xls_mtef(input_file, column_names):
-    return import_xls_new(input_file, "mtef", column_names)
+def import_xls_mtef(input_file, column_names, activity_column_names):
+    return import_xls_new(input_file, "mtef", column_names, activity_column_names)
 
 
-def import_xls(input_file, column_names):
-    return import_xls_new(input_file, "disbursements", column_names)
+def import_xls(input_file, column_names, activity_column_names):
+    return import_xls_new(input_file, "disbursements", column_names, activity_column_names)
 
 
-def import_xls_new(input_file, _type, disbursement_cols=[]):
+def import_xls_new(input_file, _type, disbursement_cols=[], activity_cols=[]):
     num_updated_activities = 0
     messages = []
     activity_id = None
@@ -287,6 +299,7 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
     num_sheets = len(xl_workbook.sheetnames)
     cl_lookups = get_codelists_lookups()
     cl_lookups_by_name = get_codelists_lookups_by_name()
+    cl_lookups_by_name_id = get_codelists_ids_by_name()
 
     def filter_mtef(column):
         pattern = r"(\S*) \(MTEF\)$"
@@ -327,6 +340,11 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                         system before trying to import.".format(row['ID'], row['Activity Title']))
                     continue
                 activity = qactivity.get_activity(activity_id)
+                if activity is None:
+                    messages.append("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                        and was not imported! Please create this activity in the \
+                        system before trying to import.".format(row['ID'], row['Activity Title']))
+                    continue
                 activity_iati_preferences = [
                     pref.field for pref in activity.iati_preferences]
                 if not activity:
@@ -338,10 +356,14 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                 if _type == 'mtef':
                     # FIXME quick fix for now
                     if 'forwardspend' in activity_iati_preferences:
+                        updated = {
+                            'activity': update_activity_data(activity_cols, activity, existing_activity,
+                                row, cl_lookups_by_name, cl_lookups_by_name_id)
+                        }
                         continue
                     updated = {
-                        'activity': update_activity_data(activity, existing_activity,
-                            row, cl_lookups_by_name),
+                        'activity': update_activity_data(activity_cols, activity, existing_activity,
+                            row, cl_lookups_by_name, cl_lookups_by_name_id),
                         # Parse MTEF projections columns
                         'mtef_years': parse_mtef_cols(currency, mtef_cols, existing_activity,
                             row, activity_id),
@@ -352,10 +374,14 @@ def import_xls_new(input_file, _type, disbursement_cols=[]):
                 elif _type == 'disbursements':
                     # FIXME quick fix for now
                     if 'disbursement' in activity_iati_preferences:
+                        updated = {
+                            'activity': update_activity_data(activity_cols, activity, existing_activity,
+                                row, cl_lookups_by_name, cl_lookups_by_name_id)
+                        }
                         continue
                     updated = {
-                        'activity': update_activity_data(activity, existing_activity,
-                            row, cl_lookups_by_name),
+                        'activity': update_activity_data(activity_cols, activity, existing_activity,
+                            row, cl_lookups_by_name, cl_lookups_by_name_id),
                         'disbursements': parse_disbursement_cols(currency, disbursement_cols,
                             activity, existing_activity, row)
                     }

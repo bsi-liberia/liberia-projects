@@ -1,26 +1,56 @@
 <template>
   <div>
-    <template v-if="isBusy">
-      <b-row style="margin-bottom: 20px;">
-        <b-col md="12" class="text-center">
-          <b-spinner class="align-middle" label="Loading..."></b-spinner>
-          <strong>Loading...</strong>
-        </b-col>
-      </b-row>
-    </template>
-    <template v-else>
-      <template v-if="showChart">
-        <LineChart
-          :data="chartData"
-          :options="lineChartOptions"
-          class="line-chart"
-          v-if="isBusy==false"
-          ></LineChart>
+    <b-row class="mb-2">
+      <b-col md="6" class="mt-1">
+        <b-form-radio-group
+          v-model="selectedPlannedActualDisbursements"
+          :options="plannedActualDisbursementOptions"
+          button-variant="outline-primary"
+          buttons
+          size="sm"
+        ></b-form-radio-group>
+      </b-col>
+      <b-col md="6" class="text-md-right mt-1">
+        <b-form-radio-group
+          v-model="displayMode"
+          :options="displayModeOptions"
+          button-variant="outline-secondary"
+          buttons
+          size="sm"
+        ></b-form-radio-group>
+      </b-col>
+    </b-row>
+    <client-only>
+      <template v-if="isBusy">
+        <b-row style="margin-bottom: 20px;">
+          <b-col md="12" class="text-center">
+            <b-spinner class="align-middle" label="Loading..."></b-spinner>
+            <strong>Loading...</strong>
+          </b-col>
+        </b-row>
       </template>
       <template v-else>
-        <b-alert show variant="secondary" class="text-center">No data.</b-alert>
+        <template v-if="showChart">
+          <template v-if="displayMode!='table'">
+            <LineChart
+              :data="chartData"
+              :options="lineChartOptions"
+              class="line-chart"
+              v-if="isBusy==false"
+              ></LineChart>
+            </template>
+            <template v-else>
+            <b-table
+              responsive
+              :fields="dataFields"
+              :items="tableData" />
+            </template>
+        </template>
+        <template v-else>
+          <b-alert show variant="secondary" class="text-center">No data.</b-alert>
+        </template>
       </template>
-    </template>
+    </client-only>
   </div>
 </template>
 <style scoped>
@@ -41,10 +71,36 @@ export default {
       isBusy: true,
       data: [],
       labelField: "Sector",
-      valueLabel: "Amount (USD mn)"
+      valueLabel: "Amount (USD mn)",
+      selectedPlannedActualDisbursements: 'Disbursements',
+      displayMode: 'area',
+      displayModeOptions: [
+        {
+          'value': 'area',
+          'text': 'Area Chart'
+        },
+        {
+          'value': 'line',
+          'text': 'Line Chart'
+        },
+        {
+          'value': 'table',
+          'text': 'Table'
+        }
+      ],
+      plannedActualDisbursementOptions: [
+        {
+          'value': 'Disbursement Projection',
+          'text': 'Planned Disbursements'
+        },
+        {
+          'value': 'Disbursements',
+          'text': 'Actual Disbursements'
+        }
+      ]
     }
   },
-  props: ['fyOptions', 'valueField', 'stacked', 'dimension', 'agg-filter', 'agg-filter-value'],
+  props: ['fyOptions', 'dimension', 'dimension-label', 'agg-filter', 'agg-filter-value'],
   components: {
     LineChart
   },
@@ -54,6 +110,41 @@ export default {
   watch: {
   },
   computed: {
+    tableData() {
+      return Object.entries(this.summaryData).reduce((summary, item) => {
+        item[1][this.dimensionLabel] = item[0]
+        summary.push(item[1])
+        return summary
+      }, [])
+    },
+    dataFields(){
+      var fields = [
+        {
+          key: this.dimensionLabel,
+          sortable: true
+        }
+      ]
+      this.fyOptions.forEach(option => {
+        fields.push({
+          key: option.value,
+          sortable: true,
+          class: "number",
+          formatter: value => {
+            return value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })
+          }
+        })
+      })
+      return fields
+    },
+    valueField() {
+      return this.selectedPlannedActualDisbursements
+    },
+    stacked() {
+      return this.displayMode == 'area'
+    },
     showChart() {
       return (Object.entries(this.summaryData).length>0) && (this.total > 0)
     },
@@ -182,7 +273,10 @@ export default {
   },
   methods: {
     async loadData() {
-      const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter_value=${this.aggFilterValue}`
+      var apiURL = `aggregates.json?dimension=${this.dimension}`
+      if (this.aggFilter != null) {
+        apiURL += `&filter=${this.aggFilter}&filter_value=${this.aggFilterValue}`
+      }
       await this.$axios.get(apiURL)
       .then(response => {
         this.data = response.data.entries
