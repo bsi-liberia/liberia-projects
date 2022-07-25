@@ -161,9 +161,12 @@ def import_template():
         return make_response(jsonify({'msg': 'Please select a file.'}), 400)
     if file and allowed_file(file.filename):
         headers = request.form.get('import_headers').split(",")
+        if headers == ['']: headers = []
+        activity_headers = request.form.get('activity_headers', '').split(",")
+        if activity_headers == ['']: activity_headers = []
         try:
             if request.form.get('template_type') == 'mtef':
-                result_messages, result_rows = qgenerate_xlsx.import_xls_mtef(file, headers)
+                result_messages, result_rows = qgenerate_xlsx.import_xls_mtef(file, headers, activity_headers)
                 if result_rows > 0:
                     return make_response(jsonify({
                         'msg': "{} activities successfully updated!".format(result_rows),
@@ -184,7 +187,7 @@ def import_template():
                 # If no data in that FQ: then import
                 # If there was data for that FY: then don't import
                 result_messages, result_rows = qgenerate_xlsx.import_xls(
-                    file, headers)
+                    file, headers, activity_headers)
                 if result_rows > 0:
                     return make_response(jsonify({
                         'msg': "{} activities successfully updated!".format(result_rows),
