@@ -72,7 +72,8 @@ def spreadsheet_field_names():
                    counterpart_funding_headers=counterpart_headers,
                    selected={
                        "disbursements": spreadsheet_headers.headers_disb_template_1 + selected_disb_headers + spreadsheet_headers.headers_disb_template_2,
-                       "mtef": spreadsheet_headers.headers_mtef_template_1 + selected_counterpart_headers + selected_mtef_headers + spreadsheet_headers.headers_mtef_template_2
+                       "mtef": spreadsheet_headers.headers_mtef_template_1 + selected_counterpart_headers + selected_mtef_headers + spreadsheet_headers.headers_mtef_template_2,
+                       "basic": spreadsheet_headers.headers_disb_template_1 + spreadsheet_headers.headers_disb_template_2
                    })
 
 
