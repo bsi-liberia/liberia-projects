@@ -635,6 +635,13 @@ class Activity(db.Model):
     def classification_data(self):
         return self.make_classification_data(as_dict=False)
 
+    #FIXME need to improve relationship to classifications
+    def set_classification(self, classification, _id):
+        relevant_codelistcode = list(
+            filter(lambda cl: cl.codelist_code.codelist_code==classification,
+            self.classifications))[0]
+        relevant_codelistcode.codelist_code_id = _id
+
     @hybrid_property
     def policy_markers_data(self):
         all_markers = PolicyMarker.query.all()
