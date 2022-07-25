@@ -340,6 +340,11 @@ def import_xls_new(input_file, _type, disbursement_cols=[], activity_cols=[]):
                         system before trying to import.".format(row['ID'], row['Activity Title']))
                     continue
                 activity = qactivity.get_activity(activity_id)
+                if activity is None:
+                    messages.append("Warning, activity ID \"{}\" with title \"{}\" was not found in the system \
+                        and was not imported! Please create this activity in the \
+                        system before trying to import.".format(row['ID'], row['Activity Title']))
+                    continue
                 activity_iati_preferences = [
                     pref.field for pref in activity.iati_preferences]
                 if not activity:
