@@ -241,15 +241,33 @@ def api_aggregates():
     dimension = request.args.get("dimension")
     if dimension not in ['mtef-sector', 'reporting-org', 'papd-pillar', 'sdg-goals']:
         abort(405)
+    # Codelists set at the transaction level
     if request.args.get("filter") == 'mtef-sector':
         filter_value = request.args.get("filter_value")
         sector_totals = qaggregates.aggregate(dimension,
                                               req_filters=[
-                                                  models.CodelistCode.codelist_code == 'mtef-sector',
+                                                  models.CodelistCode.codelist_code == request.args.get("filter"),
                                                   models.CodelistCode.code == filter_value
                                               ],
                                               req_finances_joins=[
                                                   models.ActivityFinancesCodelistCode,
+                                                  models.CodelistCode
+                                              ],
+                                              req_forwardspends_joins=[
+                                                  models.ActivityCodelistCode,
+                                                  models.CodelistCode
+                                              ]
+                                              )
+    # Codelists set at the activity level
+    elif request.args.get("filter") in ['sdg-goals']:
+        filter_value = request.args.get("filter_value")
+        sector_totals = qaggregates.aggregate(dimension,
+                                              req_filters=[
+                                                  models.CodelistCode.codelist_code == request.args.get("filter"),
+                                                  models.CodelistCode.code == filter_value
+                                              ],
+                                              req_finances_joins=[
+                                                  models.ActivityCodelistCode,
                                                   models.CodelistCode
                                               ],
                                               req_forwardspends_joins=[
