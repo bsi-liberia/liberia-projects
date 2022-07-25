@@ -155,7 +155,10 @@ def create_activity_for_test(data, user_id):
     mtef_sector = models.ActivityCodelistCode()
     mtef_sector.codelist_code_id = codelists.get_codelists_ids_by_name()[
         'mtef-sector'][data.get("MTEF Sector")]
-    act.classifications = [mtef_sector]
+    sdg_goal = models.ActivityCodelistCode()
+    sdg_goal.codelist_code_id = codelists.get_codelists_ids_by_name()[
+        'sdg-goals']["Peace and Justice Strong Institutions"]
+    act.classifications = [mtef_sector, sdg_goal]
     act.title = data.get("Activity Title")
     act.description = ""
     act.recipient_country_code = "LR"
