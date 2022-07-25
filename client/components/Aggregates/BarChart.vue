@@ -9,17 +9,47 @@
       </b-row>
     </template>
     <template v-else>
-      <template v-if="showChart">
-        <BarChart
-          :data="chartData"
-          :options="barChartOptions"
-          class="bar-chart"
-          v-if="isBusy==false"
-          ></BarChart>
-      </template>
-      <template v-else>
-        <b-alert show variant="secondary" class="text-center">No data.</b-alert>
-      </template>
+      <b-row>
+        <b-col md="6">
+          <b-form-group
+            label="Fiscal year"
+            label-align="right"
+            label-cols-sm="3">
+            <b-select v-model="selectedFY"
+            :options="fyOptions"></b-select>
+          </b-form-group>
+        </b-col>
+        <b-col md="6" class="text-md-right ml-auto">
+          <b-form-group>
+            <b-form-radio-group v-model="showChart"
+            :options="showChartOptions"
+            button-variant="outline-secondary"
+            size="md"
+            name="radio-btn-outline"
+            buttons></b-form-radio-group>
+          </b-form-group>
+        </b-col>
+      </b-row>
+      <client-only>
+        <template v-if="showData">
+          <template v-if="showChart">
+            <BarChart
+              :data="chartData"
+              :options="barChartOptions"
+              class="bar-chart"
+              ></BarChart>
+          </template>
+          <template v-else>
+            <b-table
+              responsive
+              :fields="dataFields"
+              :items="summaryData" />
+          </template>
+        </template>
+        <template v-else>
+          <b-alert show variant="secondary" class="text-center">No data.</b-alert>
+        </template>
+      </client-only>
     </template>
   </div>
 </template>
@@ -40,12 +70,16 @@ export default {
     return {
       isBusy: true,
       data: [],
-      valueField: "Disbursements",
-      labelField: "Sector",
-      valueLabel: "Amount (USD mn)"
+      valueField: "Actual Disbursements",
+      valueLabel: "Amount (USD mn)",
+      showChart: true,
+      showChartOptions: [
+        {'text': 'Chart', value: true},
+        {'text': 'Table', value: false}
+      ]
     }
   },
-  props: ['selected-fy', 'dimension', 'agg-filter', 'agg-filter-value'],
+  props: ['selected-fy', 'fy-options', 'dimension', 'dimension-label', 'agg-filter', 'agg-filter-value'],
   components: {
     BarChart
   },
@@ -55,7 +89,15 @@ export default {
   watch: {
   },
   computed: {
-    showChart() {
+    selectedFY: {
+      get() {
+        return this.selectedFy
+      },
+      set(newValue) {
+        this.$emit('update:selectedFy', newValue)
+      }
+    },
+    showData() {
       return this.summaryData.length>0 && (this.totalDisbursements > 0 || this.totalDisbursementProjections > 0)
     },
     barChartOptions(){
@@ -130,30 +172,62 @@ export default {
     },
     totalDisbursements() {
       return this.summaryData.reduce((summary, item)=> {
-        summary += item['Disbursements']
+        summary += item['Actual Disbursements']
         return summary
       }, 0.00)
     },
     totalDisbursementProjections() {
       return this.summaryData.reduce((summary, item)=> {
-        summary += item['Disbursement Projection']
+        summary += item['Planned Disbursements']
         return summary
       }, 0.00)
+    },
+    dataFields(){
+      return [
+        {
+          key: this.dimensionLabel,
+          sortable: true
+        },
+        {
+          key: 'Planned Disbursements',
+          label: 'Planned Disbursements (USDm)',
+          class: "number",
+          sortable: true,
+          formatter: value => {
+            return value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })
+          }
+        },
+        {
+          key: 'Actual Disbursements',
+          label: 'Actual Disbursements (USDm)',
+          class: "number",
+          sortable: true,
+          formatter: value => {
+            return value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })
+          }
+        }
+      ]
     },
     summaryData() {
       return Object.values(this.filteredData.reduce((summary, item) => {
         if (!(summary[item.name])) {
           summary[item.name] = {
-            'Sector': item.name,
-            'Disbursements': 0.0,
-            'Disbursement Projection': 0.0
+            'Actual Disbursements': 0.0,
+            'Planned Disbursements': 0.0
           }
+          summary[item.name][this.dimensionLabel] = item.name
         }
-        summary[item.name].Disbursements += (item.Disbursements / 1000000)
-        summary[item.name]['Disbursement Projection'] += (item['Disbursement Projection'] / 1000000)
+        summary[item.name]['Actual Disbursements'] += (item.Disbursements / 1000000)
+        summary[item.name]['Planned Disbursements'] += (item['Disbursement Projection'] / 1000000)
         return summary
       }, {}))
-      .sort((a,b) => a[this.labelField] > b[this.labelField] ? 1 : -1)
+      .sort((a,b) => a[this.dimensionLabel] > b[this.dimensionLabel] ? 1 : -1)
     },
     chartData() {
       const colours = [
@@ -164,22 +238,25 @@ export default {
         datasets: [{
           label: 'Planned Disbursements',
           fill: true,
-          data: this.summaryData.map((ds) => { return ds['Disbursement Projection'] }).slice(0,20),
+          data: this.summaryData.map((ds) => { return ds['Planned Disbursements'] }).slice(0,20),
           backgroundColor: colours[10]
         },
         {
           label: 'Actual Disbursements',
           fill: true,
-          data: this.summaryData.map((ds) => { return ds['Disbursements'] }).slice(0,20),
+          data: this.summaryData.map((ds) => { return ds['Actual Disbursements'] }).slice(0,20),
           backgroundColor: colours[0]
         }],
-        labels: this.summaryData.map((ds) => { return ds[this.labelField] }).slice(0,20),
+        labels: this.summaryData.map((ds) => { return ds[this.dimensionLabel] }).slice(0,20),
       }
     }
   },
   methods: {
     async loadData() {
-      const apiURL = `aggregates.json?dimension=${this.dimension}&filter=${this.aggFilter}&filter_value=${this.aggFilterValue}`
+      var apiURL = `aggregates.json?dimension=${this.dimension}`
+      if (this.aggFilterValue != null) {
+        apiURL += `&filter=${this.aggFilter}&filter_value=${this.aggFilterValue}`
+      }
       await this.$axios.get(apiURL)
       .then(response => {
         this.data = response.data.entries
