@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-navbar toggleable="xl" type="dark" variant="light" sticky>
+    <b-navbar toggleable="xl" type="dark" variant="light" sticky class="primary-navbar">
       <b-container fluid>
         <b-navbar-brand :to="'/'">
           <img src="~/assets/img/flag-lr.png" alt="Flag" />
@@ -12,18 +12,9 @@
             <b-nav-item :to="{name: 'index'}" exact-active-class="active">Home
             </b-nav-item>
             <b-nav-item  :to="{name: 'activities'}" active-class="active" v-if="loggedInUser.new_permissions_list.includes('activities')">Activities</b-nav-item>
-            <b-nav-item-dropdown text="Sectors" active-class="active" :class="this.$route.name=='sectors-id' ?'active' : ''">
-              <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
-                {{ sector.name }}
-              </b-dropdown-item>
-            </b-nav-item-dropdown>
-            <b-nav-item-dropdown text="Donors" active-class="active" :class="this.$route.name=='donors-id' ?'active' : ''">
-              <div class="scrollable-menu">
-                <b-dropdown-item :to="{name: 'donors-id', params: { id: donor.id }}" v-for="donor in donors" :key="donor.id" active-class="active">
-                  {{ donor.name }}
-                </b-dropdown-item>
-              </div>
-            </b-nav-item-dropdown>
+            <b-nav-item v-b-toggle.secondary-navbar-collapse :class="showSecondaryNavbar ? 'active': null">
+              <span class="dropdown-toggle">Dashboards</span>
+            </b-nav-item>
             <template v-if="loggedInUser.new_permissions_list.includes('reports')">
               <b-nav-item-dropdown text="Reports">
                 <b-dropdown-item :to="{name: 'reports-milestones'}" active-class="active"
@@ -69,6 +60,53 @@
         </b-collapse><!--/.nav-collapse -->
       </b-container>
     </b-navbar>
+    <b-collapse id="secondary-navbar-collapse" class="sticky-secondary" :visible="showSecondaryNavbar">
+      <b-navbar toggleable="xl" type="dark" variant="secondary" class="secondary-nav" :show="showSecondaryNavbar">
+        <b-container fluid>
+          <b-navbar-brand>
+            Dashboards
+          </b-navbar-brand>
+          <b-navbar-toggle target="secondary-navbar-inner-collapse"></b-navbar-toggle>
+          <b-collapse id="secondary-navbar-inner-collapse" is-nav>
+            <b-navbar-nav>
+              <b-nav-item-dropdown text="by Donor" :class="('donors', 'donors-id').includes(this.$route.name) ?'active' : ''">
+                <div class="scrollable-menu">
+                  <b-dropdown-item :to="{name: 'donors'}" exact-active-class="active">
+                    All donors
+                  </b-dropdown-item>
+                  <b-dropdown-divider></b-dropdown-divider>
+                  <b-dropdown-item :to="{name: 'donors-id', params: { id: donor.id }}" v-for="donor in donors" :key="donor.id" active-class="active">
+                    {{ donor.name }}
+                  </b-dropdown-item>
+                </div>
+              </b-nav-item-dropdown>
+              <b-nav-item-dropdown text="by Sector" :class="('sectors', 'sectors-id').includes(this.$route.name) ?'active' : ''">
+                <div class="scrollable-menu">
+                  <b-dropdown-item :to="{name: 'sectors'}" exact-active-class="active">
+                    All sectors
+                  </b-dropdown-item>
+                  <b-dropdown-divider></b-dropdown-divider>
+                  <b-dropdown-item :to="{name: 'sectors-id', params: { id: sector.code }}" v-for="sector in sectors" :key="sector.code" active-class="active">
+                    {{ sector.name }}
+                  </b-dropdown-item>
+                </div>
+              </b-nav-item-dropdown>
+              <b-nav-item-dropdown text="by SDG" :class="('sdgs', 'sdgs-id').includes(this.$route.name) ?'active' : ''">
+                <div class="scrollable-menu">
+                  <b-dropdown-item :to="{name: 'sdgs'}" exact-active-class="active">
+                    All SDGs
+                  </b-dropdown-item>
+                  <b-dropdown-divider></b-dropdown-divider>
+                  <b-dropdown-item :to="{name: 'sdgs-id', params: { id: sdg.code }}" v-for="sdg in sdgGoals" :key="sdg.code" active-class="active">
+                    {{ sdg.code }} - {{ sdg.name }}
+                  </b-dropdown-item>
+                </div>
+              </b-nav-item-dropdown>
+            </b-navbar-nav>
+          </b-collapse>
+        </b-container>
+      </b-navbar>
+    </b-collapse>
     <b-container :style="pageMargins" :fluid="$route.name=='index'">
       <nuxt />
     </b-container>
@@ -92,7 +130,7 @@
 @media (min-width: 768px) {
   .scrollable-menu {
       height: auto;
-      max-height: calc(100vh - 80px);
+      max-height: calc(100vh - 140px);
       overflow-x: hidden;
   }
 }
@@ -100,9 +138,17 @@
 @media (max-width: 767px) {
   .scrollable-menu {
     height: auto;
-    max-height: calc(100vh - 260px);
+    max-height: calc(100vh - 320px);
     overflow-x: hidden;
   }
+}
+.secondary-nav {
+  padding: 0rem 1rem;
+}
+.sticky-secondary {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 67px; z-index: 1010;
 }
 .number {
   text-align: right;
@@ -115,7 +161,7 @@
   padding-top: 10px;
   padding-bottom: 0;
 }
-.navbar-default, nav.navbar {
+.navbar-default, nav.primary-navbar {
     background: #55a44f;
     background: -moz-linear-gradient(45deg,#55a44f 0%,#68b761 100%);
     background: -webkit-gradient(linear,left bottom,right top,color-stop(0%,#55a44f),color-stop(100%,#68b761));
@@ -137,6 +183,7 @@ export default {
     return {
       title: config.head.title,
       description: config.description,
+      showSecondaryNavbar: false
     }
   },
   computed: {
@@ -147,7 +194,20 @@ export default {
       return 'margin-top: 20px; margin-bottom: 30px;';
     },
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
-    ...mapState(['sectors', 'donors'])
+    ...mapState(['sectors', 'sdgGoals', 'donors'])
+  },
+  watch: {
+    $route: {
+      immediate: true,
+      handler (to, from) {
+        const routesToWatch = ['sectors', 'sectors-id', 'donors', 'donors-id', 'sdgs', 'sdgs-id']
+        if (routesToWatch.includes(to.name)) {
+          this.showSecondaryNavbar = true
+        } else {
+          this.showSecondaryNavbar = false
+        }
+      }
+    }
   },
   methods: {
     async logout() {
