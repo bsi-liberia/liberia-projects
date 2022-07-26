@@ -18,7 +18,7 @@ export default {
       { name: 'twitter:title', content: 'Liberia Project Dashboard' },
       { name: 'twitter:description', content: 'The Liberia Project Dashboard is used to collect, analyze, and report information about external assistance programs and projects in Liberia.' },
       { name: 'twitter:image', content: 'https://liberiaprojects.org/flag-liberia-large.png' },
-      { name: 'twitter:image:alt', content: 'Contributions to the Covid-19 emergency.' }
+      { name: 'twitter:image:alt', content: 'Flag of Liberia.' }
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
