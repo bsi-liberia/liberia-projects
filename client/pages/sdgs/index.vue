@@ -12,6 +12,11 @@ import AggregatesTop from '~/components/AggregatesTop.vue'
 export default {
   components: {
     AggregatesTop
+  },
+  head() {
+    return {
+      title: `Sustainable Development Goals | ${this.$config.title}`
+    }
   }
 }
 </script>
