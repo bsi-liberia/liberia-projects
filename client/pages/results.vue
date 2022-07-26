@@ -83,7 +83,11 @@ export default {
   },
   head() {
     return {
-      title: `Results | ${this.$config.title}`
+      title: `Results | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Results | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Results | ${this.$config.title}` },
+      ]
     }
   },
   mounted: function() {

@@ -150,7 +150,11 @@ export default {
   },
   head() {
     return {
-      title: `Help | ${this.$config.title}`
+      title: `Help | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Help | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Help | ${this.$config.title}` },
+      ]
     }
   },
   computed: {
