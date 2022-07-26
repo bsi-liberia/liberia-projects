@@ -14,11 +14,13 @@ export default {
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: 'The Liberia Project Dashboard is used to collect, analyze, and report information about external assistance programs and projects in Liberia.' },
-      { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: 'Liberia Project Dashboard' },
-      { name: 'twitter:description', content: 'The Liberia Project Dashboard is used to collect, analyze, and report information about external assistance programs and projects in Liberia.' },
-      { name: 'twitter:image', content: 'https://liberiaprojects.org/flag-liberia-large.png' },
-      { name: 'twitter:image:alt', content: 'Flag of Liberia.' }
+      { hid: 'twitter:card', name: 'twitter:card', content: 'summary_large_image' },
+      { hid: 'twitter:title', name: 'twitter:title', content: 'Liberia Project Dashboard' },
+      { hid: 'og:title', name: 'og:title', content: 'Liberia Project Dashboard' },
+      { hid: 'twitter:description', name: 'twitter:description', content: 'The Liberia Project Dashboard is used to collect, analyze, and report information about external assistance programs and projects in Liberia.' },
+      { hid: 'twitter:image', name: 'twitter:image', content: 'https://liberiaprojects.org/flag-liberia-large.png' },
+      { hid: 'og:image', name: 'og:image', content: 'https://liberiaprojects.org/flag-liberia-large.png' },
+      { hid: 'twitter:image:alt', name: 'twitter:image:alt', content: 'Flag of Liberia.' }
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

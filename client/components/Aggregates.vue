@@ -179,7 +179,11 @@ export default {
   props: ['aggFilter', 'label', 'aggFilterValue'],
   head() {
     return {
-      title: this.aggregate.name ? `${this.label}: ${this.aggregate.name} | ${this.$config.title}` : `${this.label} | ${this.$config.title}`
+      title: this.title,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: this.title },
+        { hid: 'og:title', name: 'og:title', content: this.title },
+      ]
     }
   },
   data() {
@@ -418,6 +422,9 @@ export default {
     }, 500)
   },
   computed: {
+    title() {
+      return this.aggregate.name ? `${this.label}: ${this.aggregate.name} | ${this.$config.title}` : `${this.label} | ${this.$config.title}`
+    },
     dimension() {
       if (this.aggFilter == 'mtef-sector') {
         return 'reporting-org'

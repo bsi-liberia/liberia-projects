@@ -113,7 +113,11 @@ export default {
   },
   head() {
     return {
-      title: `Aid disbursements | ${this.$config.title}`
+      title: `Aid disbursements | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Aid disbursements | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Aid disbursements | ${this.$config.title}` },
+      ]
     }
   },
   mounted: function() {

@@ -96,7 +96,11 @@ export default {
   },
   head() {
     return {
-      title: `Counterpart funding | ${this.$config.title}`
+      title: `Counterpart funding | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Counterpart funding | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Counterpart funding | ${this.$config.title}` },
+      ]
     }
   },
   mounted: function() {

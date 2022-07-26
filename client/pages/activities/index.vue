@@ -174,7 +174,11 @@ export default {
   },
   head() {
     return {
-      title: `Activities | ${this.$config.title}`
+      title: `Activities | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Activities | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Activities | ${this.$config.title}` },
+      ]
     }
   },
   data() {

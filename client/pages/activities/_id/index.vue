@@ -374,7 +374,11 @@ export default {
   },
   head() {
     return {
-      title: this.activity.title ? `${this.activity.title} | ${this.$config.title}` : this.$config.title
+      title: this.activity.title ? `${this.activity.title} | ${this.$config.title}` : this.$config.title,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: this.activity.title ? `${this.activity.title} | ${this.$config.title}` : this.$config.title },
+        { hid: 'og:title', name: 'og:title', content: this.activity.title ? `${this.activity.title} | ${this.$config.title}` : this.$config.title },
+      ]
     }
   },
   data() {

@@ -15,7 +15,11 @@ export default {
   },
   head() {
     return {
-      title: `Sectors | ${this.$config.title}`
+      title: `Sectors | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Sectors | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Sectors | ${this.$config.title}` },
+      ]
     }
   }
 }

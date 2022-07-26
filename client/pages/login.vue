@@ -38,7 +38,11 @@ export default {
   },
   head() {
     return {
-      title: `Login | ${this.$config.title}`
+      title: `Login | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Login | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Login | ${this.$config.title}` },
+      ]
     }
   },
   computed: {

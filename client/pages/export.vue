@@ -366,7 +366,11 @@ export default {
   },
   head() {
     return {
-      title: `Export data | ${this.$config.title}`
+      title: `Export data | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Export data | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Export data | ${this.$config.title}` },
+      ]
     }
   },
   data() {

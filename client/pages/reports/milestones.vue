@@ -89,7 +89,11 @@ export default {
   },
   head() {
     return {
-      title: `Project Development and Appraisal Tracking | ${this.$config.title}`
+      title: `Project Development and Appraisal Tracking | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Project Development and Appraisal Tracking | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Project Development and Appraisal Tracking | ${this.$config.title}` },
+      ]
     }
   },
   mounted: function() {

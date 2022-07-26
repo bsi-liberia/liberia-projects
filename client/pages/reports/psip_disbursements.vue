@@ -121,7 +121,11 @@ export default {
   },
   head() {
     return {
-      title: `PSIP Disbursements | ${this.$config.title}`
+      title: `PSIP Disbursements | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `PSIP Disbursements | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `PSIP Disbursements | ${this.$config.title}` },
+      ]
     }
   },
   mounted: function() {

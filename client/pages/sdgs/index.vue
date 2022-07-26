@@ -15,7 +15,11 @@ export default {
   },
   head() {
     return {
-      title: `Sustainable Development Goals | ${this.$config.title}`
+      title: `Sustainable Development Goals | ${this.$config.title}`,
+      meta: [
+        { hid: 'twitter:title', name: 'twitter:title', content: `Sustainable Development Goals | ${this.$config.title}` },
+        { hid: 'og:title', name: 'og:title', content: `Sustainable Development Goals | ${this.$config.title}` },
+      ]
     }
   }
 }
