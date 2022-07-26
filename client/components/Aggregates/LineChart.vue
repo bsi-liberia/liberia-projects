@@ -7,6 +7,7 @@
           :options="plannedActualDisbursementOptions"
           button-variant="outline-primary"
           buttons
+          class="w-100"
           size="sm"
         ></b-form-radio-group>
       </b-col>
@@ -16,6 +17,7 @@
           :options="displayModeOptions"
           button-variant="outline-secondary"
           buttons
+          class="w-100"
           size="sm"
         ></b-form-radio-group>
       </b-col>

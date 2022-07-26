@@ -13,20 +13,25 @@
         <b-col md="6">
           <b-form-group
             label="Fiscal year"
-            label-align="right"
-            label-cols-sm="3">
-            <b-select v-model="selectedFY"
-            :options="fyOptions"></b-select>
+            label-size="sm"
+            label-align-sm="right"
+            label-cols-sm="4">
+            <b-select
+              v-model="selectedFY"
+              size="sm"
+              :options="fyOptions"></b-select>
           </b-form-group>
         </b-col>
         <b-col md="6" class="text-md-right ml-auto">
           <b-form-group>
-            <b-form-radio-group v-model="showChart"
-            :options="showChartOptions"
-            button-variant="outline-secondary"
-            size="md"
-            name="radio-btn-outline"
-            buttons></b-form-radio-group>
+            <b-form-radio-group
+              v-model="showChart"
+              :options="showChartOptions"
+              button-variant="outline-secondary"
+              size="sm"
+              class="w-100"
+              name="radio-btn-outline"
+              buttons></b-form-radio-group>
           </b-form-group>
         </b-col>
       </b-row>
