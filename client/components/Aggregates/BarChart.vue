@@ -239,20 +239,23 @@ export default {
         "#6e40aa", "#6849b9", "#6153c7", "#585fd2", "#4e6cda", "#4479df", "#3988e1", "#2f96e0", "#26a5db", "#1fb3d3", "#1bc1c8", "#19cdbb", "#1bd9ac", "#20e29d", "#28ea8d", "#34f07e", "#44f470", "#56f665", "#6bf75c", "#81f558",
         "#98f357", "#aff05b"
       ]
+      const filterOutZero = this.summaryData.filter((ds) => {
+        return ((ds['Planned Disbursements'] > 0 ) || (ds['Actual Disbursements'] > 0))
+      })
       return {
         datasets: [{
           label: 'Planned Disbursements',
           fill: true,
-          data: this.summaryData.map((ds) => { return ds['Planned Disbursements'] }).slice(0,20),
+          data: filterOutZero.map((ds) => { return ds['Planned Disbursements'] }),
           backgroundColor: colours[10]
         },
         {
           label: 'Actual Disbursements',
           fill: true,
-          data: this.summaryData.map((ds) => { return ds['Actual Disbursements'] }).slice(0,20),
+          data: filterOutZero.map((ds) => { return ds['Actual Disbursements'] }),
           backgroundColor: colours[0]
         }],
-        labels: this.summaryData.map((ds) => { return ds[this.dimensionLabel] }).slice(0,20),
+        labels: filterOutZero.map((ds) => { return ds[this.dimensionLabel] }),
       }
     }
   },
