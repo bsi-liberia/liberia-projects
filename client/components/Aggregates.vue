@@ -243,6 +243,9 @@ export default {
       } else if (this.aggFilter == 'sdg-goals') {
         await this.getSector()
         this.setAggDefaultFilters('sdg-goals')
+      } else if (this.aggFilter == 'papd-pillar') {
+        await this.getSector()
+        this.setAggDefaultFilters('papd-pillar')
       } else if (this.aggFilter == 'reporting-org') {
         await this.getDonor()
         this.setAggDefaultFilters('reporting_org_id')
