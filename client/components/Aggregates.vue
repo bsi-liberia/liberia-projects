@@ -426,21 +426,17 @@ export default {
       return this.aggregate.name ? `${this.label}: ${this.aggregate.name} | ${this.$config.title}` : `${this.label} | ${this.$config.title}`
     },
     dimension() {
-      if (this.aggFilter == 'mtef-sector') {
-        return 'reporting-org'
-      } else if (this.aggFilter == 'sdg-goals') {
-        return 'reporting-org'
-      } else if (this.aggFilter == 'reporting-org') {
+      if (this.aggFilter == 'reporting-org') {
         return 'mtef-sector'
+      } else {
+        return 'reporting-org'
       }
     },
     dimensionLabel() {
-      if (this.aggFilter == 'mtef-sector') {
-        return 'Donor'
-      } else if (this.aggFilter == 'sdg-goals') {
-        return 'Donor'
-      } else if (this.aggFilter == 'reporting-org') {
+      if (this.aggFilter == 'reporting-org') {
         return 'Sector'
+      } else {
+        return 'Donor'
       }
     },
     downloadURL() {
