@@ -236,7 +236,7 @@ class ActivityDocumentLink(db.Model):
         ret = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         ret['categories'] = list(
             map(lambda category: category.code, self.categories))
-        if self.local:
+        if self.local is True:
             ret['url'] = url_for('activities.api_activities_document',
                 activity_id=self.activity_id,
                 filename=self.filename,
@@ -1283,6 +1283,8 @@ class ActivityResultIndicatorPeriod(db.Model):
     def percent_complete(self):
         if self.actual_value == None:
             return None
+        if self.actual_value == True:
+            return 100.0
         try:
             return int(round((float(self.actual_value) / float(self.target_value))*100.0))
         except ZeroDivisionError:
