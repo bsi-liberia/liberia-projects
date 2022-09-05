@@ -17,6 +17,7 @@ export const state = () => ({
   },
   sectors: [],
   sdgGoals: [],
+  papdPillars: [],
   donors: [],
 })
 
@@ -27,8 +28,11 @@ export const mutations = {
   setMtefSectors(state, data) {
     state.sectors = data.codelists.filter((sector) => {return sector.name != ''}).sort((a, b) => a.name > b.name ? 1 : -1);
   },
-  setSDGGOals(state, data) {
+  setSDGGoals(state, data) {
     state.sdgGoals = data.codelists.filter((sdg) => {return sdg.name != ''}).sort((a, b) => a.id > b.id ? 1 : -1);
+  },
+  setPAPDPillars(state, data) {
+    state.papdPillars = data.codelists.filter((papd) => {return papd.name != ''}).sort((a, b) => a.id > b.id ? 1 : -1);
   },
   setDonors(state, data) {
     state.donors = data.organisations.filter((donor) => {return donor.name != ''})
@@ -45,7 +49,10 @@ export const actions = {
     commit('setMtefSectors', mtefSectors)
     const sdgGoals = await $axios
       .$get(`codelists/sdg-goals/`)
-    commit('setSDGGOals', sdgGoals)
+    commit('setSDGGoals', sdgGoals)
+    const papdPillars = await $axios
+      .$get(`codelists/papd-pillar/`)
+    commit('setPAPDPillars', papdPillars)
     const donors = await $axios
       .$get(`codelists/organisations/donor/`)
     commit('setDonors', donors)

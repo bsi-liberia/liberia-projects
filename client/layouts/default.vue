@@ -102,6 +102,17 @@
                   </b-dropdown-item>
                 </div>
               </b-nav-item-dropdown>
+              <b-nav-item-dropdown text="by PAPD Pillar" :class="('papd', 'papd-id').includes(this.$route.name) ?'active' : ''">
+                <div class="scrollable-menu">
+                  <b-dropdown-item :to="{name: 'papd'}" exact-active-class="active">
+                    All PAPD Pillars
+                  </b-dropdown-item>
+                  <b-dropdown-divider></b-dropdown-divider>
+                  <b-dropdown-item :to="{name: 'papd-id', params: { id: papd.code }}" v-for="papd in papdPillars" :key="papd.code" active-class="active">
+                    {{ papd.code }} - {{ papd.name }}
+                  </b-dropdown-item>
+                </div>
+              </b-nav-item-dropdown>
             </b-navbar-nav>
           </b-collapse>
         </b-container>
@@ -194,13 +205,13 @@ export default {
       return 'margin-top: 20px; margin-bottom: 30px;';
     },
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
-    ...mapState(['sectors', 'sdgGoals', 'donors'])
+    ...mapState(['sectors', 'sdgGoals', 'papdPillars', 'donors'])
   },
   watch: {
     $route: {
       immediate: true,
       handler (to, from) {
-        const routesToWatch = ['sectors', 'sectors-id', 'donors', 'donors-id', 'sdgs', 'sdgs-id']
+        const routesToWatch = ['sectors', 'sectors-id', 'donors', 'donors-id', 'sdgs', 'sdgs-id', 'papd', 'papd-id']
         if (routesToWatch.includes(to.name)) {
           this.showSecondaryNavbar = true
         } else {
