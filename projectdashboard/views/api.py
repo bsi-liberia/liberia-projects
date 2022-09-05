@@ -259,7 +259,7 @@ def api_aggregates():
                                               ]
                                               )
     # Codelists set at the activity level
-    elif request.args.get("filter") in ['sdg-goals']:
+    elif request.args.get("filter") in ['sdg-goals', 'papd-pillar']:
         filter_value = request.args.get("filter_value")
         sector_totals = qaggregates.aggregate(dimension,
                                               req_filters=[
