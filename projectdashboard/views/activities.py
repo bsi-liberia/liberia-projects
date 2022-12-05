@@ -413,6 +413,16 @@ def api_activities_documents(activity_id):
         return jsonify(documents=documents)
 
 
+@blueprint.route("/<activity_id>/documents/<document_id>.json", methods=['DELETE'])
+@jwt_required(optional=True)
+@quser.permissions_required("edit")
+def api_activities_documents_delete(activity_id, document_id):
+    result = qdocuments.delete_document(activity_id, document_id)
+    if result == True:
+        return jsonify(deleted=True)
+    return jsonify(error="Error, could not delete that document."), 500
+
+
 @blueprint.route("/<int:activity_id>/documents/<filename>")
 def api_activities_document(activity_id, filename):
     document = models.ActivityDocumentLink.query.filter_by(
