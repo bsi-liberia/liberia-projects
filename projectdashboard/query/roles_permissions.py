@@ -16,7 +16,7 @@ ROLES_PERMISSIONS = {
     'admin': ['sector-dashboard'],
     'results-data-entry': ['sector-dashboard', 'results'],
     'results-data-design': ['sector-dashboard', 'results'],
-    'piu-desk-officer': ['sector-dashboard'],
+    'piu-desk-officer': ['sector-dashboard', 'reports-project-bank'],
     'world-bank': ['world-bank']
 }
 
@@ -31,7 +31,8 @@ VIEW_EDIT_PERMISSIONS = {
     'edit': {
         'domestic': [
             'reports-milestones',
-            'reports-psip_disbursements'
+            'reports-psip_disbursements',
+            'reports-project-bank'
         ],
         'external': []
     }

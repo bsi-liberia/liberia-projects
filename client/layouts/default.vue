@@ -21,6 +21,8 @@
                   v-if="loggedInUser.new_permissions_list.includes('reports-milestones')">PSIP Project Development and Appraisal Tracking</b-dropdown-item>
                 <b-dropdown-item :to="{name: 'reports-psip_disbursements'}" active-class="active"
                   v-if="loggedInUser.new_permissions_list.includes('reports-psip_disbursements')">PSIP Disbursements</b-dropdown-item>
+                <b-dropdown-item :to="{name: 'reports-project-bank'}" active-class="active"
+                  v-if="loggedInUser.new_permissions_list.includes('reports-project-bank')">PSIP Project Bank</b-dropdown-item>
                 <b-dropdown-item :to="{name: 'reports-aid_disbursements'}" active-class="active"
                   v-if="loggedInUser.new_permissions_list.includes('reports-aid_disbursements')">Aid Disbursements</b-dropdown-item>
                 <b-dropdown-item :to="{name: 'reports-results'}" active-class="active"

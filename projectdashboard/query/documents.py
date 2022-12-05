@@ -30,3 +30,16 @@ def add_document(activity_id, title, category_codes, file):
     db.session.add(document)
     db.session.commit()
     return document
+
+def delete_document(activity_id, document_id):
+    document = models.ActivityDocumentLink.query.filter_by(
+        activity_id=activity_id,
+        id=document_id).first()
+    if document:
+        filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
+            document.filename)
+        os.remove(filename)
+        db.session.delete(document)
+        db.session.commit()
+        return True
+    return False

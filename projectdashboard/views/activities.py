@@ -99,6 +99,27 @@ def api_activities_country():
     )
 
 
+@blueprint.route("/descriptions-objectives/")
+@jwt_required(optional=True)
+@quser.permissions_required("view")
+def api_activities_descriptions_objectives():
+    arguments = request.args.to_dict()
+    activities = qactivity.list_activities_by_filters(arguments)
+
+    return jsonify(activities=[{
+        'title': activity.title,
+        'description': activity.description,
+        'objectives': activity.objectives,
+        'reporting_org': activity.reporting_org.name,
+        'id': activity.id,
+        'updated_date': activity.updated_date.date().isoformat(),
+        'user': activity.user.username,
+        'user_id': activity.user.id,
+        "permissions": activity.permissions
+    } for activity in activities]
+    )
+
+
 @blueprint.route("/<activity_id>.json")
 @jwt_required(optional=True)
 @quser.permissions_required("view")
@@ -390,6 +411,16 @@ def api_activities_documents(activity_id):
             return abort(404)
         documents = [document.as_dict() for document in activity.documents]
         return jsonify(documents=documents)
+
+
+@blueprint.route("/<activity_id>/documents/<document_id>.json", methods=['DELETE'])
+@jwt_required(optional=True)
+@quser.permissions_required("edit")
+def api_activities_documents_delete(activity_id, document_id):
+    result = qdocuments.delete_document(activity_id, document_id)
+    if result == True:
+        return jsonify(deleted=True)
+    return jsonify(error="Error, could not delete that document."), 500
 
 
 @blueprint.route("/<int:activity_id>/documents/<filename>")
