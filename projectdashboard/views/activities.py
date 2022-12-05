@@ -99,6 +99,27 @@ def api_activities_country():
     )
 
 
+@blueprint.route("/descriptions-objectives/")
+@jwt_required(optional=True)
+@quser.permissions_required("view")
+def api_activities_descriptions_objectives():
+    arguments = request.args.to_dict()
+    activities = qactivity.list_activities_by_filters(arguments)
+
+    return jsonify(activities=[{
+        'title': activity.title,
+        'description': activity.description,
+        'objectives': activity.objectives,
+        'reporting_org': activity.reporting_org.name,
+        'id': activity.id,
+        'updated_date': activity.updated_date.date().isoformat(),
+        'user': activity.user.username,
+        'user_id': activity.user.id,
+        "permissions": activity.permissions
+    } for activity in activities]
+    )
+
+
 @blueprint.route("/<activity_id>.json")
 @jwt_required(optional=True)
 @quser.permissions_required("view")
