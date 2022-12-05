@@ -8,7 +8,7 @@
       </template>
       <template v-slot:cell(type)="data">
         <span class="badge badge-secondary"
-            v-for="category in data.item.categories" v-bind:key="category">{{ category }}</span>
+            v-for="category in data.item.categories" v-bind:key="category">{{ categoriesObj[category] }}</span>
       </template>
       <template v-slot:cell(date)="data">
         {{ data.item.document_date || '' }}
@@ -45,6 +45,12 @@ export default {
       }).map(item => {
         return { code: item.code, text: item.name, value: item.id}
       })
+    },
+    categoriesObj() {
+      return this.categories.reduce((summary, item) => {
+        summary[item.code] = item.text
+        return summary
+      }, {})
     }
   },
   methods: {
